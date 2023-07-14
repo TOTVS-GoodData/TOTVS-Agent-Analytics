@@ -1,0 +1,9 @@
+@media screen and (max-width: 800px) {
+  .fields {
+    width: 40% !important;
+  }
+}
+
+.fields {
+  width: 35%;
+}

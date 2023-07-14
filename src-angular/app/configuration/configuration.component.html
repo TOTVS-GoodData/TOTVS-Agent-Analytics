@@ -1,0 +1,36 @@
+<po-page-list p-title="Configuração do Agent">
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  <form #configurationForm="ngForm">
+    <div class="po-row">
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ programName }}</span>
+      <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">Versão {{ version }}</span>
+      <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    </div>
+    
+    <div class="po-row fields">
+      <po-number
+        class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+        p-min="1"
+        name="po_logfilesToKeep"
+        [(ngModel)]="configuration.logfilesToKeep"
+        [p-label]="lbl_logfilesToKeep"
+        p-maxlength=3
+        p-regex="999">
+      </po-number>
+      
+      <po-switch class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12"
+        name="po_showQuery"
+        [(ngModel)]="configuration.debug"
+        p-label-off="Modo de depuração: Desativado"
+        p-label-on="Modo de depuração: Ativado"
+        [p-label-position]="showQueriesPosition">
+      </po-switch>
+    </div>
+    
+    <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+    
+    <div class="po-row footer">
+      <po-button class="removeBorder padding-0 po-button po-text-ellipsis po-button-primary" p-size="medium" p-label="Salvar" (p-click)="saveConfiguration()" p-kind="primary" />
+    </div>
+  </form>
+</po-page-list>

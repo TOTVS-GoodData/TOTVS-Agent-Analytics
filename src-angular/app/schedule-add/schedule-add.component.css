@@ -1,0 +1,60 @@
+@media screen and (max-width: 1366px) {
+    .small-size{
+        font-family: NunitoSans;
+        font-size: 14px;
+        line-height: 24px;
+        height: 32px;
+        margin-top: 13px !important;
+    }
+}   
+
+.po-grid-cell-input {
+  width: 100px !important;
+}
+
+.flex {
+  display: flex;
+  align-items: center;
+}
+
+.grow {
+  flex-grow: 1;
+}
+
+.vertical-align {
+  display: flex;
+  justify-content: left;
+}
+
+.conf-row {
+  max-width: 100%;
+}
+
+.conf-select {
+  flex-grow: 1;
+}
+
+.label-field{
+    margin-top: 17px;
+}
+
+.dateTime-margin{
+    margin-top: 5px !important;
+    margin-bottom: 15px !important;    
+}
+
+.interval-label{
+    text-align: right;
+}
+
+.grid-title{
+    margin-top: 3%;
+}
+
+.margin-zero{
+    padding: 0px;
+}
+
+.interval-hours-label{
+    margin-top: 2%;
+}

@@ -1,0 +1,133 @@
+{
+  "workspaces": [],
+  "databases": [
+    {
+      "id": 1,
+      "name": "Servidor GoodData (SQL Server)",
+      "type": "SQL_Server",
+      "driverClass": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+      "driverPath": "./agent/files/jdbc/sqljdbc4.jar",
+      "ip": "10.171.59.134",
+      "port": "1456",
+      "schema": "P12123MNT",
+      "sid": null,
+      "connectionString": "jdbc:sqlserver://10.171.59.134:1456;DatabaseName=P12123MNT",
+      "username": "sa",
+      "password": "ab15",
+      "instance": null,
+      "ipType": "IPV4"
+    }
+  ],
+  "javas": [],
+  "schedules": [
+    {
+      "id": 1,
+      "name": "Dadadadada",
+      "workspaceId": 1,
+      "workspaceName": "[Hom] Protheus WMS 1.1.0",
+      "windows": [
+        "00:00",
+        "00:30"
+      ],
+      "SQLParameters": [
+        {
+          "name": "START_DATE",
+          "value": "CONVERT(VARCHAR(8), DATEADD(MONTH, -24, DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)), 112)",
+          "sql": true
+        },
+        {
+          "name": "FINAL_DATE",
+          "value": "CONVERT(VARCHAR(8), GETDATE(), 112)",
+          "sql": true
+        },
+        {
+          "name": "EXTRACTION_DATE",
+          "value": "CONVERT(VARCHAR(8), GETDATE(), 112)",
+          "sql": true
+        },
+        {
+          "name": "DATE_MASK",
+          "value": "yyyyMMdd",
+          "sql": false
+        }
+      ],
+      "ETLParameters": [
+        {
+          "Modulos": [],
+          "name": "LOAD_MODE_DIM",
+          "value": "FULL_LOAD"
+        },
+        {
+          "Modulos": [],
+          "name": "LOAD_MODE_FCT",
+          "value": "INCREMENTAL"
+        },
+        {
+          "Modulos": [],
+          "name": "LOAD_MODE_KPI",
+          "value": "INCREMENTAL"
+        },
+        {
+          "Modulos": [],
+          "name": "LOAD_MODE_SNAPSHOT",
+          "value": "FULL_LOAD"
+        },
+        {
+          "Modulos": [],
+          "name": "MULTI_INSTANCIA",
+          "value": "FALSE"
+        },
+        {
+          "Modulos": [],
+          "name": "INSTANCIA",
+          "value": "01"
+        }
+      ],
+      "enabled": false,
+      "GDZipFilename": "gg",
+      "GDZipExtension": ".zip"
+    },
+    {
+      "id": 2,
+      "name": "Hyhy",
+      "workspaceId": 2,
+      "workspaceName": "[Hom] Datasul WMS 1.1.0",
+      "windows": [
+        "01:00",
+        "01:30"
+      ],
+      "SQLParameters": [],
+      "ETLParameters": [
+        {
+          "name": "LOAD_MODE_DIM",
+          "value": "FULL_LOAD"
+        },
+        {
+          "name": "LOAD_MODE_FCT",
+          "value": "INCREMENTAL"
+        },
+        {
+          "name": "LOAD_MODE_KPI",
+          "value": "INCREMENTAL"
+        },
+        {
+          "name": "LOAD_MODE_SNAPSHOT",
+          "value": "FULL_LOAD"
+        },
+        {
+          "name": "MULTI_INSTANCIA",
+          "value": "FALSE"
+        }
+      ],
+      "enabled": false,
+      "GDZipFilename": "GGG",
+      "GDZipExtension": ".zip"
+    }
+  ],
+  "queries": [],
+  "scripts": [],
+  "configuration": {
+    "logfilesToKeep": 8,
+    "debug": true
+  }
+}

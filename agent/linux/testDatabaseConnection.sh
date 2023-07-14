@@ -1,0 +1,1 @@
+java -cp TOTVS-FastAnalytics-Agent-1.7.8-jar-with-dependencies.jar com.gooddata.agent.util.TestDatabaseConnection ./config.properties ./log4j2.properties

@@ -1,0 +1,29 @@
+<po-page-list p-title= "{{ operation }}">
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  <form #javaForm="ngForm">
+    <div class="po-row">
+      <po-input
+        name="po_java"
+        class="form-control po-md-12 po-lg-12"
+        [p-label]="lbl_name"
+        [(ngModel)]="java.name"
+        p-required="true" >
+      </po-input>
+    </div>
+    <div class="po-row padding-button">
+      <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Novo parâmetro" (p-click)="onBeforeInsert({value: this._CNST_NEW_PARAMETER_VALUE})"/>
+    </div>
+    <div class="form-group po-row">
+      <po-grid #po_javaParams
+        class="form-control po-md-12 po-lg-12"
+        [p-data]="java.parameters"
+        [p-columns]="po_columns"
+        [p-row-actions]="po_gridActions">
+      </po-grid>
+    </div>
+    <div class="po-row footer">
+      <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Voltar" (p-click)="goBack()" />
+      <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Salvar" (p-click)="saveJava()" p-kind="primary" />
+    </div>
+  </form>
+</po-page-list>

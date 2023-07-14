@@ -1,0 +1,125 @@
+{
+  "workspaces": [
+    {
+      "id": 1,
+      "contractType": "FAST_2",
+      "contractCode": "hyhy",
+      "erp": "Protheus",
+      "module": "BO",
+      "source": "Local",
+      "GDEnvironment": "analytics.totvs.com.br",
+      "GDUsername": "dev.gd@totvs.com.br",
+      "GDPassword": "9f1b51882a85fdb84fcf4452a56af10e4d",
+      "GDWorkspaceId": "okdtv9dwnqcpxgkhq310un6x2us052be",
+      "GDWorkspaceUploadURL": "https://secure-di.gooddata.com/project-uploads/okdtv9dwnqcpxgkhq310un6x2us052be/today/",
+      "javaId": 666,
+      "databaseId": 1,
+      "GDProcessId": "ecf83786-f164-4257-86f6-fc2e33f91aee",
+      "GDProcessGraph": "/graph/com_fct_Devolucoes.grf",
+      "name": "[Hom] Protheus BO 1.3.9"
+    }
+  ],
+  "databases": [
+    {
+      "id": 1,
+      "name": "SQL Server",
+      "type": "SQL_Server",
+      "driverClass": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+      "driverPath": "./agent/files/jdbc/sqljdbc4.jar",
+      "ip": "10.171.59.134",
+      "port": "1456",
+      "schema": "P12123MNT",
+      "sid": null,
+      "connectionString": "jdbc:sqlserver://10.171.59.134:1456;DatabaseName=P12123MNT",
+      "username": "sa",
+      "password": "ab15",
+      "instance": null,
+      "ipType": "IPV4"
+    }
+  ],
+  "javas": [],
+  "schedules": [
+    {
+      "id": 1,
+      "name": "Protheus BO",
+      "workspaceId": 1,
+      "workspaceName": "[Hom] Protheus BO 1.3.9",
+      "windows": [
+        "12:00"
+      ],
+      "SQLParameters": [
+        {
+          "name": "START_DATE",
+          "value": "CONVERT(VARCHAR(8), DATEADD(MONTH, -24, DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)), 112)",
+          "sql": true
+        },
+        {
+          "name": "FINAL_DATE",
+          "value": "CONVERT(VARCHAR(8), GETDATE(), 112)",
+          "sql": true
+        },
+        {
+          "name": "EXTRACTION_DATE",
+          "value": "CONVERT(VARCHAR(8), GETDATE(), 112)",
+          "sql": true
+        },
+        {
+          "name": "DATE_MASK",
+          "value": "yyyyMMdd",
+          "sql": false
+        }
+      ],
+      "ETLParameters": [
+        {
+          "Modulos": [],
+          "name": "LOAD_MODE_DIM",
+          "value": "FULL_LOAD"
+        },
+        {
+          "Modulos": [],
+          "name": "LOAD_MODE_FCT",
+          "value": "INCREMENTAL"
+        },
+        {
+          "Modulos": [],
+          "name": "LOAD_MODE_KPI",
+          "value": "INCREMENTAL"
+        },
+        {
+          "Modulos": [],
+          "name": "LOAD_MODE_SNAPSHOT",
+          "value": "FULL_LOAD"
+        },
+        {
+          "Modulos": [],
+          "name": "MULTI_INSTANCIA",
+          "value": "FALSE"
+        },
+        {
+          "Modulos": [],
+          "name": "INSTANCIA",
+          "value": "01"
+        }
+      ],
+      "enabled": false,
+      "GDZipFilename": "Zipzinho_uhu",
+      "GDZipExtension": ".zip",
+      "lastExecution": "2023-07-13T20:47:18.673Z"
+    }
+  ],
+  "queries": [
+    {
+      "scheduleId": 1,
+      "name": "Devolucoes.99",
+      "query": "8b3172a90db0a9fe5f9b5716e265f90559a87cf0a8113b094caa94580b1d235dbad18dd49241f61c686b039d747eaf5b0111c3dc1393c419d57386982db54c25f3eb3f5605537ce34822d1683fc1d54588f4febde8a82ae9e74aa20c0c157aa82b5709b20cc7b03e5570d8773b61da541355c02442df16122109b8cc816f1d6688a838cff2aef7aaf7c4f66d027e0becdba20c724485bce7945bc5348fd53fc38d9f5cfa734a2872c9e5086930a162a34a19ebe459ac8728634725a13c1381c1404360996aba1eef14828364b196135d3017f3ef1a9b3090498de7acb10794287d9ac1caa0418f06b6df5dba4e648ef4e31c612cce7bfe844f815b0b16cac3ed2314839daee212f051a180c5f551c787e5b2b3233598a7b5be6917792ca8eced62dc79bb368de24174fe05078270c0aced56ff17872908d13c270a9bba84ba47f6c30e9c1502728bfc9028d66e6ef097daaa2743981603849542e7b768be9de699d15962c5baebc31d08929401957db65b4f69c0652288c0e93bfb033b7f99e029a35bde6cbd19c47b8a919ec639dd6a294a90170ecf36b69ee58324d01edc657551961fe8bdb6aebd7ae0fb6ee77dca7ae1d777102302beab5580b4c44b14285e48f04b6137c46516e88bcea7437aaee148e15101d632a3917117b2c66e6392d03a9ab371d8976fb587620ac38307ff1cc8980f78c4ce5e72c590dbde09d9968c2e7eb30ae4d3fb013fc70da118139bc47b35031c81981a6f61acfdcc84e42e778eed9e011e8b12cd2bc03ec0f44dab15d967351aa5cc2b23b9292e141c263d4e71107ffe29b4674e2c1ebf74e51da2e1ebd5f18f61e5e52272973dcf7e2f98dc4ae18bef9b73fd3157ecf379e2c5d918d367fc4c92e6452747caae74eadade70335fe03d5c2689a8d21debeb8b875be0dfbf90a4895ba36099a8672744455615492752eddd5f18bb2fb76d64930d3e9e3fad6b8553faf5093ab22e3b15ad62be608a9416d3e3c2cd38b860bd66583c97833d45855c19abfea487b46ff04a4114eef5bdcd156a6a25615792e7273e3c37a41bb9d014a9916223b44190140eb173b3da2e9363bd86b3f1b21606d6592c2a8d99a9cd51997ff6c5a36e47b03fe70f3c728d1a40171a543bd6bd21cbf982c3ea2787c0dc2ac8c25393a4faa9653b3c52059235925ef30bd3708da445624072492918342ad81781d6b520cab09279fb6c5455cd47029f37ec5a1060dd82bd194e132a16e7e3c838d9cb62238a1c6d46edde36fa8e83bb0fcfca399c7a12cafc1681a7c356306d249f63c973349dedbba6aee72c6dd5e02fff5c6e0adc002486b50c0377208a853c588eb41a251bb8b13ce6a2a2e948dc810556e4cca76bfcdefec8e4712a93f032c2d0cde2cc6a0f661579b0d903134943dc5e3a85379758f61e7121d5609436abacebd22e508cac575da5422529e03e64954677b33feb36b5faeebeb12449a192ae1bc5ce36f7130f4a755f6d0e9dc838eb0818de3bf4950bbde61db55018b6b94bd2f221711eb6eab2f2a63fcae9d18a03f1aef8e28b4a5ab5931f429f51373f73fe4966c976612fb8cc7398d165400083b0243adc51847c18ae36b1acb5362e1629746a42d2603bbc334971f9b95aac987ee0f90395c81f8471f4e563cb97fec6b8fbc139c6c05a081898c0ba1aa5d06934a7ad4366b611dce7e5cc27f5e844cee307a42901b67323dcab0ca6df5badb6bcfc25f4fe1e14493d7dce607666578a3ce0f5ab43ae8ac6bc40aa23536d3b50b54b9a2b1d97a58378073446d2a35403a2283a4603497a950303bc14359ceeb16a3fe10526a72ccebefbbc73b05ff0d67bb51984c481f9853187df5de880361cf9473c36ffe925becbd9fcb6ab650959fe8cc377316b4005c59a765280e764fb73380711ef8a0e1198be5519459bd4f06e559ea46c88c60700c77726309292114de618ac541c9725de8a96bf26edbc859499ce0c53412995d3c3af8c9799c1c0a7a64879d7320e4ba54ecd7b93ffc93943400d542481d1e39a201ad0fcb375806e79ac2d11dfdc59f3d2bc3e4a0b0e6d65af795e3d75b7fca864feffa91e1b7d2604862dfb09eff663bbac72938d93765e142d6a330e8e976ab5b657b89f66ccb6cb03b9cd59c85730347b5f4450bb1eaf3863a107df43e659191eb3151efbde1de41c2105b05b70c48b2905d140744d93b9a28f2e43ac884a434137500721558f724b4c07a45d9a4363d93fd47aaf68090a871e930e5917c4767af7729d00b6acb6225a2cdfe75249d1e81cc58d485c22d304d9d46b5f129f1ccdbe98a6473ce8e4a12fad4235de41be51d4f2dfe9ca067ca244f2746f6884346bd5c0146b5f020ee474598d597160df107877b0f92c73988c3f2884e44e12b5e8aa3aac4fa1d1b5e1d6b276b3913101c9e44ea7afeb4eaaea6151f642cd064ba458cb9a3eae8c90417d3808a1a9b0715d89f16591285ac6299132152829f40d9be8057f800e841e696387be84577607eae751ab97c183b48f116258dbce022cf4c1fd18a812d7b6832044436ed42ed455e80a44c956ed9f9f45c7639249158def02c018f4389429ca40cc6d2405987d23c2e948dbd131fb5b977a8ee89b4a710857f9f3911f19de4b8975b9431807982f8f6c5015ffd466b5915c7af14e57e9225e429956d23bcf7e6f87c9372ca2921e5dfb308b8e1c2ff24f89b586261252d66ea9dc60c12977af95a4e00c22e581d796fc6f03579b75735e0bbdf50a3011debf6cd62fc33c40daed4da434a66f41d1270f0af1be9c9fbf10b627cdafe7531808b14394b5d5a4b543c94eedf960c99409f0ff5b6b29b6e69afb182cf5a27d8bdfdc7d2f6cf92ea1b64d3c151da298e48e7dc135770c35a02997090543364929ce55101688dda4637ee3e77b0cb9e4fc88954dcd42dd0ca6be9a067ab9a81c97b274bed088a57d9f330164f12e81cf9703328ded0aae9e1dbd1667b4f40cb52331064ce26a496c967b2ba5421d63e76469e40dc3b9ac6cf2efb8178b10ad3c9014cd21d622427224c7b86f8dd81c69a310ee427db1f8c2a55b135294e6761336dd37b628a0749830ab40faff0c1075abc6acb0410373b3c488b68c151ee1c22db2bad357c9696ab14972a7f0fdffa9a298a9dd4b4fee8e74b987a7243e283a3ed91d43ae540664ceb912c812a0948e2a657a808ef29b6a0ad63ffa52048e28b706596a65049f5d88a55a8e24378797c1cb16ca725a9591a0c75fe56ac59be070d405dbf971ac2676b384ccb70bf03e6175ca2df9509daf65dacd59f5ccec48f4a264b1819baeec7f14eace95a65e9f34fd205598b4a1fc760c68360ccc3caefd2ad529e483c91be84bcff1199e74e5f0afdc116cafaf1fb795d5a6d11d61511492c6c749769966d27f076b047aa35bdbefc316898cdaa7af674e6542e8aaf6689e5c6244f66a5c90fa810e6a402a86b6e9ee5e63da6b79da8355edbb3ed3a51f5144fa5ecce42dc5dce63d15d22e0b23350ee066ef0de5582b128586a681746db93582d16c215ec23465db692e40576eda061e6bde1d295073a6cd78d6c63d30f7828aa4be844b956466eca04dbdcb4b25f1e8d512159fabc0725a3961c89429fe609087f37915cba54467412d1067c93ff0c467a898992d3f35aabc4dad4bfb550f13b3850d2f88cb3f8d24ec1a5195ed4f8d16a577b3e655588dad756c7f16c920dd45c07360958f2ae0656b45209e34c5bbcdefafe64d187de341bad89b403ee24b332898e52a31b177df0383d40c8387714a392718f7c7153b6aded991ec59f1b26277f25fdb622cba2018463cc4cf652d9ca4d80be2bae0cb71ada14ed7717251cbde3e692e5077f2d14e7566a3889ef35a86a69e92b456b24a5d4b137a2dc208ec5ff49c103be306416560f2b07b4eccbcd5a03618afd5a72375ea78e800a74a68d218088f32ca0057b98328ce16714648fff912fef1c299be3cbfe3af43b5ddb8e76d84a44c326a33e0b04bbc3b1554943c742aeb802923d73d74d62ba9c1fd6aa88cbc9921f0024faf03fce3ace8bb0a0ee45f98199ef11c1ea63dfb2e3ac96a541364d6e4bbc3ce69eac8cc02bc0a72cf65f0253a00642fb1a315f97e314e4c48b19db7e290952cbe28949707923ff51d691b9218efac0bf79b3a6bf64deee46c8d0b06529e9be36620f4910a9247bec8322d80dec3bf70a6038c388655757eec1a2a749b4c2583e911ecb7da0d3c39a8325a8374ab495483e6010d9bbae379267759a07aa7ed23a6d8ba741cb03963a120eeeaf51d34ceeb466ac1fa50f2cb7ec4a763ddd73659f50749903261a302764ad8ced8d113951a58c18efbf37b282da1947fd70bbbad7c617eac0d04df4ebff0096d31cc35480a5493a473b7491d921a225a49ccf19b914d3c6dcc77a5ec0074334da7011a312e61b8989ab4e6b1973276815ffcae3363c5b5d102f27b07fd1e09b980423f327244d282b0c542b185979a2c21412696920dffba3d2c0fac0ed9c3bf8e14a2bc552772a32848ae922e2b208124027bb7656c44ddffae4cd1601cceef5fadfa8543e0a3b9a12db73195df4723880335629ba509c7449f4b0dfb23d037a08f3f949e96ee50affb5c0592b8039dd485100b71dcd408407a9f9fc7b01271575047e3149a61a8813ec30fb4299a3d47593cd17ae1160bcc0c9d70b025efe8c438b3d8a5ac69fab09a4990c455e2c7e3ed3d4133c8e24f75c8a58cf22daee53e8a44119f6902acfd33acaf5816157c89a05915d0f9aedb3473c5c8893c50ab8176d18570511ec3b2de3134730394a464810b69599cfd63e3b1bc3cc1a90025e69972a57e5eb1566eabc6907efc5a9790",
+      "executionMode": "completa",
+      "canDecrypt": true,
+      "id": 1
+    }
+  ],
+  "scripts": [],
+  "configuration": {
+    "logfilesToKeep": 6,
+    "debug": true
+  }
+}

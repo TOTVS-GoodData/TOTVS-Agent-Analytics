@@ -1,0 +1,12 @@
+{
+  "workspaces": [],
+  "databases": [],
+  "javas": [],
+  "schedules": [],
+  "queries": [],
+  "scripts": [],
+  "configuration": {
+    "logfilesToKeep": 6,
+    "debug": false
+  }
+}

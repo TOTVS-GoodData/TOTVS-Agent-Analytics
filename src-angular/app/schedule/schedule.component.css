@@ -1,0 +1,28 @@
+.title{
+    font-family: NunitoSans-ExtraLight;
+    line-height: 48px;
+    color: #0c9abe;
+    text-align: left;
+    font-weight: bold;
+    font-size: 150%;
+}
+
+.status-service{
+    text-align: center;
+    color: white;
+    margin-top: 15px; 
+    display: block; 
+    width: 100%;
+}
+
+.div-status-service{
+    text-align: right; 
+}
+
+.service-running{
+    background-color: #00b28e;
+}
+
+.service-stoped{
+    background-color: #c64840;
+}

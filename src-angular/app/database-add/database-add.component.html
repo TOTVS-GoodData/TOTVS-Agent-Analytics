@@ -1,0 +1,138 @@
+<po-page-list p-title = "{{ operation }}">
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  <form #dataBaseForm="ngForm">
+    <po-container>
+      <div class="po-row">
+        <po-input
+          name="po_name"
+          class="form-control po-md-6 po-lg-6"
+          [p-label]="lbl_name"
+          [(ngModel)]="database.name"
+          p-required="true">
+        </po-input>
+        <po-select 
+          name="po_databaseType"
+          class="form-control po-md-6 po-lg-6"
+          [p-label]="lbl_type"
+          [(ngModel)]="database.type"
+          [p-options]="_CNST_DATABASE_TYPES"
+          (p-change)="onChangeDatabaseType($event)"
+          p-required="true">
+        </po-select>
+      </div>
+      <div class="po-row">
+        <po-input
+          name="po_driverClass"
+          class="form-control po-md-6 po-lg-6"
+          [p-label]="lbl_driverClass"
+          [(ngModel)]="database.driverClass"
+          [p-disabled]="(database.type != 'Outro')"
+          p-required="true">
+        </po-input>
+        <po-input
+          name="poDriverPath"
+          class="form-control po-md-6 po-lg-6"
+          [p-label]="lbl_driverPath"
+          [(ngModel)]="database.driverPath"
+          [p-disabled]="(database.type != 'Outro')"
+          p-required="true">
+        </po-input>
+      </div>
+      <ng-template [ngIf]="(database.type != 'Outro')">
+        <div class="po-row">
+          <po-select 
+          name="po_databaseIpType"
+          class="form-control po-md-3 po-lg-3"
+          [p-label]="lbl_ipType"
+          [(ngModel)]="database.ipType"
+          [p-options]="_CNST_DATABASE_IPTYPES"
+          (p-change)="updateIpRegexPattern()"
+          p-required="true">
+        </po-select>
+          <po-input
+            name="po_ip"
+            class="form-control po-md-3 po-lg-3"
+            [p-label]="lbl_ip"
+            [(ngModel)]="database.ip"
+            (p-change)="updateConnectionString()"
+            p-required="true"
+            [p-pattern]="regexPattern">
+          </po-input>
+          <po-input
+            name="po_port"
+            class="form-control po-md-3 po-lg-3"
+            [p-label]="lbl_port"
+            [(ngModel)]="database.port"
+            (p-change)="updateConnectionString()"
+            p-required="true"
+            [p-pattern]="_CNST_DATABASE_PORT_REGEX">
+          </po-input>
+          <po-input
+            name="po_schema"
+            class="form-control po-md-3 po-lg-3"
+            [p-label]="lbl_schema"
+            [(ngModel)]="schema"
+            (p-change)="setDatabaseSchema($event)"
+            p-required="true">
+          </po-input>
+        </div>
+      </ng-template>
+      <ng-template [ngIf]="(database.type === 'SQL_Server')">
+        <div class="po-row">
+          <po-input
+            name="po_instance"
+            class="form-control po-md-12 po-lg-12"
+            [p-label]="lbl_instance"
+            [(ngModel)]="database.instance"
+            (p-change)="updateConnectionString()"
+            p-required="true">
+          </po-input>
+        </div>
+      </ng-template>
+      <div class="po-row">
+        <po-input
+          name="po_connectionString"
+          class="form-control po-md-12 po-lg-12"
+          [p-label]="lbl_connectionString"
+          [(ngModel)]="database.connectionString"
+          [p-disabled]="(database.type != 'Outro')"
+          p-required="true">
+        </po-input>
+      </div>
+      <div class="po-row vertical-align">
+        <po-input
+          name="po_username"
+          class="form-control po-md-4 po-lg-4"
+          [p-label]="lbl_username"
+          [(ngModel)]="database.username"
+          p-required="true"
+          p-icon="po-icon-user">
+        </po-input>
+        <po-password
+          name="po_password"
+          class="form-control po-md-4 po-lg-4"
+          [p-label]="lbl_password"
+          [(ngModel)]="database.password"
+          p-required="true">
+        </po-password>
+        <po-button class="po-sm-4 po-md-4 po-lg-4 po-xl-4 padding-button"
+          (p-click)="testDatabaseConnection()"
+          p-label="Testar Conexão"
+          p-small="false"
+          p-icon="po-icon-database"
+          p-disabled="  ((database.type === null)
+                      || (database.ip === null)
+                      || (database.port === null)
+                      || (database.schema === null)
+                      || (database.username === null)
+                      || (database.password === null))"
+        >
+        </po-button>
+      </div>
+      <div class="po-row footer">
+        <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Voltar" (p-click)="goBack()" />
+        <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Salvar" (p-click)="saveDatabase()" p-kind="primary" />
+      </div>
+    </po-container>
+  </form>
+</po-page-list>

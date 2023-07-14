@@ -1,0 +1,1 @@
+﻿java -Djava.io.tmpdir="./files/tmp" -jar TOTVS-FastAnalytics-Agent-1.7.8-jar-with-dependencies.jar ./config.properties ./log4j2.properties

@@ -1,0 +1,102 @@
+<po-page-list p-title = "Cadastro de Rotinas (Scripts)">
+  
+  <div class="po-row">
+    <po-button class="padding-button" p-label="Adicionar" p-icon="po-icon po-icon-plus" (p-click)="newScript()" p-kind="primary"/>
+  </div>
+  
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  
+  <div class="po-sm-12 po-md-12 po-lg-12 po-xl-12 list-project list-project-empty" *ngIf="schedulesScriptTotal.length === 0">
+    <span>Nenhum agendamento encontrado</span> 
+  </div>
+  
+  <div class="po-row">
+    
+    <po-list-view p-property-title="name" *ngIf="schedulesScript.length > 0" [p-items]="this.schedulesScript" [p-actions]="setListViewActions">
+      <ng-template p-list-view-content-template let-item>
+        <div class="po-row">
+          <po-table
+            class="table"
+            [p-actions]="setTableRowActions"
+            [p-columns]="setcolumns"
+            [p-items]="item.scripts"
+            p-hide-detail="true"
+            p-hide-select-all="true"
+            p-hide-columns-manager="true"
+            p-infinite-scroll="true"
+            p-sort="true"
+            [p-actions-right]="true" />
+        </div>
+      </ng-template>
+    </po-list-view>
+    
+    <po-list-view p-property-title="name" *ngIf="schedulesScriptProtheus.length > 0" [p-items]="this.schedulesScriptProtheus" [p-actions]="setListViewActions">
+      <ng-template p-list-view-content-template let-item>
+        <div class="po-row">
+          <po-table
+            class="table"
+            [p-actions]="setTableRowActions"
+            [p-columns]="setcolumns"
+            [p-items]="item.scripts"
+            p-hide-detail="true"
+            p-hide-select-all="true"
+            p-hide-columns-manager="true"
+            p-infinite-scroll="true"
+            p-sort="true"
+            [p-actions-right]="true" />
+        </div>
+      </ng-template>
+    </po-list-view>
+  </div>
+  
+  <po-modal #modal_1
+    p-title={{modal_1_title}}
+    [p-primary-action]="modal_1_confirm"
+    [p-secondary-action]="modal_1_close">
+    <form #queryForm="ngForm" class="po-row">
+      <po-select
+        class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+        name="po_schedule"
+        [p-label]="lbl_schedule"
+        p-required="true"
+        [(ngModel)]="script.scheduleId"
+        [p-options]="listSchedule">
+      </po-select>
+      
+      <po-input
+        class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+        name="po_scriptName"
+        [p-label]="lbl_scriptName"
+        p-required="true"
+        [(ngModel)]="script.name">
+      </po-input>
+      
+      <po-textarea
+        class="po-textarea po-sm-12 po-md-12 po-lg-12 po-xl-12 script-text removeBorder padding-0 textarea"
+        name="po_scriptQuery"
+        [p-label]="lbl_scriptQuery"
+        [(ngModel)]="script.script"
+        p-rows="10">
+      </po-textarea>
+      
+      <po-modal-footer class="modal-footer">
+        <div class="po-row footer">
+          <po-button p-label="Cancelar" (p-click)="modal_1_close()"></po-button>
+          <po-button p-label="Confirmar" (p-click)="modal_1_confirm()" p-kind="primary"></po-button>
+        </div>
+      </po-modal-footer>
+    </form>
+  </po-modal>
+  
+  <po-modal #modal_2
+    p-title="Deseja realmente excluir esta rotina?"
+    [p-primary-action]="modal_2_confirm"
+    [p-secondary-action]="modal_2_close">
+    <po-modal-footer class="modal-footer">
+      <div class="po-row footer">
+        <po-button p-label="Cancelar" (p-click)="modal_2_close()"></po-button>
+        <po-button p-label="Remover" (p-click)="modal_2_confirm()" p-kind="primary"></po-button>
+      </div>
+    </po-modal-footer>
+  </po-modal>
+</po-page-list>

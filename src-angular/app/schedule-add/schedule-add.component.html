@@ -1,0 +1,108 @@
+<po-page-list p-title = "{{ operation }}">
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  <form #scheduleForm="ngForm">
+    <div class="form-group po-row">
+      <po-input
+          class="form-control po-sm-6 po-md-6 po-lg-6 po-xl-6"
+          name="po_name"
+          [(ngModel)]="schedule.name"
+          [p-label]="lbl_name"
+          p-required="true">
+      </po-input>
+      <po-select
+          class="form-control po-sm-6 po-md-6 po-lg-6 po-xl-6"
+          name="po_workspaceId"
+          (p-change)="updateStandardParameters()"
+          [(ngModel)]="schedule.workspaceId"
+          [p-label]="lbl_workspaceId"
+          [p-options]="listProjects"
+          p-required="true">
+      </po-select>
+    </div>
+    
+    <div class="form-group po-row vertical-align">
+      <po-multiselect
+        class="form-control po-md-6 po-lg-6"
+        name="po_execution_windows"
+        [(ngModel)]="schedule.windows"
+        [p-label]="lbl_windows"
+        [p-options]="_CNST_EXECUTION_WINDOWS"
+        p-required="true"
+        p-hide-select-all="true"
+        p-sort="true">
+      </po-multiselect>
+      <po-checkbox
+        class="form-control vertical-align po-md-6 po-lg-6"
+        name="po_enabled"
+        [(ngModel)]="schedule.enabled"
+        [p-label]="lbl_enabled"
+        p-size="medium">
+      </po-checkbox>
+    </div>
+    
+    <div class="po-row">
+      <po-input name="filename" class="form-control po-md-6 po-lg-6" [p-label]="lbl_GDZipFilename" p-required="true" [(ngModel)]="schedule.GDZipFilename"></po-input>
+      <po-select
+        class="form-control po-md-6 po-lg-6"
+        name="extension"
+        [(ngModel)]="schedule.GDZipExtension"pricedescricaocompleta
+        [p-label]="lbl_GDZipExtension"
+        [p-options]="_CNST_EXTENSION"
+        p-required="true">
+      </po-select> 
+    </div>
+    
+    <div class="po-row vertical-align conf-row">
+      <div class="po-md-6 po-lg-6 flex footer">
+        <span>{{ lbl_fileFolder }}</span>
+        <po-input class="conf-select grow" name="po_fileFolder" [(ngModel)]="schedule.fileFolder" [p-disabled]="true"></po-input>
+        <po-button
+          (p-click)="getFolder()"
+          p-icon="po-icon-folder"
+          p-size="medium"
+        />
+      </div>
+      <div class="po-md-6 po-lg-6 flex footer">
+        <span>{{ lbl_fileFolderWildcard }}</span>
+        <po-input class="grow" name="po_fileFolderWildcard" [(ngModel)]="schedule.fileFolderWildcard"></po-input>
+      </div>
+    </div>
+    
+    <div class="po-row">
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Parâmetros SQL</span>
+      <span class="subtitle po-sm-11 po-md-11 po-lg-11 po-xl-11">Parâmetros das consultas de extração</span>
+    </div>
+    
+    <div class="po-row padding-button">
+      <po-button class="po-button removeBorder" p-size="medium" p-label="Novo parâmetro" (p-click)="onBeforeInsertSQL()" p-kind="primary" />
+    </div>
+    
+    <po-grid #po_grid_sql
+      class="form-control"
+      [p-data]="schedule.SQLParameters"
+      [p-columns]="po_grid_config_sql"
+      [p-row-actions]="po_gridActionsSQL">
+    </po-grid>
+    
+    <div class="po-row grid-title">
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Parâmetros ETL</span>
+      <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">Parâmetros das consultas do ETL</span>
+    </div>
+    
+    <div class="po-row padding-button">
+      <po-button class="po-button removeBorder" p-size="medium" p-label="Novo parâmetro" (p-click)="onBeforeInsertETL()" p-kind="primary" />
+    </div>
+    
+    <po-grid #po_grid_etl
+      class="form-control"
+      [p-data]="schedule.ETLParameters"
+      [p-columns]="po_grid_config_etl"
+      [p-row-actions]="po_gridActionsETL">
+    </po-grid>
+    
+    <div class="po-row footer">
+      <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Voltar" (p-click)="goToSchedules()" />
+      <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Salvar" (p-click)="saveSchedule()" p-kind="primary" />
+    </div>
+  </form>
+</po-page-list>

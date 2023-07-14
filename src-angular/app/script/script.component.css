@@ -1,0 +1,38 @@
+.modal-footer {
+  width: 100%;
+}
+
+.textarea {
+  background: #FFFFFF;
+}
+
+.footer {
+  justify-content: right;
+}
+
+.btn-new{
+    margin-left: 0%;
+    width: 130px;
+}
+
+.btn-export{
+    margin-right: 0%;
+    width: 130px;
+}
+
+.export{
+    text-align: right;
+}
+
+.script-text{
+    margin: 10px;
+}
+
+.list-project-empty{
+    text-align: center;
+    background-color: white;
+    border-top: 2px solid #ceeaf2;
+    margin-top: 24px;
+    line-height: 50px;
+    font-weight: bold;
+}

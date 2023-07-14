@@ -1,0 +1,53 @@
+<po-page-list p-title="Cadastro de Ambientes">
+  
+  <div class="po-row">
+    <po-button class="padding-button" p-label="Adicionar" p-icon="po-icon po-icon-plus" (p-click)="insertProject()" p-kind="primary"/>
+  </div>
+  
+  <po-list-view p-property-title="name" [p-items]="projects" [p-actions]="this.setoptions()">
+    <ng-template p-list-view-content-template let-item>
+      <div class="po-row">
+        <po-info class="po-md-3" p-label="Ambiente" [p-value]="item.GDWorkspaceId" />
+        <po-info class="po-md-3" p-label="Graph" [p-value]="item.GDProcessGraph" />
+        <po-info class="po-md-3" p-label="Banco de Dados" [p-value]="item.databaseName" />
+        <po-info class="po-md-3" p-label="Contratação" [p-value]="item.contractType" />
+      </div>
+    </ng-template>
+  </po-list-view>
+  
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  
+  <po-modal #modal_1
+    p-title="Preencha abaixo o produto contratado pelo cliente"
+    [p-primary-action]="modal_1_confirm"
+    [p-secondary-action]="modal_1_close"
+    p-size="auto"
+    p-hide-close="true"
+    p-click-out="true">
+    <form #projectForm="ngForm">
+      <po-select
+        class="form-control po-md-6"
+        name="po_contractType"
+        [(ngModel)]="contractType"
+        p-label="Modalidade de Contratação"
+        [p-options]="_CNST_MODALIDADE_CONTRATACAO"
+        p-required="true">
+      </po-select>
+      <po-input name="po_contractCode" class="form-control po-md-6" p-label="Código T do Cliente" p-required="true" [(ngModel)]="contractCode" ></po-input>
+    </form>
+    <po-modal-footer>
+      <po-button p-label="Fechar" (p-click)="modal_1_close()"></po-button>
+      <po-button p-label="Confirmar" (p-click)="modal_1_confirm()" p-kind="primary" [p-disabled]="!projectForm.valid"></po-button>
+    </po-modal-footer>
+  </po-modal>
+  
+  <po-modal #modal_2
+    p-title="Deseja realmente excluir este ambiente?"
+    [p-primary-action]="modal_2_confirm"
+    [p-secondary-action]="modal_2_close">
+    <po-modal-footer>
+        <po-button p-label="Fechar" (p-click)="modal_2_close()"></po-button>
+        <po-button p-label="Confirmar" (p-click)="modal_2_confirm()" p-kind="primary"></po-button>
+    </po-modal-footer>
+  </po-modal> 
+</po-page-list>

@@ -1,0 +1,27 @@
+<po-page-list p-title="Cadastro de Banco de Dados">
+  
+  <div class="po-row">
+    <po-button class="padding-button" p-label="Adicionar" p-icon="po-icon po-icon-plus" (p-click)="addDatabase()" p-kind="primary"/>
+  </div>
+  
+  <po-list-view p-property-title="name" [p-items]="databases" [p-actions]="this.setoptions()">
+    <ng-template p-list-view-content-template let-item>
+      <div class="po-row">
+        <po-info class="po-md-4" p-label="Driver" [p-value]="item.driverClass" />
+        <po-info class="po-md-8" p-label="URL" [p-value]="item.driverPath" />
+      </div>
+    </ng-template>
+  </po-list-view>
+  
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  
+  <po-modal #modal_1
+    p-title="Deseja realmente excluir este Banco de Dados?"
+    [p-primary-action]="modal_1_confirm"
+    [p-secondary-action]="modal_1_close">
+    <po-modal-footer>
+      <po-button p-label="Fechar" (p-click)="modal_1_close()"></po-button>
+      <po-button p-label="Confirmar" (p-click)="modal_1_confirm()" p-kind="primary"></po-button>
+    </po-modal-footer>
+  </po-modal>
+</po-page-list>

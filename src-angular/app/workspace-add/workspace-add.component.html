@@ -1,0 +1,254 @@
+<po-page-list p-title = "{{ operation }}">
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  <form #projectForm="ngForm">
+    <po-container class="padding-basic">
+      <div class="po-row">
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">1 / 5 - Informações da Oferta</span>
+      </div>
+      <div class="po-row">
+        <po-select
+          (p-change)="onChangeContract()"
+          class="form-control po-md-6 po-lg-6"
+          name="po_modalidadeContratacao"
+          [(ngModel)]="project.contractType"
+          [p-label]="lbl_contractType"
+          [p-options]="_CNST_MODALIDADE_CONTRATACAO"
+          p-required="true">
+        </po-select>
+        <po-select
+          class="form-control po-md-6 po-lg-6"
+          name="po_erp"
+          [p-label]="lbl_erp"
+          (p-change)="onChangeERP($event)"
+          [(ngModel)]="project.erp"
+          [p-options]="_CNST_ERP"
+          p-required="true">
+        </po-select>
+      </div>
+      <div class="po-row">
+        <po-input
+          name="po_codigot"
+          class="form-control po-md-6 po-lg-6" 
+          [p-label]="lbl_contractCode"
+          [(ngModel)]="project.contractCode"
+          [p-required]="true">
+        </po-input>
+        <po-select
+          class="form-control po-md-6 po-lg-6"
+          name="po_modulo"
+          [p-label]="lbl_module"
+          [(ngModel)]="project.module"
+          [p-options]="_CNST_MODULO"
+          p-required="true"
+          [p-disabled]="((project.erp === null) || (_CNST_MODULO.length == 1))">
+        </po-select>
+      </div>
+      <div class="po-row">
+        <po-select
+          class="form-control po-md-6 po-lg-6 m-left"
+          name="po_origem"
+          [p-label]="lbl_source"
+          [(ngModel)]="project.source"
+          [p-options]="_CNST_ORIGEM"
+          p-required="true">
+        </po-select>
+      </div>
+    </po-container>
+    
+    <po-container class="padding-basic">
+      <div class="po-row">
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">2 / 5 - Informações da Plataforma GoodData</span>
+      </div>
+      <div class="po-row">
+        <po-input
+          class="form-control po-md-6 po-lg-6"
+          name="po_user"
+          p-icon="po-icon-user"
+          [p-label]="lbl_GDUsername"
+          [(ngModel)]="project.GDUsername"
+          p-required="true">
+        </po-input>
+        <po-input
+          class="form-control po-md-6 po-lg-6"
+          name="po_dominio"
+          p-icon="po-icon-user"
+          [p-label]="lbl_GDEnvironment"
+          [(ngModel)]="project.GDEnvironment"
+          p-required="true">
+        </po-input>
+      </div>
+      <div class="po-row vertical-align-end">
+        <po-password
+          class="form-control po-md-6 po-lg-6"
+          name="po_password"
+          [p-label]="lbl_GDPassword"
+          [(ngModel)]="project.GDPassword"
+          p-required="true"
+          (keydown.enter)="enterPassword($event)">
+        </po-password>
+        <po-button
+          class="po-md-6 po-lg-6 padding-button"
+          p-label="Carregar Projetos"
+          [p-disabled]="( project.GDUsername === undefined ) || ( project.GDPassword === undefined ) ||
+                        ( project.GDUsername === '' ) || ( project.GDPassword === '' )"
+          (p-click)="getProjects(this.project.GDUsername, this.project.GDPassword, this.project.GDEnvironment, false).subscribe()">
+        </po-button>
+      </div>
+      <div class="po-row">
+        <po-select #po_name
+          (p-change)="onChangeProject().subscribe()"
+          class="form-control po-md-6 po-lg-6"
+          name="projectId"
+          [(ngModel)]="project.GDWorkspaceId"
+          [p-label]="lbl_GDWorkspaceId"
+          [p-options]="listProjects"
+          p-required="true"
+          [p-disabled]="listProjects[0] === undefined">
+        </po-select>
+        <po-input name="uploadUrl" class="form-control po-md-6 po-lg-6" [p-label]="lbl_GDWorkspaceUploadURL" p-required [(ngModel)]="project.GDWorkspaceUploadURL" [p-disabled]="project.GDWorkspaceId === undefined"></po-input>
+      </div>
+      <div class="po-row">
+        <po-select
+          (p-change)="onChangeProcess()"
+          class="form-control po-md-6 po-lg-6"
+          name="process"
+          [(ngModel)]="project.GDProcessId"
+          [p-label]="lbl_GDProcessId"
+          [p-options]="listProcess"
+          p-required="true"
+          [p-disabled]="project.GDWorkspaceId === null">
+        </po-select> 
+        <po-select
+          class="form-control po-md-6 po-lg-6"
+          name="graph"
+          [(ngModel)]="project.GDProcessGraph"
+          [p-label]="lbl_GDProcessGraph"
+          [p-options]="listGraph"
+          p-required="true"
+          [p-disabled]="project.GDProcessId === undefined">
+        </po-select> 
+      </div>
+    </po-container>
+    
+    <po-container class="padding-basic">
+      <div class="po-row">
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">3 / 5 - Informações do Banco de Dados</span>
+      </div>
+      <div class="po-row vertical-align align-left db-row footer">
+        <div>
+          <span>{{ lbl_databaseId }}</span>
+        </div>
+        <po-select
+          class="form-control db-select"
+          name="databaseId"
+          [(ngModel)]="project.databaseId"
+          (p-change)="onChangeDatabase($event)"
+          [p-options]="listDatabase"
+          p-required="false">
+        </po-select> 
+        <div class="form-control">
+          <po-button
+            (p-click)="newModalDatabase()"
+            p-icon="po-icon-plus"
+            p-size="medium"
+          />
+        </div>
+      </div>
+      <div class="po-row">
+        <ng-template [ngIf]="((project.databaseId != undefined) && (project.databaseId != _CNST_NO_OPTION_SELECTED.value))">
+          <div class="po-row">
+            <po-input class="po-md-6 po-lg-6" name="databaseUsername" [(ngModel)]="database.username"  p-label="Usuário" [p-disabled]="true"></po-input>
+            <po-input class="po-md-6 po-lg-6" name="databaseType" [(ngModel)]="database.type" p-label="Tipo" [p-disabled]="true"></po-input>
+          </div>
+          <div class="po-row">
+            <po-password class="po-md-6 po-lg-6" name="databasePassword" [(ngModel)]="database.password" p-label="Senha" [p-disabled]="true"></po-password>
+            <po-input class="po-md-6 po-lg-6" name="databaseDriverName" [(ngModel)]="database.driverClass" p-label="Driver" [p-disabled]="true"></po-input>
+          </div>
+          <div class="po-row vertical-align-end">
+            <po-button
+              class="po-md-3 po-lg-3 padding-button"
+              (p-click)="testDatabaseConnection()"
+              p-label="Testar conexão"
+            />
+            <po-button
+              class="po-md-3 po-lg-3 padding-button"
+              (p-click)="openModalDatabase()"
+              p-label="Editar"
+            />
+            <po-input class="po-md-6 po-lg-6" name="databaseDriverURL" p-label="URL do Driver" [(ngModel)]="database.driverPath" [p-disabled]="true"></po-input>
+          </div>
+        </ng-template>
+      </div>
+    </po-container>
+    
+    <po-container class="padding-basic">
+      <div class="po-row">
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">4 / 5 - Informações do Java</span>
+      </div>
+      <div class="po-row vertical-align db-row footer">
+        <div>
+          <span>{{ lbl_javaId }}</span>
+        </div>
+        <po-select
+          class="form-control db-select"
+          name="javaId"
+          [(ngModel)]="project.javaId"
+          (p-change)="onChangeJava($event)"
+          [p-options]="listJava"
+          p-required="false">
+        </po-select> 
+        <div class="form-control">
+          <po-button
+            (p-click)="openModalJava()"
+            p-icon="po-icon-plus"
+            p-size="medium"
+          />
+        </div>
+      </div>
+      <ng-template [ngIf]="((project.javaId != undefined) && (project.javaId != _CNST_NO_OPTION_SELECTED.value))">
+        <div class="po-row">
+          <po-grid #javaParams
+            (keydown.enter)="focusParams()"
+            class="form-control po-md-12 po-lg-12"
+            [p-data]="listJavaParams"
+            [p-columns]="po_grid_config">
+          </po-grid>
+        </div>
+      </ng-template>
+    </po-container>
+    
+    <po-container class="padding-basic padding-bottom">
+      <div class="po-row vertical-align">
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">5 / 5 - Configurações finais</span>
+      </div>
+      <div class="po-row vertical-align">
+        <po-input
+          name="po_name"
+          class="form-control po-md-12 po-lg-12"
+          [p-label]="lbl_name"
+          [(ngModel)]="project.name"
+          [p-required]="true">
+        </po-input>
+      </div>
+      <div class="po-row footer">
+        <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Voltar" (p-click)="goToProjects()" />
+        <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Salvar" (p-click)="saveProject()" p-kind="primary" />
+      </div>
+    </po-container>
+    
+    <app-modal id="modal-database" *ngIf="showModalDatabase">
+      <app-database-add
+        [modal]="true"
+        [databaseObject]="database"
+        (closeModal)="closeModalDatabase($event)">
+      </app-database-add>
+    </app-modal>
+    
+    <app-modal id="modal-java" *ngIf="showModalJava">
+      <app-java-add
+        [modal]="true"
+        (closeModal)="closeModalJava($event)">
+      </app-java-add>
+    </app-modal>
+  </form>
+</po-page-list>

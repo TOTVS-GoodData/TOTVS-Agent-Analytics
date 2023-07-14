@@ -1,0 +1,8 @@
+<div class="po-wrapper">
+  <po-menu [p-menus]="menus">
+    <ng-template p-menu-header-template>
+    <h2 class="menu-title po-menu-item po-menu-icon-container po-menu-icon-label">{{ programName }} - {{ version }}</h2>
+    </ng-template>
+  </po-menu>
+  <router-outlet></router-outlet>
+</div>

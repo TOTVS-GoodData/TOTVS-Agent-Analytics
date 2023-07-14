@@ -1,0 +1,45 @@
+<po-page-list p-title="Monitor de Execução">
+  <po-table
+    class="executions"
+    p-container="shadow"
+    p-sort="true"
+    p-striped="true"
+    p-hide-columns-manager="true"
+    p-infinite-scroll="true"
+    [p-columns]="setColumns"
+    [p-actions]="setTableRowActions"
+    [p-actions-right]="true"
+    [p-items]="agentLog" />
+  
+  <po-modal #modal_1
+    p-click-out="true"
+    p-size="auto"
+    p-title="Detalhes da Execução">
+    <div class="details">
+      <po-table
+        class="gridDetails"
+        p-infinite-scroll="true"
+        p-hide-columns-manager="true"
+        [p-items]="details.messages"
+        [p-columns]="setDetailColumns">
+      </po-table>
+    </div>
+    <po-modal-footer class="modal-footer">
+      <div class="po-row footer">
+        <po-button p-label="Voltar" (p-click)="modal_1_close()" p-kind="primary"></po-button>
+      </div>
+    </po-modal-footer>
+  </po-modal>
+  
+  <po-modal #modal_2
+    p-title="Deseja realmente alterar o status da execução para cancelado?"
+    [p-primary-action]="modal_2_confirm"
+    [p-secondary-action]="modal_2_close">
+    <po-modal-footer class="modal-footer">
+      <div class="po-row footer">
+        <po-button p-label="Não" (p-click)="modal_2_close()"></po-button>
+        <po-button p-label="Sim" (p-click)="modal_2_confirm()" p-kind="primary"></po-button>
+      </div>
+    </po-modal-footer>
+  </po-modal>
+</po-page-list>
