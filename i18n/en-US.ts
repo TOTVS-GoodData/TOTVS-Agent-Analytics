@@ -20,12 +20,64 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     EXECUTE: 'Execute',
     NEW_PARAMETER: 'New parameter',
     YES_SIMPLIFIED: 'Y',
-    NO_SIMPLIFIED: 'N'
+    NO_SIMPLIFIED: 'N',
+    TEST_CONNECTION: 'Test Connection'
   },
   WORKSPACES: {
+    TITLE: 'Workspaces Management',
+    DELETE_CONFIRMATION: 'Are you sure you want to delete this workspace?',
     MESSAGES: {
       LOADING: 'Loading workspaces...',
       LOADING_ERROR: 'Error - An unexpected error has happened. Please try again.'
+    },
+    TABLE: {
+      WORKSPACE: 'Workspace',
+      GRAPH: 'Graph',
+      DATABASE: 'Database',
+      CONTRACT_TYPE: 'Contract Type'
+    }
+  },
+  DATABASES: {
+    TITLE: 'Databases Management',
+    NEW_DATABASE: 'New Database',
+    EDIT_DATABASE: 'Edit Database',
+    DELETE_CONFIRMATION: 'Are you sure you want to delete this database?',
+    TABLE: {
+      NAME: 'Configuration name',
+      TYPE: 'Database type',
+      DRIVER_CLASS: 'Driver class',
+      DRIVER_PATH: 'Driver path',
+      HOST_TYPE: 'Host type',
+      HOST_NAME: 'IP address',
+      PORT: 'Port',
+      DATABASE: 'Database',
+      SID: 'SID',
+      SERVICE_NAME: 'Service name',
+      INSTANCE: 'Database instance',
+      CONNECTION_STRING: 'Connection string',
+      USERNAME: 'Username',
+      PASSWORD: 'Password',
+      TEST_CONNECTION: 'Test Connection'
+    },
+    MESSAGES: {
+      LOADING: 'Loading databases...',
+      LOADING_OK: 'Databases loaded.',
+      LOADING_ERROR: 'Error - An unexpected error has happened. Please try again.',
+      SAVE: 'Saving database: ${p1}',
+      SAVE_OK: 'Database successfully saved!',
+      SAVE_ERROR: 'Error - An unexpected error has happened while saving database ${p1}. Please try again.',
+      DELETE: 'Deleting databasae: ${p1}',
+      DELETE_OK: 'Database successfully deleted!',
+      DELETE_ERROR: 'Error - An unexpected error has happened while deleting database ${p1}. Please try again.',
+      DELETE_ERROR_WORKSPACES: 'Error - Unable to delete this database, because there are workspaces using it.',
+      LOGIN: 'Testing database connection: ${p1}',
+      LOGIN_OK: 'Connection successfull!',
+      LOGIN_ERROR: 'Error - Connection with database \'${p1}\' failed. Check the fields and try again.',
+      LOGIN_WARNING: 'Warning - Database connections can only be tested with Electron.',
+      VALIDATE: 'Validating database...',
+      ERROR_INVALID_IP: 'Error - Invalid IP address. Please check it\'s type (ipv4 / ipv6 / hostname).',
+      ERROR_INVALID_PORT: 'Error - Invalid database port. Please check if it\'s number is between the valid range (1024 - 65536).',
+      PASSWORD_ENCRYPT: 'Criptografando senhas...',
     }
   },
   SCHEDULES: {

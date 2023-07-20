@@ -18,7 +18,7 @@ import { ScheduleService } from '../schedule/schedule-service';
 import { Schedule, Query, ScheduleQuery, Workspace, Database, JavaInputBuffer } from '../utilities/interfaces';
 import * as _constants from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
-import { TranslateServiceExtended, TranslationInput } from '../service/translate-service-extended';
+import { TranslationService, TranslationInput } from '../service/translation/translation-service';
 
 import { forkJoin } from 'rxjs';
 
@@ -76,7 +76,7 @@ export class QueryComponent implements OnInit {
     private _queryService: QueryService,
     private _scheduleService: ScheduleService,
     private _electronService: ElectronService,
-    private _translateService: TranslateServiceExtended,
+    private _translateService: TranslationService,
     private _utilities: Utilities
   ) {
     this._translateService.getTranslations([

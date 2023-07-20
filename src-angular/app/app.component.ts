@@ -11,7 +11,7 @@ import { ConfigurationService } from './configuration/configuration-service';
 import { Configuration, Schedule } from './utilities/interfaces';
 
 import { TranslateService } from '@ngx-translate/core';
-import { TranslateServiceExtended, TranslationInput } from './service/translate-service-extended';
+import { TranslationService, TranslationInput } from './service/translation/translation-service';
 
 import { map, switchMap, filter } from 'rxjs/operators';
 
@@ -33,7 +33,7 @@ export class AppComponent {
   constructor(
      private _electronService: ElectronService
     ,private _scheduleService: ScheduleService
-    ,private _translateService: TranslateServiceExtended
+    ,private _translateService: TranslationService
     ,private _configurationService: ConfigurationService
     ,private _utilities: Utilities
   ) {

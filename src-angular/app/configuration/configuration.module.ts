@@ -7,6 +7,7 @@ import { PoFieldModule } from '@po-ui/ng-components';
 import { PoPageModule, PoLoadingModule, PoButtonModule } from '@po-ui/ng-components';
 
 import { ConfigurationComponent } from './configuration.component';
+import { TranslationModule } from '../service/translation/translation.module';
 
 @NgModule({
     declarations: [
@@ -19,6 +20,7 @@ import { ConfigurationComponent } from './configuration.component';
         FormsModule,
       PoButtonModule,
         PoFieldModule,
+      TranslationModule,
         PoPageModule
     ],
     providers: []

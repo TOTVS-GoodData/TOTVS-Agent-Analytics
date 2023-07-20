@@ -26,14 +26,15 @@ import { SharedModule } from './shared/shared.module';
 import { AppComponent } from './app.component';
 
 import { WorkspaceService } from './workspace/workspace-service';
-import { TranslationService } from './service/translation-service';
-import { TranslateServiceExtended } from './service/translate-service-extended';
+
+import { CustomTranslationLoader } from './service/translation/custom-translation-loader';
+import { TranslationModule } from './service/translation/translation.module';
 
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 
 @NgModule({
   declarations: [
-    AppComponent, TranslateServiceExtended
+    AppComponent
   ],
   imports: [
     BrowserAnimationsModule,
@@ -55,10 +56,11 @@ import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
     SharedModule,
     PoNotificationModule,
     PoTableModule,
+    TranslationModule,
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,
-        useClass: TranslationService,
+        useClass: CustomTranslationLoader,
         deps: [HttpClient]
       }
      }),

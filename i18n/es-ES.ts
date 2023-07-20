@@ -20,12 +20,63 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     EXECUTE: 'Ejecutar',
     NEW_PARAMETER: 'Anadir parámetro',
     YES_SIMPLIFIED: 'S',
-    NO_SIMPLIFIED: 'N'
+    NO_SIMPLIFIED: 'N',
+    TEST_CONNECTION: 'Testar Conexión'
   },
   WORKSPACES: {
+    TITLE: 'Cadastro de Ambientes',
+    DELETE_CONFIRMATION: '¿Estás seguro que quieres borrar este ambiente?',
     MESSAGES: {
       LOADING: 'Cargando ambientes...',
       LOADING_ERROR: 'Error - Un error inesperado ocurrió. Por favor intenta otra vez.'
+    },
+    TABLE: {
+      WORKSPACE: 'Ambiente',
+      GRAPH: 'Graph',
+      DATABASE: 'Banco de Datos',
+      CONTRACT_TYPE: 'Tipo de Contratación'
+    }
+  },
+  DATABASES: {
+    TITLE: 'Cadastro de Bancos de Datos',
+    NEW_DATABASE: 'Novo Banco de Datos',
+    EDIT_DATABASE: 'Cambiar Banco de Datos',
+    DELETE_CONFIRMATION: '¿Estás seguro que quieres borrar este banco de datos?',
+    TABLE: {
+      NAME: 'Nombre de la configuración',
+      TYPE: 'Tipo de banco de datos',
+      DRIVER_CLASS: 'Classe del driver',
+      DRIVER_PATH: 'Camino del driver',
+      HOST_TYPE: 'Tipo de host',
+      HOST_NAME: 'Endereço IP',
+      PORT: 'Porta',
+      DATABASE: 'Banco de datos',
+      SID: 'SID',
+      SERVICE_NAME: 'Nombre del servicio',
+      INSTANCE: 'Instancia del banco de datos',
+      CONNECTION_STRING: 'String de conexión final',
+      USERNAME: 'Usuario',
+      PASSWORD: 'Contraseña'
+    },
+    MESSAGES: {
+      LOADING: 'Cargando bancos de datos...',
+      LOADING_OK: 'Bancos de datos cargados.',
+      LOADING_ERROR: 'Error - Un error inesperado ocurrió. Por favor intenta otra vez.',
+      SAVE: 'Gravando banco de dato: ${p1}',
+      SAVE_OK: 'Banco de dato gravado con éxito!',
+      SAVE_ERROR: 'Error - Un error inesperado ocurrió mientras gravación del banco de datos ${p1}. Por favor intenta otra vez.',
+      DELETE: 'Borrando banco de dato: ${p1}',
+      DELETE_OK: 'Banco de dato borrado con éxito!',
+      DELETE_ERROR: 'Error - Un error inesperado ocurrió mientras borro del banco de datos ${p1}. Por favor intenta otra vez.',
+      DELETE_ERROR_WORKSPACES: 'Error - No fue posible borrar este banco de datos, porqué existen ambientes lo utilizando.',
+      LOGIN: 'Probando conexión con banco de datos: ${p1}',
+      LOGIN_OK: 'Conexión con éxito!',
+      LOGIN_ERROR: 'Error - Conexión con banco de datos \'${p1}\' ha fallado. Mira los campos y intenta otra vez.',
+      LOGIN_WARNING: 'Atención - Conexión con banco de datos no pueden ser probada sin el Electron.',
+      VALIDATE: 'Validando informaciones del banco de datos...',
+      ERROR_INVALID_IP: 'Error - Endereço IP inválido. Por favor mira si el tipo informado esta correcto (ipv4 / ipv6 / hostname).',
+      ERROR_INVALID_PORT: 'Error - Porta del banco de datos inválida. Por favor mira si el numero esta en el range permitido (1024 - 65536).',
+      PASSWORD_ENCRYPT: 'Criptografando senhas...',
     }
   },
   SCHEDULES: {

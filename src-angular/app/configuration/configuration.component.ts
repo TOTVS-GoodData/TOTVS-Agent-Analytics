@@ -9,7 +9,7 @@ import { ConfigurationService } from './configuration-service';
 import { Configuration } from '../utilities/interfaces';
 import * as _constants from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
-import { TranslateServiceExtended, TranslationInput } from '../service/translate-service-extended';
+import { TranslationService, TranslationInput } from '../service/translation/translation-service';
 
 @Component({
   selector: 'app-configuration',
@@ -50,7 +50,7 @@ export class ConfigurationComponent implements OnInit {
   /*************************************************/
   constructor(
     private _configurationService: ConfigurationService,
-    private _translateService: TranslateServiceExtended,
+    private _translateService: TranslationService,
     private _utilities: Utilities,
     private _electronService: ElectronService
   ) {

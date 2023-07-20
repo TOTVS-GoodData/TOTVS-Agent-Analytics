@@ -1,16 +1,16 @@
-<po-page-list p-title="Cadastro de Ambientes">
+<po-page-list [p-title]="lbl_title">
   
   <div class="po-row">
-    <po-button class="padding-button" p-label="Adicionar" p-icon="po-icon po-icon-plus" (p-click)="insertProject()" p-kind="primary"/>
+    <po-button class="padding-button" [p-label]="lbl_add" p-icon="po-icon po-icon-plus" (p-click)="insertProject()" p-kind="primary"/>
   </div>
   
-  <po-list-view p-property-title="name" [p-items]="projects" [p-actions]="this.setoptions()">
+  <po-list-view p-property-title="name" [p-items]="projects" [p-actions]="setoptions">
     <ng-template p-list-view-content-template let-item>
       <div class="po-row">
-        <po-info class="po-md-3" p-label="Ambiente" [p-value]="item.GDWorkspaceId" />
-        <po-info class="po-md-3" p-label="Graph" [p-value]="item.GDProcessGraph" />
-        <po-info class="po-md-3" p-label="Banco de Dados" [p-value]="item.databaseName" />
-        <po-info class="po-md-3" p-label="Contratação" [p-value]="item.contractType" />
+        <po-info class="po-md-3" [p-label]="lbl_workspace" [p-value]="item.GDWorkspaceId" />
+        <po-info class="po-md-3" [p-label]="lbl_graph" [p-value]="item.GDProcessGraph" />
+        <po-info class="po-md-3" [p-label]="lbl_database" [p-value]="item.databaseName" />
+        <po-info class="po-md-3" [p-label]="lbl_contractType" [p-value]="item.contractType" />
       </div>
     </ng-template>
   </po-list-view>
@@ -42,12 +42,12 @@
   </po-modal>
   
   <po-modal #modal_2
-    p-title="Deseja realmente excluir este ambiente?"
+    [p-title]="lbl_deleteConfirmation"
     [p-primary-action]="modal_2_confirm"
     [p-secondary-action]="modal_2_close">
     <po-modal-footer>
-        <po-button p-label="Fechar" (p-click)="modal_2_close()"></po-button>
-        <po-button p-label="Confirmar" (p-click)="modal_2_confirm()" p-kind="primary"></po-button>
+        <po-button [p-label]="lbl_goBack" (p-click)="modal_2_close()"></po-button>
+        <po-button [p-label]="lbl_confirm" (p-click)="modal_2_confirm()" p-kind="primary"></po-button>
     </po-modal-footer>
   </po-modal> 
 </po-page-list>

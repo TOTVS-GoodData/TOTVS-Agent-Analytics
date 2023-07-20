@@ -5,7 +5,7 @@ import { ElectronService } from 'ngx-electronyzer';
 
 import { PoSelectOption, PoGridRowActions } from '@po-ui/ng-components';
 
-import { TranslateServiceExtended, TranslationInput } from '../service/translate-service-extended';
+import { TranslationService, TranslationInput } from '../service/translation/translation-service';
 
 import { WorkspaceService } from '../workspace/workspace-service';
 import { ScheduleService } from '../schedule/schedule-service';
@@ -35,10 +35,7 @@ const CNST_FIELD_NAMES: Array<any> = [
 })
 
 export class ScheduleAddComponent {
-  public CNST_MESSAGES: any = {
-     SCHEDULE_VALIDATE: 'Validando informações do agendamento...'
-    ,FOLDER_SELECT_WARNING: 'Aviso - Seleção de arquivos / diretórios não podem ser testadas sem o electron.'
-  };
+  public CNST_MESSAGES: any = {};
   
   private _CNST_NEW_PARAMETER_VALUE: string;
   private _CNST_ERP: Array<any>;
@@ -90,7 +87,7 @@ export class ScheduleAddComponent {
     private _workspaceService: WorkspaceService,
     private _scheduleService: ScheduleService,
     private _databaseService: DatabaseService,
-    private _translateService: TranslateServiceExtended,
+    private _translateService: TranslationService,
     private _electronService: ElectronService,
     private _utilities: Utilities,
     private _router: Router
@@ -130,8 +127,8 @@ export class ScheduleAddComponent {
     ]).subscribe((translations: any) => {
       this.po_grid_config_sql = [
         { property: 'name', label: translations['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.NAME'], width: 30, required: true, editable: true  },
-        { property: 'value', label: translations['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.VALUE'], width: 60, required: true, editable: true },
-        { property: 'sql', label: translations['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.SQL'], width: 10, required: true, editable: true }
+        { property: 'value', label: translations['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.VALUE'], width: 59, required: true, editable: true },
+        { property: 'sql', label: translations['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.SQL'], width: 11, required: true, editable: true }
       ];
       
       this.po_grid_config_etl = [

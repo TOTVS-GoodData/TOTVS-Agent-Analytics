@@ -20,12 +20,63 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     EXECUTE: 'Executar',
     NEW_PARAMETER: 'Novo parâmetro',
     YES_SIMPLIFIED: 'S',
-    NO_SIMPLIFIED: 'N'
+    NO_SIMPLIFIED: 'N',
+    TEST_CONNECTION: 'Testar Conexão'
   },
   WORKSPACES: {
+    TITLE: 'Cadastro de Ambientes',
+    DELETE_CONFIRMATION: ' Deseja realmente excluir este ambiente?',
     MESSAGES: {
       LOADING: 'Carregando ambientes...',
       LOADING_ERROR: 'Erro - Um erro inesperado ocorreu. Por favor tente novamente.'
+    },
+    TABLE: {
+      WORKSPACE: 'Ambiente',
+      GRAPH: 'Graph',
+      DATABASE: 'Banco de dados',
+      CONTRACT_TYPE: 'Contratação'
+    }
+  },
+  DATABASES: {
+    TITLE: 'Cadastro de Bancos de Dados',
+    NEW_DATABASE: 'Cadastrar Banco de Dados',
+    EDIT_DATABASE: 'Alterar Banco de Dados',
+    DELETE_CONFIRMATION: ' Deseja realmente excluir este banco de dados?',
+    TABLE: {
+      NAME: 'Nome da configuração',
+      TYPE: 'Tipo de banco de dados',
+      DRIVER_CLASS: 'Classe do driver',
+      DRIVER_PATH: 'Caminho do driver',
+      HOST_TYPE: 'Tipo de host',
+      HOST_NAME: 'Endereço IP',
+      PORT: 'Porta',
+      DATABASE: 'Banco de dados',
+      SID: 'SID',
+      SERVICE_NAME: 'Nome do serviço',
+      INSTANCE: 'Instância do banco de dados',
+      CONNECTION_STRING: 'String de conexão final',
+      USERNAME: 'Usuário',
+      PASSWORD: 'Senha'
+    },
+    MESSAGES: {
+      LOADING: 'Carregando bancos de dados...',
+      LOADING_OK: 'Bancos de dados carregados.',
+      LOADING_ERROR: 'Um erro inesperado ocorreu. Por favor tente novamente.',
+      SAVE: 'Gravando banco de dados: ${p1}',
+      SAVE_OK: 'Banco de dados salvo com sucesso!',
+      SAVE_ERROR: 'Um erro inesperado ocorreu ao salvar o banco de dados ${p1}. Por favor tente novamente.',
+      DELETE: 'Apagando banco de dados: ${p1}',
+      DELETE_OK: 'Banco de dados apagado com sucesso!',
+      DELETE_ERROR: 'Um erro inesperado ocorreu ao apagar o banco de dados ${p1}. Por favor tente novamente.',
+      DELETE_ERROR_WORKSPACES: 'Erro - Não foi possível apagar este banco de dados, pois existem ambientes atrelados á ele.',
+      LOGIN: 'Testando conexão com o banco de dados: ${p1}',
+      LOGIN_OK: 'Conexão efetuada com sucesso!',
+      LOGIN_ERROR: 'A conexão com o banco de dados ${p1} falhou. Verifique se as informações digitadas estão corretas.',
+      LOGIN_WARNING: 'Aviso - Conexões a banco de dados não podem ser testadas sem o electron.',
+      VALIDATE: 'Validando informações do banco de dados...',
+      ERROR_INVALID_IP: 'Erro - Endereço IP inválido. Verifique o tipo informado (ipv4 / ipv6 / hostname) e se o preenchimento está correto.',
+      ERROR_INVALID_PORT: 'Erro - Porta do banco de dados inválida. Verifique se a porta está no range permitido (1024 - 65536).',
+      PASSWORD_ENCRYPT: 'Criptografando senhas...',
     }
   },
   SCHEDULES: {

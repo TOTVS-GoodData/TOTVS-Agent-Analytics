@@ -7,7 +7,7 @@ import { ElectronService } from 'ngx-electronyzer';
 import { PoNotificationService } from '@po-ui/ng-components';
 import { PoNotification, PoToasterOrientation } from '@po-ui/ng-components';
 
-import { TranslateServiceExtended, TranslationInput } from '../service/translate-service-extended';
+import { TranslationService, TranslationInput } from '../service/translation/translation-service';
 
 import { Utilities } from '../utilities/utilities';
 import { AgentLog } from '../utilities/interfaces';
@@ -47,7 +47,7 @@ export class MonitorComponent implements OnInit {
 
   constructor(
     public _monitorService: MonitorService,
-    private _translateService: TranslateServiceExtended,
+    private _translateService: TranslationService,
     private _electronService: ElectronService,
     private _utilities: Utilities
   ) {

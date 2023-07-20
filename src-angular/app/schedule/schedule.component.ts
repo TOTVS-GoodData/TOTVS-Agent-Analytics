@@ -15,7 +15,7 @@ import * as _constants from '../utilities/constants-angular';
 import { Schedule } from '../utilities/interfaces';
 import { Utilities } from '../utilities/utilities';
 
-import { TranslateServiceExtended, TranslationInput } from '../service/translate-service-extended';
+import { TranslationService, TranslationInput } from '../service/translation/translation-service';
 
 @Component({
   selector: 'app-schedule',
@@ -47,7 +47,7 @@ export class ScheduleComponent implements OnInit {
   constructor(
     private _workspaceService: WorkspaceService,
     private _scheduleService: ScheduleService,
-    private _translateService: TranslateServiceExtended,
+    private _translateService: TranslationService,
     private _electronService: ElectronService,
     private _utilities: Utilities,
     private _router: Router

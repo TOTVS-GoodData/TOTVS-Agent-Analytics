@@ -1,6 +1,6 @@
-import { TranslateService, TranslateLoader } from '@ngx-translate/core';
+import { TranslateLoader } from '@ngx-translate/core';
 
-import { HttpService } from './http.service';
+import { HttpService } from '../http.service';
 import { HTTP_INTERCEPTORS, HttpClient, HttpClientModule } from '@angular/common/http';
 
 import { Observable , forkJoin, of } from 'rxjs';
@@ -21,7 +21,7 @@ class Translation {
   replacement: string[];
 }
 
-export class TranslationService implements TranslateLoader {
+export class CustomTranslationLoader implements TranslateLoader {
   constructor(private _httpService: HttpService) {
   }
   

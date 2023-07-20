@@ -14,7 +14,7 @@ import { WorkspaceService } from '../workspace/workspace-service';
 import { DatabaseService } from '../database/database-service';
 import { ScriptService } from './script-service';
 
-import { TranslateServiceExtended, TranslationInput } from '../service/translate-service-extended';
+import { TranslationService, TranslationInput } from '../service/translation/translation-service';
 
 import { ScheduleService } from '../schedule/schedule-service';
 import { Schedule, Script, ScheduleScript, Workspace, Database, JavaInputBuffer } from '../utilities/interfaces';
@@ -74,7 +74,7 @@ export class ScriptComponent implements OnInit {
     private _scriptService: ScriptService,
     private _scheduleService: ScheduleService,
     private _electronService: ElectronService,
-    private _translateService: TranslateServiceExtended,
+    private _translateService: TranslationService,
     private _utilities: Utilities
   ) {
     this._translateService.getTranslations([

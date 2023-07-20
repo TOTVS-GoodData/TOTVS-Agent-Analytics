@@ -1,4 +1,4 @@
-<po-page-list p-title = "{{ operation }}">
+<po-page-list [p-title]="lbl_title">
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
   <form #dataBaseForm="ngForm">
     <po-container>
@@ -117,7 +117,7 @@
         </po-password>
         <po-button class="po-sm-4 po-md-4 po-lg-4 po-xl-4 padding-button"
           (p-click)="testDatabaseConnection()"
-          p-label="Testar Conexão"
+          [p-label]="lbl_testConnection"
           p-small="false"
           p-icon="po-icon-database"
           p-disabled="  ((database.type === null)
@@ -130,8 +130,8 @@
         </po-button>
       </div>
       <div class="po-row footer">
-        <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Voltar" (p-click)="goBack()" />
-        <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Salvar" (p-click)="saveDatabase()" p-kind="primary" />
+        <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_goBack" (p-click)="goBack()" />
+        <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_save" (p-click)="saveDatabase()" p-kind="primary" />
       </div>
     </po-container>
   </form>

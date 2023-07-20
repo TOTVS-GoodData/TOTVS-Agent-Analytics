@@ -6,11 +6,12 @@ import { ElectronService } from 'ngx-electronyzer';
 import { WorkspaceService } from '../workspace/workspace-service';
 import { Database } from '../utilities/interfaces';
 import { DatabaseService } from '../database/database-service';
-import { CNST_DATABASE_MESSAGES } from '../database/database-messages';
 import * as _constants from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
 
-import { Observable } from 'rxjs';
+import { TranslationService, TranslationInput } from '../service/translation/translation-service';
+
+import { Observable, of, map } from 'rxjs';
 
 const CNST_FIELD_NAMES: Array<any> = [
    { key: 'name', value: 'Nome da configuração*' }
@@ -38,12 +39,8 @@ export class DataBaseAddComponent {
   @Input() databaseObject: Database = null;
   @Output() closeModal: EventEmitter<Database> = new EventEmitter<Database>();
   
-  public CNST_MESSAGES: any = {
-     DATABASE_VALIDATE: 'Validando informações do banco de dados...'
-    ,DATABASE_INVALID_IP: 'Endereço IP inválido. Verifique o tipo informado (ipv4 / ipv6 / hostname) e se o preenchimento está correto.'
-    ,DATABASE_INVALID_PORT: 'Porta do banco de dados inválida. Verifique se a porta está no range permitido (1024 - 65536).'
-    ,DATABASE_PASSWORD_ENCRYPT: 'Criptografando senhas...'
-  };
+  public CNST_MESSAGES: any = {};
+  protected CNST_FIELD_NAMES: Array<any> = [];
   
   /*************************************************/
   /* MAPEAMENTO DOS NOMES DOS CAMPOS DO FORMULÁRIO */
@@ -60,15 +57,17 @@ export class DataBaseAddComponent {
   protected lbl_connectionString: string;
   protected lbl_username: string;
   protected lbl_password: string;
+  protected lbl_testConnection: string;
+  protected lbl_save: string;
+  protected lbl_goBack: string;
   
   /*************************************************/
   /*************************************************/
   /*************************************************/
-  protected _CNST_FIELD_NAMES: any;
   protected _CNST_DATABASE_PORT_REGEX: any;
   protected _CNST_DATABASE_IPTYPES: any;
   protected _CNST_DATABASE_TYPES: any;
-  protected operation: string;
+  protected lbl_title: string;
   protected po_lo_text: any = { value: null };
   protected database: Database = new Database();
   protected schema: string = null;
@@ -76,56 +75,93 @@ export class DataBaseAddComponent {
   protected regexPattern: string = null;
   
   constructor(
-     private _workspaceService: WorkspaceService
-    ,private _databaseService: DatabaseService
-    ,private _electronService: ElectronService
-    ,private _utilities: Utilities
-    ,private _router: Router
+    private _workspaceService: WorkspaceService,
+    private _databaseService: DatabaseService,
+    private _electronService: ElectronService,
+    private _translateService: TranslationService,
+    private _utilities: Utilities,
+    private _router: Router
   ) {
-    this._CNST_FIELD_NAMES = CNST_FIELD_NAMES;
-    this.lbl_name = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'name'; }).value;
-    this.lbl_type = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'type'; }).value;
-    this.lbl_driverClass = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'driverClass'; }).value;
-    this.lbl_driverPath = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'driverPath'; }).value;
-    this.lbl_ipType = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'ipType'; }).value;
-    this.lbl_ip = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'ip'; }).value;
-    this.lbl_port = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'port'; }).value;
-    this.lbl_schema = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'schema'; }).value;
-    this.lbl_instance = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'instance'; }).value;
-    this.lbl_connectionString = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'connectionString'; }).value;
-    this.lbl_username = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'username'; }).value;
-    this.lbl_password = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'password'; }).value;
     this._CNST_DATABASE_PORT_REGEX = _constants.CNST_DATABASE_PORT_REGEX;
     this._CNST_DATABASE_IPTYPES = _constants.CNST_DATABASE_IPTYPES.map((db: any) => {
       return { label: db.label, value: db.value }
     });
+      
     this._CNST_DATABASE_TYPES = _constants.CNST_DATABASE_TYPES.map((db: any) => {
       return { label: db.label, value: db.value }
     });
-    let nav: Navigation = this._router.getCurrentNavigation();
-    if ((nav != undefined) && (nav.extras.state)) {
-      Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
-        this.database[p] = nav.extras.state[p];
-      });
-    }
-    this.regexPattern = (this.database.ipType ? _constants.CNST_DATABASE_IPTYPES.find((db: any) => {
-      return (db.value == this.database.ipType)
-    }).pattern : null);
-    this.schema = (this.database.schema ? this.database.schema : this.database.sid);
-    if (this.database.id != null) {
-      this.operation = 'Alterar Banco de dados';
-      this.editPassword = this.database.password;
-    } else {
-      this.operation = 'Cadastrar Banco de Dados';
-      this.editPassword = null;
-    }
+      
+    this._translateService.getTranslations([
+      new TranslationInput('BUTTONS.TEST_CONNECTION', []),
+      new TranslationInput('BUTTONS.GO_BACK', []),
+      new TranslationInput('BUTTONS.SAVE', []),
+      new TranslationInput('DATABASES.NEW_DATABASE', []),
+      new TranslationInput('DATABASES.EDIT_DATABASE', []),
+      new TranslationInput('DATABASES.TABLE.NAME', []),
+      new TranslationInput('DATABASES.TABLE.TYPE', []),
+      new TranslationInput('DATABASES.TABLE.DRIVER_CLASS', []),
+      new TranslationInput('DATABASES.TABLE.DRIVER_PATH', []),
+      new TranslationInput('DATABASES.TABLE.HOST_TYPE', []),
+      new TranslationInput('DATABASES.TABLE.HOST_NAME', []),
+      new TranslationInput('DATABASES.TABLE.PORT', []),
+      new TranslationInput('DATABASES.TABLE.DATABASE', []),
+      new TranslationInput('DATABASES.TABLE.INSTANCE', []),
+      new TranslationInput('DATABASES.TABLE.CONNECTION_STRING', []),
+      new TranslationInput('DATABASES.TABLE.USERNAME', []),
+      new TranslationInput('DATABASES.TABLE.PASSWORD', []),
+      new TranslationInput('DATABASES.MESSAGES.SAVE_OK', []),
+      new TranslationInput('DATABASES.TABLE.INSTANCE', [])
+    ]).subscribe((translations: any) => {
+      this.lbl_testConnection = translations['BUTTONS.TEST_CONNECTION'];
+      this.lbl_goBack = translations['BUTTONS.GO_BACK'];
+      this.lbl_save = translations['BUTTONS.SAVE'];
+      
+      this.lbl_name = translations['DATABASES.TABLE.NAME'] + '*';
+      this.lbl_type = translations['DATABASES.TABLE.TYPE'] + '*';
+      this.lbl_driverClass = translations['DATABASES.TABLE.DRIVER_CLASS'] + '*';
+      this.lbl_driverPath = translations['DATABASES.TABLE.DRIVER_PATH'] + '*';
+      this.lbl_ipType = translations['DATABASES.TABLE.HOST_TYPE'] + '*';
+      this.lbl_ip = translations['DATABASES.TABLE.HOST_NAME'] + '*';
+      this.lbl_port = translations['DATABASES.TABLE.PORT'] + '*';
+      this.lbl_schema = translations['DATABASES.TABLE.DATABASE'] + '*';
+      this.lbl_instance = translations['DATABASES.TABLE.INSTANCE'];
+      this.lbl_connectionString = translations['DATABASES.TABLE.CONNECTION_STRING'] + '*';
+      this.lbl_username = translations['DATABASES.TABLE.USERNAME'] + '*';
+      this.lbl_password = translations['DATABASES.TABLE.PASSWORD'] + '*';
+      
+      this.CNST_MESSAGES = {
+        SAVE_OK: translations['DATABASES.MESSAGES.SAVE_OK'],
+        VALIDATE: translations['DATABASES.MESSAGES.VALIDATE'],
+        ERROR_INVALID_IP: translations['DATABASES.MESSAGES.ERROR_INVALID_IP'],
+        ERROR_INVALID_PORT: translations['DATABASES.MESSAGES.ERROR_INVALID_PORT'],
+        PASSWORD_ENCRYPT: translations['DATABASES.MESSAGES.PASSWORD_ENCRYPT']
+      };
+      
+      let nav: Navigation = this._router.getCurrentNavigation();
+      if ((nav != undefined) && (nav.extras.state)) {
+        Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
+          this.database[p] = nav.extras.state[p];
+        });
+      }
+      this.regexPattern = (this.database.ipType ? _constants.CNST_DATABASE_IPTYPES.find((db: any) => {
+        return (db.value == this.database.ipType)
+      }).pattern : null);
+      this.schema = (this.database.schema ? this.database.schema : this.database.sid);
+      if (this.database.id != null) {
+        this.lbl_title = translations['DATABASES.EDIT_DATABASE'];
+        this.editPassword = this.database.password;
+      } else {
+        this.lbl_title = translations['DATABASES.NEW_DATABASE'];
+        this.editPassword = null;
+      }
+    });
   }
   
   protected ngOnChanges(): void {
     if (this.databaseObject) {
       this.database = this.databaseObject;
       this.editPassword = this.database.password;
-      this.operation = 'Alterar Banco de dados';
+      this.lbl_title = 'Alterar Banco de dados';
     }
   }
   
@@ -217,20 +253,25 @@ export class DataBaseAddComponent {
   
   protected saveDatabase(): void {
       if (this.validateDatabase()) {
-        if ((this._electronService.isElectronApp) && (this.editPassword != this.database.password)) {
-          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.DATABASE_PASSWORD_ENCRYPT);
-          this.po_lo_text = { value: this.CNST_MESSAGES.DATABASE_PASSWORD_ENCRYPT };
-          this.database.password = this._electronService.ipcRenderer.sendSync('encrypt', this.database.password);
-        }
-        
-        this.po_lo_text = { value: CNST_DATABASE_MESSAGES.DATABASE_SAVE };
-        this._databaseService.saveDatabase(this.database).subscribe((b: boolean) => {
-          this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, CNST_DATABASE_MESSAGES.DATABASE_SAVE_OK);
-          this.po_lo_text = { value: null };
-          this.goBack(this.database);
-        }, (err: any) => {
-          this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, CNST_DATABASE_MESSAGES.DATABASE_DELETE_ERROR, err);
-          this.po_lo_text = { value: null };
+        this._translateService.getTranslations([
+          new TranslationInput('DATABASE.MESSAGES.SAVE', [this.database.name]),
+          new TranslationInput('DATABASE.MESSAGES.SAVE_ERROR', [this.database.name])
+        ]).subscribe((translations: any) => {
+          if ((this._electronService.isElectronApp) && (this.editPassword != this.database.password)) {
+            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.PASSWORD_ENCRYPT);
+            this.po_lo_text = { value: this.CNST_MESSAGES.PASSWORD_ENCRYPT };
+            this.database.password = this._electronService.ipcRenderer.sendSync('encrypt', this.database.password);
+          }
+          
+          this.po_lo_text = { value: translations['DATABASE.MESSAGES.SAVE'] };
+          this._databaseService.saveDatabase(this.database).subscribe((b: boolean) => {
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+            this.po_lo_text = { value: null };
+            this.goBack(this.database);
+          }, (err: any) => {
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['DATABASE.MESSAGES.SAVE_ERROR'], err);
+            this.po_lo_text = { value: null };
+          });
         });
       }
     //}, (err: any) => {
@@ -239,8 +280,8 @@ export class DataBaseAddComponent {
   }
   
   private validateDatabase(): boolean {
-    this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.DATABASE_VALIDATE);
-    this.po_lo_text = { value: this.CNST_MESSAGES.DATABASE_VALIDATE };
+    this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.VALIDATE);
+    this.po_lo_text = { value: this.CNST_MESSAGES.VALIDATE };
     let db: Database = new Database();
     let password: string = null;
     
@@ -273,18 +314,23 @@ export class DataBaseAddComponent {
     // Validação dos campos de formulário //
     if (propertiesNotDefined.length > 0) {
       this.po_lo_text = { value: null };
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, 'Campo obrigatório "' + this._CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value + '" não preenchido.');
+      let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
+      this._translateService.getTranslations([
+        new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName])
+      ]).subscribe((translations: any) => {
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED']);
+      });
       return false;
     } else {
       let regexIp = new RegExp(this.regexPattern);
       let regexPort = new RegExp(this._CNST_DATABASE_PORT_REGEX);
       if (!regexIp.test(this.database.ip)) {
         this.po_lo_text = { value: null };
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.DATABASE_INVALID_IP);
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.ERROR_INVALID_IP);
         return false;
       } else if (!regexPort.test(this.database.port)) {
         this.po_lo_text = { value: null };
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.DATABASE_INVALID_PORT);
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.ERROR_INVALID_PORT);
         return false;
       }
     }
@@ -294,7 +340,11 @@ export class DataBaseAddComponent {
   }
   
   public testDatabaseConnection(): boolean {
-    this.po_lo_text = { value: CNST_DATABASE_MESSAGES.DATABASE_LOGIN };
+    this._translateService.getTranslations([
+      new TranslationInput('DATABASE.LOGIN', [this.database.name])
+    ]).subscribe((translations: any) => {
+      this.po_lo_text = { value: translations['DATABASE.LOGIN'] };
+    });
     let decrypt: boolean = (this.editPassword == this.database.password) ? true : false;
     let b: boolean = this._databaseService.testConnection(decrypt, { ...this.database });
     this.po_lo_text = { value: null };

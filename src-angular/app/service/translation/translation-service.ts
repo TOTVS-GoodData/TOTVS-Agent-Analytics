@@ -16,10 +16,7 @@ export class TranslationInput {
 }
 
 @Pipe({name: 'translateExtended'})
-@Injectable({
-  providedIn: 'root'
-})
-export class TranslateServiceExtended extends TranslateService implements PipeTransform {
+export class TranslationService extends TranslateService implements PipeTransform {
   public transform(value: string): Observable<string> {
     let ti: TranslationInput[] = [new TranslationInput(value, [])];
     return this.getTranslations(ti).pipe(map((translations: any) => {
