@@ -1,6 +1,8 @@
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { HTTP_INTERCEPTORS, HttpClient, HttpClientModule } from '@angular/common/http';
+
 import { AppRoutingModule } from './app-routing.module';
 
 import { PoMenuModule } from '@po-ui/ng-components';
@@ -12,8 +14,6 @@ import { WorkspaceModule } from './workspace/workspace.module';
 import { WorkspaceAddModule } from './workspace-add/workspace-add.module';
 import { DataBaseModule } from './database/database.module';
 import { DataBaseAddModule } from './database-add/database-add.module';
-import { JavaModule } from './java/java.module'; 
-import { JavaAddModule } from './java-add/java-add.module';
 import { LogModule } from './log/log.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { ScheduleAddModule } from './schedule-add/schedule-add.module';
@@ -26,10 +26,14 @@ import { SharedModule } from './shared/shared.module';
 import { AppComponent } from './app.component';
 
 import { WorkspaceService } from './workspace/workspace-service';
+import { TranslationService } from './service/translation-service';
+import { TranslateServiceExtended } from './service/translate-service-extended';
+
+import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent, TranslateServiceExtended
   ],
   imports: [
     BrowserAnimationsModule,
@@ -41,7 +45,6 @@ import { WorkspaceService } from './workspace/workspace-service';
     WorkspaceAddModule,
     DataBaseModule,
     DataBaseAddModule,
-    JavaModule,
     LogModule,
     ScheduleModule,
     ScheduleAddModule,
@@ -52,7 +55,14 @@ import { WorkspaceService } from './workspace/workspace-service';
     SharedModule,
     PoNotificationModule,
     PoTableModule,
-    JavaAddModule
+    TranslateModule.forRoot({
+      loader: {
+        provide: TranslateLoader,
+        useClass: TranslationService,
+        deps: [HttpClient]
+      }
+     }),
+     HttpClientModule
   ],
   providers: [AppModule, WorkspaceService],
   bootstrap: [ AppComponent ]

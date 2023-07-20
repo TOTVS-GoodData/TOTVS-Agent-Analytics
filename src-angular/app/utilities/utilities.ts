@@ -74,7 +74,7 @@ export class Utilities {
   
   public async createNotification(type: any, message: string, errObj?: any): Promise<void> {
     let notification: PoNotification = {
-       message: (type.level == CNST_LOGLEVEL.ERROR.level ? 'Erro! - ' + message : message)
+       message: message
       ,orientation: PoToasterOrientation.Top
       ,duration: 4000
     };

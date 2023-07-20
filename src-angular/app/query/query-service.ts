@@ -186,7 +186,6 @@ export class QueryService {
           let javaInput: JavaInputBuffer = {
             workspace: null,
             database: exportDatabase,
-            java: null,
             schedule: null,
             queries: null,
             scripts: null

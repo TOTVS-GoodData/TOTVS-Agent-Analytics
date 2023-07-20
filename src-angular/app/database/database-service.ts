@@ -103,7 +103,6 @@ export class DatabaseService {
       let javaInput: JavaInputBuffer = {
         workspace: null,
         database: db,
-        java: null,
         schedule: null,
         queries: null,
         scripts: null

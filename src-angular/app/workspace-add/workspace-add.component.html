@@ -3,7 +3,7 @@
   <form #projectForm="ngForm">
     <po-container class="padding-basic">
       <div class="po-row">
-        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">1 / 5 - Informações da Oferta</span>
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">1 / 4 - Informações da Oferta</span>
       </div>
       <div class="po-row">
         <po-select
@@ -57,7 +57,7 @@
     
     <po-container class="padding-basic">
       <div class="po-row">
-        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">2 / 5 - Informações da Plataforma GoodData</span>
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">2 / 4 - Informações da Plataforma GoodData</span>
       </div>
       <div class="po-row">
         <po-input
@@ -132,7 +132,7 @@
     
     <po-container class="padding-basic">
       <div class="po-row">
-        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">3 / 5 - Informações do Banco de Dados</span>
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">3 / 4 - Informações do Banco de Dados</span>
       </div>
       <div class="po-row vertical-align align-left db-row footer">
         <div>
@@ -181,45 +181,9 @@
       </div>
     </po-container>
     
-    <po-container class="padding-basic">
-      <div class="po-row">
-        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">4 / 5 - Informações do Java</span>
-      </div>
-      <div class="po-row vertical-align db-row footer">
-        <div>
-          <span>{{ lbl_javaId }}</span>
-        </div>
-        <po-select
-          class="form-control db-select"
-          name="javaId"
-          [(ngModel)]="project.javaId"
-          (p-change)="onChangeJava($event)"
-          [p-options]="listJava"
-          p-required="false">
-        </po-select> 
-        <div class="form-control">
-          <po-button
-            (p-click)="openModalJava()"
-            p-icon="po-icon-plus"
-            p-size="medium"
-          />
-        </div>
-      </div>
-      <ng-template [ngIf]="((project.javaId != undefined) && (project.javaId != _CNST_NO_OPTION_SELECTED.value))">
-        <div class="po-row">
-          <po-grid #javaParams
-            (keydown.enter)="focusParams()"
-            class="form-control po-md-12 po-lg-12"
-            [p-data]="listJavaParams"
-            [p-columns]="po_grid_config">
-          </po-grid>
-        </div>
-      </ng-template>
-    </po-container>
-    
     <po-container class="padding-basic padding-bottom">
       <div class="po-row vertical-align">
-        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">5 / 5 - Configurações finais</span>
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">4 / 4 - Configurações finais</span>
       </div>
       <div class="po-row vertical-align">
         <po-input
@@ -242,13 +206,6 @@
         [databaseObject]="database"
         (closeModal)="closeModalDatabase($event)">
       </app-database-add>
-    </app-modal>
-    
-    <app-modal id="modal-java" *ngIf="showModalJava">
-      <app-java-add
-        [modal]="true"
-        (closeModal)="closeModalJava($event)">
-      </app-java-add>
     </app-modal>
   </form>
 </po-page-list>

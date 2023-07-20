@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 
 import { ElectronService } from 'ngx-electronyzer';
 
-import { DatabaseData, Workspace, Database , Java, Schedule, Query, Configuration } from '../utilities/interfaces';
+import { DatabaseData, Workspace, Database, Schedule, Query, Configuration } from '../utilities/interfaces';
 import * as _constants from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
 
@@ -32,22 +32,6 @@ export class WorkspaceService {
       return of(this._electronService.ipcRenderer.sendSync('getWorkspaces'));
     } else {
       return this._http.get<Workspace[]>(this._utilities.getLocalhostURL() + '/workspaces').pipe(
-      map((workspaces: Workspace[]) => {
-        this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_OK);
-        return workspaces;
-      }), catchError((err: any) => {
-        this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_ERROR, err);
-        throw err;
-      }));
-    }
-  }
-  
-  public getWorkspacesByJavaConfiguration(j: Java): Observable<Workspace[]> {
-    this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING);
-    if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getWorkspacesByJavaConfiguration', j));
-    } else {
-      return this._http.get<Workspace[]>(this._utilities.getLocalhostURL() + '/workspaces?javaId=' + j.id).pipe(
       map((workspaces: Workspace[]) => {
         this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_OK);
         return workspaces;

@@ -1,4 +1,4 @@
-<po-page-list p-title="Monitor de Execução">
+<po-page-list [p-title]="lbl_title">
   <po-table
     class="executions"
     p-container="shadow"
@@ -26,19 +26,7 @@
     </div>
     <po-modal-footer class="modal-footer">
       <div class="po-row footer">
-        <po-button p-label="Voltar" (p-click)="modal_1_close()" p-kind="primary"></po-button>
-      </div>
-    </po-modal-footer>
-  </po-modal>
-  
-  <po-modal #modal_2
-    p-title="Deseja realmente alterar o status da execução para cancelado?"
-    [p-primary-action]="modal_2_confirm"
-    [p-secondary-action]="modal_2_close">
-    <po-modal-footer class="modal-footer">
-      <div class="po-row footer">
-        <po-button p-label="Não" (p-click)="modal_2_close()"></po-button>
-        <po-button p-label="Sim" (p-click)="modal_2_confirm()" p-kind="primary"></po-button>
+        <po-button [p-label]="lbl_goBack" (p-click)="modal_1_close()" p-kind="primary"></po-button>
       </div>
     </po-modal-footer>
   </po-modal>

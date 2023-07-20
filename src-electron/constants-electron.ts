@@ -4,6 +4,7 @@ import { CNST_APPLICATION_ROOTDIR } from '../app';
 
 export const CNST_PROGRAM_PATH: string = CNST_APPLICATION_ROOTDIR;
 
+export const CNST_TMP_PATH: string = path.join(CNST_PROGRAM_PATH, 'tmp');
 export const CNST_DATABASE_PATH: string = path.join(CNST_PROGRAM_PATH, 'assets');
 export const CNST_DATABASE_NAME: string = path.join(CNST_DATABASE_PATH, 'db.json');
 export const CNST_DATABASE_NAME_DEV: string = path.join(CNST_DATABASE_PATH, 'dbDevelopment.json');

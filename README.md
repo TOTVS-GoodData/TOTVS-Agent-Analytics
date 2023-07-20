@@ -12,7 +12,29 @@ Executar o seguinte comando:
    npm install
 ```
 
-Após a instalação das dependências do projeto, executar o seguinte comando para subir a aplicação:
+Depois, acessar a pasta ```node_modules``` criada pelo comando anterior, e alterar o código fonte do programa ```auto-launch/dist/AutoLaunchWindows.js```.
+
+De:
+
+```powershell
+regKey = new Winreg({
+  hive: Winreg.HKCU,
+  key: '\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
+});
+```
+
+Para:
+
+```powershell
+regKey = new Winreg({
+  hive: Winreg.HKLM,
+  key: '\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
+});
+```
+
+Esta alteração é necessária pois esta dependência "auto-launch" não foi configurada para instalar pacotes do Windows de maneira global na máquina.
+
+Após a instalação das dependências do projeto e realizado o ajuste acima, executar o seguinte comando para subir a aplicação:
 
 ```powershell
    npm start
@@ -64,7 +86,8 @@ Por fim, neste ambiente de desenvolvimento, é possível testar qualquer funcion
 ## Geração de Instaladores - Windows (.exe) / Linux (.deb) / MacOS ()
 Executar um dos comandos abaixo, de acordo com o SO de destino:
 ```powershell
-   npm run release-windows
+   npm run release-windows-32
+   npm run release-windows-64
    npm run release-linux
    npm run release-mac
 ```
@@ -75,7 +98,8 @@ Vale lembrar que estes pacotes já serão atualizados automaticamente, caso um n
 Para liberar um pacote oficial para todos os Agents da TOTVS, execute um dos comandos abaixo, de acordo com o SO de destino:
 
 ```powershell
-   npm run release-windows-p
+   npm run release-windows-32-p
+   npm run release-windows-64-p
    npm run release-linux-p
    npm run release-mac-p
 ```

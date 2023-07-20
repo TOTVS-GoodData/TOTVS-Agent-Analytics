@@ -12,13 +12,12 @@ import * as constants from './src-angular/app/utilities/constants-angular';
 
 import { CNST_WORKSPACE_MESSAGES } from './src-angular/app/workspace/workspace-messages';
 import { CNST_DATABASE_MESSAGES } from './src-angular/app/database/database-messages';
-import { CNST_JAVA_MESSAGES } from './src-angular/app/java/java-messages';
 import { CNST_SCHEDULE_MESSAGES } from './src-angular/app/schedule/schedule-messages';
 import { CNST_QUERY_MESSAGES } from './src-angular/app/query/query-messages';
 import { CNST_SCRIPT_MESSAGES } from './src-angular/app/script/script-messages';
 import { CNST_CONFIGURATION_MESSAGES } from './src-angular/app/configuration/configuration-messages';
 
-import { DatabaseData, Workspace, Database, Java, Schedule, Query, Script, Configuration, Updater, UpdaterProgress } from './src-angular/app/utilities/interfaces';
+import { DatabaseData, Workspace, Database, Schedule, Query, Script, Configuration, Updater, UpdaterProgress } from './src-angular/app/utilities/interfaces';
 
 export default class Main {
   public static CNST_MESSAGES: any = {
@@ -135,13 +134,6 @@ export default class Main {
       });
     });
     
-    ipcMain.on('getWorkspacesByJavaConfiguration', (event: IpcMainEvent, j: Java) => {
-      Files2.getWorkspacesByJavaConfiguration(j).subscribe((workspaces: Workspace[]) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_OK, null, null, null);
-        event.returnValue = workspaces;
-      });
-    });
-    
     ipcMain.on('getWorkspacesByDatabase', (event: IpcMainEvent, db: Database) => {
       Files2.getWorkspacesByDatabase(db).subscribe((workspaces: Workspace[]) => {
         Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_DATABASES_OK, null, null, null);
@@ -196,33 +188,6 @@ export default class Main {
       this.execute.testDatabaseConnection(inputBuffer).subscribe((res: any) => {
         event.returnValue = res;
         return res;
-      });
-    });
-    
-    /*******************/
-    /*      JAVA       */
-    /*******************/
-    ipcMain.on('getJavaConfigurations', (event: IpcMainEvent) => {
-      Files2.getJavaConfigurations().subscribe((j: Java[]) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_JAVA_MESSAGES.JAVA_LOADING_OK, null, null, null);
-        event.returnValue = j;
-        return j;
-      });
-    });
-    
-    ipcMain.on('saveJavaConfiguration', (event: IpcMainEvent, j: Java) => {
-      Files2.saveJavaConfiguration(j).subscribe((b: boolean) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_JAVA_MESSAGES.JAVA_SAVE_OK, null, null, null);
-        event.returnValue = b;
-        return b;
-      });
-    });
-    
-    ipcMain.on('deleteJavaConfiguration', (event: IpcMainEvent, j: Java) => {
-      Files2.deleteJavaConfiguration(j).subscribe((b: boolean) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_JAVA_MESSAGES.JAVA_DELETE_OK, null, null, null);
-        event.returnValue = b;
-        return b;
       });
     });
     
@@ -379,6 +344,11 @@ export default class Main {
       Files2.getFolder(this.mainWindow).subscribe((folder: string) => {
         event.returnValue = folder;
       });
+    });
+    
+    ipcMain.on('getTmpPath', (event: IpcMainEvent) => {
+      event.returnValue = globals.CNST_TMP_PATH;
+      return globals.CNST_TMP_PATH;
     });
     
     /*******************/

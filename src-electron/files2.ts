@@ -17,11 +17,10 @@ import * as fs from 'fs-extra';
 
 import * as winston from 'winston';
 
-import { DatabaseData, Workspace, Database, Java, Schedule, Query, Script, Configuration, JavaInputBuffer } from '../src-angular/app/utilities/interfaces';
+import { DatabaseData, Workspace, Database, Schedule, Query, Script, Configuration, JavaInputBuffer } from '../src-angular/app/utilities/interfaces';
 
 import { CNST_WORKSPACE_MESSAGES } from '../src-angular/app/workspace/workspace-messages';
 import { CNST_DATABASE_MESSAGES } from '../src-angular/app/database/database-messages';
-import { CNST_JAVA_MESSAGES } from '../src-angular/app/java/java-messages';
 import { CNST_SCHEDULE_MESSAGES } from '../src-angular/app/schedule/schedule-messages';
 import { CNST_QUERY_MESSAGES } from '../src-angular/app/query/query-messages';
 import { CNST_SCRIPT_MESSAGES } from '../src-angular/app/script/script-messages';
@@ -220,18 +219,6 @@ export class Files2 {
     }));
   }
   
-  public static getWorkspacesByJavaConfiguration(j: Java): Observable<Workspace[]> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING, null, null, null);
-    return this.readApplicationData().pipe(map((_dbd: DatabaseData) => {
-      return _dbd.workspaces.filter((w: Workspace) => {
-        return (w.javaId === j.id)
-      });
-    }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_ERROR, null, null, err);
-      throw err;
-    }));
-  }
-  
   public static getWorkspacesByDatabase(db: Database): Observable<Workspace[]> {
     Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_DATABASES(db.name), null, null, null);
     return this.readApplicationData().pipe(map((_dbd: DatabaseData) => {
@@ -320,51 +307,6 @@ export class Files2 {
   }
   
   /*******************/
-  /*      JAVA       */
-  /*******************/
-  public static getJavaConfigurations(): Observable<Java[]> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_JAVA_MESSAGES.JAVA_LOADING, null, null, null);
-    return this.readApplicationData().pipe(map((db: DatabaseData) => {
-      return db.javas;
-    }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_JAVA_MESSAGES.JAVA_LOADING_ERROR, null, null, err);
-      throw err;
-    }));
-  }
-  
-  public static saveJavaConfiguration(j: Java): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_JAVA_MESSAGES.JAVA_SAVE(j.name), null, null, null);
-    return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
-      if (j.id) {
-        let index = _dbd.javas.findIndex((java: Java) => { return java.id === j.id; });
-        _dbd.javas[index] = j;
-      } else {
-        j.id = this.findNextId(_dbd.javas);
-        _dbd.javas.push(j);
-      }
-      
-      return this.writeApplicationData(_dbd);
-    }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_JAVA_MESSAGES.JAVA_SAVE_ERROR(j.name), null, null, err);
-      throw err;
-    }));
-  }
-  
-  
-  public static deleteJavaConfiguration(j: Java): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_JAVA_MESSAGES.JAVA_DELETE(j.name), null, null, null);
-    return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
-      let index = _dbd.javas.findIndex((java: Java) => { return java.id === j.id; });
-      _dbd.javas.splice(index, 1);
-      
-      return this.writeApplicationData(_dbd);
-    }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_JAVA_MESSAGES.JAVA_DELETE_ERROR(j.name), null, null, err);
-      throw err;
-    }));
-  }
-  
-  /*******************/
   /*  AGENDAMENTOS   */
   /*******************/
   public static getSchedules(showLogs: boolean): Observable<Schedule[]> {
@@ -448,19 +390,17 @@ export class Files2 {
     return forkJoin([
       Files2.getWorkspaces(),
       Files2.getDatabases(),
-      Files2.getJavaConfigurations(),
       Files2.getQueriesBySchedule(s),
       Files2.getScriptsBySchedule(s)
-    ]).pipe(switchMap(((results: [Workspace[], Database[], Java[], Query[], Script[]]) => {
+    ]).pipe(switchMap(((results: [Workspace[], Database[], Query[], Script[]]) => {
       let w: Workspace = results[0].find((w: Workspace) => (w.id === s.workspaceId));
       let db: Database = results[1].find((db: Database) => (db.id === w.databaseId));
-      let j: Java = results[2].find((j: Java) => (j.id === w.javaId));
-      let q: Query[] = results[3];
+      let q: Query[] = results[2];
       q.map((q: Query) => {
         q.query = Functions.decrypt(q.query);
       });
       
-      let scr: Script[] = results[4];
+      let scr: Script[] = results[3];
       scr.map((s: Script) => {
         s.script = Functions.decrypt(s.script);
       });
@@ -471,7 +411,6 @@ export class Files2 {
       let javaInput: JavaInputBuffer = {
         workspace: w,
         database: db,
-        java: j,
         schedule: s,
         queries: q,
         scripts: scr

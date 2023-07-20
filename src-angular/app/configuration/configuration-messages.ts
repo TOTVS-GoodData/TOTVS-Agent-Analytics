@@ -5,4 +5,5 @@ export const CNST_CONFIGURATION_MESSAGES: any = {
   ,CONFIG_SAVE: 'Gravando configuração...'
   ,CONFIG_SAVE_ERROR: 'Um erro inesperado ocorreu. Por favor tente novamente.'
   ,CONFIG_SAVE_OK: 'Configuração atualizada com sucesso!'
+  ,FOLDER_SELECT_WARNING: 'Aviso - Seleção de diretórios não podem ser testados sem o Electron.'
 };

@@ -1,36 +1,87 @@
-<po-page-list p-title="Configuração do Agent">
+<po-page-list [p-title]="lbl_title">
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
   <form #configurationForm="ngForm">
     <div class="po-row">
-      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ programName }}</span>
-      <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">Versão {{ version }}</span>
-      <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
-    </div>
-    
-    <div class="po-row fields">
-      <po-number
-        class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
-        p-min="1"
-        name="po_logfilesToKeep"
-        [(ngModel)]="configuration.logfilesToKeep"
-        [p-label]="lbl_logfilesToKeep"
-        p-maxlength=3
-        p-regex="999">
-      </po-number>
+      <div class="po-row-50">
+        <div class="po-row display-title">
+          <span class="title">{{ 'CONFIGURATION.APPLICATION' | translateExtended | async }}</span>
+          <span class="subtitle">({{ 'CONFIGURATION.VERSION' | translateExtended | async }} {{ AgentVersion }})</span>
+        </div>
+        
+        <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+        
+        <div class="po-row fields">
+          <po-number
+            class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+            p-min="1"
+            name="po_logfilesToKeep"
+            [(ngModel)]="configuration.logfilesToKeep"
+            [p-label]="lbl_logfilesToKeep"
+            p-maxlength=3
+            p-regex="999">
+          </po-number>
+          
+          <po-switch class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12"
+            name="po_debugMode"
+            [(ngModel)]="configuration.debug"
+            [p-label-off]="lbl_debugModeOff"
+            [p-label-on]="lbl_debugModeOn"
+            [p-label-position]="poDebugModeLabelPosition">
+          </po-switch>
+        </div>
+      </div>
       
-      <po-switch class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12"
-        name="po_showQuery"
-        [(ngModel)]="configuration.debug"
-        p-label-off="Modo de depuração: Desativado"
-        p-label-on="Modo de depuração: Ativado"
-        [p-label-position]="showQueriesPosition">
-      </po-switch>
+      <div class="po-row-50">
+        <div class="po-row display-title">
+          <span class="title">{{ 'CONFIGURATION.JAVA' | translateExtended | async }}</span>
+          <span class="subtitle">({{ 'CONFIGURATION.VERSION' | translateExtended | async }} {{ JavaVersion }})</span>
+        </div>
+        
+        <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+        
+        <div class="po-row fields">
+          <div>
+            <span class="input-text">{{ lbl_javaXms }}</span>
+            <span class="input-text-help po-icon po-icon-help">
+              <div class="input-help-balloon">{{ lbl_javaXmsHelp }}</div>
+            </span>
+          </div>
+          <po-number
+            class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+            p-min="1024"
+            name="po_javaXms"
+            [(ngModel)]="configuration.javaXms"
+            p-maxlength=5
+            p-regex="99999">
+          </po-number>
+          
+          <po-number
+            class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+            p-min="1024"
+            name="po_javaXmx"
+            [(ngModel)]="configuration.javaXmx"
+            [p-label]="lbl_javaXmx"
+            p-maxlength=5
+            p-regex="99999">
+          </po-number>
+          
+          <div class="po-md-12 po-lg-12">
+            <span>{{ lbl_javaTmpDir }}</span>
+            <div class="display-title">
+              <po-input class="conf-select grow" name="po_tmpDirFolder" [(ngModel)]="configuration.javaTmpDir" [p-disabled]="true"></po-input>
+              <po-button
+                (p-click)="getFolder()"
+                p-icon="po-icon-folder"
+                p-size="medium"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    
-    <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
-    
+
     <div class="po-row footer">
-      <po-button class="removeBorder padding-0 po-button po-text-ellipsis po-button-primary" p-size="medium" p-label="Salvar" (p-click)="saveConfiguration()" p-kind="primary" />
+      <po-button class="removeBorder padding-0 po-button po-text-ellipsis po-button-primary" p-size="medium" [p-label]="lbl_save" (p-click)="saveConfiguration()" p-kind="primary" />
     </div>
   </form>
 </po-page-list>

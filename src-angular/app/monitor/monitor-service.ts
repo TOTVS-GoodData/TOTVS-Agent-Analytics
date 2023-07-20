@@ -39,7 +39,7 @@ export class MonitorService {
             lastMessage = messages;
           }
         } catch (ex) {
-          agentLogMessages.push(new AgentLogMessage(lastMessage.timestamp, lastMessage.str_timestamp, _constants.CNST_LOGLEVEL.ERROR, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+          agentLogMessages.push(new AgentLogMessage(lastMessage.timestamp, lastMessage.str_timestamp, _constants.CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
         }
       });
       

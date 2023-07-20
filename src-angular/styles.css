@@ -3,6 +3,47 @@
   --background: #FFFFFF;
 }
 
+.input-text {
+  width: 100%;
+  padding: 0 8px;
+  font-weight: var(--font-weight-field);
+  padding-right: var(--spacing-xs);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  color: var(--color-field-container-color-title,var(--text-color));
+  text-align: left;
+}
+
+.input-text-help {
+  font-family: var(--font-family);
+}
+
+.input-help-balloon {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1000;
+}
+
+.input-text-help:hover .input-help-balloon {
+  visibility: visible;
+}
+
+.po-row-50 {
+  width: 50%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+}
+
 .po-page-header {
   border-bottom: solid;
   border-color: var(--color-neutral-dark-80);

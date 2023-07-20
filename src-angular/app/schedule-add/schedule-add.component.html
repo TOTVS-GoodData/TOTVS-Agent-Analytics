@@ -1,4 +1,4 @@
-<po-page-list p-title = "{{ operation }}">
+<po-page-list [p-title]="lbl_title">
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
   <form #scheduleForm="ngForm">
     <div class="form-group po-row">
@@ -69,12 +69,12 @@
     </div>
     
     <div class="po-row">
-      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Parâmetros SQL</span>
-      <span class="subtitle po-sm-11 po-md-11 po-lg-11 po-xl-11">Parâmetros das consultas de extração</span>
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ 'SCHEDULE.TABLE.SQL_PARAMETERS.TITLE' | translateExtended | async }}</span>
+      <span class="subtitle po-sm-11 po-md-11 po-lg-11 po-xl-11">{{ 'SCHEDULE.TABLE.SQL_PARAMETERS.SUBTITLE' | translateExtended | async }}</span>
     </div>
     
     <div class="po-row padding-button">
-      <po-button class="po-button removeBorder" p-size="medium" p-label="Novo parâmetro" (p-click)="onBeforeInsertSQL()" p-kind="primary" />
+      <po-button class="po-button removeBorder" p-size="medium" [p-label]="lbl_newParameter" (p-click)="onBeforeInsertSQL()" p-kind="primary" />
     </div>
     
     <po-grid #po_grid_sql
@@ -85,12 +85,12 @@
     </po-grid>
     
     <div class="po-row grid-title">
-      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">Parâmetros ETL</span>
-      <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">Parâmetros das consultas do ETL</span>
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ 'SCHEDULE.TABLE.ETL_PARAMETERS.TITLE' | translateExtended | async }}</span>
+      <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ 'SCHEDULE.TABLE.ETL_PARAMETERS.TITLE' | translateExtended | async }}</span>
     </div>
     
     <div class="po-row padding-button">
-      <po-button class="po-button removeBorder" p-size="medium" p-label="Novo parâmetro" (p-click)="onBeforeInsertETL()" p-kind="primary" />
+      <po-button class="po-button removeBorder" p-size="medium" [p-label]="lbl_newParameter" (p-click)="onBeforeInsertETL()" p-kind="primary" />
     </div>
     
     <po-grid #po_grid_etl
@@ -101,8 +101,8 @@
     </po-grid>
     
     <div class="po-row footer">
-      <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Voltar" (p-click)="goToSchedules()" />
-      <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Salvar" (p-click)="saveSchedule()" p-kind="primary" />
+      <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_goBack" (p-click)="goToSchedules()" />
+      <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_save" (p-click)="saveSchedule()" p-kind="primary" />
     </div>
   </form>
 </po-page-list>

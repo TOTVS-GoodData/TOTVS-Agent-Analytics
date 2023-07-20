@@ -3,13 +3,12 @@ import { Injectable } from '@angular/core';
 
 import { ElectronService } from 'ngx-electronyzer';
 
-import { Schedule, Workspace, Database, Java, Query, Script, JavaInputBuffer } from '../utilities/interfaces';
+import { Schedule, Workspace, Database, Query, Script, JavaInputBuffer } from '../utilities/interfaces';
 import * as _constants from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
 
 import { WorkspaceService } from '../workspace/workspace-service';
 import { DatabaseService } from '../database/database-service';
-import { JavaService } from '../java/java-service';
 import { QueryService } from '../query/query-service';
 import { ScriptService } from '../script/script-service';
 
@@ -29,7 +28,6 @@ export class ScheduleService {
     private _electronService: ElectronService,
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
-    private _javaService: JavaService,
     private _queryService: QueryService,
     private _scriptService: ScriptService,
     private _utilities: Utilities

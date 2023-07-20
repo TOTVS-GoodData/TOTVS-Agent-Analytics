@@ -11,11 +11,9 @@ import { GoodDataService } from '../service/gooddata.service';
 import { UserService } from '../service/user.service';
 import { SessionService } from '../service/session-service';
 
-import { Workspace, Database, Java, Parameter, GDWorkspace, GDProcess } from '../utilities/interfaces';
+import { Workspace, Database, GDWorkspace, GDProcess } from '../utilities/interfaces';
 import { WorkspaceService } from '../workspace/workspace-service';
 import { CNST_WORKSPACE_MESSAGES } from '../workspace/workspace-messages';
-import { JavaService } from '../java/java-service';
-import { CNST_JAVA_MESSAGES } from '../java/java-messages';
 
 import { DatabaseService } from '../database/database-service';
 import { CNST_DATABASE_MESSAGES } from '../database/database-messages';
@@ -40,7 +38,6 @@ const CNST_FIELD_NAMES: Array<any> = [
   ,{ key: 'GDProcessId', value: 'Id do processo de ETL*' }
   ,{ key: 'GDProcessGraph', value: 'Graph (CloudConnect)*' }
   ,{ key: 'databaseId', value: 'Banco de dados*' }
-  ,{ key: 'javaId', value: 'Configuração*' }
   ,{ key: 'name', value: 'Nome desta configuração*' }
 ];
 
@@ -51,9 +48,6 @@ const CNST_FIELD_NAMES: Array<any> = [
 })
 
 export class WorkspaceAddComponent {
-  
-  @ViewChild('javaParams', { read: ElementRef }) javaParams: any;
-  
   public CNST_MESSAGES: any = {
      PROJECT_VALIDATE: 'Validando informações do ambiente...'
     ,PROJECT_PASSWORD_ENCRYPT: 'Criptografando senhas...'
@@ -90,7 +84,6 @@ export class WorkspaceAddComponent {
   protected lbl_GDProcessId: string;
   protected lbl_GDProcessGraph: string;
   protected lbl_databaseId: string;
-  protected lbl_javaId: string;
   protected lbl_name: string;
   
   /*************************************************/
@@ -109,14 +102,11 @@ export class WorkspaceAddComponent {
   protected listProjects: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
   protected listProcess: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
   protected listGraph: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
-  protected listJava: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
   protected listDatabase: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
   private listExtensions: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
-  private listJavaParams: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
   
   constructor(
      private _workspaceService: WorkspaceService
-    ,private _javaService: JavaService
     ,private _databaseService: DatabaseService
     ,private _electronService: ElectronService
     ,private _utilities: Utilities
@@ -140,7 +130,6 @@ export class WorkspaceAddComponent {
     this.lbl_GDProcessId = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDProcessId'; }).value;
     this.lbl_GDProcessGraph = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDProcessGraph'; }).value;
     this.lbl_databaseId = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'databaseId'; }).value;
-    this.lbl_javaId = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'javaId'; }).value;
     this.lbl_name = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'name'; }).value;
     
     this._CNST_NO_OPTION_SELECTED = _constants.CNST_NO_OPTION_SELECTED;
@@ -162,10 +151,7 @@ export class WorkspaceAddComponent {
     this.project.GDEnvironment = this._CNST_DOMAIN;
     this._CNST_MODULO = null;
        
-    forkJoin([
-      this.reloadDatabases(),
-      this.reloadJavaConfigurations()
-    ]).subscribe((results: [boolean, boolean]) => {
+    this.reloadDatabases().subscribe((res: boolean) => {
     }, (err: any) => {
       this.po_lo_text = { value: null };
       this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_ERROR);
@@ -190,7 +176,6 @@ export class WorkspaceAddComponent {
         this.po_lo_text = { value: null };
         this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this._goodDataService.CNST_MESSAGES.GOODDATA_LOADING_PROJECTS_ERROR);
       });
-      this.onChangeJava(this.project.javaId);
     } else {
       this.operation = 'Cadastrar Ambiente';
       this.editMode = false;
@@ -204,17 +189,6 @@ export class WorkspaceAddComponent {
   
   protected onChangeContract(): void {
   }
-  
-  private reloadJavaConfigurations(): Observable<boolean> {
-    return this._javaService.getJavaConfigurations().pipe(switchMap(((java: Java[]) => {
-      this.listJava = java.map((j: Java) => {
-        return { label: j.name, value: j.id };
-      });
-      this.listJava.push(_constants.CNST_NO_OPTION_SELECTED);
-      return Promise.resolve(true);
-    })));
-  }
-  
   
   private reloadDatabases(): Observable<boolean> {
     return this._databaseService.getDatabases().pipe(switchMap(((database: Database[]) => {
@@ -344,19 +318,6 @@ export class WorkspaceAddComponent {
     }
   }
   
-  protected onChangeJava(id: number): void {
-    if (id != _constants.CNST_NO_OPTION_SELECTED.value) {
-      this._javaService.getJavaConfigurations().subscribe((j: Java[]) => {
-        this.listJavaParams = j.find((j: Java) => { return (j.id === id ); }).parameters.map((p: Parameter) => {
-          return { label: p.value, value: p.value };
-        });
-      }, (err: any) => {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, CNST_JAVA_MESSAGES.JAVA_LOADING_ERROR);
-      });
-    } else {
-    }
-  }
-  
   protected goToProjects(): void {
     this._router.navigate(['/workspace']);
   }
@@ -455,26 +416,6 @@ export class WorkspaceAddComponent {
     let b: boolean = this._databaseService.testConnection(true, this.database);
     this.po_lo_text = { value: null };
     return b;
-  }
-  
-  protected openModalJava(): void {
-    this.showModalJava = true;
-    this._modalService.open('modal-java');
-  }
-  
-  protected closeModalJava(newJava?: Java): void {
-    this._modalService.close('modal-java');
-    this.showModalJava = false;
-    if (newJava) {
-      this.reloadJavaConfigurations().subscribe((b: boolean) => {
-        this.project.javaId = newJava.id;
-        this.listJavaParams = newJava.parameters.map((p: Parameter) => {
-          return { label: p.value, value: p.value };
-        });
-      }, (err: any) => {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, CNST_JAVA_MESSAGES.JAVA_LOADING_ERROR);
-      });
-    }
   }
   
   protected enterPassword(event: any): void {

@@ -34,7 +34,7 @@ Function un.uCustom
     Rename "$INSTDIR$R0\$R2" "$PLUGINSDIR\old-install$R0\$R2"
     
     # Ignore errors when renaming ourselves.
-    StrCmp "$R0\$R2" "${UNINSTALL_FILENAME}" 0 +2
+    #StrCmp "$R0\$R2" "${UNINSTALL_FILENAME}" 0 +2
     ClearErrors
     
     IfErrors 0 +3
@@ -75,4 +75,24 @@ FunctionEnd
     # Remove all files (or remaining shallow directories from the block above)
     RMDir /r $INSTDIR
   ${endif}
+!macroend
+
+!macro preInit
+  ClearErrors
+  SetRegView 64
+  ReadRegStr $R0 HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "TOTVS Agent Analytics"
+  
+  ; Check to see if already installed
+  StrCmp $R0 "" NotInstalled +1
+  MessageBox MB_OK|MB_ICONEXCLAMATION "TOTVS Agent Analytics já está instalado. Por favor, desinstale a versão atual antes de executar este instalador novamente."
+  Abort
+  
+  NotInstalled:
+  
+!macroend
+
+!macro customUnInstall
+  ClearErrors
+  SetRegView 64
+  DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "TOTVS Agent Analytics"
 !macroend

@@ -69,6 +69,9 @@
             "browserTarget": "TOTVS-Agent-Analytics:build",
             "proxyConfig": "src-angular/proxy.conf.js"
           },
+          "assets": [
+            "i18n"
+          ],
           "configurations": {
             "production": {
               "browserTarget": "TOTVS-Agent-Analytics:build:production"

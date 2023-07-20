@@ -5,6 +5,8 @@ import { ElectronService } from 'ngx-electronyzer';
 
 import { PoSelectOption, PoGridRowActions } from '@po-ui/ng-components';
 
+import { TranslateServiceExtended, TranslationInput } from '../service/translate-service-extended';
+
 import { WorkspaceService } from '../workspace/workspace-service';
 import { ScheduleService } from '../schedule/schedule-service';
 import { CNST_SCHEDULE_MESSAGES as scheduleMessage } from '../schedule/schedule-messages';
@@ -41,8 +43,8 @@ export class ScheduleAddComponent {
   private _CNST_NEW_PARAMETER_VALUE: string;
   private _CNST_ERP: Array<any>;
   protected _CNST_EXTENSION: Array<any>;
-  protected operation: string;
-  protected _CNST_FIELD_NAMES: any;
+  
+  protected CNST_FIELD_NAMES: Array<any> = [];
   protected _CNST_EXECUTION_WINDOWS: Array<PoSelectOption>;
   
   protected po_lo_text: any = { value: null };
@@ -52,16 +54,8 @@ export class ScheduleAddComponent {
   private databases: Database[];
   protected listProjects: Array<PoSelectOption> = [{ label: undefined, value: undefined }];
   
-  protected po_grid_config_sql: Array<any> = [
-     { property: 'name', label: 'Nome', width: 30, required: true, editable: true  }
-    ,{ property: 'value', label: 'Valor', width: 60, required: true, editable: true }
-    ,{ property: 'sql', label: 'SQL (S/N)?', width: 10, required: true, editable: true }
-  ];
-  
-  protected po_grid_config_etl: Array<any> = [
-     { property: 'name', label: 'Nome', width: 30, required: true, editable: true }
-    ,{ property: 'value', label: 'Valor', width: 70, required: true, editable: true }
-  ];
+  protected po_grid_config_sql: Array<any> = [];
+  protected po_grid_config_etl: Array<any> = [];
   
   protected po_gridActionsETL: PoGridRowActions = {
     beforeRemove: this.onBeforeRemoveETL.bind(this),
@@ -76,6 +70,10 @@ export class ScheduleAddComponent {
   /*************************************************/
   /* MAPEAMENTO DOS NOMES DOS CAMPOS DO FORMULÁRIO */
   /*************************************************/
+  protected lbl_title: string;
+  protected lbl_newParameter: string;
+  protected lbl_goBack: string;
+  protected lbl_save: string;
   protected lbl_name: string;
   protected lbl_workspaceId: string;
   protected lbl_windows: string;
@@ -89,62 +87,110 @@ export class ScheduleAddComponent {
   /*************************************************/
   /*************************************************/
   constructor(
-     private _workspaceService: WorkspaceService
-    ,private _scheduleService: ScheduleService
-    ,private _databaseService: DatabaseService
-    ,private _electronService: ElectronService
-    ,private _utilities: Utilities
-    ,private _router: Router
+    private _workspaceService: WorkspaceService,
+    private _scheduleService: ScheduleService,
+    private _databaseService: DatabaseService,
+    private _translateService: TranslateServiceExtended,
+    private _electronService: ElectronService,
+    private _utilities: Utilities,
+    private _router: Router
   ) {
     this._CNST_EXTENSION = _constants.CNST_EXTENSION;
     this._CNST_NEW_PARAMETER_VALUE = _constants.CNST_NEW_PARAMETER_VALUE;
-    this._CNST_FIELD_NAMES = CNST_FIELD_NAMES;
-    this.lbl_name = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'name'; }).value;
-    this.lbl_workspaceId = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'workspaceId'; }).value;
-    this.lbl_windows = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'windows'; }).value;
-    this.lbl_enabled = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'enabled'; }).value;
-    this.lbl_fileFolder = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'fileFolder'; }).value;
-    this.lbl_fileFolderWildcard = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'fileFolderWildcard'; }).value;
-    this.lbl_GDZipFilename = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDZipFilename'; }).value;
-    this.lbl_GDZipExtension = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDZipExtension'; }).value;
-    
-    forkJoin([
-       this._workspaceService.getWorkspaces()
-      ,this._databaseService.getDatabases()
-    ]).subscribe((results: [Workspace[], Database[]]) => {
-      this.projects = results[0];
-      this.databases = results[1];
-      this.listProjects = this.projects.map((w: Workspace) => {
-        return { label: w.name, value: w.id }
-      });
-    }, (err: any) => {
-      this.po_lo_text = { value: null };
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, scheduleMessage.SCHEDULE_LOADING_ERROR, err);
-    });
-    
     this._CNST_ERP = _constants.CNST_ERP;
     this._CNST_EXECUTION_WINDOWS = _constants.CNST_EXECUTION_WINDOWS.map((v: string) => {
       return { label: v, value: v };
     });
     
-    let nav: Navigation = this._router.getCurrentNavigation();
-    if ((nav != undefined) && (nav.extras.state)) {
-      this.operation = 'Alterar Agendamento';
-      Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
-        this.schedule[p] = nav.extras.state[p];
+    this._translateService.getTranslations([
+      new TranslationInput('BUTTONS.YES_SIMPLIFIED', []),
+      new TranslationInput('BUTTONS.NO_SIMPLIFIED', []),
+      new TranslationInput('BUTTONS.NEW_PARAMETER', []),
+      new TranslationInput('BUTTONS.GO_BACK', []),
+      new TranslationInput('BUTTONS.SAVE', []),
+      new TranslationInput('SCHEDULES.NEW_SCHEDULE', []),
+      new TranslationInput('SCHEDULES.EDIT_SCHEDULE', []),
+      new TranslationInput('SCHEDULES.TABLE.NAME', []),
+      new TranslationInput('SCHEDULES.TABLE.WORKSPACE', []),
+      new TranslationInput('SCHEDULES.TABLE.WINDOWS', []),
+      new TranslationInput('SCHEDULES.TABLE.ENABLED', []),
+      new TranslationInput('SCHEDULES.TABLE.ZIP_FILENAME', []),
+      new TranslationInput('SCHEDULES.TABLE.ZIP_EXTENSION', []),
+      new TranslationInput('SCHEDULES.TABLE.FILE_FOLDER', []),
+      new TranslationInput('SCHEDULES.TABLE.FILE_WILDCARD', []),
+      new TranslationInput('SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.NAME', []),
+      new TranslationInput('SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.VALUE', []),
+      new TranslationInput('SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.SQL', []),
+      new TranslationInput('SCHEDULES.TABLE.ETL_PARAMETERS.TABLE.NAME', []),
+      new TranslationInput('SCHEDULES.TABLE.ETL_PARAMETERS.TABLE.VALUE', []),
+      new TranslationInput('SCHEDULES.MESSAGES.LOADING_ERROR', []),
+      new TranslationInput('SCHEDULES.MESSAGES.SAVE_OK', []),
+      new TranslationInput('SCHEDULES.MESSAGES.VALIDATE', []),
+      new TranslationInput('FORM_ERRORS.FOLDER_SELECT_WARNING', []),
+    ]).subscribe((translations: any) => {
+      this.po_grid_config_sql = [
+        { property: 'name', label: translations['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.NAME'], width: 30, required: true, editable: true  },
+        { property: 'value', label: translations['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.VALUE'], width: 60, required: true, editable: true },
+        { property: 'sql', label: translations['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.SQL'], width: 10, required: true, editable: true }
+      ];
+      
+      this.po_grid_config_etl = [
+        { property: 'name', label: translations['SCHEDULES.TABLE.ETL_PARAMETERS.TABLE.NAME'], width: 30, required: true, editable: true },
+        { property: 'value', label: translations['SCHEDULES.TABLE.ETL_PARAMETERS.TABLE.VALUE'], width: 70, required: true, editable: true }
+      ];
+      
+      this.lbl_newParameter = translations['BUTTONS.NEW_PARAMETER'];
+      this.lbl_goBack = translations['BUTTONS.GO_BACK'];
+      this.lbl_save = translations['BUTTONS.SAVE'];
+      this.lbl_name = translations['SCHEDULES.TABLE.NAME'] + '*';
+      this.lbl_workspaceId = translations['SCHEDULES.TABLE.WORKSPACE'] + '*';
+      this.lbl_windows = translations['SCHEDULES.TABLE.WINDOWS'] + '*';
+      this.lbl_enabled = translations['SCHEDULES.TABLE.ENABLED'];
+      this.lbl_GDZipFilename = translations['SCHEDULES.TABLE.ZIP_FILENAME'] + '*';
+      this.lbl_GDZipExtension = translations['SCHEDULES.TABLE.ZIP_EXTENSION'] + '*';
+      this.lbl_fileFolder = translations['SCHEDULES.TABLE.FILE_FOLDER'];
+      this.lbl_fileFolderWildcard = translations['SCHEDULES.TABLE.FILE_WILDCARD'];
+    
+      this.CNST_MESSAGES = {
+        LOADING_ERROR: translations['SCHEDULES.MESSAGES.LOADING_ERROR'],
+        SAVE_OK: translations['SCHEDULES.MESSAGES.SAVE_OK'],
+        VALIDATE: translations['SCHEDULES.MESSAGES.VALIDATE'],
+        FOLDER_SELECT_WARNING: translations['FORM_ERRORS.FOLDER_SELECT_WARNING']
+      };
+      
+      forkJoin([
+        this._workspaceService.getWorkspaces(),
+        this._databaseService.getDatabases()
+      ]).subscribe((results: [Workspace[], Database[]]) => {
+        this.projects = results[0];
+        this.databases = results[1];
+        this.listProjects = this.projects.map((w: Workspace) => {
+          return { label: w.name, value: w.id }
+        });
+      }, (err: any) => {
+        this.po_lo_text = { value: null };
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.LOADING_ERROR, err);
       });
-      this.schedule.SQLParameters = this.schedule.SQLParameters.map((p: SQLParameter) => {
-        return {
-          name: p.name,
-          value: p.value,
-          sql: (p.sql == true ? 'S' : 'N')
-        };
-      });
-    } else {
-      this.operation = 'Cadastrar Agendamento';
-      this.schedule.ETLParameters = [];
-      this.schedule.SQLParameters = [];
-    }
+      
+      let nav: Navigation = this._router.getCurrentNavigation();
+      if ((nav != undefined) && (nav.extras.state)) {
+        this.lbl_title = translations['SCHEDULES.EDIT_SCHEDULE'];
+        Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
+          this.schedule[p] = nav.extras.state[p];
+        });
+        this.schedule.SQLParameters = this.schedule.SQLParameters.map((p: SQLParameter) => {
+          return {
+            name: p.name,
+            value: p.value,
+            sql: (p.sql == true ? translations['BUTTONS.YES_SIMPLIFIED'] : translations['BUTTONS.NO_SIMPLIFIED'])
+          };
+        });
+      } else {
+        this.lbl_title = translations['SCHEDULES.NEW_SCHEDULE'];
+        this.schedule.ETLParameters = [];
+        this.schedule.SQLParameters = [];
+      }
+    });
   }
   
   protected goToSchedules(): void {
@@ -184,33 +230,44 @@ export class ScheduleAddComponent {
   }
   
   protected updateStandardParameters(): void {
-    let workspace: Workspace = this.projects.find((w: Workspace) => (w.id === this.schedule.workspaceId));
-    let database: Database = this.databases.find((db: Database) => (db.id === workspace.databaseId));
-    this.schedule.workspaceName = workspace.name;
-    this.schedule.ETLParameters = this._CNST_ERP.find((e: any) => (e.ERP === workspace.erp)).Parametros.ETL;
-    if (database) {
-      this.schedule.SQLParameters = this._CNST_ERP.find((e: any) => (e.ERP === workspace.erp))
-        .Parametros[database.type].filter((p2: any) => {
-        return (p2.Modulos.includes(workspace.module) || (p2.Modulos.length == 0))
-      }).map((p3: SQLParameter) => {
-        return { name: p3.name, value: p3.value, sql: (p3.sql ? 'S': 'N')}
-      });
-    }
+    this._translateService.getTranslations([
+      new TranslationInput('BUTTONS.YES_SIMPLIFIED', []),
+      new TranslationInput('BUTTONS.NO_SIMPLIFIED', [])
+    ]).subscribe((translations: any) => {
+      let workspace: Workspace = this.projects.find((w: Workspace) => (w.id === this.schedule.workspaceId));
+      let database: Database = this.databases.find((db: Database) => (db.id === workspace.databaseId));
+      this.schedule.workspaceName = workspace.name;
+      this.schedule.ETLParameters = this._CNST_ERP.find((e: any) => (e.ERP === workspace.erp)).Parametros.ETL;
+      if (database) {
+        this.schedule.SQLParameters = this._CNST_ERP.find((e: any) => (e.ERP === workspace.erp))
+          .Parametros[database.type].filter((p2: any) => {
+          return (p2.Modulos.includes(workspace.module) || (p2.Modulos.length == 0))
+        }).map((p3: SQLParameter) => {
+          return { name: p3.name, value: p3.value, sql: (p3.sql ? translations['BUTTONS.YES_SIMPLIFIED']: translations['BUTTONS.NO_SIMPLIFIED']) }
+        });
+      }
+    });
   }
   
   protected saveSchedule(): void {
     if (this.validateSchedule()) {
-      this.po_lo_text = { value: scheduleMessage.SCHEDULE_SAVE };
-      this.schedule.SQLParameters = this.schedule.SQLParameters.map((p: any) => {
-        return { name: p.name, value: p.value, sql: (p.sql == 'S' ? true : false)};
-      });
-      this._scheduleService.saveSchedule(this.schedule).subscribe((b: boolean) => {
-        this.po_lo_text = { value: null };
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, scheduleMessage.SCHEDULE_SAVE_OK);
-        this._router.navigate(['/schedule']);
-      }, (err: any) => {
-        this.po_lo_text = { value: null };
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, scheduleMessage.SCHEDULE_SAVE_ERROR);
+      this._translateService.getTranslations([
+        new TranslationInput('SCRIPTS.MESSAGES.SAVE', [this.schedule.name]),
+        new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [this.schedule.name]),
+        new TranslationInput('BUTTONS.YES_SIMPLIFIED', [])
+      ]).subscribe((translations: any) => {
+        this.po_lo_text = { value: translations['SCRIPTS.MESSAGES.SAVE'] };
+        this.schedule.SQLParameters = this.schedule.SQLParameters.map((p: any) => {
+          return { name: p.name, value: p.value, sql: (p.sql == translations['BUTTONS.YES_SIMPLIFIED'] ? true : false)};
+        });
+        this._scheduleService.saveSchedule(this.schedule).subscribe((b: boolean) => {
+          this.po_lo_text = { value: null };
+          this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+          this._router.navigate(['/schedule']);
+        }, (err: any) => {
+          this.po_lo_text = { value: null };
+          this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR']);
+        });
       });
     }
   }
@@ -230,11 +287,11 @@ export class ScheduleAddComponent {
   }
   
   private validateSchedule(): boolean {
-    let valid: boolean = true;
+    let validate: boolean = true;
     let schedule: Schedule = new Schedule();
     
-    this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.SCHEDULE_VALIDATE);
-    this.po_lo_text = { value: this.CNST_MESSAGES.SCHEDULE_VALIDATE };
+    this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.VALIDATE);
+    this.po_lo_text = { value: this.CNST_MESSAGES.VALIDATE };
     
     // Todo processo de ETL precisa ter um graph preenchido. //
     if (this.schedule.fileFolder != undefined) {
@@ -247,30 +304,42 @@ export class ScheduleAddComponent {
     
     // Validação dos campos de formulário //
     if (propertiesNotDefined.length > 0) {
-      valid = false;
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, 'Campo obrigatório "' + this._CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value + '" não preenchido.');
+      validate = false;
       this.po_lo_text = { value: null };
+      let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
+      this._translateService.getTranslations([
+        new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName])
+      ]).subscribe((translations: any) => {
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED']);
+      });
     } else {
       // Validação dos parâmetros SQL //
-      this.schedule.SQLParameters.map((p: any) => {
-        if ((p.sql.toUpperCase() != 'S') && (p.sql.toUpperCase() != 'N')) { 
-          valid = false;
+      this._translateService.getTranslations([
+        new TranslationInput('BUTTONS.YES_SIMPLIFIED', []),
+        new TranslationInput('BUTTONS.NO_SIMPLIFIED', []),
+        new TranslationInput('FORM_ERRORS.ONLY_YES_OR_NO', [])
+      ]).subscribe((translations: any) => {
+        this.schedule.SQLParameters.map((p: any) => {
+          if ((p.sql.toUpperCase() != translations['BUTTONS.YES_SIMPLIFIED']) && (p.sql.toUpperCase() != translations['BUTTONS.NO_SIMPLIFIED'])) { 
+            validate = false;
+          }
+        });
+        
+        if (!validate) {
+          this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.ONLY_YES_OR_NO']);
+          this.po_lo_text = { value: null };
         }
       });
-      if (!valid) {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, 'Os parâmetros SQL só podem ser do tipo "S" ou "N". Por favor, verifique o preenchimento dos mesmos.');
-        this.po_lo_text = { value: null };
-      }
     }
     
-    return valid;
+    return validate;
   }
   
   public getFolder(): void {
     if (this._electronService.isElectronApp) {
       this.schedule.fileFolder = this._electronService.ipcRenderer.sendSync('getFolder');
     } else {
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, scheduleMessage.FOLDER_SELECT_WARNING);
+      this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, this.CNST_MESSAGES.FOLDER_SELECT_WARNING);
       this.po_lo_text = { value: null };
     }
   }

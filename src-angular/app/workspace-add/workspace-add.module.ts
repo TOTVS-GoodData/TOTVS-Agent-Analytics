@@ -16,9 +16,7 @@ import { WorkspaceAddComponent } from '../workspace-add/workspace-add.component'
 import { UserService } from '../service/user.service';
 
 import { DataBaseAddModule } from '../database-add/database-add.module';
-import { JavaModule } from '../java/java.module';
 import { ModalModule } from '../modal/modal.module';
-import { JavaAddModule } from '../java-add/java-add.module';
 
 @NgModule({
     declarations: [
@@ -33,13 +31,11 @@ import { JavaAddModule } from '../java-add/java-add.module';
       PoContainerModule,
         HttpClientModule,
         ModalModule,
-        JavaModule,
       DataBaseAddModule,
         PoPageModule,
         PoFieldModule,
         PoInfoModule,
-        PoButtonModule,
-        JavaAddModule
+        PoButtonModule
     ],
     providers: [UserService]
 })

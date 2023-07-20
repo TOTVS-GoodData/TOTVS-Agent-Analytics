@@ -101,7 +101,6 @@ export class JavaOutputBuffer {
 export class JavaInputBuffer {
   workspace: Workspace;
   database: Database;
-  java: Java;
   schedule: Schedule;
   queries: Query[];
   scripts: Script[];
@@ -110,7 +109,6 @@ export class JavaInputBuffer {
 export class DatabaseData {
   workspaces: Workspace[];
   databases: Database[];
-  javas: Java[];
   schedules: Schedule[];
   queries: Query[];
   scripts: Script[];
@@ -119,7 +117,6 @@ export class DatabaseData {
   constructor() {
     this.workspaces = [];
     this.databases = [];
-    this.javas = [];
     this.schedules = [];
     this.queries = [];
     this.scripts = [];
@@ -144,7 +141,6 @@ export class Workspace {
   GDProcessGraph: string;
   databaseId: number;
   databaseName?: string;
-  javaId: number;
   pathMyProperties: string;
   
   constructor() {
@@ -159,7 +155,6 @@ export class Workspace {
     this.GDPassword = null;
     this.GDWorkspaceId = null;
     this.GDWorkspaceUploadURL = null;
-    this.javaId = null;
     this.databaseId = null;
   }
 }
@@ -194,22 +189,6 @@ export class Database {
     this.username = null;
     this.password = null;
   }
-}
-
-export class Java {
-  id: number;
-  name: string;
-  parameters: Parameter[];
-  
-  constructor() {
-    this.id = null;
-    this.name = null;
-    this.parameters = [];
-  }
-}
-
-export class Parameter {
-  value: string;
 }
 
 export class Schedule {
@@ -294,9 +273,17 @@ export class Script {
 export class Configuration {
   debug: boolean;
   logfilesToKeep: number;
+  javaXms: number;
+  javaXmx: number;
+  javaTmpDir: string;
+  language: string;
   constructor() {
     this.logfilesToKeep = 10;
     this.debug = false;
+    this.javaXms = 1024;
+    this.javaXmx = 2048;
+    this.javaTmpDir = '';
+    this.language = 'en-US';
   }
 }
 

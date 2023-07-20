@@ -1,12 +1,14 @@
 {
   "workspaces": [],
   "databases": [],
-  "javas": [],
   "schedules": [],
   "queries": [],
   "scripts": [],
   "configuration": {
     "logfilesToKeep": 6,
-    "debug": false
+    "debug": false,
+    "javaXms": 1024,
+    "javaXmx": 1024,
+    "javaTmpDir": ""
   }
 }
