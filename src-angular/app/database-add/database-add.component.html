@@ -70,14 +70,14 @@
           <po-input
             name="po_schema"
             class="form-control po-md-3 po-lg-3"
-            [p-label]="lbl_schema"
-            [(ngModel)]="schema"
-            (p-change)="setDatabaseSchema($event)"
+            [p-label]="lbl_db_databaseName"
+            [(ngModel)]="database.db_databaseName"
+            (p-change)="updateConnectionString()"
             p-required="true">
           </po-input>
         </div>
       </ng-template>
-      <ng-template [ngIf]="(database.type === 'SQL_Server')">
+      <ng-template [ngIf]="(database.type === 'SQL_Server (2012)')">
         <div class="po-row">
           <po-input
             name="po_instance"
@@ -116,7 +116,7 @@
           p-required="true">
         </po-password>
         <po-button class="po-sm-4 po-md-4 po-lg-4 po-xl-4 padding-button"
-          (p-click)="testDatabaseConnection()"
+          (p-click)="testDatabaseConnection().subscribe()"
           [p-label]="lbl_testConnection"
           p-small="false"
           p-icon="po-icon-database"

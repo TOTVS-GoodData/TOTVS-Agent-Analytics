@@ -31,17 +31,32 @@ export class AppComponent {
   public menus: PoMenuItem[] = [];
   
   constructor(
-     private _electronService: ElectronService
-    ,private _scheduleService: ScheduleService
-    ,private _translateService: TranslationService
-    ,private _configurationService: ConfigurationService
-    ,private _utilities: Utilities
+    private _electronService: ElectronService,
+    private _scheduleService: ScheduleService,
+    private _translateService: TranslationService,
+    private _configurationService: ConfigurationService,
+    private _utilities: Utilities
   ) {
     this.programName = CNST_PROGRAM_NAME.SIMPLE;
-    
     this._translateService.setDefaultLang('en-US');
-    this._translateService.use('en-US');
-    let ti: TranslationInput[] = [
+    this._configurationService.getConfiguration().subscribe((conf: Configuration) => {
+      this._translateService.use(conf.language == null ? 'en-US': conf.language);
+      if (this._electronService.isElectronApp) {
+        this._electronService.ipcRenderer.send('deleteOldLogs');
+        this.version = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getVersion').version;
+        if (conf.javaTmpDir == null) {
+          conf.javaTmpDir = this._electronService.ipcRenderer.sendSync('getTmpPath');
+          this._configurationService.saveConfiguration(conf).subscribe();
+        }
+      } else {
+        this.version = CNST_PROGRAM_VERSION.DEVELOPMENT;
+      }
+    });
+    this.setMenuTranslations();
+  }
+  
+  public setMenuTranslations(): void {
+    this._translateService.getTranslations([
       new TranslationInput('MENU.WORKSPACES', []),
       new TranslationInput('MENU.DATABASES', []),
       new TranslationInput('MENU.SCHEDULES', []),
@@ -50,8 +65,7 @@ export class AppComponent {
       new TranslationInput('MENU.MONITOR', []),
       new TranslationInput('MENU.CONFIGURATION', []),
       new TranslationInput('MENU.EXIT', [])
-    ];
-    this._translateService.getTranslations(ti).subscribe((translations: any) => {
+    ]).subscribe((translations: any) => {
       this.menus = [
         { label: translations['MENU.WORKSPACES'], link: './workspace', icon: 'po-icon-chart-columns' },
         { label: translations['MENU.DATABASES'], link: './database', icon: 'po-icon-database' },
@@ -63,25 +77,6 @@ export class AppComponent {
         { label: translations['MENU.EXIT'], icon: 'po-icon-exit', action: this.exit.bind(this) }
       ];
     });
-    
-    if (this._electronService.isElectronApp) {
-      this._electronService.ipcRenderer.send('deleteOldLogs');
-      let tmp: string = this._electronService.ipcRenderer.sendSync('getTmpPath');
-      this._configurationService.getConfiguration().subscribe((conf: Configuration) => {
-        if (conf.javaTmpDir == null) {
-          conf.javaTmpDir = tmp;
-          return this._configurationService.saveConfiguration(conf).pipe(map((res: boolean) => {
-            return res;
-          }));
-        } else {
-          return;
-        }
-      });
-      
-      this.version = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getVersion').version;
-    } else {
-      this.version = CNST_PROGRAM_VERSION.DEVELOPMENT;
-    }
   }
   
   public exit(): void {

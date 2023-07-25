@@ -18,6 +18,8 @@ import { UserService } from '../service/user.service';
 import { DataBaseAddModule } from '../database-add/database-add.module';
 import { ModalModule } from '../modal/modal.module';
 
+import { TranslationModule } from '../service/translation/translation.module';
+
 @NgModule({
     declarations: [
         WorkspaceAddComponent
@@ -33,6 +35,7 @@ import { ModalModule } from '../modal/modal.module';
         ModalModule,
       DataBaseAddModule,
         PoPageModule,
+      TranslationModule,
         PoFieldModule,
         PoInfoModule,
         PoButtonModule

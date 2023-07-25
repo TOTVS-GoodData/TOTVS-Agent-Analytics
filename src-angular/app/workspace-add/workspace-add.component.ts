@@ -13,33 +13,16 @@ import { SessionService } from '../service/session-service';
 
 import { Workspace, Database, GDWorkspace, GDProcess } from '../utilities/interfaces';
 import { WorkspaceService } from '../workspace/workspace-service';
-import { CNST_WORKSPACE_MESSAGES } from '../workspace/workspace-messages';
 
 import { DatabaseService } from '../database/database-service';
-import { CNST_DATABASE_MESSAGES } from '../database/database-messages';
 import * as _constants from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
 
-import { merge, switchMap, catchError } from 'rxjs/operators';
+import { merge, switchMap, catchError, map } from 'rxjs/operators';
 
-import { forkJoin, Observable, throwError } from 'rxjs';
+import { forkJoin, Observable, throwError, of } from 'rxjs';
 
-const CNST_FIELD_NAMES: Array<any> = [
-   { key: 'contractType', value: 'Modalidade de Contratação*' }
-  ,{ key: 'contractCode', value: 'Código T do cliente*' }
-  ,{ key: 'erp', value: 'ERP*' }
-  ,{ key: 'module', value: 'Módulo*' }
-  ,{ key: 'source', value: 'Origem dos dados*' }
-  ,{ key: 'GDUsername', value: 'Usuário*' }
-  ,{ key: 'GDEnvironment', value: 'Domínio*' }
-  ,{ key: 'GDPassword', value: 'Senha*' }
-  ,{ key: 'GDWorkspaceId', value: 'Ambiente*' }
-  ,{ key: 'GDWorkspaceUploadURL', value: 'URL para upload do arquivo*' }
-  ,{ key: 'GDProcessId', value: 'Id do processo de ETL*' }
-  ,{ key: 'GDProcessGraph', value: 'Graph (CloudConnect)*' }
-  ,{ key: 'databaseId', value: 'Banco de dados*' }
-  ,{ key: 'name', value: 'Nome desta configuração*' }
-];
+import { TranslationService, TranslationInput } from '../service/translation/translation-service';
 
 @Component({
   selector: 'app-workspace-add',
@@ -48,12 +31,7 @@ const CNST_FIELD_NAMES: Array<any> = [
 })
 
 export class WorkspaceAddComponent {
-  public CNST_MESSAGES: any = {
-     PROJECT_VALIDATE: 'Validando informações do ambiente...'
-    ,PROJECT_PASSWORD_ENCRYPT: 'Criptografando senhas...'
-  };
-  
-  protected _CNST_FIELD_NAMES: any;
+  public CNST_MESSAGES: any = {};
   protected _CNST_UPLOAD_URL: any;
   protected _CNST_DOMAIN: any;
   protected _CNST_MODALIDADE_CONTRATACAO: any;
@@ -62,6 +40,7 @@ export class WorkspaceAddComponent {
   protected _CNST_MODULO: any;
   protected _CNST_NO_OPTION_SELECTED: any;
   
+  protected CNST_FIELD_NAMES: any[] = []
   private po_grid_config = [ { property: 'value', label: 'Parâmetros', width: '100%'} ];
   
   protected project: Workspace = new Workspace();
@@ -86,11 +65,22 @@ export class WorkspaceAddComponent {
   protected lbl_databaseId: string;
   protected lbl_name: string;
   
+  protected lbl_edit: string;
+  protected lbl_save: string;
+  protected lbl_testConnection: string;
+  protected lbl_loadWorkspaces: string;
+  
+  protected lbl_dbUsername: string;
+  protected lbl_dbType: string;
+  protected lbl_dbPassword: string;
+  protected lbl_dbDriverClass: string;
+  protected lbl_dbDriverPath: string;
+  
   /*************************************************/
   /*************************************************/
   /*************************************************/
   
-  protected operation: string;
+  protected lbl_title: string;
   protected po_lo_text: any = { value: null };
   protected showModalDatabase: boolean = false;
   protected showModalJava: boolean = false;
@@ -106,37 +96,24 @@ export class WorkspaceAddComponent {
   private listExtensions: Array<PoSelectOption> = [ { label: undefined, value: undefined } ];
   
   constructor(
-     private _workspaceService: WorkspaceService
-    ,private _databaseService: DatabaseService
-    ,private _electronService: ElectronService
-    ,private _utilities: Utilities
-    ,private _router: Router
-    ,private _modalService: ModalService
-    ,private _sessionService: SessionService
-    ,private _goodDataService: GoodDataService
-    ,private _loginService: LoginService
+    private _workspaceService: WorkspaceService,
+    private _databaseService: DatabaseService,
+    private _electronService: ElectronService,
+    private _utilities: Utilities,
+    private _router: Router,
+    private _translateService: TranslationService,
+    private _modalService: ModalService,
+    private _sessionService: SessionService,
+    private _goodDataService: GoodDataService,
+    private _loginService: LoginService
   ) {
-    this._CNST_FIELD_NAMES = CNST_FIELD_NAMES;
-    this.lbl_contractType = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'contractType'; }).value;
-    this.lbl_contractCode = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'contractCode'; }).value;
-    this.lbl_erp = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'erp'; }).value;
-    this.lbl_module = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'module'; }).value;
-    this.lbl_source = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'source'; }).value;
-    this.lbl_GDEnvironment = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDEnvironment'; }).value;
-    this.lbl_GDUsername = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDUsername'; }).value;
-    this.lbl_GDPassword = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDPassword'; }).value;
-    this.lbl_GDWorkspaceId = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDWorkspaceId'; }).value;
-    this.lbl_GDWorkspaceUploadURL = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDWorkspaceUploadURL'; }).value;
-    this.lbl_GDProcessId = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDProcessId'; }).value;
-    this.lbl_GDProcessGraph = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'GDProcessGraph'; }).value;
-    this.lbl_databaseId = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'databaseId'; }).value;
-    this.lbl_name = this._CNST_FIELD_NAMES.find((v: any) => { return v.key == 'name'; }).value;
-    
     this._CNST_NO_OPTION_SELECTED = _constants.CNST_NO_OPTION_SELECTED;
     this._CNST_DOMAIN = _constants.CNST_DOMAIN;
     this._CNST_UPLOAD_URL = _constants.CNST_UPLOAD_URL;
     this._CNST_MODALIDADE_CONTRATACAO = _constants.CNST_MODALIDADE_CONTRATACAO;
     this._CNST_ORIGEM = _constants.CNST_ORIGEM;
+    this.project.GDEnvironment = this._CNST_DOMAIN;
+    this._CNST_MODULO = null;
     this._CNST_ERP = _constants.CNST_ERP.map((v) => {
       return { label: v.ERP, value: v.ERP };
     }).sort((v1: any, v2: any) => {
@@ -148,43 +125,140 @@ export class WorkspaceAddComponent {
       }
       return 0;
     });
-    this.project.GDEnvironment = this._CNST_DOMAIN;
-    this._CNST_MODULO = null;
-       
-    this.reloadDatabases().subscribe((res: boolean) => {
-    }, (err: any) => {
-      this.po_lo_text = { value: null };
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_ERROR);
-    });
     
-    this._sessionService.initSession();
-    let nav: Navigation = this._router.getCurrentNavigation();
-    if (nav.extras.state.id) {
-      this.operation = 'Alterar Ambiente';
-      this.editMode = true;
-      this.project.GDWorkspaceId = nav.extras.state['GDWorkspaceId'];
-      this.onChangeERP(nav.extras.state.erp);
-      this.onChangeDatabase(nav.extras.state.databaseId);
+    this._translateService.getTranslations([
+      new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING', []),
+      new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_ERROR', []),
+      new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES', []),
+      new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES_OK', []),
+      new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES_ERROR', []),
+      new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES', []),
+      new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES_ERROR', []),
+      new TranslationInput('DATABASES.MESSAGES.LOADING_ERROR', []),
+      new TranslationInput('BUTTONS.GO_BACK', []),
+      new TranslationInput('BUTTONS.SAVE', []),
+      new TranslationInput('BUTTONS.EDIT', []),
+      new TranslationInput('BUTTONS.TEST_CONNECTION', []),
+      new TranslationInput('BUTTONS.LOAD_WORKSPACES', []),
+      new TranslationInput('WORKSPACES.NEW_WORKSPACE', []),
+      new TranslationInput('WORKSPACES.EDIT_WORKSPACE', []),
+      new TranslationInput('WORKSPACES.TABLE.CONTRACT_TYPE', []),
+      new TranslationInput('WORKSPACES.TABLE.CUSTOMER_CODE', []),
+      new TranslationInput('WORKSPACES.TABLE.ERP', []),
+      new TranslationInput('WORKSPACES.TABLE.MODULE', []),
+      new TranslationInput('WORKSPACES.TABLE.SOURCE', []),
+      new TranslationInput('WORKSPACES.TABLE.USERNAME', []),
+      new TranslationInput('WORKSPACES.TABLE.ENVIRONMENT', []),
+      new TranslationInput('WORKSPACES.TABLE.PASSWORD', []),
+      new TranslationInput('WORKSPACES.TABLE.WORKSPACE', []),
+      new TranslationInput('WORKSPACES.TABLE.UPLOAD_URL', []),
+      new TranslationInput('WORKSPACES.TABLE.PROCESS', []),
+      new TranslationInput('WORKSPACES.TABLE.GRAPH', []),
+      new TranslationInput('WORKSPACES.TABLE.DATABASE', []),
+      new TranslationInput('WORKSPACES.TABLE.NAME', []),
+      new TranslationInput('WORKSPACES.MESSAGES.LOADING_ERROR', []),
+      new TranslationInput('WORKSPACES.MESSAGES.SAVE_OK', []),
+      new TranslationInput('WORKSPACES.MESSAGES.VALIDATE', []),
+      new TranslationInput('WORKSPACES.MESSAGES.PASSWORD_ENCRYPT', []),
+      new TranslationInput('DATABASES.TABLE.USERNAME', []),
+      new TranslationInput('DATABASES.TABLE.TYPE', []),
+      new TranslationInput('DATABASES.TABLE.PASSWORD', []),
+      new TranslationInput('DATABASES.TABLE.DRIVER_CLASS', []),
+      new TranslationInput('DATABASES.TABLE.DRIVER_PATH', [])
+    ]).subscribe((translations: any) => {
+      this.lbl_edit = translations['BUTTONS.EDIT'];
+      this.lbl_save = translations['BUTTONS.SAVE'];
+      this.lbl_testConnection = translations['BUTTONS.TEST_CONNECTION'];
+      this.lbl_loadWorkspaces = translations['BUTTONS.LOAD_WORKSPACES'];
       
-      Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
-        this.project[p] = nav.extras.state[p];
-      });
+      this.lbl_dbUsername = translations['DATABASES.TABLE.USERNAME'];
+      this.lbl_dbType = translations['DATABASES.TABLE.TYPE'];
+      this.lbl_dbPassword = translations['DATABASES.TABLE.PASSWORD'];
+      this.lbl_dbDriverClass = translations['DATABASES.TABLE.DRIVER_CLASS'];
+      this.lbl_dbDriverPath = translations['DATABASES.TABLE.DRIVER_PATH'];
       
-      this.editPassword = nav.extras.state['GDPassword'];
-      this.getProjects(this.project.GDUsername, this.project.GDPassword, this.project.GDEnvironment, false)
-        .subscribe(() => {}, (err: any) => {
+      this.lbl_contractType = translations['WORKSPACES.TABLE.CONTRACT_TYPE'] + '*';
+      this.lbl_contractCode = translations['WORKSPACES.TABLE.CUSTOMER_CODE'] + '*';
+      this.lbl_erp = translations['WORKSPACES.TABLE.ERP'] + '*';
+      this.lbl_module = translations['WORKSPACES.TABLE.MODULE'] + '*';
+      this.lbl_source = translations['WORKSPACES.TABLE.SOURCE'] + '*';
+      this.lbl_GDUsername = translations['WORKSPACES.TABLE.USERNAME'] + '*';
+      this.lbl_GDEnvironment = translations['WORKSPACES.TABLE.ENVIRONMENT'] + '*';
+      this.lbl_GDPassword = translations['WORKSPACES.TABLE.PASSWORD'] + '*';
+      this.lbl_GDWorkspaceId = translations['WORKSPACES.TABLE.WORKSPACE'] + '*';
+      this.lbl_GDWorkspaceUploadURL = translations['WORKSPACES.TABLE.UPLOAD_URL'] + '*';
+      this.lbl_GDProcessId = translations['WORKSPACES.TABLE.PROCESS'];
+      this.lbl_GDProcessGraph = translations['WORKSPACES.TABLE.GRAPH'];
+      this.lbl_databaseId = translations['WORKSPACES.TABLE.DATABASE'] + '*';
+      this.lbl_name = translations['WORKSPACES.TABLE.NAME'] + '*';
+      
+      this.CNST_FIELD_NAMES = [
+        { key: 'contractType', value: translations['WORKSPACES.TABLE.CONTRACT_TYPE'] },
+        { key: 'contractCode', value: translations['WORKSPACES.TABLE.CUSTOMER_CODE'] },
+        { key: 'erp', value: translations['WORKSPACES.TABLE.ERP'] },
+        { key: 'module', value: translations['WORKSPACES.TABLE.MODULE'] },
+        { key: 'source', value: translations['WORKSPACES.TABLE.SOURCE'] },
+        { key: 'GDUsername', value: translations['WORKSPACES.TABLE.USERNAME'] },
+        { key: 'GDEnvironment', value: translations['WORKSPACES.TABLE.ENVIRONMENT'] },
+        { key: 'GDPassword', value: translations['WORKSPACES.TABLE.PASSWORD'] },
+        { key: 'GDWorkspaceId', value: translations['WORKSPACES.TABLE.WORKSPACE'] },
+        { key: 'GDWorkspaceUploadURL', value: translations['WORKSPACES.TABLE.UPLOAD_URL'] },
+        { key: 'GDProcessId', value: translations['WORKSPACES.TABLE.PROCESS'] },
+        { key: 'GDProcessGraph', value: translations['WORKSPACES.TABLE.GRAPH'] },
+        { key: 'databaseIdRef', value: translations['WORKSPACES.TABLE.DATABASE'] },
+        { key: 'name', value: translations['WORKSPACES.TABLE.NAME'] }
+      ];
+      
+      this.CNST_MESSAGES = {
+        GOODDATA_LOADING: translations['SERVICES.GOODDATA.MESSAGES.LOADING'],
+        GOODDATA_LOADING_ERROR: translations['SERVICES.GOODDATA.MESSAGES.LOADING_ERROR'],
+        GOODDATA_LOADING_WORKSPACES: translations['SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES'],
+        GOODDATA_LOADING_WORKSPACES_OK: translations['SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES_OK'],
+        GOODDATA_LOADING_WORKSPACES_ERROR: translations['SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES_ERROR'],
+        GOODDATA_LOADING_PROCESSES: translations['SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES'],
+        GOODDATA_LOADING_PROCESSES_ERROR: translations['SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES_ERROR'],
+        DATABASE_LOADING_ERROR: translations['DATABASES.MESSAGES.LOADING_ERROR'],
+        LOADING_ERROR: translations['WORKSPACES.MESSAGES.LOADING_ERROR'],
+        SAVE_OK: translations['WORKSPACES.MESSAGES.SAVE_OK'],
+        VALIDATE: translations['WORKSPACES.MESSAGES.VALIDATE'],
+        PASSWORD_ENCRYPT: translations['WORKSPACES.MESSAGES.PASSWORD_ENCRYPT']
+      };
+      
+      this.reloadDatabases().subscribe((res: boolean) => {
+      }, (err: any) => {
         this.po_lo_text = { value: null };
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this._goodDataService.CNST_MESSAGES.GOODDATA_LOADING_PROJECTS_ERROR);
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.LOADING_ERROR);
       });
-    } else {
-      this.operation = 'Cadastrar Ambiente';
-      this.editMode = false;
-      this.project.contractType = nav.extras.state.contractType;
-      this.project.contractCode = nav.extras.state.contractCode;
-      this.listProjects = [];
-      this.listProcess = [];
-      this.listGraph = [];
-    }
+      
+      this._sessionService.initSession();
+      let nav: Navigation = this._router.getCurrentNavigation();
+      if (nav.extras.state.id) {
+        this.lbl_title = translations['WORKSPACES.EDIT_WORKSPACE'];
+        this.editMode = true;
+        this.project.GDWorkspaceId = nav.extras.state['GDWorkspaceId'];
+        this.onChangeERP(nav.extras.state.erp);
+        this.onChangeDatabase(nav.extras.state.databaseIdRef);
+        
+        Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
+          this.project[p] = nav.extras.state[p];
+        });
+        
+        this.editPassword = nav.extras.state['GDPassword'];
+        this.getProjects(this.project.GDUsername, this.project.GDPassword, this.project.GDEnvironment, false)
+          .subscribe(() => {}, (err: any) => {
+          this.po_lo_text = { value: null };
+          this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.GOODDATA_LOADING_WORKSPACES_ERROR);
+        });
+      } else {
+        this.lbl_title = translations['WORKSPACES.NEW_WORKSPACE'];
+        this.editMode = false;
+        this.project.contractType = nav.extras.state.contractType;
+        this.project.contractCode = nav.extras.state.contractCode;
+        this.listProjects = [];
+        this.listProcess = [];
+        this.listGraph = [];
+      }
+    });
   }
   
   protected onChangeContract(): void {
@@ -201,7 +275,7 @@ export class WorkspaceAddComponent {
   }
   
   protected getProjects(username: string, password: string, environment: string, rememberMe: boolean): Observable<boolean> {
-    this.po_lo_text = { value: this._goodDataService.CNST_MESSAGES.GOODDATA_LOADING };
+    this.po_lo_text = { value: this.CNST_MESSAGES.GOODDATA_LOADING };
     if ((this._electronService.isElectronApp) && (this.editMode) && (this.editPassword == password)) {
       password = this._electronService.ipcRenderer.sendSync('decrypt', password);
     }
@@ -209,14 +283,14 @@ export class WorkspaceAddComponent {
     return this._loginService.doLogin(username, password, environment, rememberMe)
       .pipe(catchError(((err: any) => {
         this.po_lo_text = { value: null };
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this._goodDataService.CNST_MESSAGES.GOODDATA_LOADING_ERROR, err);
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.GOODDATA_LOADING_ERROR, err);
         return throwError(err);
       })))
       .pipe(switchMap((b: boolean) => {
-        this.po_lo_text = { value: this._goodDataService.CNST_MESSAGES.GOODDATA_LOADING_PROJECTS };
+        this.po_lo_text = { value: this.CNST_MESSAGES.GOODDATA_LOADING_WORKSPACES };
         return this._goodDataService.init(this._sessionService.USER_ID, this.project.GDWorkspaceId)
           .pipe(catchError(((err: any) => {
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this._goodDataService.CNST_MESSAGES.GOODDATA_LOADING_PROJECTS_ERROR, err);
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.GOODDATA_LOADING_WORKSPACES_ERROR, err);
             this.po_lo_text = { value: null };
             return throwError(err);
           })))
@@ -243,7 +317,7 @@ export class WorkspaceAddComponent {
             }
           }
           
-          this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this._goodDataService.CNST_MESSAGES.GOODDATA_LOADING_PROJECTS_OK);
+          this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.GOODDATA_LOADING_WORKSPACES_OK);
           this.po_lo_text = { value: null };
           return Promise.resolve(true);
         }));
@@ -269,10 +343,10 @@ export class WorkspaceAddComponent {
   }
   
   protected onChangeProject(): Observable<boolean> {
-    this.po_lo_text = { value: this._goodDataService.CNST_MESSAGES.GOODDATA_LOADING_PROCESSES };
+    this.po_lo_text = { value: this.CNST_MESSAGES.GOODDATA_LOADING_PROCESSES };
     return this._goodDataService.setCurrentProject(this.project.GDWorkspaceId)
       .pipe(catchError(((err: any) => {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this._goodDataService.CNST_MESSAGES.GOODDATA_LOADING_PROCESSES_ERROR, err);
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.GOODDATA_LOADING_PROCESSES_ERROR, err);
         this.po_lo_text = { value: null };
         return throwError(err);
       })))
@@ -306,12 +380,12 @@ export class WorkspaceAddComponent {
     }
   }
   
-  protected onChangeDatabase(id: number): void {
+  protected onChangeDatabase(id: string): void {
     if (id != _constants.CNST_NO_OPTION_SELECTED.value) {
       this._databaseService.getDatabases().subscribe((db: Database[]) => {
         this.database = db.find((db: Database) => { return (db.id === id ); });
       }, (err: any) => {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, CNST_DATABASE_MESSAGES.DATABASE_LOADING_ERROR);
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.DATABASE_LOADING_ERROR);
       });
     } else {
       this.database = new Database();
@@ -323,8 +397,8 @@ export class WorkspaceAddComponent {
   }
   
   private validProject(): Observable<boolean> {
-    this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.PROJECT_VALIDATE);
-    this.po_lo_text = { value: this.CNST_MESSAGES.PROJECT_VALIDATE };
+    this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.VALIDATE);
+    this.po_lo_text = { value: this.CNST_MESSAGES.VALIDATE };
     let workspace = new Workspace();
     
     // Todo processo de ETL precisa ter um graph preenchido. //
@@ -334,7 +408,7 @@ export class WorkspaceAddComponent {
     
     // Regras de negócio do FAST Analytics //
     if (((this.project.contractType == 'FAST_1') || (this.project.contractType == 'FAST_2')) && ((this.project.erp == 'Datasul') || (this.project.erp == 'RM'))) {
-      workspace.databaseId = (workspace.databaseId != undefined ? workspace.databaseId : null);
+      workspace.databaseIdRef = (workspace.databaseIdRef != undefined ? workspace.databaseIdRef : null);
     }
     
     let propertiesNotDefined = Object.getOwnPropertyNames.call(Object, workspace).map((p: string) => {
@@ -342,49 +416,54 @@ export class WorkspaceAddComponent {
     }).filter((p: string) => { return p != null; });
     
     // Validação dos campos de formulário //
-    if (propertiesNotDefined.length > 0) {
+    if (propertiesNotDefined.length > 0) {console.log(propertiesNotDefined[0]);
       this.po_lo_text = { value: null };
-      if (propertiesNotDefined[0] == 'gdc_etl_graph') {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, 'Campo obrigatório "' + this._CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value + '" não preenchido. Por favor selecione um graph para ser executado, ou remova a seleção do campo "' + this._CNST_FIELD_NAMES.find((f: any) => { return f.key === 'gdc_etl_process_url'}).value + '".');
-      } else {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, 'Campo obrigatório "' + this._CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value + '" não preenchido.');
-      }
-      
-      return new Observable((obs) => { obs.error(false); });
+      let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
+      return this._translateService.getTranslations([
+        new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName]),
+        new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED_GRAPH', [fieldName])
+      ]).pipe(map((translations: any) => {
+        if (propertiesNotDefined[0] == 'gdc_etl_graph') {
+          this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED_GRAPH']);
+        } else {
+          this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED']);
+        }
+        return false;
+      }));
     }
     
     // Validação das credenciais do GoodData //
     if ((this._electronService.isElectronApp) && (this.editMode) && (this.editPassword == this.project.GDPassword)) {
       this.project.GDPassword = this._electronService.ipcRenderer.sendSync('decrypt', this.project.GDPassword);
     }
-    return this._loginService.doLogin(this.project.GDUsername, this.project.GDPassword, this.project.GDEnvironment, false)
-      .pipe(switchMap((b: boolean) => {
-      return Promise.resolve(b);
-    }));
+    
+    return this._loginService.doLogin(this.project.GDUsername, this.project.GDPassword, this.project.GDEnvironment, false);
   }
   
-  protected saveProject(): void {
-    this.validProject().subscribe((v: boolean) => {
-      if (v) {
-        if ((this._electronService.isElectronApp) && (this.editPassword != this.project.GDPassword)) {
-          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.PROJECT_PASSWORD_ENCRYPT);
-          this.po_lo_text = { value: this.CNST_MESSAGES.PROJECT_PASSWORD_ENCRYPT };
-          this.project.GDPassword = this._electronService.ipcRenderer.sendSync('encrypt', this.project.GDPassword);
+  protected saveProject(): Observable<void> {
+    return this._translateService.getTranslations([
+      new TranslationInput('WORKSPACES.MESSAGES.SAVE', [this.project.name]),
+      new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR', [this.project.name]),
+    ]).pipe(switchMap((translations: any) => {
+      return this.validProject().pipe(switchMap((v: boolean) => {
+        if (v) {
+          if ((this._electronService.isElectronApp) && (this.editPassword != this.project.GDPassword)) {
+            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.PASSWORD_ENCRYPT);
+            this.po_lo_text = { value: this.CNST_MESSAGES.PASSWORD_ENCRYPT };
+            this.project.GDPassword = this._electronService.ipcRenderer.sendSync('encrypt', this.project.GDPassword);
+          }
+          this.po_lo_text = { value: translations['WORKSPACES.MESSAGES.SAVE'] };
+          return this._workspaceService.saveWorkspace(this.project).pipe(map((res: boolean) => {
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+            this.po_lo_text = { value: null };
+            this.goToProjects();
+          }, (err: any) => {
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['WORKSPACES.MESSAGES.SAVE_ERROR'], err);
+            this.po_lo_text = { value: null };
+          }));
         }
-        this.po_lo_text = { value: CNST_WORKSPACE_MESSAGES.WORKSPACE_SAVE };
-        this._workspaceService.saveWorkspace(this.project).subscribe((res: boolean) => {
-          this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, CNST_WORKSPACE_MESSAGES.WORKSPACE_SAVE_OK);
-          this.po_lo_text = { value: null };
-          this.goToProjects();
-        }, (err: any) => {
-          this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, CNST_WORKSPACE_MESSAGES.WORKSPACE_SAVE_ERROR, err);
-          this.po_lo_text = { value: null };
-        });
-      }
-    }, (err: any) => {
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, CNST_WORKSPACE_MESSAGES.WORKSPACE_SAVE_ERROR, err);
-      this.po_lo_text = { value: null };
-    });
+      }));
+    }));
   }
   
   protected openModalDatabase(): void {
@@ -394,7 +473,7 @@ export class WorkspaceAddComponent {
   
   protected newModalDatabase(): void {
     this.database = new Database();
-    this.project.databaseId = this._CNST_NO_OPTION_SELECTED.value;
+    this.project.databaseIdRef = this._CNST_NO_OPTION_SELECTED.value;
     this.openModalDatabase();
   }
   
@@ -403,19 +482,24 @@ export class WorkspaceAddComponent {
     this.showModalDatabase = false;
     if (newDatabase) {
       this.reloadDatabases().subscribe((b: boolean) => {
-        this.project.databaseId = newDatabase.id;
+        this.project.databaseIdRef = newDatabase.id;
         this.database = newDatabase;
       }, (err: any) => {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, CNST_DATABASE_MESSAGES.DATABASE_LOADING_ERROR);
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.DATABASE_LOADING_ERROR);
       });
     }
   }
   
-  private testDatabaseConnection(): boolean {
-    this.po_lo_text = { value: CNST_DATABASE_MESSAGES.DATABASE_LOGIN };
-    let b: boolean = this._databaseService.testConnection(true, this.database);
-    this.po_lo_text = { value: null };
-    return b;
+  private testDatabaseConnection(): Observable<boolean> {
+    return this._translateService.getTranslations([
+      new TranslationInput('DATABASES.MESSAGES.LOGIN', [this.database.name]),
+    ]).pipe(switchMap((translations: any) => {
+      this.po_lo_text = { value: translations['DATABASES.MESSAGES.LOGIN'] };
+      return this._databaseService.testConnection(true, this.database).pipe(map((validate: boolean) => {
+        this.po_lo_text = { value: null };
+        return validate;
+      }));
+    }));
   }
   
   protected enterPassword(event: any): void {

@@ -16,7 +16,7 @@ import { Workspace, Database } from '../utilities/interfaces';
 import { CNST_MODALIDADE_CONTRATACAO, CNST_NO_OPTION_SELECTED, CNST_LOGLEVEL } from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
 
-import { forkJoin } from 'rxjs';
+import { Observable, forkJoin, catchError, map, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-workspace',
@@ -91,11 +91,10 @@ export class WorkspaceComponent implements OnInit {
       
       this.lbl_title = translations['WORKSPACES.TITLE'];
       this.lbl_deleteConfirmation = translations['WORKSPACES.DELETE_CONFIRMATION'];
-      
       this.CNST_MESSAGES = {
-        LOADING: translations['WORKSPACES.LOADING'],
-        LOADING_ERROR: translations['WORKSPACES.LOADING_ERROR'],
-        DELETE_OK: translations['WORKSPACES.DELETE_OK']
+        LOADING: translations['WORKSPACES.MESSAGES.LOADING'],
+        LOADING_ERROR: translations['WORKSPACES.MESSAGES.LOADING_ERROR'],
+        DELETE_OK: translations['WORKSPACES.MESSAGES.DELETE_OK']
       };
     });
   }
@@ -111,14 +110,15 @@ export class WorkspaceComponent implements OnInit {
       ,this._databaseService.getDatabases()
     ]).subscribe((results: [Workspace[], Database[]]) => {
       this.databases = results[1];
-      this.projects = results[0]
-        .filter((w: Workspace) => { return w.databaseId != CNST_NO_OPTION_SELECTED.value })
-        .map((w: Workspace) => { 
-          w.databaseName = this.databases.find((db: Database) => {
-            return db.id === w.databaseId;
-          }).name;
-            return w;
-        });
+      this.projects = results[0].map((w: Workspace) => {
+        let db: Database = this.databases.find((db: Database) => {
+          return db.id === w.databaseIdRef;
+        })
+        
+        if (db != undefined) w.databaseName = db.name;
+        else w.databaseName = CNST_NO_OPTION_SELECTED.label;
+        return w;
+      });
       this.po_lo_text = { value: null };
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.LOADING_ERROR);
@@ -150,25 +150,26 @@ export class WorkspaceComponent implements OnInit {
     this.modal_2.open();
   }
   
-  protected modal_2_confirm(): void {
+  protected modal_2_confirm(): Observable<void> {
     this.modal_2.close();
-    this._translateService.getTranslations([
-      new TranslationInput('WORKSPACES.DELETE', [this.projectToDelete.name]),
-      new TranslationInput('WORKSPACES.DELETE_ERROR', [this.projectToDelete.name])
-    ]).subscribe((translations: any) => {
-      this.po_lo_text = { value: translations['WORKSPACES.DELETE'] };
-      this._workspaceService.deleteWorkspace(this.projectToDelete)
-      .subscribe((b: boolean) => {
+    return this._translateService.getTranslations([
+      new TranslationInput('WORKSPACES.MESSAGES.DELETE', [this.projectToDelete.name]),
+      new TranslationInput('WORKSPACES.MESSAGES.DELETE_ERROR', [this.projectToDelete.name])
+    ]).pipe(switchMap((translations: any) => {
+      this.po_lo_text = { value: translations['WORKSPACES.MESSAGES.DELETE'] };
+      return this._workspaceService.deleteWorkspace(this.projectToDelete)
+      .pipe(map((b: boolean) => {
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.DELETE_OK);
         this.po_lo_text = { value: null };
         this.projectToDelete = null;
         this.loadWorkspaces();
-      }, (err: any) => {
-        this._utilities.createNotification(CNST_LOGLEVEL.INFO, translations['WORKSPACES.DELETE_ERROR']);
+      }), catchError((err: any) => {
+        this._utilities.createNotification(CNST_LOGLEVEL.INFO, translations['WORKSPACES.MESSAGES.DELETE_ERROR']);
         this.po_lo_text = { value: null };
         this.projectToDelete = null;
-      });
-    });
+        throw err;
+      }));
+    }));
   }
   
   protected modal_2_close(): void {

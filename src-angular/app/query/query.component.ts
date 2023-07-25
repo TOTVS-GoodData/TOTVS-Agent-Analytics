@@ -44,7 +44,7 @@ export class QueryComponent implements OnInit {
   protected po_lo_text: any = { value: null };
   public schedulesQueryTotal: ScheduleQuery[] = [];
   public schedulesQuery: any[] = [];
-  public schedulesQueryProtheus: any[] = [];
+  public schedulesQueryExport: any[] = [];
   protected _CNST_FIELD_NAMES: any;
   public projectExport: Workspace = null;
   
@@ -183,14 +183,14 @@ export class QueryComponent implements OnInit {
         s.erp = w.erp;
         s.contractType = w.contractType;
         s.module = w.module;
-        s.databaseType = results[3].find((db: Database) => (db.id == w.databaseId)).type;
+        let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
+        s.databaseType = (db != undefined ? _constants.CNST_DATABASE_TYPES.find((type: any) => (type.value == db.type)).brand : _constants.CNST_NO_OPTION_SELECTED.label);
         if (s.databaseType.indexOf(_constants.CNST_DATABASE_ORACLE) > -1) s.databaseType = _constants.CNST_DATABASE_ORACLE;
         return s;
       });
       
-      this.schedulesQuery = this.schedulesQueryTotal.filter((sc: any) => !((sc.erp ==  _constants.CNST_ERP_PROTHEUS) && (sc.contractType == _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA)));
-      this.schedulesQueryProtheus = this.schedulesQueryTotal.filter((sc: any) => ((sc.erp ==  _constants.CNST_ERP_PROTHEUS) && (sc.contractType == _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA)));
-      
+      this.schedulesQuery = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType == _constants.CNST_NO_OPTION_SELECTED.label));
+      this.schedulesQueryExport = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType != _constants.CNST_NO_OPTION_SELECTED.label));
       this.listSchedule = results[0].map((sq: any) => {
         return { label: sq.name, value: sq.id };
       });

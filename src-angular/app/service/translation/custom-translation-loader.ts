@@ -1,3 +1,5 @@
+import { Injectable } from '@angular/core';
+
 import { TranslateLoader } from '@ngx-translate/core';
 
 import { HttpService } from '../http.service';
@@ -21,6 +23,9 @@ class Translation {
   replacement: string[];
 }
 
+@Injectable({
+  providedIn: 'root',
+})
 export class CustomTranslationLoader implements TranslateLoader {
   constructor(private _httpService: HttpService) {
   }
@@ -28,5 +33,9 @@ export class CustomTranslationLoader implements TranslateLoader {
   public getTranslation(language: string): Observable<any> {
     language = language.replaceAll('\-','\_');
     return of(TRANSLATIONS[language]);
+  }
+  
+  public getAvailableLanguages(): string[] {
+    return ['pt_BR', 'en_US', 'es_ES'];
   }
 }

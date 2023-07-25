@@ -58,7 +58,7 @@ export class DataBaseComponent implements OnInit {
       new TranslationInput('DATABASES.MESSAGES.LOADING', []),
       new TranslationInput('DATABASES.MESSAGES.LOADING_ERROR', []),
       new TranslationInput('DATABASES.MESSAGES.DELETE_OK', []),
-      new TranslationInput('DATABASES.MESSAGES.DELETE_ERROR_PROJECTS', [])
+      new TranslationInput('DATABASES.MESSAGES.DELETE_ERROR_WORKSPACES', [])
     ]).subscribe((translations: any) => {
       this.setoptions = [
         { label: translations['BUTTONS.EDIT'],  action: this.editDatabase.bind(this) },

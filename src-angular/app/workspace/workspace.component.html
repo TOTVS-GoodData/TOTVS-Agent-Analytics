@@ -47,7 +47,7 @@
     [p-secondary-action]="modal_2_close">
     <po-modal-footer>
         <po-button [p-label]="lbl_goBack" (p-click)="modal_2_close()"></po-button>
-        <po-button [p-label]="lbl_confirm" (p-click)="modal_2_confirm()" p-kind="primary"></po-button>
+        <po-button [p-label]="lbl_confirm" (p-click)="modal_2_confirm().subscribe()" p-kind="primary"></po-button>
     </po-modal-footer>
   </po-modal> 
 </po-page-list>

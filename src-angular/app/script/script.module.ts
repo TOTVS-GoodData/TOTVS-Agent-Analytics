@@ -11,6 +11,7 @@ import { PoLoadingModule } from '@po-ui/ng-components';
 
 import { ScriptComponent } from './script.component';
 import { SharedModule } from '../shared/shared.module';
+import { TranslationModule } from '../service/translation/translation.module';
 
 
 @NgModule({
@@ -20,6 +21,7 @@ import { SharedModule } from '../shared/shared.module';
     imports: [
         CommonModule,
         FormsModule,
+      TranslationModule,
         HttpClientModule,
       PoListViewModule,
       PoButtonModule,

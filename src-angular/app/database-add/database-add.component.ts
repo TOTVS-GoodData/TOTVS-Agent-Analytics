@@ -11,22 +11,7 @@ import { Utilities } from '../utilities/utilities';
 
 import { TranslationService, TranslationInput } from '../service/translation/translation-service';
 
-import { Observable, of, map } from 'rxjs';
-
-const CNST_FIELD_NAMES: Array<any> = [
-   { key: 'name', value: 'Nome da configuração*' }
-  ,{ key: 'type', value: 'Tipo de banco de dados*' }
-  ,{ key: 'driverClass', value: 'Driver*' }
-  ,{ key: 'driverPath', value: 'Caminho do driver*' }
-  ,{ key: 'ip', value: 'Endereço IP*' }
-  ,{ key: 'ipType', value: 'Tipo*' }
-  ,{ key: 'port', value: 'Porta*' }
-  ,{ key: 'schema', value: 'Schema / SID*' }
-  ,{ key: 'instance', value: 'Instância do banco de dados' }
-  ,{ key: 'connectionString', value: 'String de conexão final*' }
-  ,{ key: 'username', value: 'Usuário*' }
-  ,{ key: 'password', value: 'Senha*' }
-];
+import { Observable, of, map, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-database-add',
@@ -52,7 +37,7 @@ export class DataBaseAddComponent {
   protected lbl_ipType: string;
   protected lbl_ip: string;
   protected lbl_port: string;
-  protected lbl_schema: string;
+  protected lbl_db_databaseName: string;
   protected lbl_instance: string;
   protected lbl_connectionString: string;
   protected lbl_username: string;
@@ -70,7 +55,7 @@ export class DataBaseAddComponent {
   protected lbl_title: string;
   protected po_lo_text: any = { value: null };
   protected database: Database = new Database();
-  protected schema: string = null;
+  protected db_databaseName: string = null;
   protected editPassword: string = null;
   protected regexPattern: string = null;
   
@@ -105,12 +90,15 @@ export class DataBaseAddComponent {
       new TranslationInput('DATABASES.TABLE.HOST_NAME', []),
       new TranslationInput('DATABASES.TABLE.PORT', []),
       new TranslationInput('DATABASES.TABLE.DATABASE', []),
+      new TranslationInput('DATABASES.TABLE.SID', []),
+      new TranslationInput('DATABASES.TABLE.SERVICE_NAME', []),
       new TranslationInput('DATABASES.TABLE.INSTANCE', []),
       new TranslationInput('DATABASES.TABLE.CONNECTION_STRING', []),
       new TranslationInput('DATABASES.TABLE.USERNAME', []),
       new TranslationInput('DATABASES.TABLE.PASSWORD', []),
+      new TranslationInput('DATABASES.TABLE.INSTANCE', []),
       new TranslationInput('DATABASES.MESSAGES.SAVE_OK', []),
-      new TranslationInput('DATABASES.TABLE.INSTANCE', [])
+      new TranslationInput('DATABASES.MESSAGES.VALIDATE', [])
     ]).subscribe((translations: any) => {
       this.lbl_testConnection = translations['BUTTONS.TEST_CONNECTION'];
       this.lbl_goBack = translations['BUTTONS.GO_BACK'];
@@ -123,11 +111,26 @@ export class DataBaseAddComponent {
       this.lbl_ipType = translations['DATABASES.TABLE.HOST_TYPE'] + '*';
       this.lbl_ip = translations['DATABASES.TABLE.HOST_NAME'] + '*';
       this.lbl_port = translations['DATABASES.TABLE.PORT'] + '*';
-      this.lbl_schema = translations['DATABASES.TABLE.DATABASE'] + '*';
+      this.lbl_db_databaseName = translations['DATABASES.TABLE.DATABASE'] + '*';
       this.lbl_instance = translations['DATABASES.TABLE.INSTANCE'];
       this.lbl_connectionString = translations['DATABASES.TABLE.CONNECTION_STRING'] + '*';
       this.lbl_username = translations['DATABASES.TABLE.USERNAME'] + '*';
       this.lbl_password = translations['DATABASES.TABLE.PASSWORD'] + '*';
+      
+      this.CNST_FIELD_NAMES = [
+        { key: 'name', value: translations['DATABASES.TABLE.NAME'] },
+        { key: 'type', value: translations['DATABASES.TABLE.TYPE'] },
+        { key: 'driverClass', value: translations['DATABASES.TABLE.DRIVER_CLASS'] },
+        { key: 'driverPath', value: translations['DATABASES.TABLE.DRIVER_PATH'] },
+        { key: 'ip', value: translations['DATABASES.TABLE.HOST_NAME'] },
+        { key: 'ipType', value: translations['DATABASES.TABLE.HOST_TYPE'] },
+        { key: 'port', value: translations['DATABASES.TABLE.PORT'] },
+        { key: 'db_databaseName', value: translations['DATABASES.TABLE.DATABASE'] },
+        { key: 'instance', value: translations['DATABASES.TABLE.INSTANCE'] },
+        { key: 'connectionString', value: translations['DATABASES.TABLE.CONNECTION_STRING'] },
+        { key: 'username', value: translations['DATABASES.TABLE.USERNAME'] },
+        { key: 'password', value: translations['DATABASES.TABLE.PASSWORD'] }
+      ];
       
       this.CNST_MESSAGES = {
         SAVE_OK: translations['DATABASES.MESSAGES.SAVE_OK'],
@@ -146,10 +149,20 @@ export class DataBaseAddComponent {
       this.regexPattern = (this.database.ipType ? _constants.CNST_DATABASE_IPTYPES.find((db: any) => {
         return (db.value == this.database.ipType)
       }).pattern : null);
-      this.schema = (this.database.schema ? this.database.schema : this.database.sid);
       if (this.database.id != null) {
         this.lbl_title = translations['DATABASES.EDIT_DATABASE'];
         this.editPassword = this.database.password;
+        switch(this.database.type) {
+        case 'Oracle_SID':
+          this.lbl_db_databaseName = translations['DATABASES.TABLE.SID'] + '*';
+          break;
+        case 'Oracle_ServiceName':
+          this.lbl_db_databaseName = translations['DATABASES.TABLE.SERVICE_NAME'] + '*';
+          break;
+        default:
+          this.lbl_db_databaseName = translations['DATABASES.TABLE.DATABASE'] + '*';
+          break;
+        }
       } else {
         this.lbl_title = translations['DATABASES.NEW_DATABASE'];
         this.editPassword = null;
@@ -161,7 +174,6 @@ export class DataBaseAddComponent {
     if (this.databaseObject) {
       this.database = this.databaseObject;
       this.editPassword = this.database.password;
-      this.lbl_title = 'Alterar Banco de dados';
     }
   }
   
@@ -169,21 +181,32 @@ export class DataBaseAddComponent {
     this.database.driverClass = _constants.CNST_DATABASE_TYPES.find((db: any) => { return db.value == driver }).driverClass;
     this.database.driverPath = _constants.CNST_DATABASE_TYPES.find((db: any) => { return db.value == driver }).driverPath;
     this.database.port = _constants.CNST_DATABASE_TYPES.find((db: any) => { return db.value == driver }).defaultPort;
-    this.setDatabaseSchema((this.database.schema ? this.database.schema : this.database.sid));
+    this.setDatabaseName(null);
     this.updateConnectionString();
+    
+    this._translateService.getTranslations([
+      new TranslationInput('DATABASES.TABLE.SID', []),
+      new TranslationInput('DATABASES.TABLE.SERVICE_NAME', []),
+      new TranslationInput('DATABASES.TABLE.DATABASE', [])
+    ]).subscribe((translations: any) => {
+      switch(this.database.type) {
+        case 'Oracle_SID':
+          this.lbl_db_databaseName = translations['DATABASES.TABLE.SID'] + '*';
+          this.CNST_FIELD_NAMES.find((field: any) => (field.key == 'db_databaseName')).value = translations['DATABASES.TABLE.SID'];
+          break;
+        case 'Oracle_ServiceName':
+          this.lbl_db_databaseName = translations['DATABASES.TABLE.SERVICE_NAME'] + '*';
+          this.CNST_FIELD_NAMES.find((field: any) => (field.key == 'db_databaseName')).value = translations['DATABASES.TABLE.SERVICE_NAME'];
+          break;
+        default:
+          this.lbl_db_databaseName = translations['DATABASES.TABLE.DATABASE'] + '*';
+          this.CNST_FIELD_NAMES.find((field: any) => (field.key == 'db_databaseName')).value = translations['DATABASES.TABLE.DATABASE'];
+          break;
+      }
+    });
   }
   
-  protected setDatabaseSchema(schema: string): void {
-    switch(this.database.type) {
-      case 'Oracle_SID':
-        this.database.schema = null;
-        this.database.sid = schema;
-        break;
-      default:
-        this.database.schema = schema;
-        this.database.sid = null;
-        break;
-    }
+  protected setDatabaseName(db: string): void {
     this.updateConnectionString();
   }
   
@@ -198,49 +221,55 @@ export class DataBaseAddComponent {
     
     this.database.ip = (this.database.ip == null ? null : this.database.ip.replace(/\s+/g, ''));
     this.database.port = (this.database.port == null ? null : this.database.port.replace(/\s+/g, ''));
-    this.database.schema = (this.database.schema == null ? null : this.database.schema.replace(/\s+/g, ''));
-    this.database.sid = (this.database.sid == null ? null : this.database.sid.replace(/\s+/g, ''));
+    this.database.db_databaseName = (this.database.db_databaseName == null ? null : this.database.db_databaseName.replace(/\s+/g, ''));
     this.database.instance = (this.database.instance == null ? null : this.database.instance.replace(/\s+/g, ''));
     
     if (this.database.ip == '') { this.database.ip = null; }
     if (this.database.port == '') { this.database.port = null; }
-    if (this.database.schema == '') { this.database.schema = null; }
-    if (this.database.sid == '') { this.database.sid = null; }
+    if (this.database.db_databaseName == '') { this.database.db_databaseName = null; }
     if (this.database.instance == '') { this.database.instance = null; }
     
-    switch(this.database.type) {
-      case 'SQL_Server':
-        this.database.connectionString = driverConnectionString
-                               + (this.database.ip == null ? '<ENDERECO_IP>' : this.database.ip)
-                               + (this.database.port == null ? ':<PORTA>' : ':' + this.database.port)
-                               + (this.database.instance == null ? '' : ';InstanceName=' + this.database.instance)
-                               + (this.database.schema == null ? ';DatabaseName=<SCHEMA>' : ';DatabaseName=' + this.database.schema);
-        break;
-      case 'Oracle_ServiceName':
-        this.database.connectionString = driverConnectionString
-                               + (this.database.ip == null ? '<ENDERECO_IP>' : this.database.ip)
-                               + (this.database.port == null ? ':<PORTA>' : ':' + this.database.port)
-                               + (this.database.schema == null ? '/<SCHEMA>' : '/' + this.database.schema);
-        break;
-      case 'Oracle_SID':
-        this.database.connectionString = driverConnectionString
-                               + (this.database.ip == null ? '<ENDERECO_IP>' : this.database.ip)
-                               + (this.database.port == null ? ':<PORTA>' : ':' + this.database.port)
-                               + (this.database.sid == null ? ':<SID>' : ':' + this.database.sid);
-        break;
-      case 'Progress':
-        this.database.connectionString = driverConnectionString
-                               + (this.database.ip == null ? '<ENDERECO_IP>' : this.database.ip)
-                               + (this.database.port == null ? ':<PORTA>' : ':' + this.database.port)
-                               + (this.database.schema == null ? ';DatabaseName=<SCHEMA>' : ';DatabaseName=' + this.database.schema);
-        break;
-      case 'Informix':
-        this.database.connectionString = driverConnectionString
-                               + (this.database.ip == null ? '<ENDERECO_IP>' : this.database.ip)
-                               + (this.database.port == null ? ':<PORTA>' : ':' + this.database.port)
-                               + (this.database.schema == null ? '/<SCHEMA>' : '/' + this.database.schema);
-        break;
-    }
+    this._translateService.getTranslations([
+      new TranslationInput('DATABASES.CONNECTION_STRING.IP_ADDRESS', []),
+      new TranslationInput('DATABASES.CONNECTION_STRING.PORT', []),
+      new TranslationInput('DATABASES.CONNECTION_STRING.DATABASE_NAME', []),
+      new TranslationInput('DATABASES.CONNECTION_STRING.SERVICE_NAME', []),
+      new TranslationInput('DATABASES.CONNECTION_STRING.SID', [])
+    ]).subscribe((translations: any) => {
+      switch(this.database.type) {
+        case 'SQL_Server (2012)':
+          this.database.connectionString = driverConnectionString
+                                 + (this.database.ip == null ? translations['DATABASES.CONNECTION_STRING.IP_ADDRESS'] : this.database.ip) + ':'
+                                 + (this.database.port == null ? translations['DATABASES.CONNECTION_STRING.PORT'] : this.database.port)
+                                 + (this.database.instance == null ? '' : ';InstanceName=' + this.database.instance) + ';DatabaseName='
+                                 + (this.database.db_databaseName == null ? translations['DATABASES.CONNECTION_STRING.DATABASE_NAME'] : this.database.db_databaseName);
+          break;
+        case 'Oracle_ServiceName':
+          this.database.connectionString = driverConnectionString
+                                 + (this.database.ip == null ? translations['DATABASES.CONNECTION_STRING.IP_ADDRESS'] : this.database.ip) + ':'
+                                 + (this.database.port == null ? translations['DATABASES.CONNECTION_STRING.PORT'] : this.database.port) + '/'
+                                 + (this.database.db_databaseName == null ? translations['DATABASES.CONNECTION_STRING.SERVICE_NAME'] : this.database.db_databaseName);
+          break;
+        case 'Oracle_SID':
+          this.database.connectionString = driverConnectionString
+                                 + (this.database.ip == null ? translations['DATABASES.CONNECTION_STRING.IP_ADDRESS'] : this.database.ip) + ':'
+                                 + (this.database.port == null ? translations['DATABASES.CONNECTION_STRING.PORT'] : this.database.port) + ':'
+                                 + (this.database.db_databaseName == null ? translations['DATABASES.CONNECTION_STRING.SID'] : this.database.db_databaseName);
+          break;
+        case 'Progress':
+          this.database.connectionString = driverConnectionString
+                                 + (this.database.ip == null ? translations['DATABASES.CONNECTION_STRING.IP_ADDRESS'] : this.database.ip) + ':'
+                                 + (this.database.port == null ? translations['DATABASES.CONNECTION_STRING.PORT'] : this.database.port) + ';DatabaseName='
+                                 + (this.database.db_databaseName == null ? translations['DATABASES.CONNECTION_STRING.DATABASE_NAME'] : this.database.db_databaseName);
+          break;
+        case 'Informix':
+          this.database.connectionString = driverConnectionString
+                                 + (this.database.ip == null ? translations['DATABASES.CONNECTION_STRING.IP_ADDRESS'] : this.database.ip) + ':'
+                                 + (this.database.port == null ? translations['DATABASES.CONNECTION_STRING.PORT'] : this.database.port) + '/'
+                                 + (this.database.db_databaseName == null ? translations['DATABASES.CONNECTION_STRING.DATABASE_NAME'] : this.database.db_databaseName);
+          break;
+      }
+    });
   }
   
   protected goBack(newDatabase?: Database): void {
@@ -252,10 +281,12 @@ export class DataBaseAddComponent {
   }
   
   protected saveDatabase(): void {
-      if (this.validateDatabase()) {
+    this.validateDatabase().subscribe((validate: boolean) => {
+      if (validate) {
         this._translateService.getTranslations([
-          new TranslationInput('DATABASE.MESSAGES.SAVE', [this.database.name]),
-          new TranslationInput('DATABASE.MESSAGES.SAVE_ERROR', [this.database.name])
+          new TranslationInput('DATABASES.MESSAGES.SAVE', [this.database.name]),
+          new TranslationInput('DATABASES.MESSAGES.SAVE_ERROR', [this.database.name]),
+          new TranslationInput('DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME', [this.database.name])
         ]).subscribe((translations: any) => {
           if ((this._electronService.isElectronApp) && (this.editPassword != this.database.password)) {
             this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.PASSWORD_ENCRYPT);
@@ -263,46 +294,44 @@ export class DataBaseAddComponent {
             this.database.password = this._electronService.ipcRenderer.sendSync('encrypt', this.database.password);
           }
           
-          this.po_lo_text = { value: translations['DATABASE.MESSAGES.SAVE'] };
+          this.po_lo_text = { value: translations['DATABASES.MESSAGES.SAVE'] };
           this._databaseService.saveDatabase(this.database).subscribe((b: boolean) => {
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+            if (b) {
+              this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+              this.goBack(this.database);
+            } else {
+              this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME']);
+            }
             this.po_lo_text = { value: null };
-            this.goBack(this.database);
           }, (err: any) => {
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['DATABASE.MESSAGES.SAVE_ERROR'], err);
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.SAVE_ERROR'], err);
             this.po_lo_text = { value: null };
           });
         });
       }
+    });
     //}, (err: any) => {
     //  this.po_lo_text = { value: null };
     //  this._utilities.createNotification('ERR', CNST_MESSAGES.DATABASE_DELETE_ERROR, err);
   }
   
-  private validateDatabase(): boolean {
+  private validateDatabase(): Observable<boolean> {
     this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.VALIDATE);
     this.po_lo_text = { value: this.CNST_MESSAGES.VALIDATE };
     let db: Database = new Database();
     let password: string = null;
     
     switch (this.database.type) {
-      case 'SQL_Server':
-        delete db.sid;
-        break;
       case 'Oracle_ServiceName':
-        delete db.sid;
         delete db.instance;
         break;
       case 'Oracle_SID':
-        delete db.schema;
         delete db.instance;
         break;
       case 'Progress':
-        delete db.sid;
         delete db.instance;
         break;
       case 'Informix':
-        delete db.sid;
         delete db.instance;
         break;
     }
@@ -320,34 +349,37 @@ export class DataBaseAddComponent {
       ]).subscribe((translations: any) => {
         this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED']);
       });
-      return false;
+      return of(false);
     } else {
       let regexIp = new RegExp(this.regexPattern);
       let regexPort = new RegExp(this._CNST_DATABASE_PORT_REGEX);
       if (!regexIp.test(this.database.ip)) {
         this.po_lo_text = { value: null };
         this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.ERROR_INVALID_IP);
-        return false;
+        return of(false);
       } else if (!regexPort.test(this.database.port)) {
         this.po_lo_text = { value: null };
         this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.ERROR_INVALID_PORT);
-        return false;
+        return of(false);
       }
     }
     
     // Validação da conexão do banco de dados //
-    return this.testDatabaseConnection();
+    return this.testDatabaseConnection().pipe(map((validate: boolean) => {
+      return validate;
+    }));
   }
   
-  public testDatabaseConnection(): boolean {
-    this._translateService.getTranslations([
-      new TranslationInput('DATABASE.LOGIN', [this.database.name])
-    ]).subscribe((translations: any) => {
-      this.po_lo_text = { value: translations['DATABASE.LOGIN'] };
-    });
-    let decrypt: boolean = (this.editPassword == this.database.password) ? true : false;
-    let b: boolean = this._databaseService.testConnection(decrypt, { ...this.database });
-    this.po_lo_text = { value: null };
-    return b;
+  public testDatabaseConnection(): Observable<boolean> {
+    return this._translateService.getTranslations([
+      new TranslationInput('DATABASES.MESSAGES.LOGIN', [this.database.name])
+    ]).pipe(switchMap((translations: any) => {
+      this.po_lo_text = { value: translations['DATABASES.MESSAGES.LOGIN'] };
+      let decrypt: boolean = (this.editPassword == this.database.password) ? true : false;
+      return this._databaseService.testConnection(decrypt, { ...this.database }).pipe(map((test: boolean) => {
+        this.po_lo_text = { value: null };
+        return test;
+      }));
+    }));
   }
 }

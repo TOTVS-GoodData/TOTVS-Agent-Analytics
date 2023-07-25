@@ -21,26 +21,7 @@ export class Utilities {
      private _electronService: ElectronService
     ,private _sessionService: SessionService
     ,private _notificationService: PoNotificationService
-  ) {}
-  
-  public findNextId(obj: any): number {
-    let ids = obj.map((o: any) => {
-      return o.id;
-    }).sort((v1: number, v2: number) => {
-      if (v1 < v2) return -1;
-      if (v1 > v2) return 1;
-      return 0;
-    });
-    
-    let start: number = 0;
-    let output: number = ids.find((id: number) => {
-      start = start + 1;
-      return (id != start);
-    });
-    
-    if (output == undefined) start = start + 1;
-    return start;
-  }
+  ) { this.debug = true; }
   
   public getLocalhostURL(): string {
     return 'http://localhost:' + this.CNST_LOCALHOST_PORT;

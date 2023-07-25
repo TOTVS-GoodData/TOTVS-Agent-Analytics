@@ -1,8 +1,8 @@
-import * as rc4 from 'arc4';
+import rc4 from 'arc4';
 import { CNST_FILE_ENCODING_INPUT, CNST_FILE_ENCODING_OUTPUT } from '../src-angular/app/utilities/constants-angular';
 
 export class Functions {
-  private static cipher: rc4.Cipher = rc4('arc4', 'rasgolkiebploisl');
+  public static cipher: rc4.Cipher = rc4('arc4', 'rasgolkiebploisl');
   
   public static encrypt(text: string): string {
     return Functions.cipher.encodeString(text, CNST_FILE_ENCODING_INPUT, CNST_FILE_ENCODING_OUTPUT);
@@ -12,7 +12,7 @@ export class Functions {
     return Functions.cipher.decodeString(text, CNST_FILE_ENCODING_OUTPUT, CNST_FILE_ENCODING_INPUT);
   }
   
-  public convertDate(dateTime, special): any {
+  public static convertDate(dateTime, special): any {
     function pad( s ) { return ( s < 10 ) ? '0' + s : s; }
     const d = new Date( dateTime );
   
@@ -40,7 +40,7 @@ export class Functions {
     return year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
   }
   
-  public between(x: number, min: number, max: number): boolean {
+  public static between(x: number, min: number, max: number): boolean {
     return ((x >= min) && (x <= max));
   }
 }

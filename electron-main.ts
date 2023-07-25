@@ -1,8 +1,7 @@
 import { BrowserWindow, ipcMain, App, IpcMainEvent, dialog, Tray, Menu, nativeImage } from 'electron';
 import { autoUpdater } from 'electron-updater';
-import * as AutoLaunch from 'auto-launch';
+import { AutoLaunch } from 'auto-launch';
 
-import { Process } from './src-electron/process';
 import { Execute } from './src-electron/execute';
 import { Functions } from './src-electron/functions';
 import { Files2 } from './src-electron/files2';
@@ -18,6 +17,8 @@ import { CNST_SCRIPT_MESSAGES } from './src-angular/app/script/script-messages';
 import { CNST_CONFIGURATION_MESSAGES } from './src-angular/app/configuration/configuration-messages';
 
 import { DatabaseData, Workspace, Database, Schedule, Query, Script, Configuration, Updater, UpdaterProgress } from './src-angular/app/utilities/interfaces';
+
+import { lastValueFrom, map } from 'rxjs';
 
 export default class Main {
   public static CNST_MESSAGES: any = {
@@ -37,16 +38,14 @@ export default class Main {
   
   public static mainWindow: Electron.BrowserWindow;
   static application: Electron.App;
-  static process: Process = new Process();
   static execute: Execute = new Execute();
-  static functions: Functions = new Functions();
   
   static hidden: boolean = false;
   static triggerSchedules: boolean = true;
   static terminate: boolean = false;
   
   private static setAutoLaunchOptions(): void {
-    let autoLaunch: AutoLaunch = new AutoLaunch({
+    /*let autoLaunch: AutoLaunch = new AutoLaunch({
 	    name: constants.CNST_PROGRAM_NAME.DEFAULT,
 	    path: process.execPath,
       isHidden: true
@@ -61,7 +60,7 @@ export default class Main {
       }
     }).catch((err: any) => {
       Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.AUTOLAUNCH_ERROR, null, null, null);
-    });
+    });*/
   }
   
   private static setAutoUpdaterPreferences(): void {
@@ -89,11 +88,11 @@ export default class Main {
       let offset: string = '';
       let speed: string = (Math.round((info.bytesPerSecond / 1000000 + Number.EPSILON) * 100) / 100) + 'MBps';
       
-      if (Main.functions.between(info.transferred, 0, 9999999)) {
+      if (Functions.between(info.transferred, 0, 9999999)) {
         offset = '   ';
-      } else if (Main.functions.between(info.transferred, 10000000, 99999999)) {
+      } else if (Functions.between(info.transferred, 10000000, 99999999)) {
         offset = '  ';
-      } else if (Main.functions.between(info.transferred, 100000000, 999999999)) {
+      } else if (Functions.between(info.transferred, 100000000, 999999999)) {
         offset = ' ';
       } else {
         offset = '';
@@ -101,9 +100,9 @@ export default class Main {
       
       str_total = offset + Math.trunc(info.transferred / 1000000) + 'MB';
       
-      if (Main.functions.between(info.percent, 0, 9)) {
+      if (Functions.between(info.percent, 0, 9)) {
         offset = '  ';
-      } else if (Main.functions.between(info.percent, 10, 99.99)) {
+      } else if (Functions.between(info.percent, 10, 99.99)) {
         offset = ' ';
       } else {
         offset = '';
@@ -184,11 +183,10 @@ export default class Main {
       });
     });
     
-    ipcMain.on('testDatabaseConnection', (event: IpcMainEvent, inputBuffer: string) => {
-      this.execute.testDatabaseConnection(inputBuffer).subscribe((res: any) => {
-        event.returnValue = res;
+    ipcMain.handle('testDatabaseConnection', (event: IpcMainEvent, inputBuffer: string) => {
+      return lastValueFrom(this.execute.testDatabaseConnection(inputBuffer).pipe(map((res: any) => {
         return res;
-      });
+      })));
     });
     
     /*******************/
@@ -436,10 +434,10 @@ export default class Main {
     
     
     
-    
+    /*
     ipcMain.on('setStatusExecution', (event: IpcMainEvent, idExecutionCancel, status) => {
       event.returnValue = this.process.setStatusExecution(idExecutionCancel, status);
-    });
+    });*/
   }
   
   private static renderWindow(): void {

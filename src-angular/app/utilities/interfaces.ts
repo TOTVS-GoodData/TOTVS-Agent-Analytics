@@ -125,7 +125,7 @@ export class DatabaseData {
 }
 
 export class Workspace {
-  id: number;
+  id: string;
   name: string;
   contractType: string;
   contractCode: string;
@@ -139,7 +139,7 @@ export class Workspace {
   GDWorkspaceUploadURL: string;
   GDProcessId: string;
   GDProcessGraph: string;
-  databaseId: number;
+  databaseIdRef: string;
   databaseName?: string;
   pathMyProperties: string;
   
@@ -155,12 +155,12 @@ export class Workspace {
     this.GDPassword = null;
     this.GDWorkspaceId = null;
     this.GDWorkspaceUploadURL = null;
-    this.databaseId = null;
+    this.databaseIdRef = null;
   }
 }
 
 export class Database {
-  id: number;
+  id: string;
   name: string;
   type: string
   driverClass: string;
@@ -168,9 +168,8 @@ export class Database {
   ipType: string;
   ip: string;
   port: string;
-  schema: string;
   instance: string;
-  sid: string;
+  db_databaseName: string;
   connectionString: string;
   username: string;
   password: string;
@@ -182,9 +181,9 @@ export class Database {
     this.driverClass = null;
     this.driverPath = null;
     this.ip = null;
+    this.ipType = null;
     this.port = null;
-    this.schema = null;
-    this.sid = null;
+    this.db_databaseName = null;
     this.connectionString = null;
     this.username = null;
     this.password = null;
@@ -194,7 +193,7 @@ export class Database {
 export class Schedule {
   id: number;
   name: string;
-  workspaceId: number;
+  workspaceId: string;
   workspaceName: string;
   windows: string[];
   SQLParameters: SQLParameter[];
@@ -211,7 +210,7 @@ export class Schedule {
     this.name = null;
     this.workspaceId = null;
     this.workspaceName = null;
-    this.windows = [];
+    this.windows = null;
     this.SQLParameters = [];
     this.ETLParameters = [];
     this.enabled = false;
@@ -277,6 +276,7 @@ export class Configuration {
   javaXmx: number;
   javaTmpDir: string;
   language: string;
+  lastId: number;
   constructor() {
     this.logfilesToKeep = 10;
     this.debug = false;

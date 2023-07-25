@@ -1,9 +1,9 @@
-<po-page-list p-title = "{{ operation }}">
+<po-page-list [p-title]="lbl_title">
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
   <form #projectForm="ngForm">
     <po-container class="padding-basic">
       <div class="po-row">
-        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">1 / 4 - Informações da Oferta</span>
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ 'WORKSPACES.SECTIONS.1' | translateExtended | async }}</span>
       </div>
       <div class="po-row">
         <po-select
@@ -57,7 +57,7 @@
     
     <po-container class="padding-basic">
       <div class="po-row">
-        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">2 / 4 - Informações da Plataforma GoodData</span>
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ 'WORKSPACES.SECTIONS.2' | translateExtended | async }}</span>
       </div>
       <div class="po-row">
         <po-input
@@ -88,7 +88,7 @@
         </po-password>
         <po-button
           class="po-md-6 po-lg-6 padding-button"
-          p-label="Carregar Projetos"
+          [p-label]="lbl_loadWorkspaces"
           [p-disabled]="( project.GDUsername === undefined ) || ( project.GDPassword === undefined ) ||
                         ( project.GDUsername === '' ) || ( project.GDPassword === '' )"
           (p-click)="getProjects(this.project.GDUsername, this.project.GDPassword, this.project.GDEnvironment, false).subscribe()">
@@ -132,7 +132,7 @@
     
     <po-container class="padding-basic">
       <div class="po-row">
-        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">3 / 4 - Informações do Banco de Dados</span>
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ 'WORKSPACES.SECTIONS.3' | translateExtended | async }}</span>
       </div>
       <div class="po-row vertical-align align-left db-row footer">
         <div>
@@ -141,7 +141,7 @@
         <po-select
           class="form-control db-select"
           name="databaseId"
-          [(ngModel)]="project.databaseId"
+          [(ngModel)]="project.databaseIdRef"
           (p-change)="onChangeDatabase($event)"
           [p-options]="listDatabase"
           p-required="false">
@@ -155,27 +155,27 @@
         </div>
       </div>
       <div class="po-row">
-        <ng-template [ngIf]="((project.databaseId != undefined) && (project.databaseId != _CNST_NO_OPTION_SELECTED.value))">
+        <ng-template [ngIf]="((project.databaseIdRef != undefined) && (project.databaseIdRef != _CNST_NO_OPTION_SELECTED.value))">
           <div class="po-row">
-            <po-input class="po-md-6 po-lg-6" name="databaseUsername" [(ngModel)]="database.username"  p-label="Usuário" [p-disabled]="true"></po-input>
-            <po-input class="po-md-6 po-lg-6" name="databaseType" [(ngModel)]="database.type" p-label="Tipo" [p-disabled]="true"></po-input>
+            <po-input class="po-md-6 po-lg-6" name="databaseUsername" [(ngModel)]="database.username"  [p-label]="lbl_dbUsername" [p-disabled]="true"></po-input>
+            <po-input class="po-md-6 po-lg-6" name="databaseType" [(ngModel)]="database.type" [p-label]="lbl_dbType" [p-disabled]="true"></po-input>
           </div>
           <div class="po-row">
-            <po-password class="po-md-6 po-lg-6" name="databasePassword" [(ngModel)]="database.password" p-label="Senha" [p-disabled]="true"></po-password>
-            <po-input class="po-md-6 po-lg-6" name="databaseDriverName" [(ngModel)]="database.driverClass" p-label="Driver" [p-disabled]="true"></po-input>
+            <po-password class="po-md-6 po-lg-6" name="databasePassword" [(ngModel)]="database.password" [p-label]="lbl_dbPassword" [p-disabled]="true"></po-password>
+            <po-input class="po-md-6 po-lg-6" name="databaseDriverName" [(ngModel)]="database.driverClass" [p-label]="lbl_dbDriverClass" [p-disabled]="true"></po-input>
           </div>
           <div class="po-row vertical-align-end">
             <po-button
               class="po-md-3 po-lg-3 padding-button"
               (p-click)="testDatabaseConnection()"
-              p-label="Testar conexão"
+              [p-label]="lbl_testConnection"
             />
             <po-button
               class="po-md-3 po-lg-3 padding-button"
               (p-click)="openModalDatabase()"
-              p-label="Editar"
+              [p-label]="lbl_edit"
             />
-            <po-input class="po-md-6 po-lg-6" name="databaseDriverURL" p-label="URL do Driver" [(ngModel)]="database.driverPath" [p-disabled]="true"></po-input>
+            <po-input class="po-md-6 po-lg-6" name="databaseDriverURL" [p-label]="lbl_dbDriverPath" [(ngModel)]="database.driverPath" [p-disabled]="true"></po-input>
           </div>
         </ng-template>
       </div>
@@ -183,7 +183,7 @@
     
     <po-container class="padding-basic padding-bottom">
       <div class="po-row vertical-align">
-        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">4 / 4 - Configurações finais</span>
+        <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ 'WORKSPACES.SECTIONS.4' | translateExtended | async }}</span>
       </div>
       <div class="po-row vertical-align">
         <po-input
@@ -195,8 +195,8 @@
         </po-input>
       </div>
       <div class="po-row footer">
-        <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Voltar" (p-click)="goToProjects()" />
-        <po-button class="po-button removeBorder padding-0" p-size="medium" p-label="Salvar" (p-click)="saveProject()" p-kind="primary" />
+        <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_edit" (p-click)="goToProjects()" />
+        <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_save" (p-click)="saveProject().subscribe()" p-kind="primary" />
       </div>
     </po-container>
     

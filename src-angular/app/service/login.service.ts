@@ -32,7 +32,6 @@ export class LoginService {
     // Devemos assinalar o alias que está sendo usado utilizado antes de tentar o login,
     // para que o session service defina o servidor que devera realizar o login
     this._sessionService.ENVIRONMENT = env;
-    
     let headers: HttpHeaders = this._utilities.getDefaultHeaders();
     return this._http.post(this._sessionService.SERVER + 'gdc/account/login', payload, { withCredentials: true, headers: headers, observe: 'response' })
     .pipe(switchMap((res2: any) => {
@@ -52,11 +51,11 @@ export class LoginService {
   }
   
   public refreshLoginSection(): Observable<boolean> {
-    return this.refreshToken().pipe(switchMap((res2: any) => {
+    return this.refreshToken().pipe(map((res2: any) => {
       this._sessionService.TOKEN_TT = res2.body.userToken.token;
-      return Promise.resolve(true);
+      return true;
     }), catchError((authError: any) => {
-      return Promise.resolve(false);
+      throw authError;
     }));
   }
 }

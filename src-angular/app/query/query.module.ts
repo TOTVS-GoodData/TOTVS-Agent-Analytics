@@ -12,6 +12,7 @@ import { PoLoadingModule } from '@po-ui/ng-components';
 import { QueryComponent } from './query.component';
 import { SharedModule } from '../shared/shared.module';
 
+import { TranslationModule } from '../service/translation/translation.module';
 
 @NgModule({
     declarations: [
@@ -24,6 +25,7 @@ import { SharedModule } from '../shared/shared.module';
       PoListViewModule,
       PoButtonModule,
         SharedModule,
+      TranslationModule,
         PoPageModule,
         PoTableModule,
         PoModalModule,

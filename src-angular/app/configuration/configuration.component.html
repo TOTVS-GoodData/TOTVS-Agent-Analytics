@@ -4,8 +4,8 @@
     <div class="po-row">
       <div class="po-row-50">
         <div class="po-row display-title">
-          <span class="title">{{ 'CONFIGURATION.APPLICATION' | translateExtended | async }}</span>
-          <span class="subtitle">({{ 'CONFIGURATION.VERSION' | translateExtended | async }} {{ AgentVersion }})</span>
+          <span class="title">{{ lbl_application }}</span>
+          <span class="subtitle">({{ lbl_version }} {{ AgentVersion }})</span>
         </div>
         
         <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
@@ -28,13 +28,18 @@
             [p-label-on]="lbl_debugModeOn"
             [p-label-position]="poDebugModeLabelPosition">
           </po-switch>
+          
+          <po-button-group
+            [p-buttons]="CNST_LANGUAGES"
+            p-toggle="single">
+          </po-button-group>
         </div>
       </div>
       
       <div class="po-row-50">
         <div class="po-row display-title">
-          <span class="title">{{ 'CONFIGURATION.JAVA' | translateExtended | async }}</span>
-          <span class="subtitle">({{ 'CONFIGURATION.VERSION' | translateExtended | async }} {{ JavaVersion }})</span>
+          <span class="title">{{ lbl_java }}</span>
+          <span class="subtitle">({{ lbl_version }} {{ JavaVersion }})</span>
         </div>
         
         <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
@@ -61,6 +66,7 @@
             name="po_javaXmx"
             [(ngModel)]="configuration.javaXmx"
             [p-label]="lbl_javaXmx"
+            [p-tooltip]="myTest"
             p-maxlength=5
             p-regex="99999">
           </po-number>
@@ -68,7 +74,7 @@
           <div class="po-md-12 po-lg-12">
             <span>{{ lbl_javaTmpDir }}</span>
             <div class="display-title">
-              <po-input class="conf-select grow" name="po_tmpDirFolder" [(ngModel)]="configuration.javaTmpDir" [p-disabled]="true"></po-input>
+              <po-input class="conf-select grow" name="po_tmpDirFolder" [p-tooltip]="myTest" [(ngModel)]="configuration.javaTmpDir" [p-disabled]="true"></po-input>
               <po-button
                 (p-click)="getFolder()"
                 p-icon="po-icon-folder"

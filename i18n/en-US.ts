@@ -1,4 +1,22 @@
 export const CNST_TRANSLATIONS_EN_US: any = {
+  SERVICES: {
+    GOODDATA: {
+      MESSAGES: {
+        LOADING: 'Logging in to GoodData\'s platform...',
+        LOADING_ERROR: 'Login has failed. Please check your credentials.',
+        LOADING_WORKSPACES: 'Login\'s successfull. Loadding workspaces...',
+        LOADING_WORKSPACES_OK: 'Workspaces successfully loaded!',
+        LOADING_WORKSPACES_ERROR: 'Unable to connect to GoodData\'s platform. Check your connection and try again.',
+        LOADING_PROCESSES: 'Loading ETL processes...',
+        LOADING_PROCESSES_ERROR: 'Unable to connect to GoodData\'s platform. Check your connection and try again.'
+      }
+    }
+  },
+  LANGUAGES: {
+    en_US: 'English',
+    pt_BR: 'Portuguese',
+    es_ES: 'Spanish'
+  },
   MENU: {
     WORKSPACES: 'Workspaces',
     DATABASES: 'Databases',
@@ -21,20 +39,52 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     NEW_PARAMETER: 'New parameter',
     YES_SIMPLIFIED: 'Y',
     NO_SIMPLIFIED: 'N',
-    TEST_CONNECTION: 'Test Connection'
+    TEST_CONNECTION: 'Test Connection',
+    LOAD_WORKSPACES: 'Load Workspaces'
   },
   WORKSPACES: {
     TITLE: 'Workspaces Management',
+    NEW_WORKSPACE: 'New Workspace',
+    EDIT_WORKSPACE: 'Edit Workspace',
     DELETE_CONFIRMATION: 'Are you sure you want to delete this workspace?',
+    SECTIONS: {
+      1: '1 / 4 - Commercial information',
+      2: '2 / 4 - GoodData\'s platform settings',
+      3: '3 / 4 - Database settings',
+      4: '4 / 4 - Final settings'
+    },
     MESSAGES: {
       LOADING: 'Loading workspaces...',
-      LOADING_ERROR: 'Error - An unexpected error has happened. Please try again.'
+      LOADING_OK: 'Workspaces loaded.',
+      LOADING_ERROR: 'Error - An unexpected error has happened. Please try again.',
+      LOADING_DATABASES: 'Loading workspaces currently using database ${p1}...',
+      LOADING_DATABASES_OK: 'Workspaces loaded.',
+      LOADING_DATABASES_ERROR: 'Error - An unexpected error has happened. Please try again.',
+      SAVE: 'Saving workspace: ${p1}',
+      SAVE_OK: 'Workspace successfully saved!',
+      SAVE_ERROR: 'Error - An unexpected error has happened while saving workspace ${p1}. Please try again.',
+      SAVE_ERROR_SAME_NAME: 'Error - The workspace \'${p1}\' could not be saved, because there\'s a workspace with that name already.',
+      DELETE: 'Deleting workspace: ${p1}',
+      DELETE_OK: 'Workspace successfully deleted!',
+      DELETE_ERROR: 'Error - An unexpected error has happened while deleting workspace ${p1}. Please try again.',
+      VALIDATE: 'Validating workspace...',
+      PASSWORD_ENCRYPT: 'Encrypting password...'
     },
     TABLE: {
+      CONTRACT_TYPE: 'Contract Type',
+      CUSTOMER_CODE: 'Customer\'s TOTVS code',
+      ERP: 'ERP',
+      MODULE: 'Module',
+      SOURCE: 'Data source',
+      USERNAME: 'Username',
+      ENVIRONMENT: 'Domain',
+      PASSWORD: 'Password',
       WORKSPACE: 'Workspace',
+      UPLOAD_URL: 'Upload URL',
+      PROCESS: 'ETL Process',
       GRAPH: 'Graph',
       DATABASE: 'Database',
-      CONTRACT_TYPE: 'Contract Type'
+      NAME: 'Configuration\'s name'
     }
   },
   DATABASES: {
@@ -42,6 +92,13 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     NEW_DATABASE: 'New Database',
     EDIT_DATABASE: 'Edit Database',
     DELETE_CONFIRMATION: 'Are you sure you want to delete this database?',
+    CONNECTION_STRING: {
+      IP_ADDRESS: '<IP_ADDRESS>',
+      PORT: '<PORT>',
+      DATABASE_NAME: '<DATABASE_NAME>',
+      SERVICE_NAME: '<SERVIÇE_NAME>',
+      SID: '<SID>'
+    },
     TABLE: {
       NAME: 'Configuration name',
       TYPE: 'Database type',
@@ -66,7 +123,8 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       SAVE: 'Saving database: ${p1}',
       SAVE_OK: 'Database successfully saved!',
       SAVE_ERROR: 'Error - An unexpected error has happened while saving database ${p1}. Please try again.',
-      DELETE: 'Deleting databasae: ${p1}',
+      SAVE_ERROR_SAME_NAME: 'Error - The database \'${p1}\' could not be saved, because there\'s a database with that name already.',
+      DELETE: 'Deleting database: ${p1}',
       DELETE_OK: 'Database successfully deleted!',
       DELETE_ERROR: 'Error - An unexpected error has happened while deleting database ${p1}. Please try again.',
       DELETE_ERROR_WORKSPACES: 'Error - Unable to delete this database, because there are workspaces using it.',
@@ -121,9 +179,11 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       ID_LOADING: 'Loading schedule with Id ${p1}...',
       ID_LOADING_OK: 'Schedule loaded.',
       ID_LOADING_ERROR: 'Error - An unexpected error has happened while saving schedule with Id ${p1}. Please try again.',
+      VALIDATE: 'Validating schedule...',
       SAVE: 'Saving schedule: ${p1}',
       SAVE_OK: 'Schedule successfuly saved!',
       SAVE_ERROR: 'Error - An unexpected error has happened while saving schedule ${p1}. Please try again.',
+      SAVE_ERROR_SAME_NAME: 'Error - The schedule \'${p1}\' could not be saved, because there\'s a schedule with that name already.',
       DELETE: 'Deleting schedule: ${p1}',
       DELETE_OK: 'Schedule successfully deleted!',
       DELETE_ERROR: 'Error - An unexpected error has happened while deleting schedule ${p1}. Please try again.',
@@ -161,6 +221,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       SAVE: 'Saving query: \'${p1}\'',
       SAVE_OK: 'Query successfully saved!',
       SAVE_ERROR: 'Error - An unexpected error has happened while saving query \'${p1}\'. Please try again.',
+      SAVE_ERROR_SAME_NAME: 'Error - The query \'${p1}\' could not be saved, because there\'s a query with that name already.',
       DELETE: 'Deleting query: \'${p1}\'',
       DELETE_OK: 'Query successfully deleted!',
       DELETE_ERROR: 'Error - An unexpected error has happened while deleting query \'${p1}\'. Please try again.',
@@ -202,6 +263,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       SAVE: 'Saving script: \'${p1}\'',
       SAVE_OK: 'Script successfully saved!',
       SAVE_ERROR: 'Error - An unexpected error has happened while saving script \'${p1}\'. Please try again.',
+      SAVE_ERROR_SAME_NAME: 'Error - The script \'${p1}\' could not be saved, because there\'s a script with that name already.',
       DELETE: 'Deleting script: \'${p1}\'',
       DELETE_OK: 'Script successfully deleted!',
       DELETE_ERROR: 'Error - An unexpected error has happened while deleting script \'${p1}\'. Please try again.',
@@ -266,6 +328,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
   },
   FORM_ERRORS: {
     FIELD_NOT_FILLED: 'Error - Mandatory field \'${p1}\' not informed.',
+    FIELD_NOT_FILLED_GRAPH: 'Error - Mandatory field  \'${p1}\' not informed. Please select a graph to execute, or remove field\'s \'ETL Process\' selecion.',
     FOLDER_SELECT_WARNING: 'Warning - Folder selection can only be tested with Electron.',
     ONLY_YES_OR_NO: 'Error - SQL Parameters can only be \'Y\' or \'N\'. Please check its typing.'
   }

@@ -11,7 +11,7 @@
   </div>
   
   <div class="po-row">
-    <po-list-view p-property-title="name" *ngIf="schedulesScript.length > 0" [p-items]="this.schedulesScript" [p-actions]="setListViewActions">
+    <po-list-view p-property-title="name" *ngIf="schedulesScript.length > 0" [p-items]="this.schedulesScript">
       <ng-template p-list-view-content-template let-item>
         <div class="po-row">
           <po-table
@@ -29,7 +29,7 @@
       </ng-template>
     </po-list-view>
     
-    <po-list-view p-property-title="name" *ngIf="schedulesScriptProtheus.length > 0" [p-items]="this.schedulesScriptProtheus" [p-actions]="setListViewActions">
+    <po-list-view p-property-title="name" *ngIf="schedulesScriptExport.length > 0" [p-items]="this.schedulesScriptExport" [p-actions]="setListViewActions">
       <ng-template p-list-view-content-template let-item>
         <div class="po-row">
           <po-table

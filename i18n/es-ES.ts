@@ -1,4 +1,22 @@
 export const CNST_TRANSLATIONS_ES_ES: any = {
+  SERVICES: {
+    GOODDATA: {
+      MESSAGES: {
+        LOADING: 'Iniciando sesión en la plataforma GoodData...',
+        LOADING_ERROR: 'Login ha fallado. Mira sus credenciales.',
+        LOADING_WORKSPACES: 'Login hecho con éxito. Cargando ambientes...',
+        LOADING_LOADING_WORKSPACES_OK: 'Ambientes cargados con éxito!',
+        LOADING_LOADING_WORKSPACES_ERROR: 'No fue posible conectar a la plataforma GoodData. Mira su conexión y intenta otra vez.',
+        LOADING_PROCESSES: 'Cargando procesos de ETL...',
+        LOADING_PROCESSES_ERROR: 'No fue posible conectar a la plataforma GoodData. Mira su conexión y intenta otra vez.'
+      }
+    }
+  },
+  LANGUAGES: {
+    en_US: 'Ingles',
+    pt_BR: 'Portugues',
+    es_ES: 'Español'
+  },
   MENU: {
     WORKSPACES: 'Ambientes',
     DATABASES: 'Bancos de Datos',
@@ -21,20 +39,52 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     NEW_PARAMETER: 'Anadir parámetro',
     YES_SIMPLIFIED: 'S',
     NO_SIMPLIFIED: 'N',
-    TEST_CONNECTION: 'Testar Conexión'
+    TEST_CONNECTION: 'Testar Conexión',
+    LOAD_WORKSPACES: 'Cargar Ambientes'
   },
   WORKSPACES: {
     TITLE: 'Cadastro de Ambientes',
+    NEW_WORKSPACE: 'Novo Ambiente',
+    EDIT_WORKSPACE: 'Cambiar Ambiente',
     DELETE_CONFIRMATION: '¿Estás seguro que quieres borrar este ambiente?',
     MESSAGES: {
       LOADING: 'Cargando ambientes...',
-      LOADING_ERROR: 'Error - Un error inesperado ocurrió. Por favor intenta otra vez.'
+      LOADING_OK: 'Ambientes cargados.',
+      LOADING_ERROR: 'Error - Un error inesperado ocurrió. Por favor intenta otra vez.',
+      LOADING_DATABASES: 'Cargando ambientes utilizando el banco de datos ${p1}...',
+      LOADING_DATABASES_OK: 'Ambientes cargados.',
+      LOADING_DATABASES_ERROR: 'Error - Un error inesperado ocurrió. Por favor intenta otra vez.',
+      SAVE: 'Gravando ambiente: ${p1}',
+      SAVE_OK: 'Ambiente gravado con éxito!',
+      SAVE_ERROR: 'Error - Un error inesperado ocurrió mientras gravación del ambiente ${p1}. Por favor intenta otra vez.',
+      SAVE_ERROR_SAME_NAME: 'Error - El ambiente \'${p1}\' no puede ser gravado, porqué ya existe un ambiente con este nombre.',
+      DELETE: 'Borrando ambiente: ${p1}',
+      DELETE_OK: 'Ambiente borrado con éxito!',
+      DELETE_ERROR: 'Error - Un error inesperado ocurrió mientras borro del ambiente ${p1}. Por favor intenta otra vez.',
+      VALIDATE: 'Validando informaciones del ambiente...',
+      PASSWORD_ENCRYPT: 'Encriptando contraseña...'
+    },
+    SECTIONS: {
+      1: '1 / 4 - Informaciones comerciales',
+      2: '2 / 4 - Informaciones de la plataforma GoodData',
+      3: '3 / 4 - Informaciones del banco de datos',
+      4: '4 / 4 - Configuraciones finales'
     },
     TABLE: {
+      CONTRACT_TYPE: 'Tipo de Contratación',
+      CUSTOMER_CODE: 'Codigo T del cliente',
+      ERP: 'ERP',
+      MODULE: 'Modulo',
+      SOURCE: 'Origen de los datos',
+      USERNAME: 'Usuario',
+      ENVIRONMENT: 'Dominio',
+      PASSWORD: 'Contraseña',
       WORKSPACE: 'Ambiente',
+      UPLOAD_URL: 'URL de upload',
+      PROCESS: 'Proceso de ETL',
       GRAPH: 'Graph',
       DATABASE: 'Banco de Datos',
-      CONTRACT_TYPE: 'Tipo de Contratación'
+      NAME: 'Nombre de la configuración'
     }
   },
   DATABASES: {
@@ -42,6 +92,13 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     NEW_DATABASE: 'Novo Banco de Datos',
     EDIT_DATABASE: 'Cambiar Banco de Datos',
     DELETE_CONFIRMATION: '¿Estás seguro que quieres borrar este banco de datos?',
+    CONNECTION_STRING: {
+      IP_ADDRESS: '<ENDERECO_IP>',
+      PORT: '<PORTA>',
+      DATABASE_NAME: '<BANCO_DE_DATOS>',
+      SERVICE_NAME: '<SERVICIO>',
+      SID: '<SID>'
+    },
     TABLE: {
       NAME: 'Nombre de la configuración',
       TYPE: 'Tipo de banco de datos',
@@ -65,6 +122,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       SAVE: 'Gravando banco de dato: ${p1}',
       SAVE_OK: 'Banco de dato gravado con éxito!',
       SAVE_ERROR: 'Error - Un error inesperado ocurrió mientras gravación del banco de datos ${p1}. Por favor intenta otra vez.',
+      SAVE_ERROR_SAME_NAME: 'Error - El banco de datos \'${p1}\' no puede ser gravado, porqué ya existe un banco con este nombre.',
       DELETE: 'Borrando banco de dato: ${p1}',
       DELETE_OK: 'Banco de dato borrado con éxito!',
       DELETE_ERROR: 'Error - Un error inesperado ocurrió mientras borro del banco de datos ${p1}. Por favor intenta otra vez.',
@@ -76,7 +134,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       VALIDATE: 'Validando informaciones del banco de datos...',
       ERROR_INVALID_IP: 'Error - Endereço IP inválido. Por favor mira si el tipo informado esta correcto (ipv4 / ipv6 / hostname).',
       ERROR_INVALID_PORT: 'Error - Porta del banco de datos inválida. Por favor mira si el numero esta en el range permitido (1024 - 65536).',
-      PASSWORD_ENCRYPT: 'Criptografando senhas...',
+      PASSWORD_ENCRYPT: 'Encriptando contraseña...',
     }
   },
   SCHEDULES: {
@@ -120,9 +178,11 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       ID_LOADING: 'Cargando horario con codigo ${p1}...',
       ID_LOADING_OK: 'Horario cargado.',
       ID_LOADING_ERROR: 'Error - Un error inesperado ocurrió mientras gravación del horario con id \'${p1}\'. Por favor intenta otra vez.',
+      VALIDATE: 'Validando horario...',
       SAVE: 'Gravando horario: ${p1}',
       SAVE_OK: 'Horario gravado con éxito!',
       SAVE_ERROR: 'Error - Un error inesperado ocurrió mientras gravación del horario ${p1}. Por favor intenta otra vez.',
+      SAVE_ERROR_SAME_NAME: 'Error - El horario \'${p1}\' no puede ser gravado, porqué ya existe un horario con este nombre.',
       DELETE: 'Borrando horario: ${p1}',
       DELETE_OK: 'Horario borrado con éxito!',
       DELETE_ERROR: 'Error - Un error inesperado ocurrió mientras borro del horario ${p1}. Por favor intenta otra vez.',
@@ -160,6 +220,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       SAVE: 'Gravando consulta: \'${p1}\'',
       SAVE_OK: 'Consulta gravada con éxito!',
       SAVE_ERROR: 'Error - Un error inesperado ocurrió mientras gravación de la consulta \'${p1}\'. Por favor intenta otra vez.',
+      SAVE_ERROR_SAME_NAME: 'Error - La consulta \'${p1}\' no puede ser gravada, porqué ya existe una consulta con este nombre.',
       DELETE: 'Borrando consulta: \'${p1}\'',
       DELETE_OK: 'Consulta borrada con éxito!',
       DELETE_ERROR: 'Error - Un error inesperado ocurrió mientras borro de la consulta \'${p1}\'. Por favor intenta otra vez.',
@@ -201,6 +262,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       SAVE: 'Gravando rutina: \'${p1}\'',
       SAVE_OK: 'Rutina gravada con éxito!',
       SAVE_ERROR: 'Error - Un error inesperado ocurrió mientras gravación de la rutina \'${p1}\'. Por favor intenta otra vez.',
+      SAVE_ERROR_SAME_NAME: 'Error - La rutina \'${p1}\' no puede ser gravada, porqué ya existe una rutina con este nombre.',
       DELETE: 'Borrando rutina: \'${p1}\'',
       DELETE_OK: 'Rutina borrada con éxito!',
       DELETE_ERROR: 'Error - Un error inesperado ocurrió mientras borro de la rutina \'${p1}\'. Por favor intenta otra vez.',
@@ -265,6 +327,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
   },
   FORM_ERRORS: {
     FIELD_NOT_FILLED: 'Error - Campo obligatorio \'${p1}\' sin información.',
+    FIELD_NOT_FILLED_GRAPH: 'Error - Campo obligatorio  \'${p1}\' sin información. Por favor selecciona um graph para ejecución, o entoces borre la selección del campo \'Proceso de ETL\'.',
     FOLDER_SELECT_WARNING: 'Atención - Selección de diretorios no puede ser probada sin el Electron.',
     ONLY_YES_OR_NO: 'Error - Los parámetros SQL solo pueden ser \'Y\' or \'N\'. Por favor verifica los valores.'
   }

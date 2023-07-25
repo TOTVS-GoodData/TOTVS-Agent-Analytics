@@ -17,17 +17,6 @@ import { Utilities } from '../utilities/utilities';
 
 import { forkJoin } from 'rxjs';
 
-const CNST_FIELD_NAMES: Array<any> = [
-   { key: 'name', value: 'Nome do agendamento*' }
-  ,{ key: 'workspaceId', value: 'Ambiente*' }
-  ,{ key: 'windows', value: 'Janelas de execução*' }
-  ,{ key: 'enabled', value: 'Habilitado?' }
-  ,{ key: 'GDZipFilename', value: 'Nome do arquivo*' }
-  ,{ key: 'GDZipExtension', value: 'Extensão do arquivo*' }
-  ,{ key: 'fileFolder', value: 'Pasta p/ upload' }
-  ,{ key: 'fileFolderWildcard', value: 'Formato válido' }
-];
-
 @Component({
   selector: 'app-schedule-add',
   templateUrl: './schedule-add.component.html',
@@ -147,7 +136,18 @@ export class ScheduleAddComponent {
       this.lbl_GDZipExtension = translations['SCHEDULES.TABLE.ZIP_EXTENSION'] + '*';
       this.lbl_fileFolder = translations['SCHEDULES.TABLE.FILE_FOLDER'];
       this.lbl_fileFolderWildcard = translations['SCHEDULES.TABLE.FILE_WILDCARD'];
-    
+      
+      this.CNST_FIELD_NAMES= [
+        { key: 'name', value: translations['SCHEDULES.TABLE.NAME'] },
+        { key: 'workspaceId', value: translations['SCHEDULES.TABLE.WORKSPACE'] },
+        { key: 'windows', value: translations['SCHEDULES.TABLE.WINDOWS'] },
+        { key: 'enabled', value: translations['SCHEDULES.TABLE.ENABLED'] },
+        { key: 'GDZipFilename', value: translations['SCHEDULES.TABLE.ZIP_FILENAME'] },
+        { key: 'GDZipExtension', value: translations['SCHEDULES.TABLE.ZIP_EXTENSION'] },
+        { key: 'fileFolder', value: translations['SCHEDULES.TABLE.FILE_FOLDER'] },
+        { key: 'fileFolderWildcard', value: translations['SCHEDULES.TABLE.FILE_WILDCARD'] }
+      ];
+      
       this.CNST_MESSAGES = {
         LOADING_ERROR: translations['SCHEDULES.MESSAGES.LOADING_ERROR'],
         SAVE_OK: translations['SCHEDULES.MESSAGES.SAVE_OK'],
@@ -232,7 +232,7 @@ export class ScheduleAddComponent {
       new TranslationInput('BUTTONS.NO_SIMPLIFIED', [])
     ]).subscribe((translations: any) => {
       let workspace: Workspace = this.projects.find((w: Workspace) => (w.id === this.schedule.workspaceId));
-      let database: Database = this.databases.find((db: Database) => (db.id === workspace.databaseId));
+      let database: Database = this.databases.find((db: Database) => (db.id === workspace.databaseIdRef));
       this.schedule.workspaceName = workspace.name;
       this.schedule.ETLParameters = this._CNST_ERP.find((e: any) => (e.ERP === workspace.erp)).Parametros.ETL;
       if (database) {
@@ -297,11 +297,11 @@ export class ScheduleAddComponent {
     
     let propertiesNotDefined = Object.getOwnPropertyNames.call(Object, schedule).map((p: string) => {
       if ((this.schedule[p] == undefined) && (p != 'id')) return p;
-    }).filter((p: string) => { return p != null; });
+    }).filter((p: string) => { return (p != null); });
     
     // Validação dos campos de formulário //
     if (propertiesNotDefined.length > 0) {
-      validate = false;
+      validate = false;console.log(propertiesNotDefined[0]);
       this.po_lo_text = { value: null };
       let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
       this._translateService.getTranslations([

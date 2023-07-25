@@ -12,7 +12,7 @@
   
   <div class="po-row">
     
-    <po-list-view p-property-title="name" *ngIf="schedulesQuery.length > 0" [p-items]="this.schedulesQuery" [p-actions]="setListViewActions">
+    <po-list-view p-property-title="name" *ngIf="schedulesQuery.length > 0" [p-items]="this.schedulesQuery">
       <ng-template p-list-view-content-template let-item>
         <div class="po-row">
           <po-table
@@ -30,7 +30,7 @@
       </ng-template>
     </po-list-view>
     
-    <po-list-view p-property-title="name" *ngIf="schedulesQueryProtheus.length > 0" [p-items]="this.schedulesQueryProtheus" [p-actions]="setListViewActions">
+    <po-list-view p-property-title="name" *ngIf="schedulesQueryExport.length > 0" [p-items]="this.schedulesQueryExport" [p-actions]="setListViewActions">
       <ng-template p-list-view-content-template let-item>
         <div class="po-row">
           <po-table

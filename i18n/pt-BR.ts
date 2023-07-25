@@ -1,4 +1,17 @@
 export const CNST_TRANSLATIONS_PT_BR: any = {
+  SERVICES: {
+    GOODDATA: {
+      MESSAGES: {
+        LOADING: 'Fazendo login na plataforma GoodData...',
+        LOADING_ERROR: 'Falha no login. Por favor, verifique seu usuário / senha.',
+        LOADING_PROJECTS: 'Login bem sucedido. Carregando ambientes...',
+        LOADING_WORKSPACES_OK: 'Ambientes carregados com sucesso!',
+        LOADING_WORKSPACES_ERROR: 'Não foi possível se conectar ao GoodData. Verifique sua conexão e tente novamente.',
+        LOADING_PROCESSES: 'Carregando processos de ETL...',
+        LOADING_PROCESSES_ERROR: 'Não foi possível se conectar ao GoodData. Verifique sua conexão e tente novamente.'
+      }
+    }
+  },
   MENU: {
     WORKSPACES: 'Ambientes',
     DATABASES: 'Bancos de Dados',
@@ -8,6 +21,11 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     MONITOR: 'Monitor',
     CONFIGURATION: 'Configurações',
     EXIT: 'Sair'
+  },
+  LANGUAGES: {
+    en_US: 'Inglês',
+    pt_BR: 'Português',
+    es_ES: 'Espanhol'
   },
   BUTTONS: {
     SAVE: 'Salvar',
@@ -21,20 +39,52 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     NEW_PARAMETER: 'Novo parâmetro',
     YES_SIMPLIFIED: 'S',
     NO_SIMPLIFIED: 'N',
-    TEST_CONNECTION: 'Testar Conexão'
+    TEST_CONNECTION: 'Testar Conexão',
+    LOAD_WORKSPACES: 'Carregar Ambientes'
   },
   WORKSPACES: {
     TITLE: 'Cadastro de Ambientes',
+    NEW_WORKSPACE: 'Cadastrar Ambiente',
+    EDIT_WORKSPACE: 'Alterar Ambiente',
     DELETE_CONFIRMATION: ' Deseja realmente excluir este ambiente?',
+    SECTIONS: {
+      1: '1 / 4 - Informações comerciais',
+      2: '2 / 4 - Informações da plataforma GoodData',
+      3: '3 / 4 - Informações do banco de dados',
+      4: '4 / 4 - Configurações finais'
+    },
     MESSAGES: {
       LOADING: 'Carregando ambientes...',
-      LOADING_ERROR: 'Erro - Um erro inesperado ocorreu. Por favor tente novamente.'
+      LOADING_OK: 'Ambientes carregados.',
+      LOADING_ERROR: 'Erro - Um erro inesperado ocorreu. Por favor tente novamente.',
+      LOADING_DATABASES: 'Carregando ambientes pertencentes ao banco de dados ${p1}...',
+      LOADING_DATABASES_OK: 'Ambientes carregados.',
+      LOADING_DATABASES_ERROR: 'Um erro inesperado ocorreu. Por favor tente novamente.',
+      SAVE: 'Gravando ambiente: ${p1}',
+      SAVE_OK: 'Ambiente salvo com sucesso!',
+      SAVE_ERROR: 'Um erro inesperado ocorreu ao salvar o ambiente ${p1}. Por favor tente novamente.',
+      SAVE_ERROR_SAME_NAME: 'Erro - O ambiente \'${p1}\' não pôde ser salvo, pois já existe um ambiente cadastrado com este nome.',
+      DELETE: 'Apagando ambiente: ${p1}',
+      DELETE_OK: 'Ambiente apagado com sucesso!',
+      DELETE_ERROR: 'Um erro inesperado ocorreu ao apagar o ambiente ${p1}. Por favor tente novamente.',
+      VALIDATE: 'Validando informações do ambiente...',
+      PASSWORD_ENCRYPT: 'Criptografando senha...',
     },
     TABLE: {
+      CONTRACT_TYPE: 'Modalidade de contratação',
+      CUSTOMER_CODE: 'Código T do cliente',
+      ERP: 'ERP',
+      MODULE: 'Módulo',
+      SOURCE: 'Origem dos dados',
+      USERNAME: 'Usuário',
+      ENVIRONMENT: 'Domínio',
+      PASSWORD: 'Senha',
       WORKSPACE: 'Ambiente',
+      UPLOAD_URL: 'URL p/ upload do arquivo',
+      PROCESS: 'Processo de ETL',
       GRAPH: 'Graph',
       DATABASE: 'Banco de dados',
-      CONTRACT_TYPE: 'Contratação'
+      NAME: 'Nome desta configuração'
     }
   },
   DATABASES: {
@@ -42,6 +92,13 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     NEW_DATABASE: 'Cadastrar Banco de Dados',
     EDIT_DATABASE: 'Alterar Banco de Dados',
     DELETE_CONFIRMATION: ' Deseja realmente excluir este banco de dados?',
+    CONNECTION_STRING: {
+      IP_ADDRESS: '<ENDERECO_IP>',
+      PORT: '<PORTA>',
+      DATABASE_NAME: '<NOME_DO_BANCO>',
+      SERVICE_NAME: '<NOME_DO_SERVIÇO>',
+      SID: '<SID>'
+    },
     TABLE: {
       NAME: 'Nome da configuração',
       TYPE: 'Tipo de banco de dados',
@@ -65,6 +122,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       SAVE: 'Gravando banco de dados: ${p1}',
       SAVE_OK: 'Banco de dados salvo com sucesso!',
       SAVE_ERROR: 'Um erro inesperado ocorreu ao salvar o banco de dados ${p1}. Por favor tente novamente.',
+      SAVE_ERROR_SAME_NAME: 'Erro - O banco de dados \'${p1}\' não pôde ser salvo, pois já existe um banco cadastrado com este nome.',
       DELETE: 'Apagando banco de dados: ${p1}',
       DELETE_OK: 'Banco de dados apagado com sucesso!',
       DELETE_ERROR: 'Um erro inesperado ocorreu ao apagar o banco de dados ${p1}. Por favor tente novamente.',
@@ -120,9 +178,11 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       ID_LOADING: 'Carregando agendamento de código ${p1}...',
       ID_LOADING_OK: 'Agendamento carregado.',
       ID_LOADING_ERROR: 'Erro - Um erro inesperado ocorreu ao carregar o agendamento de código ${p1}. Por favor tente novamente.',
+      VALIDATE: 'Validando agendamento...',
       SAVE: 'Gravando agendamento: ${p1}',
       SAVE_OK: 'Agendamento cadastrado com sucesso!',
       SAVE_ERROR: 'Erro - Um erro inesperado ocorreu ao salvar o agendamento ${p1}. Por favor tente novamente.',
+      SAVE_ERROR_SAME_NAME: 'Erro - O agendamento \'${p1}\' não pôde ser salvo, pois já existe um agendamento cadastrado com este nome.',
       DELETE: 'Apagando agendamento: ${p1}',
       DELETE_OK: 'Agendamento apagado!',
       DELETE_ERROR: 'Erro - Um erro inesperado ocorreu ao apagar o agendamento ${p1}. Por favor tente novamente.',
@@ -160,6 +220,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       SAVE: 'Gravando consulta: \'${p1}\'',
       SAVE_OK: 'Consulta salva com sucesso!',
       SAVE_ERROR: 'Erro - Um erro inesperado ocorreu ao salvar a consulta \'${p1}\'. Por favor tente novamente.',
+      SAVE_ERROR_SAME_NAME: 'Erro - A consulta \'${p1}\' não pôde ser salva, pois já existe uma consulta cadastrada com este nome.',
       DELETE: 'Apagando consulta: \'${p1}\'',
       DELETE_OK: 'Consulta apagada com sucesso!',
       DELETE_ERROR: 'Erro - Um erro inesperado ocorreu ao apagar a consulta \'${p1}\'. Por favor tente novamente.',
@@ -201,6 +262,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       SAVE: 'Gravando rotina: \'${p1}\'',
       SAVE_OK: 'Rotina salva com sucesso!',
       SAVE_ERROR: 'Erro - Um erro inesperado ocorreu ao salvar a rotina \'${p1}\'. Por favor tente novamente.',
+      SAVE_ERROR_SAME_NAME: 'Erro - A rotina \'${p1}\' não pôde ser salva, pois já existe uma rotina cadastrada com este nome.',
       DELETE: 'Apagando rotina: \'${p1}\'',
       DELETE_OK: 'Rotina apagada com sucesso!',
       DELETE_ERROR: 'Erro - Um erro inesperado ocorreu ao apagar a rotina \'${p1}\'. Por favor tente novamente.',
@@ -265,6 +327,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
   },
   FORM_ERRORS: {
     FIELD_NOT_FILLED: 'Erro - Campo obrigatório \'${p1}\' não preenchido.',
+    FIELD_NOT_FILLED_GRAPH: 'Erro - Campo obrigatório  \'${p1}\' não preenchido. Por favor selecione um graph para ser executado, ou remova a seleção do campo de processo de ETL.',
     FOLDER_SELECT_WARNING: 'Aviso - Seleção de diretórios não podem ser testados sem o Electron.',
     ONLY_YES_OR_NO: 'Erro - Os parâmetros SQL só podem ser do tipo \'S\' ou \'N\'. Por favor, verifique o preenchimento dos mesmos.'
   }
