@@ -183,16 +183,26 @@ export class QueryComponent implements OnInit {
         s.erp = w.erp;
         s.contractType = w.contractType;
         s.module = w.module;
-        let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
-        s.databaseType = (db != undefined ? _constants.CNST_DATABASE_TYPES.find((type: any) => (type.value == db.type)).brand : _constants.CNST_NO_OPTION_SELECTED.label);
-        if (s.databaseType.indexOf(_constants.CNST_DATABASE_ORACLE) > -1) s.databaseType = _constants.CNST_DATABASE_ORACLE;
+        s.databaseType = (() => {
+          let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
+          if (db == undefined) return _constants.CNST_NO_OPTION_SELECTED.label;
+          else {
+            let db_type: any = _constants.CNST_DATABASE_TYPES.find((type: any) => (type.value == db.type));
+            if (db_type.brand ==  _constants.CNST_DATABASE_OTHER) return _constants.CNST_NO_OPTION_SELECTED.label;
+            else return db_type.brand;
+          }
+        })();
         return s;
       });
       
       this.schedulesQuery = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType == _constants.CNST_NO_OPTION_SELECTED.label));
       this.schedulesQueryExport = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType != _constants.CNST_NO_OPTION_SELECTED.label));
-      this.listSchedule = results[0].map((sq: any) => {
-        return { label: sq.name, value: sq.id };
+      this.listSchedule = results[0].filter((s: Schedule) => {
+        let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
+        let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
+        return ((db != undefined) && (w.contractType == _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA));
+      }).map((s: Schedule) => {
+        return { label: s.name, value: s.id };
       });
       this.po_lo_text = { value: null };
     }, (err: any) => {
@@ -245,7 +255,8 @@ export class QueryComponent implements OnInit {
       this._translateService.getTranslations([
         new TranslationInput('QUERIES.MESSAGES.SAVE', [this.query.name]),
         new TranslationInput('QUERIES.MESSAGES.ENCRYPT', [this.query.name]),
-        new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [this.query.name])
+        new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [this.query.name]),
+        new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME', [this.query.name])
       ]).subscribe((translations: any) => {
         this.po_lo_text = { value: translations['QUERIES.MESSAGES.SAVE'] };
         if (this._electronService.isElectronApp) {
@@ -255,9 +266,13 @@ export class QueryComponent implements OnInit {
             this.query.query = this._electronService.ipcRenderer.sendSync('encrypt', this.query.query);
           }
         }
-        this._queryService.saveQuery(this.query).subscribe((res: boolean) => {
-          this.loadQueries();
-          this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+        this._queryService.saveQuery({...this.query}).subscribe((res: boolean) => {
+          if (res) {
+            this.loadQueries();
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+          } else {
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME']);
+          }
           this.po_lo_text = { value: null };
         }, (err: any) => {
           this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR'], err);

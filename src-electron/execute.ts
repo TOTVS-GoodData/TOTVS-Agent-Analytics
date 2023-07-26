@@ -1,7 +1,7 @@
 import * as os from 'os';
 import * as globals from './constants-electron';
 import * as constants from '../src-angular/app/utilities/constants-angular';
-import { Query } from '../src-angular/app/utilities/interfaces';
+import { Query, Configuration } from '../src-angular/app/utilities/interfaces';
 import * as childProcess from 'child_process';
 
 import { Files2 } from './files2';
@@ -129,46 +129,46 @@ export class Execute {
   
   public testDatabaseConnection(inputBuffer: string): Observable<any> {
     let err: string = null;
-    
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.DATABASE_LOGIN_ELEC_START, null, null, null);
-    let child = childProcess.spawn('java', ['-classpath', globals.CNST_PROGRAM_PATH_JAR_FAST, constants.CNST_PROGRAM_JDBC_CLASS, inputBuffer]);
-    
-    return new Observable<any>((subscriber) => {
-      
-      child.stdout.on('data', (stdOutputBuffer: string) => {
-        Execute.concatStdoutBuffer(stdOutputBuffer, null, null, null);
-      });
-      
-      child.stderr.on('data', (stdErrorBuffer: string) => {
-        Execute.concatStderrBuffer(stdErrorBuffer, null, null, null);
-        try {
-          let obj: JavaOutputBuffer = JSON.parse(stdErrorBuffer);
-          err = obj.message_string;
-        }
-        catch (ex) {}
-      });
-      
-      child.on('close', (statusCode: number) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.DATABASE_LOGIN_ELEC_FINISH(statusCode), null, null, null);
-        let res = {
-          success: (statusCode == 0 ? true : false),
-          err: err
-        };
+    return Files2.getConfiguration().pipe(switchMap((conf: Configuration) => {
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.DATABASE_LOGIN_ELEC_START, null, null, null);
+      let child = childProcess.spawn('java', ['-Xmx'+ conf.javaXmx + 'm', '-Djava.io.tmpdir=\"' + conf.javaTmpDir + '\"', '-classpath', globals.CNST_PROGRAM_PATH_JAR_FAST, constants.CNST_PROGRAM_JDBC_CLASS, inputBuffer]);
+      return new Observable<any>((subscriber) => {
         
-        Execute.stderr_inputBuffer = '';
-        Execute.stderr_start_index = 0;
-        Execute.stderr_final_index = 0;
-        Execute.stderr_position = -1;
+        child.stdout.on('data', (stdOutputBuffer: string) => {
+          Execute.concatStdoutBuffer(stdOutputBuffer, null, null, null);
+        });
         
-        Execute.stdout_inputBuffer = '';
-        Execute.stdout_start_index = 0;
-        Execute.stdout_final_index = 0;
-        Execute.stdout_position = -1;
-        
-        subscriber.next(res);
-        subscriber.complete();
+        child.stderr.on('data', (stdErrorBuffer: string) => {
+          Execute.concatStderrBuffer(stdErrorBuffer, null, null, null);
+          try {
+            let obj: JavaOutputBuffer = JSON.parse(stdErrorBuffer);
+            err = obj.message_string;
+          }
+          catch (ex) {}
+        });
+      
+        child.on('close', (statusCode: number) => {
+          Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.DATABASE_LOGIN_ELEC_FINISH(statusCode), null, null, null);
+          let res = {
+            success: (statusCode == 0 ? true : false),
+            err: err
+          };
+          
+          Execute.stderr_inputBuffer = '';
+          Execute.stderr_start_index = 0;
+          Execute.stderr_final_index = 0;
+          Execute.stderr_position = -1;
+          
+          Execute.stdout_inputBuffer = '';
+          Execute.stdout_start_index = 0;
+          Execute.stdout_final_index = 0;
+          Execute.stdout_position = -1;
+          
+          subscriber.next(res);
+          subscriber.complete();
+        });
       });
-    });
+    }));
   }
   
   public exportQuery(inputBuffer: string): Observable<any> {
@@ -185,42 +185,44 @@ export class Execute {
     Execute.stderr_final_index = 0;
     Execute.stderr_position = -1;
     
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.EXPORT_QUERY_ELEC_START, null, null, null);
-    let child = childProcess.spawn('java', ['-classpath', globals.CNST_PROGRAM_PATH_JAR_FAST, constants.CNST_PROGRAM_EXPORT_CLASS, inputBuffer]);
-    return new Observable<any>((subscriber) => {
-      
-      child.stdout.on('data', (stdOutputBuffer: string) => {
-        Execute.concatStdoutBuffer(stdOutputBuffer, null, null, (obj: any) => {
+    return Files2.getConfiguration().pipe(switchMap((conf: Configuration) => {
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.EXPORT_QUERY_ELEC_START, null, null, null);
+      let child = childProcess.spawn('java', ['-Xmx'+ conf.javaXmx + 'm', '-Djava.io.tmpdir=\"' + conf.javaTmpDir + '\"', '-classpath', globals.CNST_PROGRAM_PATH_JAR_FAST, constants.CNST_PROGRAM_EXPORT_CLASS, inputBuffer]);
+      return new Observable<any>((subscriber) => {
+        
+        child.stdout.on('data', (stdOutputBuffer: string) => {
+          Execute.concatStdoutBuffer(stdOutputBuffer, null, null, (obj: any) => {
+            try {
+              let q: Query = obj;
+              Execute.exportQuerybuffer.push(q);
+            } catch(ex) {
+              console.log(ex);
+            }
+          });
+        });
+        
+        child.stderr.on('data', (stdErrorBuffer: string) => {
+          Execute.concatStderrBuffer(stdErrorBuffer, null, null, null);
           try {
-            let q: Query = obj;
-            Execute.exportQuerybuffer.push(q);
-          } catch(ex) {
-            console.log(ex);
+            let obj: JavaOutputBuffer = JSON.parse(stdErrorBuffer);
+            err = obj.message_string;
           }
+          catch (ex) {}
+        });
+        
+        child.on('close', (statusCode: number) => {
+          Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.EXPORT_QUERY_ELEC_FINISH(statusCode), null, null, null);
+          let res = {
+            success: (statusCode == 0 ? true : false),
+            err: err,
+            message: Execute.exportQuerybuffer
+          };
+          
+          subscriber.next(res);
+          subscriber.complete();
         });
       });
-      
-      child.stderr.on('data', (stdErrorBuffer: string) => {
-        Execute.concatStderrBuffer(stdErrorBuffer, null, null, null);
-        try {
-          let obj: JavaOutputBuffer = JSON.parse(stdErrorBuffer);
-          err = obj.message_string;
-        }
-        catch (ex) {}
-      });
-      
-      child.on('close', (statusCode: number) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.EXPORT_QUERY_ELEC_FINISH(statusCode), null, null, null);
-        let res = {
-          success: (statusCode == 0 ? true : false),
-          err: err,
-          message: Execute.exportQuerybuffer
-        };
-        
-        subscriber.next(res);
-        subscriber.complete();
-      });
-    });
+    }));
   }
   
   public static runAgent(inputBuffer: string, scheduleId: number): boolean {
@@ -230,27 +232,28 @@ export class Execute {
     console.log('<<AGENT>>>');
     console.log(inputBuffer);
     
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.RUN_AGENT_ELEC_START, execId, scheduleId, null);
-    let child = childProcess.spawn('java', ['-classpath', globals.CNST_PROGRAM_PATH_JAR_FAST, 'com.gooddata.agent.Main', inputBuffer]);
-    
-    child.stdout.on('data', (stdOutputBuffer: string) => {
-      Execute.concatStdoutBuffer(stdOutputBuffer, execId, scheduleId, (obj: any) => {
-        
+    Files2.getConfiguration().pipe(map((conf: Configuration) => {
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.RUN_AGENT_ELEC_START, execId, scheduleId, null);
+      let child = childProcess.spawn('java', ['-Xmx'+ conf.javaXmx + 'm', '-Djava.io.tmpdir=\"' + conf.javaTmpDir + '\"', '-classpath', globals.CNST_PROGRAM_PATH_JAR_FAST, 'com.gooddata.agent.Main', inputBuffer]);
+      
+      child.stdout.on('data', (stdOutputBuffer: string) => {
+        Execute.concatStdoutBuffer(stdOutputBuffer, execId, scheduleId, (obj: any) => {
+        });
       });
-    });
-    
-    child.stderr.on('data', (stdErrorBuffer: string) => {
-      Execute.concatStderrBuffer(stdErrorBuffer, execId, scheduleId, null);
-      try {
-        let obj: JavaOutputBuffer = JSON.parse(stdErrorBuffer);
-        err = obj.message_string;
-      }
-      catch (ex) {}
-    });
-    
-    child.on('close', (statusCode: number) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.RUN_AGENT_ELEC_FINISH(statusCode), execId, scheduleId, null);
-    });
+      
+      child.stderr.on('data', (stdErrorBuffer: string) => {
+        Execute.concatStderrBuffer(stdErrorBuffer, execId, scheduleId, null);
+        try {
+          let obj: JavaOutputBuffer = JSON.parse(stdErrorBuffer);
+          err = obj.message_string;
+        }
+        catch (ex) {}
+      });
+      
+      child.on('close', (statusCode: number) => {
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Execute.CNST_MESSAGES.RUN_AGENT_ELEC_FINISH(statusCode), execId, scheduleId, null);
+      });
+    }));
     
     return true;
   }

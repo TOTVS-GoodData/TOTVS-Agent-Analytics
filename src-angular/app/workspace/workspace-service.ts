@@ -10,7 +10,7 @@ import { Utilities } from '../utilities/utilities';
 import { TranslationService, TranslationInput } from '../service/translation/translation-service';
 
 import { map, switchMap } from 'rxjs/operators';
-import { Observable, of, catchError } from 'rxjs';
+import { Observable, of, catchError, forkJoin } from 'rxjs';
 
 import uuid from 'uuid-v4';
 
@@ -74,34 +74,46 @@ export class WorkspaceService {
   }
   
   public saveWorkspace(w: Workspace): Observable<boolean> {
-    return this._translateService.getTranslations([
-      new TranslationInput('WORKSPACES.MESSAGES.SAVE', [w.name]),
-      new TranslationInput('WORKSPACES.MESSAGES.SAVE_OK', []),
-      new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR', [w.name])
-    ]).pipe(switchMap((translations: any) => {
-      this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['WORKSPACES.MESSAGES.SAVE']);
+    let workspace_name: Workspace = null;
+    let newId: boolean = false;
+    return forkJoin(
+      this._translateService.getTranslations([
+        new TranslationInput('WORKSPACES.MESSAGES.SAVE', [w.name]),
+        new TranslationInput('WORKSPACES.MESSAGES.SAVE_OK', []),
+        new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR', [w.name]),
+        new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME', [w.name])
+      ]), this.getWorkspaces())
+    .pipe(switchMap((results: [TranslationInput[], Workspace[]]) => {
+      this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['WORKSPACES.MESSAGES.SAVE']);
       if (this._electronService.isElectronApp) {
         return of(this._electronService.ipcRenderer.sendSync('saveWorkspace', w));
       } else {
-        if (w.id) {
-          return this._http.put(this._utilities.getLocalhostURL() + '/workspaces/' + w.id, w).pipe(
-          map(() => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['WORKSPACES.MESSAGES.SAVE_OK']);
-            return true;
-          }), catchError((err: any) => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['WORKSPACES.MESSAGES.SAVE_ERROR'], err);
-            throw err;
-          }));
+        newId = (w.id == null)
+        if (newId) w.id = uuid();
+        workspace_name = results[1].filter((workspace: Workspace) => (workspace.id != w.id)).find((workspace: Workspace) => (workspace.name == w.name));
+        if (workspace_name != undefined) {
+          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME']);
+          return of(false);
         } else {
-          w.id = uuid();
-          return this._http.post(this._utilities.getLocalhostURL() + '/workspaces', w).pipe(
-          map(() => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['WORKSPACES.MESSAGES.SAVE_OK']);
-            return true;
-          }), catchError((err: any) => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['WORKSPACES.MESSAGES.SAVE_ERROR'], err);
-            throw err;
-          }));
+          if (newId) {
+            return this._http.post(this._utilities.getLocalhostURL() + '/workspaces', w).pipe(
+            map(() => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['WORKSPACES.MESSAGES.SAVE_OK']);
+              return true;
+            }), catchError((err: any) => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['WORKSPACES.MESSAGES.SAVE_ERROR'], err);
+              throw err;
+            }));
+          } else {
+            return this._http.put(this._utilities.getLocalhostURL() + '/workspaces/' + w.id, w).pipe(
+            map(() => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['WORKSPACES.MESSAGES.SAVE_OK']);
+              return true;
+            }), catchError((err: any) => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['WORKSPACES.MESSAGES.SAVE_ERROR'], err);
+              throw err;
+            }));
+          }
         }
       }
     }));

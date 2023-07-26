@@ -66,6 +66,7 @@ export class WorkspaceAddComponent {
   protected lbl_name: string;
   
   protected lbl_edit: string;
+  protected lbl_goBack: string;
   protected lbl_save: string;
   protected lbl_testConnection: string;
   protected lbl_loadWorkspaces: string;
@@ -135,9 +136,10 @@ export class WorkspaceAddComponent {
       new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES', []),
       new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES_ERROR', []),
       new TranslationInput('DATABASES.MESSAGES.LOADING_ERROR', []),
+      new TranslationInput('BUTTONS.EDIT', []),
       new TranslationInput('BUTTONS.GO_BACK', []),
       new TranslationInput('BUTTONS.SAVE', []),
-      new TranslationInput('BUTTONS.EDIT', []),
+      new TranslationInput('BUTTONS.GO_BACK', []),
       new TranslationInput('BUTTONS.TEST_CONNECTION', []),
       new TranslationInput('BUTTONS.LOAD_WORKSPACES', []),
       new TranslationInput('WORKSPACES.NEW_WORKSPACE', []),
@@ -167,6 +169,7 @@ export class WorkspaceAddComponent {
       new TranslationInput('DATABASES.TABLE.DRIVER_PATH', [])
     ]).subscribe((translations: any) => {
       this.lbl_edit = translations['BUTTONS.EDIT'];
+      this.lbl_goBack = translations['BUTTONS.GO_BACK'];
       this.lbl_save = translations['BUTTONS.SAVE'];
       this.lbl_testConnection = translations['BUTTONS.TEST_CONNECTION'];
       this.lbl_loadWorkspaces = translations['BUTTONS.LOAD_WORKSPACES'];
@@ -261,7 +264,20 @@ export class WorkspaceAddComponent {
     });
   }
   
-  protected onChangeContract(): void {
+  protected onChangeContract(contractType: string): void {
+    this._CNST_ERP = _constants.CNST_ERP.map((v) => {
+      return { label: v.ERP, value: v.ERP };
+    }).sort((v1: any, v2: any) => {
+      if (v1.label < v2.label) {
+        return -1;
+      }
+      if (v1.label > v2.label) {
+        return 1;
+      }
+      return 0;
+    });
+    
+    if (contractType != _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA) this._CNST_ERP = this._CNST_ERP.filter((erp: any) => (erp.value != _constants.CNST_ERP_OTHER));
   }
   
   private reloadDatabases(): Observable<boolean> {
@@ -354,7 +370,6 @@ export class WorkspaceAddComponent {
         this.listProcess = this._goodDataService.CURRENT_PROJECT.processes.map((p: GDProcess) => {
           return { label: p.name + ' - ' + p.id, value: p.id }
       });
-      this.project.name = this._goodDataService.CURRENT_PROJECT.name;
       if ((this.p_editMode) && (this.editMode)) {
         this.p_editMode = false;
       } else {
@@ -444,6 +459,7 @@ export class WorkspaceAddComponent {
     return this._translateService.getTranslations([
       new TranslationInput('WORKSPACES.MESSAGES.SAVE', [this.project.name]),
       new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR', [this.project.name]),
+      new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME', [this.project.name]),
     ]).pipe(switchMap((translations: any) => {
       return this.validProject().pipe(switchMap((v: boolean) => {
         if (v) {
@@ -453,10 +469,14 @@ export class WorkspaceAddComponent {
             this.project.GDPassword = this._electronService.ipcRenderer.sendSync('encrypt', this.project.GDPassword);
           }
           this.po_lo_text = { value: translations['WORKSPACES.MESSAGES.SAVE'] };
-          return this._workspaceService.saveWorkspace(this.project).pipe(map((res: boolean) => {
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+          return this._workspaceService.saveWorkspace({...this.project}).pipe(map((res: boolean) => {
+            if (res) {
+              this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+              this.goToProjects();
+            } else {
+              this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME']);
+            }
             this.po_lo_text = { value: null };
-            this.goToProjects();
           }, (err: any) => {
             this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['WORKSPACES.MESSAGES.SAVE_ERROR'], err);
             this.po_lo_text = { value: null };

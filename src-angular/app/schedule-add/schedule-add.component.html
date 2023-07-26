@@ -12,7 +12,7 @@
       <po-select
           class="form-control po-sm-6 po-md-6 po-lg-6 po-xl-6"
           name="po_workspaceId"
-          (p-change)="updateStandardParameters()"
+          (p-change)="onChangeWorkspace($event)"
           [(ngModel)]="schedule.workspaceId"
           [p-label]="lbl_workspaceId"
           [p-options]="listProjects"
@@ -45,7 +45,7 @@
       <po-select
         class="form-control po-md-6 po-lg-6"
         name="extension"
-        [(ngModel)]="schedule.GDZipExtension"pricedescricaocompleta
+        [(ngModel)]="schedule.GDZipExtension"
         [p-label]="lbl_GDZipExtension"
         [p-options]="_CNST_EXTENSION"
         p-required="true">
@@ -58,13 +58,14 @@
         <po-input class="conf-select grow" name="po_fileFolder" [(ngModel)]="schedule.fileFolder" [p-disabled]="true"></po-input>
         <po-button
           (p-click)="getFolder()"
+          [p-disabled]="!isPlatform"
           p-icon="po-icon-folder"
           p-size="medium"
         />
       </div>
       <div class="po-md-6 po-lg-6 flex footer">
         <span>{{ lbl_fileFolderWildcard }}</span>
-        <po-input class="grow" name="po_fileFolderWildcard" [(ngModel)]="schedule.fileFolderWildcard"></po-input>
+        <po-input class="grow" [p-disabled]="!isPlatform" name="po_fileFolderWildcard" [(ngModel)]="schedule.fileFolderWildcard"></po-input>
       </div>
     </div>
     
@@ -74,7 +75,7 @@
     </div>
     
     <div class="po-row padding-button">
-      <po-button class="po-button removeBorder" p-size="medium" [p-label]="lbl_newParameter" (p-click)="onBeforeInsertSQL()" p-kind="primary" />
+      <po-button class="po-button removeBorder padding-0" [p-disabled]="!isPlatform" p-size="medium" [p-label]="lbl_newParameter" (p-click)="onBeforeInsertSQL()" p-kind="primary" />
     </div>
     
     <po-grid #po_grid_sql
@@ -90,7 +91,7 @@
     </div>
     
     <div class="po-row padding-button">
-      <po-button class="po-button removeBorder" p-size="medium" [p-label]="lbl_newParameter" (p-click)="onBeforeInsertETL()" p-kind="primary" />
+      <po-button class="po-button removeBorder padding-0" [p-disabled]="!isPlatform" p-size="medium" [p-disabled]="" [p-label]="lbl_newParameter" (p-click)="onBeforeInsertETL()" p-kind="primary" />
     </div>
     
     <po-grid #po_grid_etl

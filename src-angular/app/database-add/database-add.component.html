@@ -113,6 +113,7 @@
           class="form-control po-md-4 po-lg-4"
           [p-label]="lbl_password"
           [(ngModel)]="database.password"
+          [p-disabled]="(database.id != null)"
           p-required="true">
         </po-password>
         <po-button class="po-sm-4 po-md-4 po-lg-4 po-xl-4 padding-button"

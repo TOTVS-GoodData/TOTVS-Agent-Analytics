@@ -177,15 +177,25 @@ export class ScriptComponent implements OnInit {
         s.erp = w.erp;
         s.contractType = w.contractType;
         s.module = w.module;
-        let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
-        s.databaseType = (db != undefined ? _constants.CNST_DATABASE_TYPES.find((type: any) => (type.value == db.type)).brand : _constants.CNST_NO_OPTION_SELECTED.label);
-        if (s.databaseType.indexOf(_constants.CNST_DATABASE_ORACLE) > -1) s.databaseType = _constants.CNST_DATABASE_ORACLE;
+        s.databaseType = (() => {
+          let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
+          if (db == undefined) return _constants.CNST_NO_OPTION_SELECTED.label;
+          else {
+            let db_type: any = _constants.CNST_DATABASE_TYPES.find((type: any) => (type.value == db.type));
+            if (db_type.brand ==  _constants.CNST_DATABASE_OTHER) return _constants.CNST_NO_OPTION_SELECTED.label;
+            else return db_type.brand;
+          }
+        })();
         return s;
       });
       
       this.schedulesScript = this.schedulesScriptTotal.filter((ss: any) => (ss.databaseType == _constants.CNST_NO_OPTION_SELECTED.label));
       this.schedulesScriptExport = this.schedulesScriptTotal.filter((ss: any) => (ss.databaseType != _constants.CNST_NO_OPTION_SELECTED.label));
-      this.listSchedule = results[0].map((s: any) => {
+      this.listSchedule = results[0].filter((s: Schedule) => {
+        let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
+        let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
+        return ((db != undefined) && (w.contractType == _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA));
+      }).map((s: Schedule) => {
         return { label: s.name, value: s.id };
       });
       this.po_lo_text = { value: null };
@@ -239,7 +249,8 @@ export class ScriptComponent implements OnInit {
       this._translateService.getTranslations([
         new TranslationInput('SCRIPTS.MESSAGES.SAVE', [this.script.name]),
         new TranslationInput('SCRIPTS.MESSAGES.ENCRYPT', [this.script.name]),
-        new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [this.script.name])
+        new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [this.script.name]),
+        new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [this.script.name])
       ]).subscribe((translations: any) => {
         this.po_lo_text = { value: translations['SCRIPTS.MESSAGES.SAVE'] };
         if (this._electronService.isElectronApp) {
@@ -249,9 +260,13 @@ export class ScriptComponent implements OnInit {
             this.script.script = this._electronService.ipcRenderer.sendSync('encrypt', this.script.script);
           }
         }
-        this._scriptService.saveScript(this.script).subscribe((res: boolean) => {
-          this.loadScripts();
-          this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+        this._scriptService.saveScript({...this.script}).subscribe((res: boolean) => {
+          if (res) {
+            this.loadScripts();
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+          } else {
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME']);
+          }
           this.po_lo_text = { value: null };
         }, (err: any) => {
           this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], err);

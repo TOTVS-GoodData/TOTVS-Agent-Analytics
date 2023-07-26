@@ -42,6 +42,7 @@ export class ScheduleAddComponent {
   
   protected po_grid_config_sql: Array<any> = [];
   protected po_grid_config_etl: Array<any> = [];
+  protected isPlatform: boolean = false;
   
   protected po_gridActionsETL: PoGridRowActions = {
     beforeRemove: this.onBeforeRemoveETL.bind(this),
@@ -190,6 +191,11 @@ export class ScheduleAddComponent {
     });
   }
   
+  protected onChangeWorkspace(w: string): void {
+    this.isPlatform = (this.projects.find((workspace: Workspace) => (workspace.id == w)).contractType == _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA);
+    this.updateStandardParameters();
+  }
+  
   protected goToSchedules(): void {
     this._router.navigate(['/schedule']);
   }
@@ -235,13 +241,15 @@ export class ScheduleAddComponent {
       let database: Database = this.databases.find((db: Database) => (db.id === workspace.databaseIdRef));
       this.schedule.workspaceName = workspace.name;
       this.schedule.ETLParameters = this._CNST_ERP.find((e: any) => (e.ERP === workspace.erp)).Parametros.ETL;
-      if (database) {
-        this.schedule.SQLParameters = this._CNST_ERP.find((e: any) => (e.ERP === workspace.erp))
-          .Parametros[database.type].filter((p2: any) => {
-          return (p2.Modulos.includes(workspace.module) || (p2.Modulos.length == 0))
-        }).map((p3: SQLParameter) => {
-          return { name: p3.name, value: p3.value, sql: (p3.sql ? translations['BUTTONS.YES_SIMPLIFIED']: translations['BUTTONS.NO_SIMPLIFIED']) }
-        });
+      if (database != undefined) {
+        if (database.brand != _constants.CNST_DATABASE_OTHER) {
+          this.schedule.SQLParameters = this._CNST_ERP.find((e: any) => (e.ERP === workspace.erp))
+            .Parametros[database.brand].filter((p2: any) => {
+            return (p2.Modulos.includes(workspace.module) || (p2.Modulos.length == 0))
+          }).map((p3: SQLParameter) => {
+            return { name: p3.name, value: p3.value, sql: (p3.sql ? translations['BUTTONS.YES_SIMPLIFIED']: translations['BUTTONS.NO_SIMPLIFIED']) }
+          });
+        }
       }
     });
   }
@@ -249,18 +257,23 @@ export class ScheduleAddComponent {
   protected saveSchedule(): void {
     if (this.validateSchedule()) {
       this._translateService.getTranslations([
-        new TranslationInput('SCRIPTS.MESSAGES.SAVE', [this.schedule.name]),
-        new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [this.schedule.name]),
+        new TranslationInput('SCHEDULES.MESSAGES.SAVE', [this.schedule.name]),
+        new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR', [this.schedule.name]),
+        new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME', [this.schedule.name]),
         new TranslationInput('BUTTONS.YES_SIMPLIFIED', [])
       ]).subscribe((translations: any) => {
-        this.po_lo_text = { value: translations['SCRIPTS.MESSAGES.SAVE'] };
+        this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.SAVE'] };
         this.schedule.SQLParameters = this.schedule.SQLParameters.map((p: any) => {
           return { name: p.name, value: p.value, sql: (p.sql == translations['BUTTONS.YES_SIMPLIFIED'] ? true : false)};
         });
-        this._scheduleService.saveSchedule(this.schedule).subscribe((b: boolean) => {
+        this._scheduleService.saveSchedule({...this.schedule}).subscribe((res: boolean) => {
+          if (res) {
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+            this._router.navigate(['/schedule']);
+          } else {
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME']);
+          }
           this.po_lo_text = { value: null };
-          this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
-          this._router.navigate(['/schedule']);
         }, (err: any) => {
           this.po_lo_text = { value: null };
           this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR']);

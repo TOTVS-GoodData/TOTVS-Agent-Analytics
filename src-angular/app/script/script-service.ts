@@ -79,34 +79,46 @@ export class ScriptService {
   }
   
   public saveScript(s: Script): Observable<boolean> {
-    return this._translateService.getTranslations([
-      new TranslationInput('SCRIPTS.MESSAGES.SAVE', [s.name]),
-      new TranslationInput('SCRIPTS.MESSAGES.SAVE_OK', []),
-      new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [s.name])
-    ]).pipe(switchMap((translations: any) => {
-      this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['SCRIPTS.MESSAGES.SAVE']);
+    let script_name: Script = null;
+    let newId: boolean = false;
+    return forkJoin(
+      this._translateService.getTranslations([
+        new TranslationInput('SCRIPTS.MESSAGES.SAVE', [s.name]),
+        new TranslationInput('SCRIPTS.MESSAGES.SAVE_OK', []),
+        new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [s.name]),
+        new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [s.name])
+      ]), this.getScripts())
+    .pipe(switchMap((results: [TranslationInput[], Script[]]) => {
+      this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['SCRIPTS.MESSAGES.SAVE']);
       if (this._electronService.isElectronApp) {
         return of(this._electronService.ipcRenderer.sendSync('saveScript', s));
       } else {
-        if (s.id) {
-          return this._http.put(this._utilities.getLocalhostURL() + '/scripts/' + s.id, s).pipe(
-          map(() => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['SCRIPTS.MESSAGES.SAVE_OK']);
-            return true;
-          }), catchError((err: any) => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
-            throw err;
-          }));
+        newId = (s.id == null)
+        if (newId) s.id = uuid();
+        script_name = results[1].filter((script: Script) => (script.id != s.id)).find((script: Script) => (script.name == s.name));
+        if (script_name != undefined) {
+          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME']);
+          return of(false);
         } else {
-          s.id = uuid();
-          return this._http.post(this._utilities.getLocalhostURL() + '/scripts', s).pipe(
-          map(() => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['SCRIPTS.MESSAGES.SAVE_OK']);
-            return true;
-          }), catchError((err: any) => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
-            throw err;
-          }));
+          if (s.id) {
+            return this._http.post(this._utilities.getLocalhostURL() + '/scripts', s).pipe(
+            map(() => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['SCRIPTS.MESSAGES.SAVE_OK']);
+              return true;
+            }), catchError((err: any) => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
+              throw err;
+            }));
+          } else {
+            return this._http.put(this._utilities.getLocalhostURL() + '/scripts/' + s.id, s).pipe(
+            map(() => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['SCRIPTS.MESSAGES.SAVE_OK']);
+              return true;
+            }), catchError((err: any) => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
+              throw err;
+            }));
+          }
         }
       }
     }));

@@ -5,8 +5,8 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
         LOADING: 'Iniciando sesión en la plataforma GoodData...',
         LOADING_ERROR: 'Login ha fallado. Mira sus credenciales.',
         LOADING_WORKSPACES: 'Login hecho con éxito. Cargando ambientes...',
-        LOADING_LOADING_WORKSPACES_OK: 'Ambientes cargados con éxito!',
-        LOADING_LOADING_WORKSPACES_ERROR: 'No fue posible conectar a la plataforma GoodData. Mira su conexión y intenta otra vez.',
+        LOADING_WORKSPACES_OK: 'Ambientes cargados con éxito!',
+        LOADING_WORKSPACES_ERROR: 'No fue posible conectar a la plataforma GoodData. Mira su conexión y intenta otra vez.',
         LOADING_PROCESSES: 'Cargando procesos de ETL...',
         LOADING_PROCESSES_ERROR: 'No fue posible conectar a la plataforma GoodData. Mira su conexión y intenta otra vez.'
       }

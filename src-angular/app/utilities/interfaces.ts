@@ -162,7 +162,8 @@ export class Workspace {
 export class Database {
   id: string;
   name: string;
-  type: string
+  type: string;
+  brand: string;
   driverClass: string;
   driverPath: string;
   ipType: string;
@@ -178,6 +179,7 @@ export class Database {
     this.id = null;
     this.name = null;
     this.type = null;
+    this.brand = null;
     this.driverClass = null;
     this.driverPath = null;
     this.ip = null;

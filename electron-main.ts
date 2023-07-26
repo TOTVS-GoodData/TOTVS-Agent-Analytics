@@ -352,7 +352,7 @@ export default class Main {
     /*******************/
     /*    LOGFILES     */
     /*******************/
-    ipcMain.on('writeToLog', (event: IpcMainEvent, loglevel: any, system: string, message: string, err: any) => {
+    ipcMain.on('writeToLog', (event: IpcMainEvent, loglevel: any, system: string, message: string, err: any) => {console.log(message);
       event.returnValue = Files2.writeToLog(loglevel, system, message, null, null, err);
     });
     

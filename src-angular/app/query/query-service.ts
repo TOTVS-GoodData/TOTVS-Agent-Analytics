@@ -79,34 +79,46 @@ export class QueryService {
   }
   
   public saveQuery(q: Query): Observable<boolean> {
-    return this._translateService.getTranslations([
-      new TranslationInput('QUERIES.MESSAGES.SAVE', [q.name]),
-      new TranslationInput('QUERIES.MESSAGES.SAVE_OK', []),
-      new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [q.name])
-    ]).pipe(switchMap((translations: any) => {
-      this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.SAVE']);
+    let query_name: Query = null;
+    let newId: boolean = false;
+    return forkJoin(
+      this._translateService.getTranslations([
+        new TranslationInput('QUERIES.MESSAGES.SAVE', [q.name]),
+        new TranslationInput('QUERIES.MESSAGES.SAVE_OK', []),
+        new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [q.name]),
+        new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME', [q.name])
+      ]), this.getQueries())
+    .pipe(switchMap((results: [TranslationInput[], Query[]]) => {
+      this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['QUERIES.MESSAGES.SAVE']);
       if (this._electronService.isElectronApp) {
         return of(this._electronService.ipcRenderer.sendSync('saveQuery', q));
       } else {
-        if (q.id) {
-          return this._http.put(this._utilities.getLocalhostURL() + '/queries/' + q.id, q).pipe(
-          map(() => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.SAVE_OK']);
-            return true;
-          }), catchError((err: any) => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR'], err);
-            throw err;
-          }));
+        newId = (q.id == null)
+        if (newId) q.id = uuid();
+        query_name = results[1].filter((query: Query) => (query.id != q.id)).find((query: Query) => (query.name == q.name));
+        if (query_name != undefined) {
+          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME']);
+          return of(false);
         } else {
-          q.id = uuid();
-          return this._http.post(this._utilities.getLocalhostURL() + '/queries', q).pipe(
-          map(() => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.SAVE_OK']);
-            return true;
-          }), catchError((err: any) => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR'], err);
-            throw err;
-          }));
+          if (newId) {
+            return this._http.post(this._utilities.getLocalhostURL() + '/queries', q).pipe(
+            map(() => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['QUERIES.MESSAGES.SAVE_OK']);
+              return true;
+            }), catchError((err: any) => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['QUERIES.MESSAGES.SAVE_ERROR'], err);
+              throw err;
+            }));
+          } else {
+            return this._http.put(this._utilities.getLocalhostURL() + '/queries/' + q.id, q).pipe(
+            map(() => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['QUERIES.MESSAGES.SAVE_OK']);
+              return true;
+            }), catchError((err: any) => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['QUERIES.MESSAGES.SAVE_ERROR'], err);
+              throw err;
+            }));
+          }
         }
       }
     }));

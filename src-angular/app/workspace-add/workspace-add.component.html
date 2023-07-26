@@ -7,7 +7,7 @@
       </div>
       <div class="po-row">
         <po-select
-          (p-change)="onChangeContract()"
+          (p-change)="onChangeContract($event)"
           class="form-control po-md-6 po-lg-6"
           name="po_modalidadeContratacao"
           [(ngModel)]="project.contractType"
@@ -84,6 +84,7 @@
           [p-label]="lbl_GDPassword"
           [(ngModel)]="project.GDPassword"
           p-required="true"
+          [p-disabled]="project.id != null"
           (keydown.enter)="enterPassword($event)">
         </po-password>
         <po-button
@@ -167,7 +168,7 @@
           <div class="po-row vertical-align-end">
             <po-button
               class="po-md-3 po-lg-3 padding-button"
-              (p-click)="testDatabaseConnection()"
+              (p-click)="testDatabaseConnection().subscribe()"
               [p-label]="lbl_testConnection"
             />
             <po-button
@@ -195,7 +196,7 @@
         </po-input>
       </div>
       <div class="po-row footer">
-        <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_edit" (p-click)="goToProjects()" />
+        <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_goBack" (p-click)="goToProjects()" />
         <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_save" (p-click)="saveProject().subscribe()" p-kind="primary" />
       </div>
     </po-container>

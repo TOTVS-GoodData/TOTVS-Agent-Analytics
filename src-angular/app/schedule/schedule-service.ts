@@ -61,34 +61,46 @@ export class ScheduleService {
   }
   
   public saveSchedule(s: Schedule): Observable<boolean> {
-    return this._translateService.getTranslations([
-      new TranslationInput('SCHEDULES.MESSAGES.SAVE', [s.name]),
-      new TranslationInput('SCHEDULES.MESSAGES.SAVE_OK', []),
-      new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR', [s.name])
-    ]).pipe(switchMap((translations: any) => {
-      this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['SCHEDULES.MESSAGES.SAVE']);
+    let schedule_name: Schedule = null;
+    let newId: boolean = false;
+    return forkJoin(
+      this._translateService.getTranslations([
+        new TranslationInput('SCHEDULES.MESSAGES.SAVE', [s.name]),
+        new TranslationInput('SCHEDULES.MESSAGES.SAVE_OK', []),
+        new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR', [s.name]),
+        new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME', [s.name])
+      ]), this.getSchedules(false))
+    .pipe(switchMap((results: [TranslationInput[], Schedule[]]) => {
+      this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['SCHEDULES.MESSAGES.SAVE']);
       if (this._electronService.isElectronApp) {
         return of(this._electronService.ipcRenderer.sendSync('saveSchedule', s));
       } else {
-        if (s.id) {
-          return this._http.put(this._utilities.getLocalhostURL() + '/schedules/' + s.id, s).pipe(
-          map(() => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['SCHEDULES.MESSAGES.SAVE_OK']);
-            return true;
-          }), catchError((err: any) => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['SCHEDULES.MESSAGES.SAVE_ERROR'], err);
-            throw err;
-          }));
+        newId = (s.id == null)
+        if (newId) s.id = uuid();
+        schedule_name = results[1].filter((schedule: Schedule) => (schedule.id != s.id)).find((schedule: Schedule) => (schedule.name == s.name));
+        if (schedule_name != undefined) {
+          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME']);
+          return of(false);
         } else {
-          s.id = uuid();
-          return this._http.post(this._utilities.getLocalhostURL() + '/schedules', s).pipe(
-          map(() => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['SCHEDULES.MESSAGES.SAVE_OK']);
-            return true;
-          }), catchError((err: any) => {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['SCHEDULES.MESSAGES.SAVE_ERROR'], err);
-            throw err;
-          }));
+          if (newId) {
+            return this._http.post(this._utilities.getLocalhostURL() + '/schedules', s).pipe(
+            map(() => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['SCHEDULES.MESSAGES.SAVE_OK']);
+              return true;
+            }), catchError((err: any) => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['SCHEDULES.MESSAGES.SAVE_ERROR'], err);
+              throw err;
+            }));
+          } else {
+            return this._http.put(this._utilities.getLocalhostURL() + '/schedules/' + s.id, s).pipe(
+            map(() => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['SCHEDULES.MESSAGES.SAVE_OK']);
+              return true;
+            }), catchError((err: any) => {
+              this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['SCHEDULES.MESSAGES.SAVE_ERROR'], err);
+              throw err;
+            }));
+          }
         }
       }
     }));

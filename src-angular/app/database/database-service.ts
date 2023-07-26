@@ -52,6 +52,8 @@ export class DatabaseService {
   }
   
   public saveDatabase(db: Database): Observable<boolean> {
+    let db_name: Database = null;
+    let newId: boolean = false;
     return forkJoin(
       this._translateService.getTranslations([
         new TranslationInput('DATABASES.MESSAGES.SAVE', [db.name]),
@@ -65,13 +67,15 @@ export class DatabaseService {
       if (this._electronService.isElectronApp) {
         return of(this._electronService.ipcRenderer.sendSync('saveDatabase', db));
       } else {
-        let db_name: Database = results[1].find((database: Database) => (database.name == db.name));
+        newId = (db.id == null)
+        if (newId) db.id = uuid();
+        db_name = results[1].filter((database: Database) => (database.id != db.id)).find((database: Database) => (database.name == db.name));
         if (db_name != undefined) {
           this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, results[0]['DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME']);
           return of(false);
         } else {
-          if (db.id) {
-            return this._http.put(this._utilities.getLocalhostURL() + '/databases/' + db.id, db).pipe(
+          if (newId) {
+            return this._http.post(this._utilities.getLocalhostURL() + '/databases', db).pipe(
             map(() => {
               this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['DATABASES.MESSAGES.SAVE_OK']);
               return true;
@@ -80,8 +84,7 @@ export class DatabaseService {
               throw err;
             }));
           } else {
-            db.id = uuid();
-            return this._http.post(this._utilities.getLocalhostURL() + '/databases', db).pipe(
+            return this._http.put(this._utilities.getLocalhostURL() + '/databases/' + db.id, db).pipe(
             map(() => {
               this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['DATABASES.MESSAGES.SAVE_OK']);
               return true;

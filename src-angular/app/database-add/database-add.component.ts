@@ -75,7 +75,7 @@ export class DataBaseAddComponent {
     this._CNST_DATABASE_TYPES = _constants.CNST_DATABASE_TYPES.map((db: any) => {
       return { label: db.label, value: db.value }
     });
-      
+    
     this._translateService.getTranslations([
       new TranslationInput('BUTTONS.TEST_CONNECTION', []),
       new TranslationInput('BUTTONS.GO_BACK', []),
@@ -98,7 +98,10 @@ export class DataBaseAddComponent {
       new TranslationInput('DATABASES.TABLE.PASSWORD', []),
       new TranslationInput('DATABASES.TABLE.INSTANCE', []),
       new TranslationInput('DATABASES.MESSAGES.SAVE_OK', []),
-      new TranslationInput('DATABASES.MESSAGES.VALIDATE', [])
+      new TranslationInput('DATABASES.MESSAGES.ERROR_INVALID_IP', []),
+      new TranslationInput('DATABASES.MESSAGES.ERROR_INVALID_PORT', []),
+      new TranslationInput('DATABASES.MESSAGES.VALIDATE', []),
+      new TranslationInput('DATABASES.MESSAGES.PASSWORD_ENCRYPT', [])
     ]).subscribe((translations: any) => {
       this.lbl_testConnection = translations['BUTTONS.TEST_CONNECTION'];
       this.lbl_goBack = translations['BUTTONS.GO_BACK'];
@@ -295,7 +298,7 @@ export class DataBaseAddComponent {
           }
           
           this.po_lo_text = { value: translations['DATABASES.MESSAGES.SAVE'] };
-          this._databaseService.saveDatabase(this.database).subscribe((b: boolean) => {
+          this._databaseService.saveDatabase({...this.database}).subscribe((b: boolean) => {
             if (b) {
               this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
               this.goBack(this.database);
@@ -334,7 +337,16 @@ export class DataBaseAddComponent {
       case 'Informix':
         delete db.instance;
         break;
+      case 'Outro':
+        delete db.ipType;
+        delete db.ip;
+        delete db.port;
+        delete db.db_databaseName;
+        delete db.instance;
+        break;
     }
+    
+    this.database.brand = _constants.CNST_DATABASE_TYPES.find((types: any) => (this.database.type == types.value)).brand;
     
     let propertiesNotDefined = Object.getOwnPropertyNames.call(Object, db).map((p: string) => {
       if ((this.database[p] == undefined) && (p != 'id')) return p;
@@ -350,14 +362,14 @@ export class DataBaseAddComponent {
         this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED']);
       });
       return of(false);
-    } else {
+    } else if (this.database.type != _constants.CNST_DATABASE_OTHER) {
       let regexIp = new RegExp(this.regexPattern);
       let regexPort = new RegExp(this._CNST_DATABASE_PORT_REGEX);
-      if (!regexIp.test(this.database.ip)) {
+      if (!regexIp.test(this.database.ip)) {console.log('ERRO REGEX IP');
         this.po_lo_text = { value: null };
         this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.ERROR_INVALID_IP);
         return of(false);
-      } else if (!regexPort.test(this.database.port)) {
+      } else if (!regexPort.test(this.database.port)) {console.log('ERRO REGEX PORTA');
         this.po_lo_text = { value: null };
         this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.ERROR_INVALID_PORT);
         return of(false);

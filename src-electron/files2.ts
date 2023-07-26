@@ -223,7 +223,7 @@ export class Files2 {
     Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_DATABASES(db.name), null, null, null);
     return this.readApplicationData().pipe(map((_dbd: DatabaseData) => {
       return _dbd.workspaces.filter((w: Workspace) => {
-        return (w.databaseId === db.id)
+        return (w.databaseIdRef === db.id)
       });
     }), catchError((err: any) => {
       Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_DATABASES_ERROR, null, null, err);
@@ -238,7 +238,7 @@ export class Files2 {
         let index = _dbd.workspaces.findIndex((workspace: Workspace) => { return workspace.id === w.id; });
         _dbd.workspaces[index] = w;
       } else {
-        w.id = this.findNextId(_dbd.workspaces);
+        //w.id = this.findNextId(_dbd.workspaces);
         _dbd.workspaces.push(w);
       }
       
@@ -282,7 +282,7 @@ export class Files2 {
         let index = _dbd.databases.findIndex((database: Database) => { return database.id === db.id; });
         _dbd.databases[index] = db;
       } else {
-        db.id = this.findNextId(_dbd.databases);
+        //db.id = this.findNextId(_dbd.databases);
         _dbd.databases.push(db);
       }
       
@@ -394,7 +394,7 @@ export class Files2 {
       Files2.getScriptsBySchedule(s)
     ]).pipe(switchMap(((results: [Workspace[], Database[], Query[], Script[]]) => {
       let w: Workspace = results[0].find((w: Workspace) => (w.id === s.workspaceId));
-      let db: Database = results[1].find((db: Database) => (db.id === w.databaseId));
+      let db: Database = results[1].find((db: Database) => (db.id === w.databaseIdRef));
       let q: Query[] = results[2];
       q.map((q: Query) => {
         q.query = Functions.decrypt(q.query);
