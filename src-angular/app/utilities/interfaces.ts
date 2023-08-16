@@ -1,10 +1,11 @@
 import { Observable } from 'rxjs';
-import { CNST_NEW_PARAMETER_VALUE } from './constants-angular';
+import { CNST_NEW_PARAMETER_VALUE, CNST_DEFAULT_LANGUAGE } from './constants-angular';
 
 export class AgentLog {
-  scheduleId: number;
+  scheduleId: string;
   scheduleName: string;
-  execId: number;
+  scheduleLines: number;
+  execId: string;
   startDate: Date;
   str_startDate: string;
   endDate: Date;
@@ -12,6 +13,7 @@ export class AgentLog {
   duration: string;
   messages: Array<AgentLogMessage>;
   status: number;
+  terminate: string;
   
   constructor() {
     this.scheduleId = null;
@@ -24,6 +26,7 @@ export class AgentLog {
     this.duration = null;
     this.messages = [];
     this.status = null;
+    this.terminate = null;
   }
 }
 
@@ -34,10 +37,10 @@ export class AgentLogMessage {
   system: string;
   message: string;
   level: string;
-  execId?: number;
-  scheduleId?: number;
+  execId?: string;
+  scheduleId?: string;
   
-  constructor(timestamp: Date, str_timestamp: string, loglevel: string, system: string, message: string, level: string, execId: number, scheduleId: number) {
+  constructor(timestamp: Date, str_timestamp: string, loglevel: string, system: string, message: string, level: string, execId: string, scheduleId: string) {
     this.timestamp = timestamp;
     this.str_timestamp = str_timestamp;
     this.loglevel = loglevel;
@@ -104,6 +107,7 @@ export class JavaInputBuffer {
   schedule: Schedule;
   queries: Query[];
   scripts: Script[];
+  configuration: Configuration;
 }
 
 export class DatabaseData {
@@ -120,7 +124,7 @@ export class DatabaseData {
     this.schedules = [];
     this.queries = [];
     this.scripts = [];
-    this.configuration = new Configuration();
+    this.configuration = new Configuration(10, true, 2048, '', CNST_DEFAULT_LANGUAGE);
   }
 }
 
@@ -193,7 +197,7 @@ export class Database {
 }
 
 export class Schedule {
-  id: number;
+  id: string;
   name: string;
   workspaceId: string;
   workspaceName: string;
@@ -244,8 +248,8 @@ export class SQLParameter {
 }
 
 export class Query {
-  id: number;
-  scheduleId: number;
+  id: string;
+  scheduleId: string;
   name: string;
   query: string;
   executionMode: string;
@@ -259,8 +263,8 @@ export class Query {
 }
 
 export class Script {
-  id: number;
-  scheduleId: number;
+  id: string;
+  scheduleId: string;
   name: string;
   script: string;
   canDecrypt: boolean;
@@ -274,18 +278,24 @@ export class Script {
 export class Configuration {
   debug: boolean;
   logfilesToKeep: number;
-  javaXms: number;
   javaXmx: number;
   javaTmpDir: string;
-  language: string;
-  lastId: number;
-  constructor() {
-    this.logfilesToKeep = 10;
-    this.debug = false;
-    this.javaXms = 1024;
-    this.javaXmx = 2048;
-    this.javaTmpDir = '';
-    this.language = 'en-US';
+  javaJREDir: string;
+  locale: string;
+  constructor(logfilesToKeep: number, debug: boolean, javaXmx: number, javaTmpDir: string, locale: string) {
+    this.logfilesToKeep = logfilesToKeep;
+    this.debug = debug;
+    this.javaXmx = javaXmx;
+    this.javaTmpDir = javaTmpDir;
+    this.locale = locale;
+  }
+  
+  public getLocaleLanguage(): string {
+    return this.locale.substring(0, 2);
+  }
+  
+  public getLocaleCountry(): string {
+    return this.locale.substring(3, 5);
   }
 }
 

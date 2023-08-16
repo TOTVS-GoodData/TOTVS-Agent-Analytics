@@ -13,6 +13,7 @@ import { ScriptComponent } from './script.component';
 import { SharedModule } from '../shared/shared.module';
 import { TranslationModule } from '../service/translation/translation.module';
 
+import { PoTooltipModule } from '@po-ui/ng-components';
 
 @NgModule({
     declarations: [
@@ -27,6 +28,7 @@ import { TranslationModule } from '../service/translation/translation.module';
       PoButtonModule,
         SharedModule,
         PoPageModule,
+      PoTooltipModule,
         PoTableModule,
         PoModalModule,
         PoFieldModule,

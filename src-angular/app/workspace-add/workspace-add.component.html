@@ -12,6 +12,7 @@
           name="po_modalidadeContratacao"
           [(ngModel)]="project.contractType"
           [p-label]="lbl_contractType"
+          [p-tooltip]="ttp_contractType"
           [p-options]="_CNST_MODALIDADE_CONTRATACAO"
           p-required="true">
         </po-select>
@@ -29,7 +30,8 @@
         <po-input
           name="po_codigot"
           class="form-control po-md-6 po-lg-6" 
-          [p-label]="lbl_contractCode"
+          [p-label]="lbl_customerCode"
+          [p-tooltip]="ttp_customerCode"
           [(ngModel)]="project.contractCode"
           [p-required]="true">
         </po-input>
@@ -65,6 +67,7 @@
           name="po_user"
           p-icon="po-icon-user"
           [p-label]="lbl_GDUsername"
+          [p-tooltip]="ttp_GDUsername"
           [(ngModel)]="project.GDUsername"
           p-required="true">
         </po-input>
@@ -73,6 +76,7 @@
           name="po_dominio"
           p-icon="po-icon-user"
           [p-label]="lbl_GDEnvironment"
+          [p-tooltip]="ttp_GDEnvironment"
           [(ngModel)]="project.GDEnvironment"
           p-required="true">
         </po-input>
@@ -82,6 +86,7 @@
           class="form-control po-md-6 po-lg-6"
           name="po_password"
           [p-label]="lbl_GDPassword"
+          [p-tooltip]="ttp_GDPassword"
           [(ngModel)]="project.GDPassword"
           p-required="true"
           [p-disabled]="project.id != null"
@@ -102,11 +107,12 @@
           name="projectId"
           [(ngModel)]="project.GDWorkspaceId"
           [p-label]="lbl_GDWorkspaceId"
+          [p-tooltip]="ttp_GDWorkspaceId"
           [p-options]="listProjects"
           p-required="true"
           [p-disabled]="listProjects[0] === undefined">
         </po-select>
-        <po-input name="uploadUrl" class="form-control po-md-6 po-lg-6" [p-label]="lbl_GDWorkspaceUploadURL" p-required [(ngModel)]="project.GDWorkspaceUploadURL" [p-disabled]="project.GDWorkspaceId === undefined"></po-input>
+        <po-input name="uploadUrl" class="form-control po-md-6 po-lg-6" [p-tooltip]="ttp_GDWorkspaceUploadURL" [p-label]="lbl_GDWorkspaceUploadURL" p-required [(ngModel)]="project.GDWorkspaceUploadURL" [p-disabled]="project.GDWorkspaceId === undefined"></po-input>
       </div>
       <div class="po-row">
         <po-select
@@ -115,6 +121,7 @@
           name="process"
           [(ngModel)]="project.GDProcessId"
           [p-label]="lbl_GDProcessId"
+          [p-tooltip]="ttp_GDProcessId"
           [p-options]="listProcess"
           p-required="true"
           [p-disabled]="project.GDWorkspaceId === null">
@@ -124,6 +131,7 @@
           name="graph"
           [(ngModel)]="project.GDProcessGraph"
           [p-label]="lbl_GDProcessGraph"
+          [p-tooltip]="ttp_GDProcessGraph"
           [p-options]="listGraph"
           p-required="true"
           [p-disabled]="project.GDProcessId === undefined">
@@ -137,7 +145,7 @@
       </div>
       <div class="po-row vertical-align align-left db-row footer">
         <div>
-          <span>{{ lbl_databaseId }}</span>
+          <po-label [p-label]="lbl_databaseId" [p-field]="true" />
         </div>
         <po-select
           class="form-control db-select"

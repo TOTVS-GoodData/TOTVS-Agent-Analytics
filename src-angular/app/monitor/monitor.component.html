@@ -1,4 +1,5 @@
 <po-page-list [p-title]="lbl_title">
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
   <po-table
     class="executions"
     p-container="shadow"
@@ -14,7 +15,7 @@
   <po-modal #modal_1
     p-click-out="true"
     p-size="auto"
-    p-title="Detalhes da Execução">
+    [p-title]="lbl_executionDetails">
     <div class="details">
       <po-table
         class="gridDetails"
@@ -27,6 +28,18 @@
     <po-modal-footer class="modal-footer">
       <div class="po-row footer">
         <po-button [p-label]="lbl_goBack" (p-click)="modal_1_close()" p-kind="primary"></po-button>
+      </div>
+    </po-modal-footer>
+  </po-modal>
+  
+  <po-modal #modal_2
+    [p-title]="lbl_killProcess"
+    [p-primary-action]="killProcess"
+    [p-secondary-action]="modal_2_close">
+    <po-modal-footer class="modal-footer">
+      <div class="po-row footer">
+        <po-button [p-label]="lbl_goBack" (p-click)="modal_2_close()"></po-button>
+        <po-button [p-label]="lbl_confirm" (p-click)="killProcess()" p-kind="primary"></po-button>
       </div>
     </po-modal-footer>
   </po-modal>

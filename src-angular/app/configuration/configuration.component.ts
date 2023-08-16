@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, EventEmitter } from '@angular/core';
+import { Router, Navigation } from '@angular/router';
 
 import { ElectronService } from 'ngx-electronyzer';
 
@@ -10,6 +11,7 @@ import * as _constants from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
 import { TranslationService, TranslationInput } from '../service/translation/translation-service';
 import { CustomTranslationLoader } from '../service/translation/custom-translation-loader';
+import { MenuService } from '../service/menu-service';
 
 import { ConfigurationService } from './configuration-service';
 
@@ -21,6 +23,7 @@ import { Observable, map, switchMap, catchError } from 'rxjs';
   styleUrls: ['./configuration.component.css']
 })
 export class ConfigurationComponent implements OnInit {
+  protected updateMenuLanguage: EventEmitter<void> = new EventEmitter<void>();
   public CNST_MESSAGES: any = {};
   protected CNST_FIELD_NAMES: Array<any> = [];
   
@@ -30,7 +33,7 @@ export class ConfigurationComponent implements OnInit {
   public AgentVersion: string = '';
   public JavaVersion: string = '';
   
-  protected configuration: Configuration = new Configuration();
+  protected configuration: Configuration = new Configuration(10, true, 2048, '', _constants.CNST_DEFAULT_LANGUAGE);
   protected po_lo_text: any = { value: null };
   
   /*************************************************/
@@ -38,20 +41,23 @@ export class ConfigurationComponent implements OnInit {
   /*************************************************/
   protected lbl_title: string;
   protected lbl_logfilesToKeep: string;
-  protected lbl_javaXms: string;
   protected lbl_javaXmx: string;
   protected lbl_javaTmpDir: string;
+  protected lbl_javaJREDir: string;
   protected lbl_debugModeOn: string;
   protected lbl_debugModeOff: string;
   protected lbl_save: string;
+  protected lbl_locale: string;
   
   protected lbl_application: string;
   protected lbl_version: string;
   protected lbl_java: string;
-  protected myTest: string = 'Lalala meu teste label para campo de ajuda padrão do portinari, para textos muito grandes ficaria assim no final.';
   
+  protected ttp_javaTmpDir: string;
+  protected ttp_javaJREDir: string;
+  protected ttp_javaXmx: string;
+  protected ttp_logfilesToKeep: string;
   
-  protected lbl_javaXmsHelp: string = 'Testezinho de label';
   /*************************************************/
   /*************************************************/
   /*************************************************/
@@ -60,6 +66,8 @@ export class ConfigurationComponent implements OnInit {
     private _translateService: TranslationService,
     private _translationLoader: CustomTranslationLoader,
     private _utilities: Utilities,
+    private _menuService: MenuService,
+    private _router: Router,
     private _electronService: ElectronService
   ) {}
   
@@ -72,9 +80,9 @@ export class ConfigurationComponent implements OnInit {
       new TranslationInput('CONFIGURATION.DEBUGMODE_ON', []),
       new TranslationInput('CONFIGURATION.DEBUGMODE_OFF', []),
       new TranslationInput('CONFIGURATION.LOGFILES_TO_KEEP', []),
-      new TranslationInput('CONFIGURATION.JAVA_XMS', []),
       new TranslationInput('CONFIGURATION.JAVA_XMX', []),
       new TranslationInput('CONFIGURATION.JAVA_TMPDIR', []),
+      new TranslationInput('CONFIGURATION.JAVA_JREDIR', []),
       new TranslationInput('CONFIGURATION.MESSAGES.VALIDATE', []),
       new TranslationInput('CONFIGURATION.MESSAGES.LOADING', []),
       new TranslationInput('CONFIGURATION.MESSAGES.LOADING_ERROR', []),
@@ -82,6 +90,11 @@ export class ConfigurationComponent implements OnInit {
       new TranslationInput('CONFIGURATION.MESSAGES.SAVE', []),
       new TranslationInput('CONFIGURATION.MESSAGES.SAVE_OK', []),
       new TranslationInput('CONFIGURATION.MESSAGES.SAVE_ERROR', []),
+      new TranslationInput('CONFIGURATION.TOOLTIPS.LOGFILES', []),
+      new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_XMX', []),
+      new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_TMPDIR', []),
+      new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_JREDIR', []),
+      new TranslationInput('LANGUAGES.TITLE', []),
       new TranslationInput('LANGUAGES.en_US', []),
       new TranslationInput('LANGUAGES.pt_BR', []),
       new TranslationInput('LANGUAGES.es_ES', []),
@@ -95,16 +108,21 @@ export class ConfigurationComponent implements OnInit {
       this.lbl_debugModeOff = translations['CONFIGURATION.DEBUGMODE_OFF'];
       
       this.lbl_logfilesToKeep = translations['CONFIGURATION.LOGFILES_TO_KEEP'] + '*';
-      this.lbl_javaXms = translations['CONFIGURATION.JAVA_XMS'] + '*';
       this.lbl_javaXmx = translations['CONFIGURATION.JAVA_XMX'] + '*';
       this.lbl_javaTmpDir = translations['CONFIGURATION.JAVA_TMPDIR'] + '*';
+      this.lbl_javaJREDir = translations['CONFIGURATION.JAVA_JREDIR'];
       this.lbl_application = translations['CONFIGURATION.APPLICATION'];
       this.lbl_version = translations['CONFIGURATION.VERSION'];
       this.lbl_java = translations['CONFIGURATION.JAVA'];
+      this.lbl_locale = translations['LANGUAGES.TITLE'];
+      
+      this.ttp_javaTmpDir = translations['CONFIGURATION.TOOLTIPS.JAVA_TMPDIR'];
+      this.ttp_javaJREDir = translations['CONFIGURATION.TOOLTIPS.JAVA_JREDIR'];
+      this.ttp_javaXmx = translations['CONFIGURATION.TOOLTIPS.JAVA_XMX'];
+      this.ttp_logfilesToKeep = translations['CONFIGURATION.TOOLTIPS.LOGFILES'];
       
       this.CNST_FIELD_NAMES = [
         { key: 'logfilesToKeep', value: translations['CONFIGURATION.LOGFILES_TO_KEEP'] },
-        { key: 'javaXms', value: translations['CONFIGURATION.JAVA_XMS'] },
         { key: 'javaXmx', value: translations['CONFIGURATION.JAVA_XMX'] },
         { key: 'javaTmpDir', value: translations['CONFIGURATION.JAVA_TMPDIR'] }
       ];
@@ -121,15 +139,15 @@ export class ConfigurationComponent implements OnInit {
       
       this.lbl_save = translations['BUTTONS.SAVE'];
       
-      return this._configurationService.getConfiguration().subscribe((conf: Configuration) => {
+      return this._configurationService.getConfiguration(true).subscribe((conf: Configuration) => {
         if (conf != undefined) {
           this.configuration = conf;
-          this.CNST_LANGUAGES = this._translationLoader.getAvailableLanguages().map((language: string) => ({
-            label: translations['LANGUAGES.' + language],
+          this.CNST_LANGUAGES = this._translationLoader.getAvailableLanguages().map((locale: string) => ({
+            label: translations['LANGUAGES.' + locale.replaceAll('\-','\_')],
             action: this.setLanguage.bind(this),
             icon: 'po-icon-user',
-            selected: (this.configuration.language == language),
-            value: language
+            selected: (this.configuration.locale == locale),
+            value: locale
           }));
         }
         if (this._electronService.isElectronApp) {
@@ -149,15 +167,16 @@ export class ConfigurationComponent implements OnInit {
     });
   }
   
-  public setLanguage(language: any): void {
-    this.configuration.language = language.value;
+  public setLanguage(locale: any): void {
+    this.configuration.locale = locale.value;
   }
   
   public saveConfiguration(): void {
     if (this.validConfiguration()) {
       this.po_lo_text = { value: this.CNST_MESSAGES.SAVE };
       this._configurationService.saveConfiguration(this.configuration).subscribe((b: boolean) => {
-        this._translateService.use(this.configuration.language);
+        this._translateService.use(this.configuration.locale);
+        this._menuService.updateMenu();
         this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
         this.po_lo_text = { value: null };
         this.ngOnInit();
@@ -170,7 +189,7 @@ export class ConfigurationComponent implements OnInit {
   
   private validConfiguration(): boolean {
     let validate: boolean = true;
-    let configuration: Configuration = new Configuration();
+    let configuration: Configuration = new Configuration(null, true, null, null, _constants.CNST_DEFAULT_LANGUAGE);
     
     this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.VALIDATE);
     this.po_lo_text = { value: this.CNST_MESSAGES.VALIDATE };
@@ -180,7 +199,7 @@ export class ConfigurationComponent implements OnInit {
     
     // Validação dos campos de formulário //
     if (propertiesNotDefined.length > 0) {
-      validate = false;console.log(propertiesNotDefined[0]);
+      validate = false;
       let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
       this._translateService.getTranslations([
         new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName])
@@ -193,9 +212,18 @@ export class ConfigurationComponent implements OnInit {
     return validate;
   }
   
-  public getFolder(): void {
+  public getTmpFolder(): void {
     if (this._electronService.isElectronApp) {
       this.configuration.javaTmpDir = this._electronService.ipcRenderer.sendSync('getFolder');
+    } else {
+      this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, this.CNST_MESSAGES.FOLDER_SELECT_WARNING);
+      this.po_lo_text = { value: null };
+    }
+  }
+  
+  public getJREFolder(): void {
+    if (this._electronService.isElectronApp) {
+      this.configuration.javaJREDir = this._electronService.ipcRenderer.sendSync('getFolder');
     } else {
       this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, this.CNST_MESSAGES.FOLDER_SELECT_WARNING);
       this.po_lo_text = { value: null };

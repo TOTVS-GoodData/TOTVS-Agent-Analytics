@@ -13,11 +13,14 @@ import {
 
 import { ScheduleAddComponent } from '../schedule-add/schedule-add.component';
 
+import { PoTooltipModule } from '@po-ui/ng-components';
+
 @NgModule({
   declarations: [ScheduleAddComponent],
   imports: [
      FormsModule
     ,CommonModule
+    ,PoTooltipModule
     ,PoLoadingModule
     ,PoPageModule
     ,TranslationModule

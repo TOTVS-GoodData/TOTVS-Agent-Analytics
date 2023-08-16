@@ -9,6 +9,7 @@
     "debug": false,
     "javaXms": 1024,
     "javaXmx": 1024,
-    "javaTmpDir": ""
+    "javaTmpDir": "",
+    "language": ""
   }
 }

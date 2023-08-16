@@ -6,6 +6,7 @@ import { PoPageModule } from '@po-ui/ng-components';
 import { PoFieldModule } from '@po-ui/ng-components';
 import { PoTableModule } from '@po-ui/ng-components';
 import { PoModalModule } from '@po-ui/ng-components';
+import { PoLoadingModule } from '@po-ui/ng-components';
 
 import { MonitorComponent } from './monitor.component';
 import { MonitorService } from './monitor-service';
@@ -22,6 +23,7 @@ import { PoModule } from '@po-ui/ng-components';
         FormsModule,
         PoTableModule,
         PoModalModule,
+      PoLoadingModule,
         PoModule
     ],
     providers: [

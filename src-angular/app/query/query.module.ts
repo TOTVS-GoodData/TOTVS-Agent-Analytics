@@ -14,6 +14,8 @@ import { SharedModule } from '../shared/shared.module';
 
 import { TranslationModule } from '../service/translation/translation.module';
 
+import { PoTooltipModule } from '@po-ui/ng-components';
+
 @NgModule({
     declarations: [
         QueryComponent
@@ -22,6 +24,7 @@ import { TranslationModule } from '../service/translation/translation.module';
         CommonModule,
         FormsModule,
         HttpClientModule,
+      PoTooltipModule,
       PoListViewModule,
       PoButtonModule,
         SharedModule,

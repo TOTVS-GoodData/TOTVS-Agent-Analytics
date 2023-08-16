@@ -7,11 +7,13 @@
       "dist/TOTVS-Agent-Analytics/src-angular/**/*",
       "dist/TOTVS-Agent-Analytics/src-electron/**/*",
       "dist/TOTVS-Agent-Analytics/icons/**/*",
+      "dist/TOTVS-Agent-Analytics/i18n/**/*",
       "!dist/TOTVS-Agent-Analytics/assets/dbDevelopment.json",
       "!dist/TOTVS-Agent-Analytics/assets/db.json"
     ],
     "extraFiles": [
-      "agent"
+      "java",
+      "icons"
     ],
     "directories": {
       "output": "release-builds",

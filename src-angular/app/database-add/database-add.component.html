@@ -25,6 +25,7 @@
           name="po_driverClass"
           class="form-control po-md-6 po-lg-6"
           [p-label]="lbl_driverClass"
+          [p-tooltip]="ttp_driverClass"
           [(ngModel)]="database.driverClass"
           [p-disabled]="(database.type != 'Outro')"
           p-required="true">
@@ -33,6 +34,7 @@
           name="poDriverPath"
           class="form-control po-md-6 po-lg-6"
           [p-label]="lbl_driverPath"
+          [p-tooltip]="ttp_driverPath"
           [(ngModel)]="database.driverPath"
           [p-disabled]="(database.type != 'Outro')"
           p-required="true">
@@ -44,6 +46,7 @@
           name="po_databaseIpType"
           class="form-control po-md-3 po-lg-3"
           [p-label]="lbl_ipType"
+          [p-tooltip]="ttp_hostType"
           [(ngModel)]="database.ipType"
           [p-options]="_CNST_DATABASE_IPTYPES"
           (p-change)="updateIpRegexPattern()"
@@ -53,6 +56,7 @@
             name="po_ip"
             class="form-control po-md-3 po-lg-3"
             [p-label]="lbl_ip"
+            [p-tooltip]="ttp_hostName"
             [(ngModel)]="database.ip"
             (p-change)="updateConnectionString()"
             p-required="true"
@@ -62,6 +66,7 @@
             name="po_port"
             class="form-control po-md-3 po-lg-3"
             [p-label]="lbl_port"
+            [p-tooltip]="ttp_port"
             [(ngModel)]="database.port"
             (p-change)="updateConnectionString()"
             p-required="true"
@@ -94,6 +99,7 @@
           name="po_connectionString"
           class="form-control po-md-12 po-lg-12"
           [p-label]="lbl_connectionString"
+          [p-tooltip]="ttp_connectionString"
           [(ngModel)]="database.connectionString"
           [p-disabled]="(database.type != 'Outro')"
           p-required="true">

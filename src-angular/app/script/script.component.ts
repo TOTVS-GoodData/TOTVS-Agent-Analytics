@@ -60,6 +60,8 @@ export class ScriptComponent implements OnInit {
   protected lbl_delete: string;
   protected lbl_deleteConfirmation: string;
   
+  protected ttp_scriptName: string;
+  
   /*************************************************/
   /*************************************************/
   /*************************************************/
@@ -100,6 +102,7 @@ export class ScriptComponent implements OnInit {
       new TranslationInput('SCRIPTS.MESSAGES.DELETE_ERROR', []),
       new TranslationInput('SCRIPTS.MESSAGES.EXPORT', []),
       new TranslationInput('SCRIPTS.MESSAGES.EXPORT_ERROR', []),
+      new TranslationInput('SCRIPTS.TOOLTIPS.SCRIPT_NAME', []),
       new TranslationInput('WORKSPACES.MESSAGES.LOADING', []),
       new TranslationInput('WORKSPACES.MESSAGES.LOADING_ERROR', [])
     ]).subscribe((translations: any) => {
@@ -133,6 +136,7 @@ export class ScriptComponent implements OnInit {
       this.lbl_goBack = translations['BUTTONS.GO_BACK'];
       this.lbl_delete = translations['BUTTONS.DELETE'];
       
+      this.ttp_scriptName = translations['SCRIPTS.TOOLTIPS.SCRIPT_NAME'];
       this.CNST_MESSAGES = {
         NEW_SCRIPT: translations['SCRIPTS.NEW_SCRIPT'],
         EDIT_SCRIPT: translations['SCRIPTS.EDIT_SCRIPT'],
@@ -179,18 +183,18 @@ export class ScriptComponent implements OnInit {
         s.module = w.module;
         s.databaseType = (() => {
           let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
-          if (db == undefined) return _constants.CNST_NO_OPTION_SELECTED.label;
+          if (db == undefined) return _constants.CNST_NO_OPTION_SELECTED;
           else {
             let db_type: any = _constants.CNST_DATABASE_TYPES.find((type: any) => (type.value == db.type));
-            if (db_type.brand ==  _constants.CNST_DATABASE_OTHER) return _constants.CNST_NO_OPTION_SELECTED.label;
+            if (db_type.brand ==  _constants.CNST_DATABASE_OTHER) return _constants.CNST_NO_OPTION_SELECTED;
             else return db_type.brand;
           }
         })();
         return s;
       });
       
-      this.schedulesScript = this.schedulesScriptTotal.filter((ss: any) => (ss.databaseType == _constants.CNST_NO_OPTION_SELECTED.label));
-      this.schedulesScriptExport = this.schedulesScriptTotal.filter((ss: any) => (ss.databaseType != _constants.CNST_NO_OPTION_SELECTED.label));
+      this.schedulesScript = this.schedulesScriptTotal.filter((ss: any) => (ss.databaseType == _constants.CNST_NO_OPTION_SELECTED));
+      this.schedulesScriptExport = this.schedulesScriptTotal.filter((ss: any) => (ss.databaseType != _constants.CNST_NO_OPTION_SELECTED));
       this.listSchedule = results[0].filter((s: Schedule) => {
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
         let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));

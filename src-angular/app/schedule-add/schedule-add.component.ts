@@ -70,6 +70,11 @@ export class ScheduleAddComponent {
   protected lbl_GDZipFilename: string;
   protected lbl_GDZipExtension: string;
   
+  protected ttp_windows: string;
+  protected ttp_zipFilename: string;
+  protected ttp_fileFolder: string;
+  protected ttp_fileWildcard: string;
+  
   /*************************************************/
   /*************************************************/
   /*************************************************/
@@ -113,6 +118,10 @@ export class ScheduleAddComponent {
       new TranslationInput('SCHEDULES.MESSAGES.LOADING_ERROR', []),
       new TranslationInput('SCHEDULES.MESSAGES.SAVE_OK', []),
       new TranslationInput('SCHEDULES.MESSAGES.VALIDATE', []),
+      new TranslationInput('SCHEDULES.TOOLTIPS.WINDOWS', []),
+      new TranslationInput('SCHEDULES.TOOLTIPS.ZIP_FILENAME', []),
+      new TranslationInput('SCHEDULES.TOOLTIPS.FILE_FOLDER', []),
+      new TranslationInput('SCHEDULES.TOOLTIPS.FILE_WILDCARD', []),
       new TranslationInput('FORM_ERRORS.FOLDER_SELECT_WARNING', []),
     ]).subscribe((translations: any) => {
       this.po_grid_config_sql = [
@@ -137,6 +146,11 @@ export class ScheduleAddComponent {
       this.lbl_GDZipExtension = translations['SCHEDULES.TABLE.ZIP_EXTENSION'] + '*';
       this.lbl_fileFolder = translations['SCHEDULES.TABLE.FILE_FOLDER'];
       this.lbl_fileFolderWildcard = translations['SCHEDULES.TABLE.FILE_WILDCARD'];
+      
+      this.ttp_windows = translations['SCHEDULES.TOOLTIPS.WINDOWS'];
+      this.ttp_zipFilename = translations['SCHEDULES.TOOLTIPS.ZIP_FILENAME'];
+      this.ttp_fileFolder = translations['SCHEDULES.TOOLTIPS.FILE_FOLDER'];
+      this.ttp_fileWildcard = translations['SCHEDULES.TOOLTIPS.FILE_WILDCARD'];
       
       this.CNST_FIELD_NAMES= [
         { key: 'name', value: translations['SCHEDULES.TABLE.NAME'] },

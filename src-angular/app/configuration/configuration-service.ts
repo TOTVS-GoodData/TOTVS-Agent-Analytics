@@ -27,19 +27,19 @@ export class ConfigurationService {
     this._http = http;
   }
   
-  public getConfiguration(): Observable<Configuration> {
+  public getConfiguration(showLogs: boolean): Observable<Configuration> {
     return this._translateService.getTranslations([
       new TranslationInput('CONFIGURATION.MESSAGES.LOADING', []),
       new TranslationInput('CONFIGURATION.MESSAGES.LOADING_OK', []),
       new TranslationInput('CONFIGURATION.MESSAGES.LOADING_ERROR', [])
     ]).pipe(switchMap((translations: any) => {
-      this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['CONFIGURATION.MESSAGES.LOADING']);
+      if (showLogs) this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['CONFIGURATION.MESSAGES.LOADING']);
       if (this._electronService.isElectronApp) {
-        return of(this._electronService.ipcRenderer.sendSync('getConfiguration'));
+        return of(this._electronService.ipcRenderer.sendSync('getConfiguration', showLogs));
       } else {
         return this._http.get<Configuration>(this._utilities.getLocalhostURL() + '/configuration').pipe(
         map((configuration: Configuration) => {
-          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['CONFIGURATION.MESSAGES.LOADING_OK']);
+          if (showLogs) this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['CONFIGURATION.MESSAGES.LOADING_OK']);
           this._utilities.debugMode = configuration.debug;
           return configuration;
         }), catchError((err: any) => {

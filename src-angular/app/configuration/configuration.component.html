@@ -17,6 +17,7 @@
             name="po_logfilesToKeep"
             [(ngModel)]="configuration.logfilesToKeep"
             [p-label]="lbl_logfilesToKeep"
+            [p-tooltip]="ttp_logfilesToKeep"
             p-maxlength=3
             p-regex="999">
           </po-number>
@@ -29,10 +30,13 @@
             [p-label-position]="poDebugModeLabelPosition">
           </po-switch>
           
-          <po-button-group
-            [p-buttons]="CNST_LANGUAGES"
-            p-toggle="single">
-          </po-button-group>
+          <div class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">
+            <po-label [p-label]="lbl_locale" [p-field]="true" />
+            <po-button-group
+              [p-buttons]="CNST_LANGUAGES"
+              p-toggle="single">
+            </po-button-group>
+          </div>
         </div>
       </div>
       
@@ -45,38 +49,35 @@
         <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
         
         <div class="po-row fields">
-          <div>
-            <span class="input-text">{{ lbl_javaXms }}</span>
-            <span class="input-text-help po-icon po-icon-help">
-              <div class="input-help-balloon">{{ lbl_javaXmsHelp }}</div>
-            </span>
-          </div>
-          <po-number
-            class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
-            p-min="1024"
-            name="po_javaXms"
-            [(ngModel)]="configuration.javaXms"
-            p-maxlength=5
-            p-regex="99999">
-          </po-number>
-          
           <po-number
             class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
             p-min="1024"
             name="po_javaXmx"
             [(ngModel)]="configuration.javaXmx"
             [p-label]="lbl_javaXmx"
-            [p-tooltip]="myTest"
+            [p-tooltip]="ttp_javaXmx"
             p-maxlength=5
             p-regex="99999">
           </po-number>
           
           <div class="po-md-12 po-lg-12">
-            <span>{{ lbl_javaTmpDir }}</span>
+            <po-label [p-label]="lbl_javaTmpDir" [p-field]="true" />
             <div class="display-title">
-              <po-input class="conf-select grow" name="po_tmpDirFolder" [p-tooltip]="myTest" [(ngModel)]="configuration.javaTmpDir" [p-disabled]="true"></po-input>
+              <po-input class="conf-select grow" name="po_tmpDirFolder" [p-tooltip]="ttp_javaTmpDir" [(ngModel)]="configuration.javaTmpDir" [p-disabled]="true"></po-input>
               <po-button
-                (p-click)="getFolder()"
+                (p-click)="getTmpFolder()"
+                p-icon="po-icon-folder"
+                p-size="medium"
+              />
+            </div>
+          </div>
+          
+          <div class="po-md-12 po-lg-12">
+            <po-label [p-label]="lbl_javaJREDir" [p-field]="true" />
+            <div class="display-title">
+              <po-input class="conf-select grow" name="po_JREDirFolder" [p-tooltip]="ttp_javaJREDir" [(ngModel)]="configuration.javaJREDir" [p-disabled]="true"></po-input>
+              <po-button
+                (p-click)="getJREFolder()"
                 p-icon="po-icon-folder"
                 p-size="medium"
               />

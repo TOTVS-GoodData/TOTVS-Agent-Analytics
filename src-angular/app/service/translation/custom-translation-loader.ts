@@ -36,6 +36,6 @@ export class CustomTranslationLoader implements TranslateLoader {
   }
   
   public getAvailableLanguages(): string[] {
-    return ['pt_BR', 'en_US', 'es_ES'];
+    return ['pt-BR', 'en-US', 'es-ES'];
   }
 }

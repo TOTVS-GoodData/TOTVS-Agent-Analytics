@@ -4,5 +4,18 @@
     <h2 class="menu-title po-menu-item po-menu-icon-container po-menu-icon-label">{{ programName }} - {{ version }}</h2>
     </ng-template>
   </po-menu>
+  
+  <po-modal #modal_1
+    [p-title]="lbl_exitConfirmation"
+    [p-primary-action]="exit"
+    [p-secondary-action]="goBack">
+    <po-modal-footer class="modal-footer">
+      <div class="po-row footer">
+        <po-button [p-label]="lbl_goBack" (p-click)="goBack()"></po-button>
+        <po-button [p-label]="lbl_confirm" (p-click)="exit()" p-kind="primary"></po-button>
+      </div>
+    </po-modal-footer>
+  </po-modal>
+  
   <router-outlet></router-outlet>
 </div>

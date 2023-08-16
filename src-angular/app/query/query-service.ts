@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 
 import { ElectronService } from 'ngx-electronyzer';
 
-import { Query, Workspace, Database, Schedule, ScheduleQuery, JavaInputBuffer } from '../utilities/interfaces';
+import { Query, Workspace, Database, Schedule, Configuration, ScheduleQuery, JavaInputBuffer } from '../utilities/interfaces';
 import * as _constants from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
 
@@ -11,6 +11,7 @@ import { TranslationService, TranslationInput } from '../service/translation/tra
 
 import { WorkspaceService } from '../workspace/workspace-service';
 import { DatabaseService } from '../database/database-service';
+import { ConfigurationService } from '../configuration/configuration-service';
 
 import { map, switchMap } from 'rxjs/operators';
 import { Observable, of, catchError, forkJoin, from } from 'rxjs';
@@ -29,6 +30,7 @@ export class QueryService {
     private _translateService: TranslationService,
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
+    private _configurationService: ConfigurationService,
     private _utilities: Utilities
   ) {
      this._http = http;
@@ -93,7 +95,7 @@ export class QueryService {
       if (this._electronService.isElectronApp) {
         return of(this._electronService.ipcRenderer.sendSync('saveQuery', q));
       } else {
-        newId = (q.id == null)
+        newId = (q.id == null);
         if (newId) q.id = uuid();
         query_name = results[1].filter((query: Query) => (query.id != q.id)).find((query: Query) => (query.name == q.name));
         if (query_name != undefined) {
@@ -228,6 +230,7 @@ export class QueryService {
   }
   
   public exportQueryFromI01(sc: ScheduleQuery, decrypt: boolean): Observable<Query[]> {
+    let queries: Query[] = [];
     return this._translateService.getTranslations([
       new TranslationInput('QUERIES.MESSAGES.EXPORT_I01', []),
       new TranslationInput('QUERIES.MESSAGES.EXPORT_I01_PREPARE', []),
@@ -235,13 +238,13 @@ export class QueryService {
       new TranslationInput('QUERIES.MESSAGES.EXPORT_I01_WARNING', [sc.schedule.name])
     ]).pipe(switchMap((translations: any) => {
       if (this._electronService.isElectronApp) {
-        this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['EXPORT_I01'], null);
+        this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.EXPORT_I01'], null);
         return forkJoin([
           this._workspaceService.getWorkspaces(),
-          this._databaseService.getDatabases()
-        ]).pipe(map((results: [Workspace[], Database[]]) => {
-          let queries: Query[] = null;
-          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['EXPORT_I01_PREPARE'], null);
+          this._databaseService.getDatabases(),
+          this._configurationService.getConfiguration(false)
+        ]).pipe(switchMap((results: [Workspace[], Database[], Configuration]) => {
+          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.EXPORT_I01_PREPARE'], null);
           let exportWorkspace: Workspace = results[0].find((w: Workspace) => (w.id === sc.schedule.workspaceId));
           let exportDatabase: Database = results[1].find((db: Database) => (db.id === exportWorkspace.databaseIdRef));
           
@@ -253,27 +256,30 @@ export class QueryService {
               database: exportDatabase,
               schedule: null,
               queries: null,
-              scripts: null
+              scripts: null,
+              configuration: results[2]
             }
             
             let params = this._electronService.ipcRenderer.sendSync('encrypt', JSON.stringify(javaInput));
-            let res = this._electronService.ipcRenderer.sendSync('exportQuery', params);
-            queries = res.message.map((q: Query) => {
-              q.scheduleId = sc.schedule.id;
-              q.canDecrypt = decrypt;
-              q.query = this._electronService.ipcRenderer.sendSync('encrypt', q.query);
-              return q;
+            return this._electronService.ipcRenderer.invoke('exportQuery', params).then((res: any) => {
+              queries = res.message.map((q: Query) => {
+                q.scheduleId = sc.schedule.id;
+                q.canDecrypt = decrypt;
+                q.query = this._electronService.ipcRenderer.sendSync('encrypt', q.query);
+                return q;
+              });
+              
+              return queries;
             });
           } else {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['EXPORT_I01_ERROR_NOTPROTHEUS'], null);
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['EXPORT_I01_ERROR_NOTPROTHEUS']);
-            queries = [];
+            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.EXPORT_I01_ERROR_NOTPROTHEUS'], null);
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.EXPORT_I01_ERROR_NOTPROTHEUS']);
           }
-          return queries;
+          return of(queries);
         }));
       } else {
         this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, translations['QUERIES.MESSAGES.EXPORT_I01_WARNING']);
-        return of([]);
+        return of(queries);
       }
     }));
   }

@@ -1,6 +1,5 @@
-//const log_manual = fs.createWriteStream( globals.CNST_PROGRAM_PATH + '/schedule/windows/logs/manual.log', { flags: 'a', encoding: 'utf8' } );
-//const log_export = fs.createWriteStream( globals.CNST_PROGRAM_PATH + '/schedule/windows/logs/export.log', { flags: 'a', encoding: 'utf8' } );
-//const log_stdout = process.stdout;
+
+import { Translations, TranslationInput } from './translations';
 
 import * as path from 'path';
 
@@ -17,14 +16,9 @@ import * as fs from 'fs-extra';
 
 import * as winston from 'winston';
 
-import { DatabaseData, Workspace, Database, Schedule, Query, Script, Configuration, JavaInputBuffer } from '../src-angular/app/utilities/interfaces';
+import uuid from 'uuid-v4';
 
-import { CNST_WORKSPACE_MESSAGES } from '../src-angular/app/workspace/workspace-messages';
-import { CNST_DATABASE_MESSAGES } from '../src-angular/app/database/database-messages';
-import { CNST_SCHEDULE_MESSAGES } from '../src-angular/app/schedule/schedule-messages';
-import { CNST_QUERY_MESSAGES } from '../src-angular/app/query/query-messages';
-import { CNST_SCRIPT_MESSAGES } from '../src-angular/app/script/script-messages';
-import { CNST_CONFIGURATION_MESSAGES } from '../src-angular/app/configuration/configuration-messages';
+import { DatabaseData, Workspace, Database, Schedule, Query, Script, Configuration, JavaInputBuffer } from '../src-angular/app/utilities/interfaces';
 
 import { Observable, from, switchMap, map, of, catchError, forkJoin } from 'rxjs';
 
@@ -33,16 +27,6 @@ const myFormat = winston.format.printf(({ level, message, label, timestamp }) =>
 });
 
 export class Files2 {
-  public static CNST_MESSAGES: any = {
-    FOLDER_SELECT: 'Selecione o diretório.'
-   ,DATABASE_DEVELOPMENT: 'Utilizando banco de desenvolvimento.'
-   ,DATABASE_PRODUCTION: 'Utilizando banco de produção.'
-   ,DATABASE_CREATE: 'Nova instalação detectada. Criando novo banco vazio.'
-   ,DATABASE_CREATE_OK: 'Banco criado com sucesso.'
-   ,DELETE_OLD_LOGS: 'Apagando arquivos de logs antigos.'
-   ,DELETE_OLD_LOGS_OK: 'Arquivos de log antigos apagados com sucesso.'
-  };
-  
   private static filepath: string = null;
   private static timestamp: string = Files2.formatDate(new Date());
   public static loggerJSON: any = null;
@@ -67,11 +51,17 @@ export class Files2 {
   /*    LOGFILES     */
   /*******************/
   public static deleteOldLogs() {
-    this.getConfiguration().subscribe((conf: Configuration) => {
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('CONFIGURATION.MESSAGES.LOADING_OK', []),
+      new TranslationInput('ELECTRON.DELETE_OLD_LOGS', []),
+      new TranslationInput('ELECTRON.DELETE_OLD_LOGS_OK', [])
+    ]);
+    
+    this.getConfiguration(true).subscribe((conf: Configuration) => {
       let maxDate: Date = new Date();
       maxDate.setDate(new Date().getDate() - conf.logfilesToKeep);
-      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_CONFIGURATION_MESSAGES.CONFIG_LOADING_OK, null, null, null);
-      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Files2.CNST_MESSAGES.DELETE_OLD_LOGS, null, null, null);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.LOADING_OK'], null, null, null);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.DELETE_OLD_LOGS'], null, null, null);
       fs.readdir(globals.CNST_PROGRAM_PATH_LOGS, (err: any, files: any) => {
         files.forEach((file: any) => {
           let regexLogs = new RegExp(globals.CNST_REGEX_LOGS);
@@ -84,12 +74,12 @@ export class Files2 {
           }
         });
         
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Files2.CNST_MESSAGES.DELETE_OLD_LOGS_OK, null, null, null);
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.DELETE_OLD_LOGS_OK'], null, null, null);
       });
     });
   }
   
-  public static writeToLog(loglevel: any, system: string, message: string, execId: number, scheduleId: number, err: any): boolean {
+  public static writeToLog(loglevel: any, system: string, message: string, execId: string, scheduleId: string, err: any): boolean {
     let obj = {
       timestamp: new Date(),
       loglevel: loglevel.tag,
@@ -114,7 +104,6 @@ export class Files2 {
   
   public static readLogs(): Array<string> {
     let logs: Array<string> = [];
-    
     let files = fs.readdirSync(globals.CNST_PROGRAM_PATH_LOGS);
     files.map((file: string) => {
       let regexLogs = new RegExp(globals.CNST_REGEX_LOGS);
@@ -122,40 +111,24 @@ export class Files2 {
         fs.readFileSync(globals.CNST_PROGRAM_PATH_LOGS + '/' + file).toString().split('\n').map((line: string) => {
           logs.push(line);
         });
+        logs.pop();
       }
     });
     
     return logs;
   }
   
-  public static openLogAgent(): any {
-        let logAgentPath = ( globals.CNST_PROGRAM_PATH + '/schedule/windows/logs/');
-        //shell.openItem( path.join( logAgentPath, 'manual.log') );
-    }
-  
-  private static findNextId(obj: any): number {
-    let ids = obj.map((o: any) => {
-      return o.id;
-    }).sort((v1: number, v2: number) => {
-      if (v1 < v2) return -1;
-      if (v1 > v2) return 1;
-      return 0;
-    });
-    
-    let start: number = 0;
-    let output: number = ids.find((id: number) => {
-      start = start + 1;
-      return (id != start);
-    });
-    
-    if (output == undefined) start = start + 1;
-    return start;
-  }
-  
   /*******************/
   /*    DB.JSON      */
   /*******************/
-  public static initApplicationData(): void {
+  public static initApplicationData(language: string): void {
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('ELECTRON.DATABASE_DEVELOPMENT', []),
+      new TranslationInput('ELECTRON.DATABASE_PRODUCTION', []),
+      new TranslationInput('ELECTRON.DATABASE_CREATE', []),
+      new TranslationInput('ELECTRON.DATABASE_CREATE_OK', [])
+    ]);
+    
     Files2.loggerJSON = winston.createLogger({
       level: 'debug',
       format: winston.format.combine(
@@ -183,16 +156,20 @@ export class Files2 {
     
     if (fs.existsSync(globals.CNST_DATABASE_NAME_DEV)) {
       Files2.filepath = globals.CNST_DATABASE_NAME_DEV;
-      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Files2.CNST_MESSAGES.DATABASE_DEVELOPMENT, null, null, null);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.DATABASE_DEVELOPMENT'], null, null, null);
     } else if (fs.existsSync(globals.CNST_DATABASE_NAME)) {
       Files2.filepath = globals.CNST_DATABASE_NAME;
-      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Files2.CNST_MESSAGES.DATABASE_PRODUCTION, null, null, null);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.DATABASE_PRODUCTION'], null, null, null);
     } else {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Files2.CNST_MESSAGES.DATABASE_CREATE, null, null, null);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.DATABASE_CREATE'], null, null, null);
       fs.createFileSync(globals.CNST_DATABASE_NAME);
       fs.writeJsonSync(globals.CNST_DATABASE_NAME, new DatabaseData(), { spaces: 2, 'EOL': '\n' });
       Files2.filepath = globals.CNST_DATABASE_NAME;
-      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Files2.CNST_MESSAGES.DATABASE_CREATE_OK, null, null, null);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.DATABASE_CREATE_OK'], null, null, null);
+    }
+    
+    if (!fs.existsSync(globals.CNST_TMP_PATH)) {
+      fs.mkdirSync(globals.CNST_TMP_PATH);
     }
   }
   
@@ -210,54 +187,84 @@ export class Files2 {
   /*   AMBIENTES     */
   /*******************/
   public static getWorkspaces(): Observable<Workspace[]> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING, null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('WORKSPACES.MESSAGES.LOADING', []),
+      new TranslationInput('WORKSPACES.MESSAGES.LOADING_ERROR', [])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.LOADING'], null, null, null);
     return this.readApplicationData().pipe(map((_dbd: DatabaseData) => {
       return _dbd.workspaces;
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.LOADING_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static getWorkspacesByDatabase(db: Database): Observable<Workspace[]> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_DATABASES(db.name), null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('WORKSPACES.MESSAGES.LOADING_DATABASES', [db.name]),
+      new TranslationInput('WORKSPACES.MESSAGES.LOADING_DATABASES_ERROR', [])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.LOADING_DATABASES'], null, null, null);
     return this.readApplicationData().pipe(map((_dbd: DatabaseData) => {
       return _dbd.workspaces.filter((w: Workspace) => {
         return (w.databaseIdRef === db.id)
       });
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_DATABASES_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.LOADING_DATABASES_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static saveWorkspace(w: Workspace): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_SAVE(w.name), null, null, null);
+    let workspace_name: Workspace = null;
+    let newId: boolean = false;
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('WORKSPACES.MESSAGES.SAVE', [w.name]),
+      new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR', [w.name]),
+      new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME', [w.name])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
-      if (w.id) {
-        let index = _dbd.workspaces.findIndex((workspace: Workspace) => { return workspace.id === w.id; });
-        _dbd.workspaces[index] = w;
+      newId = (w.id == null);
+      if (newId) w.id = uuid();
+      workspace_name = _dbd.workspaces.filter((workspace: Workspace) => (workspace.id != w.id)).find((workspace: Workspace) => (workspace.name == w.name));
+      if (workspace_name != undefined) {
+        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
+        return of(false);
       } else {
-        //w.id = this.findNextId(_dbd.workspaces);
-        _dbd.workspaces.push(w);
+        if (newId) {
+          _dbd.workspaces.push(w);
+        } else {
+          let index = _dbd.workspaces.findIndex((workspace: Workspace) => { return workspace.id === w.id; });
+          _dbd.workspaces[index] = w;
+        }
+        
+        return this.writeApplicationData(_dbd);
       }
-      
-      return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_SAVE_ERROR(w.name), null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static deleteWorkspace(w: Workspace): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_DELETE(w.name), null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('WORKSPACES.MESSAGES.DELETE', [w.name]),
+      new TranslationInput('WORKSPACES.MESSAGES.DELETE_ERROR', [w.name]),
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.DELETE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
       let index = _dbd.workspaces.findIndex((workspace: Workspace) => { return workspace.id === w.id; });
       _dbd.workspaces.splice(index, 1);
       
       return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_DELETE_ERROR(w.name), null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.DELETE_ERROR'], null, null, err);
       throw err;
     }));
   }
@@ -266,42 +273,66 @@ export class Files2 {
   /* BANCOS DE DADOS */
   /*******************/
   public static getDatabases(): Observable<Database[]> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_DATABASE_MESSAGES.DATABASE_LOADING, null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('DATABASES.MESSAGES.LOADING', []),
+      new TranslationInput('DATABASES.MESSAGES.LOADING_ERROR', []),
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.LOADING'], null, null, null);
     return this.readApplicationData().pipe(map((_dbd: DatabaseData) => {
       return _dbd.databases;
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_DATABASE_MESSAGES.DATABASE_LOADING_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.LOADING_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static saveDatabase(db: Database): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_DATABASE_MESSAGES.DATABASE_SAVE(db.name), null, null, null);
+    let db_name: Database = null;
+    let newId: boolean = false;
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('DATABASES.MESSAGES.SAVE', [db.name]),
+      new TranslationInput('DATABASES.MESSAGES.SAVE_ERROR', [db.name]),
+      new TranslationInput('DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME', [db.name]),
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
-      if (db.id) {
-        let index = _dbd.databases.findIndex((database: Database) => { return database.id === db.id; });
-        _dbd.databases[index] = db;
+      newId = (db.id == null);
+      if (newId) db.id = uuid();
+      db_name = _dbd.databases.filter((database: Database) => (database.id != db.id)).find((database: Database) => (database.name == db.name));
+      if (db_name != undefined) {
+        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
+        return of(false);
       } else {
-        //db.id = this.findNextId(_dbd.databases);
-        _dbd.databases.push(db);
+        if (newId) {
+          _dbd.databases.push(db);
+        } else {
+          let index = _dbd.databases.findIndex((database: Database) => { return database.id === db.id; });
+          _dbd.databases[index] = db;
+        }
       }
-      
       return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_DATABASE_MESSAGES.DATABASE_SAVE_ERROR(db.name), null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static deleteDatabase(db: Database): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_DATABASE_MESSAGES.DATABASE_DELETE(db.name), null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('DATABASES.MESSAGES.DELETE', [db.name]),
+      new TranslationInput('DATABASES.MESSAGES.DELETE_ERROR', [db.name])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.DELETE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
       let index = _dbd.databases.findIndex((database: Database) => { return database.id === db.id; });
       _dbd.databases.splice(index, 1);
       
       return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_DATABASE_MESSAGES.DATABASE_DELETE_ERROR(db.name), null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.DELETE_ERROR'], null, null, err);
       throw err;
     }));
   }
@@ -310,17 +341,27 @@ export class Files2 {
   /*  AGENDAMENTOS   */
   /*******************/
   public static getSchedules(showLogs: boolean): Observable<Schedule[]> {
-    if (showLogs) Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.SCHEDULE_LOADING, null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('SCHEDULES.MESSAGES.LOADING', []),
+      new TranslationInput('SCHEDULES.MESSAGES.LOADING_ERROR', [])
+    ]);
+    
+    if (showLogs) Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.LOADING'], null, null, null);
     return this.readApplicationData().pipe(map((db: DatabaseData) => {
       return db.schedules;
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.SCHEDULE_LOADING_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.LOADING_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static getSchedulesToExecute(): Observable<Schedule[]> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.TRIGGERSCHEDULES_LOADING(Functions.formatDate(new Date())), null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING', [Functions.formatDate(new Date())]),
+      new TranslationInput('SCHEDULES.MESSAGES.TRIGGERSCHEDULES_ERROR', [])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING'], null, null, null);
     return Files2.getSchedules(false).pipe(
       map((schedules: Schedule[]) => {
         schedules = schedules.filter((s: Schedule) => {
@@ -344,31 +385,51 @@ export class Files2 {
         
         return schedules;
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC,CNST_SCHEDULE_MESSAGES.TRIGGERSCHEDULES_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static saveSchedule(sc: Schedule): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.SCHEDULE_SAVE(sc.name), null, null, null);
+    let schedule_name: Schedule = null;
+    let newId: boolean = false;
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('SCHEDULES.MESSAGES.SAVE', [sc.name]),
+      new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR', [sc.name]),
+      new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME', [sc.name])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
-      if (sc.id) {
-        let index = _dbd.schedules.findIndex((schedule: Schedule) => { return schedule.id === sc.id; });
-        _dbd.schedules[index] = sc;
+      newId = (sc.id == null);
+      if (newId) sc.id = uuid();
+      schedule_name = _dbd.schedules.filter((schedule: Schedule) => (schedule.id != sc.id)).find((schedule: Schedule) => (schedule.name == sc.name));
+      if (schedule_name != undefined) {
+        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
+        return of(false);
       } else {
-        sc.id = this.findNextId(_dbd.schedules);
-        _dbd.schedules.push(sc);
+        if (newId) {
+          _dbd.schedules.push(sc);
+        } else {
+          let index = _dbd.schedules.findIndex((schedule: Schedule) => { return schedule.id === sc.id; });
+          _dbd.schedules[index] = sc;
+        }
       }
       
       return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.SCHEDULE_SAVE_ERROR(sc.name), null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static deleteSchedule(sc: Schedule): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.SCHEDULE_DELETE(sc.name), null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('SCHEDULES.MESSAGES.DELETE', [sc.name]),
+      new TranslationInput('SCHEDULES.MESSAGES.DELETE_ERROR', [sc.name])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.DELETE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
       let index = _dbd.schedules.findIndex((schedule: Schedule) => { return schedule.id === sc.id; });
       _dbd.schedules.splice(index, 1);
@@ -380,19 +441,24 @@ export class Files2 {
       });
       return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.SCHEDULE_DELETE_ERROR(sc.name), null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.DELETE_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static executeAndUpdateSchedule(s: Schedule): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.RUN_AGENT_PREPARE, null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('SCHEDULES.MESSAGES.RUN_PREPARE', [])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_PREPARE'], null, null, null);
     return forkJoin([
       Files2.getWorkspaces(),
       Files2.getDatabases(),
       Files2.getQueriesBySchedule(s),
-      Files2.getScriptsBySchedule(s)
-    ]).pipe(switchMap(((results: [Workspace[], Database[], Query[], Script[]]) => {
+      Files2.getScriptsBySchedule(s),
+      Files2.getConfiguration(false)
+    ]).pipe(switchMap(((results: [Workspace[], Database[], Query[], Script[], Configuration]) => {
       let w: Workspace = results[0].find((w: Workspace) => (w.id === s.workspaceId));
       let db: Database = results[1].find((db: Database) => (db.id === w.databaseIdRef));
       let q: Query[] = results[2];
@@ -413,18 +479,24 @@ export class Files2 {
         database: db,
         schedule: s,
         queries: q,
-        scripts: scr
+        scripts: scr,
+        configuration: results[4]
       }
       
       let params = Functions.encrypt(JSON.stringify(javaInput));
       
-      return of(Execute.runAgent(params, s.id)).pipe(switchMap((b: boolean) => {
+      return Execute.runAgent(params, s.id).pipe(switchMap((b: boolean) => {
+        let translations2: any = Translations.getTranslations([
+          new TranslationInput('SCHEDULES.MESSAGES.RUN_EXECUTIONDATE', [s.lastExecution + '']),
+          new TranslationInput('SCHEDULES.MESSAGES.RUN_ERROR', [s.name])
+        ]);
+        
         s.lastExecution = new Date();
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.RUN_AGENT_EXECUTIONDATE(s.lastExecution), null, null, null);
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.RUN_EXECUTIONDATE'], null, null, null);
         return Files2.saveSchedule(s).pipe(map((b: boolean) => {
           return b;
         }), catchError((err: any) => {
-          Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.RUN_AGENT_ERROR(s.name), null, null, err);
+          Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.RUN_ERROR'], null, null, err);
           throw err;
         }));
       }));
@@ -435,54 +507,84 @@ export class Files2 {
   /*    QUERIES      */
   /*******************/
   public static getQueries(): Observable<Query[]> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_LOADING, null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('QUERIES.MESSAGES.LOADING', []),
+      new TranslationInput('QUERIES.MESSAGES.LOADING_ERROR', [])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.LOADING'], null, null, null);
     return this.readApplicationData().pipe(map((db: DatabaseData) => {
       return db.queries;
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_LOADING_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.LOADING_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static getQueriesBySchedule(sc: Schedule): Observable<Query[]> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_SCHEDULE_LOADING(sc.name), null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('QUERIES.MESSAGES.SCHEDULE_LOADING', [sc.name]),
+      new TranslationInput('QUERIES.MESSAGES.SCHEDULE_LOADING_ERROR', [])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SCHEDULE_LOADING'], null, null, null);
     return this.readApplicationData().pipe(map((_dbd: DatabaseData) => {
       return _dbd.queries.filter((query: Query) => {
         return (query.scheduleId === sc.id)
       });
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_SCHEDULE_LOADING_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SCHEDULE_LOADING_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static saveQuery(q: Query): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_SAVE(q.name), null, null, null);
+    let query_name: Query = null;
+    let newId: boolean = false;
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('QUERIES.MESSAGES.SAVE', [q.name]),
+      new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [q.name]),
+      new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME', [q.name])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
-      if (q.id) {
-        let index = _dbd.queries.findIndex((query: Query) => { return query.id === q.id; });
-        _dbd.queries[index] = q;
+      newId = (q.id == null);
+      if (newId) q.id = uuid();
+      query_name = _dbd.queries.filter((query: Query) => (query.id != q.id)).find((query: Query) => (query.name == q.name));
+      if (query_name != undefined) {
+        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
+        return of(false);
       } else {
-        q.id = this.findNextId(_dbd.queries);
-        _dbd.queries.push(q);
+        if (newId) {
+          _dbd.queries.push(q);
+        } else {
+          let index = _dbd.queries.findIndex((query: Query) => { return query.id === q.id; });
+          _dbd.queries[index] = q;
+        }
       }
       
       return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_SAVE_ERROR(q.name), null, null, err);
+        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE_ERROR'], null, null, err);
         throw err;
     }));
   }
   
   public static deleteQuery(q: Query): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_DELETE(q.name), null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('QUERIES.MESSAGES.DELETE', [q.name]),
+      new TranslationInput('QUERIES.MESSAGES.DELETE_ERROR', [q.name])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.DELETE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
       let index = _dbd.queries.findIndex((query: Query) => { return query.id === q.id; });
       _dbd.queries.splice(index, 1);
       
       return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_DELETE_ERROR(q.name), null, null, err);
+        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.DELETE_ERROR'], null, null, err);
         throw err;
     }));
   }
@@ -491,54 +593,84 @@ export class Files2 {
   /*    SCRIPTS      */
   /*******************/
   public static getScripts(): Observable<Script[]> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_LOADING, null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('SCRIPTS.MESSAGES.LOADING', []),
+      new TranslationInput('SCRIPTS.MESSAGES.LOADING_ERROR', [])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.LOADING'], null, null, null);
     return this.readApplicationData().pipe(map((db: DatabaseData) => {
       return db.scripts;
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_LOADING_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.LOADING_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static getScriptsBySchedule(sc: Schedule): Observable<Script[]> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_SCHEDULE_LOADING(sc.name), null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('SCRIPTS.MESSAGES.SCHEDULE_LOADING', [sc.name]),
+      new TranslationInput('SCRIPTS.MESSAGES.SCHEDULE_LOADING_ERROR', [])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SCHEDULE_LOADING'], null, null, null);
     return this.readApplicationData().pipe(map((_dbd: DatabaseData) => {
       return _dbd.scripts.filter((script: Script) => {
         return (script.scheduleId === sc.id)
       });
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_SCHEDULE_LOADING_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SCHEDULE_LOADING_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static saveScript(s: Script): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_SAVE(s.name), null, null, null);
+    let script_name: Script = null;
+    let newId: boolean = false;
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('SCRIPTS.MESSAGES.SAVE', [s.name]),
+      new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [s.name]),
+      new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [s.name])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
-      if (s.id) {
-        let index = _dbd.scripts.findIndex((script: Script) => { return script.id === s.id; });
-        _dbd.scripts[index] = s;
+      newId = (s.id == null);
+      if (newId) s.id = uuid();
+      script_name = _dbd.scripts.filter((script: Script) => (script.id != s.id)).find((script: Script) => (script.name == s.name));
+      if (script_name != undefined) {
+        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
+        return of(false);
       } else {
-        s.id = this.findNextId(_dbd.scripts);
-        _dbd.scripts.push(s);
+        if (newId) {
+          _dbd.scripts.push(s);
+        } else {
+          let index = _dbd.scripts.findIndex((script: Script) => { return script.id === s.id; });
+          _dbd.scripts[index] = s;
+        }
       }
       
       return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_SAVE_ERROR(s.name), null, null, err);
+        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], null, null, err);
         throw err;
     }));
   }
   
   public static deleteScript(s: Script): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_DELETE(s.name), null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('SCRIPTS.MESSAGES.DELETE', [s.name]),
+      new TranslationInput('SCRIPTS.MESSAGES.DELETE_ERROR', [s.name])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.DELETE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
       let index = _dbd.scripts.findIndex((script: Script) => { return script.id === s.id; });
       _dbd.scripts.splice(index, 1);
       
       return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_DELETE_ERROR(s.name), null, null, err);
+        Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.ERROR'], null, null, err);
         throw err;
     }));
   }
@@ -546,23 +678,42 @@ export class Files2 {
   /*******************/
   /*  CONFIGURAÇÃO   */
   /*******************/
-  public static getConfiguration(): Observable<Configuration> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_CONFIGURATION_MESSAGES.CONFIG_LOADING, null, null, null);
+  public static getConfiguration(showLogs): Observable<Configuration> {
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('CONFIGURATION.MESSAGES.LOADING', []),
+      new TranslationInput('CONFIGURATION.MESSAGES.LOADING_ERROR', [])
+    ]);
+    if (showLogs) Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.LOADING'], null, null, null);
+    
     return this.readApplicationData().pipe(map((db: DatabaseData) => {
-      return db.configuration;
+      let conf: Configuration = new Configuration(
+        db.configuration.logfilesToKeep,
+        db.configuration.debug,
+        db.configuration.javaXmx,
+        db.configuration.javaTmpDir,
+        db.configuration.locale
+      );
+      conf.javaJREDir = db.configuration.javaJREDir;
+      return conf;
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_CONFIGURATION_MESSAGES.CONFIG_LOADING_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.LOADING_ERROR'], null, null, err);
       throw err;
     }));
   }
   
   public static saveConfiguration(conf: Configuration): Observable<boolean> {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_CONFIGURATION_MESSAGES.CONFIG_SAVE, null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('CONFIGURATION.MESSAGES.SAVE', []),
+      new TranslationInput('CONFIGURATION.MESSAGES.SAVE_ERROR', [])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.SAVE'], null, null, null);
     return this.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
       _dbd.configuration = conf;
+      Translations.use(conf.locale);
       return this.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, CNST_CONFIGURATION_MESSAGES.CONFIG_SAVE_ERROR, null, null, err);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.SAVE_ERROR'], null, null, err);
       throw err;
     }));
   }
@@ -571,11 +722,14 @@ export class Files2 {
   /*   DIRETÓRIOS    */
   /*******************/
   public static getFolder(b: any): Observable<string> {
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('ELECTRON.FOLDER_SELECT', [])
+    ]);
+    
     return from(dialog.showOpenDialog(b,{
-        title: Files2.CNST_MESSAGES.FOLDER_SELECT,
+        title: translations['ELECTRON.FOLDER_SELECT'],
         properties: ['openDirectory']
     })).pipe(map((r: any) => {
-      console.log(JSON.stringify(r));
       if (r.canceled) {
         return null;
       } else {
@@ -583,38 +737,4 @@ export class Files2 {
       }
     }));
   }
-  
-  
-  /*
-  this._electronService.remote.
-  
-  
-  
-  /*
-  public saveProject(p: Project): Observable<boolean> {
-    if (p.id) {
-      return this._http.put(this.getDataUrl() + '/projects/' + p.id, p).pipe(map(() => {
-        return true;
-      }));
-    } else {
-      return this._http.post(this.getDataUrl() + '/projects', p).pipe(map(() => {
-        return true;
-      }));
-    }
-  }
-  */
-  //public teste() {
-  //  console.log('cheguei aqui');
- // }
-  /*
-  readApplicationData(): DatabaseData {
-    
-    db.read
-    
-    //logAgent = this.db.readFileSync( logAgentPath );
-  }*/
-  
-  
-//logAgent = fs.readFileSync( logAgentPath );
-//fs.writeFileSync( globals.CNST_PROGRAM_PATH + '/schedule/windows/logs/manual-${fileDate}.log', manualContent );
 }

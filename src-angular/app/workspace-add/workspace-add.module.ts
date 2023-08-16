@@ -20,6 +20,8 @@ import { ModalModule } from '../modal/modal.module';
 
 import { TranslationModule } from '../service/translation/translation.module';
 
+import { PoTooltipModule } from '@po-ui/ng-components';
+
 @NgModule({
     declarations: [
         WorkspaceAddComponent
@@ -29,6 +31,7 @@ import { TranslationModule } from '../service/translation/translation.module';
         FormsModule,
       PoLoadingModule,
       PoGridModule,
+      PoTooltipModule,
       PoListViewModule,
       PoContainerModule,
         HttpClientModule,

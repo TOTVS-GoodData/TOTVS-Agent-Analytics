@@ -27,6 +27,7 @@ import { Observable } from 'rxjs';
 
 export class MonitorComponent implements OnInit {
   @ViewChild('modal_1') modal_1: PoModalComponent;
+  @ViewChild('modal_2') modal_2: PoModalComponent;
   
   public CNST_MESSAGES: any = {};
   
@@ -34,6 +35,7 @@ export class MonitorComponent implements OnInit {
   public agentLog: Array<AgentLog> = [];
   
   protected lbl_title: string;
+  protected po_lo_text: any = { value: null };
   
   public showModalMonitor = false;
   public interval: any;
@@ -44,7 +46,10 @@ export class MonitorComponent implements OnInit {
   public setDetailColumns: Array<PoTableColumn> = [];
   
   public lbl_goBack: string;
-
+  public lbl_confirm: string;
+  public lbl_executionDetails: string;
+  public lbl_killProcess: string;
+  
   constructor(
     public _monitorService: MonitorService,
     private _translateService: TranslationService,
@@ -54,33 +59,39 @@ export class MonitorComponent implements OnInit {
     this._translateService.getTranslations([
       new TranslationInput('MONITOR.TITLE', []),
       new TranslationInput('MONITOR.TABLE.STATUS', []),
+      new TranslationInput('MONITOR.TABLE.LINES', []),
       new TranslationInput('MONITOR.TABLE.SCHEDULE', []),
       new TranslationInput('MONITOR.TABLE.START_DATE', []),
       new TranslationInput('MONITOR.TABLE.FINAL_DATE', []),
       new TranslationInput('MONITOR.TABLE.EXECUTION_TIME', []),
+      new TranslationInput('MONITOR.TABLE.DETAILS.TITLE', []),
       new TranslationInput('MONITOR.TABLE.DETAILS.TIMESTAMP', []),
       new TranslationInput('MONITOR.TABLE.DETAILS.LEVEL', []),
       new TranslationInput('MONITOR.TABLE.DETAILS.SOURCE', []),
       new TranslationInput('MONITOR.TABLE.DETAILS.MESSAGE', []),
-      new TranslationInput('MONITOR.TABLE.EXECUTION_DETAILS.DONE', []),
-      new TranslationInput('MONITOR.TABLE.EXECUTION_DETAILS.RUNNING', []),
-      new TranslationInput('MONITOR.TABLE.EXECUTION_DETAILS.ERROR', []),
-      new TranslationInput('MONITOR.TABLE.EXECUTION_DETAILS.CANCELED', []),
+      new TranslationInput('MONITOR.TABLE.EXECUTION_STATUS.DONE', []),
+      new TranslationInput('MONITOR.TABLE.EXECUTION_STATUS.RUNNING', []),
+      new TranslationInput('MONITOR.TABLE.EXECUTION_STATUS.ERROR', []),
+      new TranslationInput('MONITOR.TABLE.EXECUTION_STATUS.CANCELED', []),
       new TranslationInput('BUTTONS.DETAILS', []),
+      new TranslationInput('BUTTONS.CONFIRM', []),
       new TranslationInput('BUTTONS.GO_BACK', []),
-      new TranslationInput('MONITOR.MESSAGES.WARNING', [])
+      new TranslationInput('MONITOR.MESSAGES.WARNING', []),
+      new TranslationInput('MONITOR.MESSAGES.KILL_PROCESS_TITLE', [])
     ]).subscribe((translations: any) => {
       this.setColumns = [
         { property: 'status', type: 'subtitle', width: '10%', subtitles: [
-          { value: _constants.CNST_LOGLEVEL.INFO.level, color: 'success', label: translations['MONITOR.TABLE.EXECUTION_DETAILS.DONE'], content: ''},
-          { value: _constants.CNST_LOGLEVEL.WARN.level, color: 'warning', label: translations['MONITOR.TABLE.EXECUTION_DETAILS.RUNNING'], content: ''},
-          { value: _constants.CNST_LOGLEVEL.ERROR.level, color: 'danger', label: translations['MONITOR.TABLE.EXECUTION_DETAILS.ERROR'] , content: ''},
-          { value: 'C', color: 'color-12', label: translations['MONITOR.TABLE.EXECUTION_DETAILS.CANCELED'] , content: ''}
+          { value: _constants.CNST_LOGLEVEL.INFO.level, color: 'color-10', label: translations['MONITOR.TABLE.EXECUTION_STATUS.DONE'], content: ''},
+          { value: _constants.CNST_LOGLEVEL.WARN.level, color: 'color-01', label: translations['MONITOR.TABLE.EXECUTION_STATUS.RUNNING'], content: ''},
+          { value: _constants.CNST_LOGLEVEL.ERROR.level, color: 'color-07', label: translations['MONITOR.TABLE.EXECUTION_STATUS.ERROR'] , content: ''},
+          { value: _constants.CNST_LOGLEVEL.DEBUG.level, color: 'color-12', label: translations['MONITOR.TABLE.EXECUTION_STATUS.CANCELED'] , content: ''}
         ]},
-        { property: 'scheduleName', label: translations['MONITOR.TABLE.SCHEDULE'] , width: '20%' },
+        { property: 'scheduleLines', label: translations['MONITOR.TABLE.LINES'] , width: '10%' },
+        { property: 'scheduleName', label: translations['MONITOR.TABLE.SCHEDULE'] , width: '15%' },
         { property: 'str_startDate', label: translations['MONITOR.TABLE.START_DATE'], width: '25%' },
         { property: 'str_endDate', label: translations['MONITOR.TABLE.FINAL_DATE'], width: '25%' },
-        { property: 'duration', label: translations['MONITOR.TABLE.EXECUTION_TIME'], width: '20%' }
+        { property: 'duration', label: translations['MONITOR.TABLE.EXECUTION_TIME'], width: '20%' },
+        { property: 'terminate', label: ' ', width: '5%', type: 'icon', action: this.modal_2_open.bind(this) }
       ];
       
       this.setDetailColumns = [
@@ -99,13 +110,16 @@ export class MonitorComponent implements OnInit {
       };
       
       this.lbl_title = translations['MONITOR.TITLE'];
-      this.lbl_goBack = translations['BUTTONS.GOBACK'];
+      this.lbl_executionDetails = translations['MONITOR.TABLE.DETAILS.TITLE'];
+      this.lbl_killProcess = translations['MONITOR.MESSAGES.KILL_PROCESS_TITLE'];
+      this.lbl_goBack = translations['BUTTONS.GO_BACK'];
+      this.lbl_confirm = translations['BUTTONS.CONFIRM'];
     });
   }
   
   public ngOnInit(): void {
     if (this._electronService.isElectronApp) {
-      setInterval(() => { this.updateMonitorLog().subscribe(); }, 60000 * 5);
+      setInterval(() => { this.updateMonitorLog().subscribe(); }, 1000 * 5);
       this.updateMonitorLog().subscribe();
     } else {
       this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, this.CNST_MESSAGES.WARNING, null);
@@ -127,32 +141,36 @@ export class MonitorComponent implements OnInit {
     this.details = new AgentLog();
     this.modal_1.close();
   }
-}
-
-  /*
   
-  protected modal_2_open(execution: Monitor): void {
-    this.idExecutionCancel = execution.idExecution;
+  protected modal_2_open(agentLog: AgentLog): void {
+    this.details = agentLog;
     this.modal_2.open();
   }
   
   protected modal_2_close(): void {
-    this.idExecutionCancel = null;
+    this.details = new AgentLog();
     this.modal_2.close();
   }
   
-  protected modal_2_confirm(): void {
+  protected killProcess(): void {
     this.modal_2.close();
-    const changeStatus = this._electronService.ipcRenderer.sendSync( 'setStatusExecution', this.idExecutionCancel, 'C' );
-    if (changeStatus) {
-      this.agentLog = [];
-      //this.agentLog = this._monitorService.getMonitorLog();
-    } else {
-      const thfNotification: PoNotification = {
-        message: 'Houve um erro ao tentar cancelar o status da execução',
-        orientation: PoToasterOrientation.Top
-      };
-      this.thfNotification.error( thfNotification );
-    }
+    this._translateService.getTranslations([
+      new TranslationInput('ELECTRON.PROCESS_KILL', []),
+      new TranslationInput('ELECTRON.PROCESS_KILL_OK', [this.details.scheduleId, this.details.execId]),
+      new TranslationInput('ELECTRON.PROCESS_KILL_WARN', [this.details.scheduleId, this.details.execId]),
+      new TranslationInput('ELECTRON.PROCESS_KILL_ERROR', [this.details.scheduleId, this.details.execId])
+    ]).subscribe((translations: any) => {
+      this.po_lo_text = { value: translations['ELECTRON.PROCESS_KILL'] };
+      this._electronService.ipcRenderer.invoke('killProcess', this.details.scheduleId, this.details.execId).then((res: number) => {
+        this.po_lo_text = { value: null };
+        if (res == 1) {
+          this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, translations['ELECTRON.PROCESS_KILL_OK'], null);
+        } else if (res == 0) {
+          this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['ELECTRON.PROCESS_KILL_ERROR'], null);
+        } else {
+          this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, translations['ELECTRON.PROCESS_KILL_WARN'], null);
+        }
+      });
+    });
   }
-  */
+}

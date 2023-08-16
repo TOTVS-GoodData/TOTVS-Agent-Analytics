@@ -75,7 +75,7 @@ export class ScheduleService {
       if (this._electronService.isElectronApp) {
         return of(this._electronService.ipcRenderer.sendSync('saveSchedule', s));
       } else {
-        newId = (s.id == null)
+        newId = (s.id == null);
         if (newId) s.id = uuid();
         schedule_name = results[1].filter((schedule: Schedule) => (schedule.id != s.id)).find((schedule: Schedule) => (schedule.name == s.name));
         if (schedule_name != undefined) {

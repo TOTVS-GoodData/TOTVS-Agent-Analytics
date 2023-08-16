@@ -46,6 +46,13 @@ export class DataBaseAddComponent {
   protected lbl_save: string;
   protected lbl_goBack: string;
   
+  protected ttp_driverClass: string;
+  protected ttp_driverPath: string;
+  protected ttp_hostType: string;
+  protected ttp_hostName: string;
+  protected ttp_port: string;
+  protected ttp_connectionString: string;
+  
   /*************************************************/
   /*************************************************/
   /*************************************************/
@@ -71,12 +78,9 @@ export class DataBaseAddComponent {
     this._CNST_DATABASE_IPTYPES = _constants.CNST_DATABASE_IPTYPES.map((db: any) => {
       return { label: db.label, value: db.value }
     });
-      
-    this._CNST_DATABASE_TYPES = _constants.CNST_DATABASE_TYPES.map((db: any) => {
-      return { label: db.label, value: db.value }
-    });
     
     this._translateService.getTranslations([
+      new TranslationInput('ANGULAR.OTHER', []),
       new TranslationInput('BUTTONS.TEST_CONNECTION', []),
       new TranslationInput('BUTTONS.GO_BACK', []),
       new TranslationInput('BUTTONS.SAVE', []),
@@ -97,12 +101,24 @@ export class DataBaseAddComponent {
       new TranslationInput('DATABASES.TABLE.USERNAME', []),
       new TranslationInput('DATABASES.TABLE.PASSWORD', []),
       new TranslationInput('DATABASES.TABLE.INSTANCE', []),
+      new TranslationInput('DATABASES.TOOLTIPS.DRIVER_CLASS', []),
+      new TranslationInput('DATABASES.TOOLTIPS.DRIVER_PATH', []),
+      new TranslationInput('DATABASES.TOOLTIPS.HOST_TYPE', []),
+      new TranslationInput('DATABASES.TOOLTIPS.HOST_NAME', []),
+      new TranslationInput('DATABASES.TOOLTIPS.PORT', []),
+      new TranslationInput('DATABASES.TOOLTIPS.CONNECTION_STRING', []),
       new TranslationInput('DATABASES.MESSAGES.SAVE_OK', []),
       new TranslationInput('DATABASES.MESSAGES.ERROR_INVALID_IP', []),
       new TranslationInput('DATABASES.MESSAGES.ERROR_INVALID_PORT', []),
       new TranslationInput('DATABASES.MESSAGES.VALIDATE', []),
       new TranslationInput('DATABASES.MESSAGES.PASSWORD_ENCRYPT', [])
     ]).subscribe((translations: any) => {
+      this._CNST_DATABASE_TYPES = _constants.CNST_DATABASE_TYPES.map((db: any) => {
+        return { label: db.label, value: db.value }
+      });
+      
+      this._CNST_DATABASE_TYPES.find((type: any) => (type.label == null)).label = translations['ANGULAR.OTHER'];
+      
       this.lbl_testConnection = translations['BUTTONS.TEST_CONNECTION'];
       this.lbl_goBack = translations['BUTTONS.GO_BACK'];
       this.lbl_save = translations['BUTTONS.SAVE'];
@@ -119,6 +135,13 @@ export class DataBaseAddComponent {
       this.lbl_connectionString = translations['DATABASES.TABLE.CONNECTION_STRING'] + '*';
       this.lbl_username = translations['DATABASES.TABLE.USERNAME'] + '*';
       this.lbl_password = translations['DATABASES.TABLE.PASSWORD'] + '*';
+      
+      this.ttp_driverClass = translations['DATABASES.TOOLTIPS.DRIVER_CLASS'];
+      this.ttp_driverPath = translations['DATABASES.TOOLTIPS.DRIVER_PATH'];
+      this.ttp_hostType = translations['DATABASES.TOOLTIPS.HOST_TYPE'];
+      this.ttp_hostName = translations['DATABASES.TOOLTIPS.HOST_NAME'];
+      this.ttp_port = translations['DATABASES.TOOLTIPS.PORT'];
+      this.ttp_connectionString = translations['DATABASES.TOOLTIPS.CONNECTION_STRING'];
       
       this.CNST_FIELD_NAMES = [
         { key: 'name', value: translations['DATABASES.TABLE.NAME'] },
@@ -156,10 +179,10 @@ export class DataBaseAddComponent {
         this.lbl_title = translations['DATABASES.EDIT_DATABASE'];
         this.editPassword = this.database.password;
         switch(this.database.type) {
-        case 'Oracle_SID':
+        case ('Oracle_SID_7' || 'Oracle_SID_8'):
           this.lbl_db_databaseName = translations['DATABASES.TABLE.SID'] + '*';
           break;
-        case 'Oracle_ServiceName':
+        case ('Oracle_ServiceName_7' || 'Oracle_ServiceName_8'):
           this.lbl_db_databaseName = translations['DATABASES.TABLE.SERVICE_NAME'] + '*';
           break;
         default:
@@ -193,11 +216,11 @@ export class DataBaseAddComponent {
       new TranslationInput('DATABASES.TABLE.DATABASE', [])
     ]).subscribe((translations: any) => {
       switch(this.database.type) {
-        case 'Oracle_SID':
+        case ('Oracle_SID_7' || 'Oracle_SID_8'):
           this.lbl_db_databaseName = translations['DATABASES.TABLE.SID'] + '*';
           this.CNST_FIELD_NAMES.find((field: any) => (field.key == 'db_databaseName')).value = translations['DATABASES.TABLE.SID'];
           break;
-        case 'Oracle_ServiceName':
+        case ('Oracle_ServiceName_7' || 'Oracle_ServiceName_8'):
           this.lbl_db_databaseName = translations['DATABASES.TABLE.SERVICE_NAME'] + '*';
           this.CNST_FIELD_NAMES.find((field: any) => (field.key == 'db_databaseName')).value = translations['DATABASES.TABLE.SERVICE_NAME'];
           break;
@@ -240,32 +263,32 @@ export class DataBaseAddComponent {
       new TranslationInput('DATABASES.CONNECTION_STRING.SID', [])
     ]).subscribe((translations: any) => {
       switch(this.database.type) {
-        case 'SQL_Server (2012)':
+        case 'SQL_Server_2012':
           this.database.connectionString = driverConnectionString
                                  + (this.database.ip == null ? translations['DATABASES.CONNECTION_STRING.IP_ADDRESS'] : this.database.ip) + ':'
                                  + (this.database.port == null ? translations['DATABASES.CONNECTION_STRING.PORT'] : this.database.port)
                                  + (this.database.instance == null ? '' : ';InstanceName=' + this.database.instance) + ';DatabaseName='
                                  + (this.database.db_databaseName == null ? translations['DATABASES.CONNECTION_STRING.DATABASE_NAME'] : this.database.db_databaseName);
           break;
-        case 'Oracle_ServiceName':
+        case ('Oracle_ServiceName_7' || 'Oracle_ServiceName_8'):
           this.database.connectionString = driverConnectionString
                                  + (this.database.ip == null ? translations['DATABASES.CONNECTION_STRING.IP_ADDRESS'] : this.database.ip) + ':'
                                  + (this.database.port == null ? translations['DATABASES.CONNECTION_STRING.PORT'] : this.database.port) + '/'
                                  + (this.database.db_databaseName == null ? translations['DATABASES.CONNECTION_STRING.SERVICE_NAME'] : this.database.db_databaseName);
           break;
-        case 'Oracle_SID':
+        case ('Oracle_SID_7' || 'Oracle_SID_8'):
           this.database.connectionString = driverConnectionString
                                  + (this.database.ip == null ? translations['DATABASES.CONNECTION_STRING.IP_ADDRESS'] : this.database.ip) + ':'
                                  + (this.database.port == null ? translations['DATABASES.CONNECTION_STRING.PORT'] : this.database.port) + ':'
                                  + (this.database.db_databaseName == null ? translations['DATABASES.CONNECTION_STRING.SID'] : this.database.db_databaseName);
           break;
-        case 'Progress':
+        case 'Progress_11':
           this.database.connectionString = driverConnectionString
                                  + (this.database.ip == null ? translations['DATABASES.CONNECTION_STRING.IP_ADDRESS'] : this.database.ip) + ':'
                                  + (this.database.port == null ? translations['DATABASES.CONNECTION_STRING.PORT'] : this.database.port) + ';DatabaseName='
                                  + (this.database.db_databaseName == null ? translations['DATABASES.CONNECTION_STRING.DATABASE_NAME'] : this.database.db_databaseName);
           break;
-        case 'Informix':
+        case 'Informix_ifx':
           this.database.connectionString = driverConnectionString
                                  + (this.database.ip == null ? translations['DATABASES.CONNECTION_STRING.IP_ADDRESS'] : this.database.ip) + ':'
                                  + (this.database.port == null ? translations['DATABASES.CONNECTION_STRING.PORT'] : this.database.port) + '/'
@@ -325,16 +348,16 @@ export class DataBaseAddComponent {
     let password: string = null;
     
     switch (this.database.type) {
-      case 'Oracle_ServiceName':
+      case ('Oracle_ServiceName_7' || 'Oracle_ServiceName_8'):
         delete db.instance;
         break;
-      case 'Oracle_SID':
+      case ('Oracle_SID_8' || 'Oracle_SID_8'):
         delete db.instance;
         break;
-      case 'Progress':
+      case 'Progress_11':
         delete db.instance;
         break;
-      case 'Informix':
+      case 'Informix_ifx':
         delete db.instance;
         break;
       case 'Outro':

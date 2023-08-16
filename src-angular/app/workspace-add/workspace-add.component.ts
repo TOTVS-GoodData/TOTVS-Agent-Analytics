@@ -51,7 +51,7 @@ export class WorkspaceAddComponent {
   /* MAPEAMENTO DOS NOMES DOS CAMPOS DO FORMULÁRIO */
   /*************************************************/
   protected lbl_contractType: string;
-  protected lbl_contractCode: string;
+  protected lbl_customerCode: string;
   protected lbl_erp: string;
   protected lbl_module: string;
   protected lbl_source: string;
@@ -64,6 +64,16 @@ export class WorkspaceAddComponent {
   protected lbl_GDProcessGraph: string;
   protected lbl_databaseId: string;
   protected lbl_name: string;
+  
+  protected ttp_contractType: string;
+  protected ttp_customerCode: string;
+  protected ttp_GDEnvironment: string;
+  protected ttp_GDUsername: string;
+  protected ttp_GDPassword: string;
+  protected ttp_GDWorkspaceId: string;
+  protected ttp_GDWorkspaceUploadURL: string;
+  protected ttp_GDProcessId: string;
+  protected ttp_GDProcessGraph: string;
   
   protected lbl_edit: string;
   protected lbl_goBack: string;
@@ -111,21 +121,8 @@ export class WorkspaceAddComponent {
     this._CNST_NO_OPTION_SELECTED = _constants.CNST_NO_OPTION_SELECTED;
     this._CNST_DOMAIN = _constants.CNST_DOMAIN;
     this._CNST_UPLOAD_URL = _constants.CNST_UPLOAD_URL;
-    this._CNST_MODALIDADE_CONTRATACAO = _constants.CNST_MODALIDADE_CONTRATACAO;
-    this._CNST_ORIGEM = _constants.CNST_ORIGEM;
     this.project.GDEnvironment = this._CNST_DOMAIN;
     this._CNST_MODULO = null;
-    this._CNST_ERP = _constants.CNST_ERP.map((v) => {
-      return { label: v.ERP, value: v.ERP };
-    }).sort((v1: any, v2: any) => {
-      if (v1.label < v2.label) {
-        return -1;
-      }
-      if (v1.label > v2.label) {
-        return 1;
-      }
-      return 0;
-    });
     
     this._translateService.getTranslations([
       new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING', []),
@@ -135,13 +132,17 @@ export class WorkspaceAddComponent {
       new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES_ERROR', []),
       new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES', []),
       new TranslationInput('SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES_ERROR', []),
-      new TranslationInput('DATABASES.MESSAGES.LOADING_ERROR', []),
+      new TranslationInput('CONTRACT_TYPES.PLATFORM', []),
+      new TranslationInput('CONTRACT_TYPES.DEMO', []),
       new TranslationInput('BUTTONS.EDIT', []),
       new TranslationInput('BUTTONS.GO_BACK', []),
       new TranslationInput('BUTTONS.SAVE', []),
       new TranslationInput('BUTTONS.GO_BACK', []),
       new TranslationInput('BUTTONS.TEST_CONNECTION', []),
       new TranslationInput('BUTTONS.LOAD_WORKSPACES', []),
+      new TranslationInput('ANGULAR.OTHER', []),
+      new TranslationInput('SOURCES.LOCALLY', []),
+      new TranslationInput('SOURCES.CLOUD_OTHERS', []),
       new TranslationInput('WORKSPACES.NEW_WORKSPACE', []),
       new TranslationInput('WORKSPACES.EDIT_WORKSPACE', []),
       new TranslationInput('WORKSPACES.TABLE.CONTRACT_TYPE', []),
@@ -158,16 +159,34 @@ export class WorkspaceAddComponent {
       new TranslationInput('WORKSPACES.TABLE.GRAPH', []),
       new TranslationInput('WORKSPACES.TABLE.DATABASE', []),
       new TranslationInput('WORKSPACES.TABLE.NAME', []),
+      new TranslationInput('WORKSPACES.TOOLTIPS.CONTRACT_TYPE', []),
+      new TranslationInput('WORKSPACES.TOOLTIPS.CUSTOMER_CODE', []),
+      new TranslationInput('WORKSPACES.TOOLTIPS.ENVIRONMENT', []),
+      new TranslationInput('WORKSPACES.TOOLTIPS.USERNAME', []),
+      new TranslationInput('WORKSPACES.TOOLTIPS.PASSWORD', []),
+      new TranslationInput('WORKSPACES.TOOLTIPS.WORKSPACE', []),
+      new TranslationInput('WORKSPACES.TOOLTIPS.UPLOAD_URL', []),
+      new TranslationInput('WORKSPACES.TOOLTIPS.PROCESS', []),
+      new TranslationInput('WORKSPACES.TOOLTIPS.GRAPH', []),
       new TranslationInput('WORKSPACES.MESSAGES.LOADING_ERROR', []),
       new TranslationInput('WORKSPACES.MESSAGES.SAVE_OK', []),
       new TranslationInput('WORKSPACES.MESSAGES.VALIDATE', []),
       new TranslationInput('WORKSPACES.MESSAGES.PASSWORD_ENCRYPT', []),
+      new TranslationInput('DATABASES.MESSAGES.LOADING_ERROR', []),
       new TranslationInput('DATABASES.TABLE.USERNAME', []),
       new TranslationInput('DATABASES.TABLE.TYPE', []),
       new TranslationInput('DATABASES.TABLE.PASSWORD', []),
       new TranslationInput('DATABASES.TABLE.DRIVER_CLASS', []),
       new TranslationInput('DATABASES.TABLE.DRIVER_PATH', [])
     ]).subscribe((translations: any) => {
+      this._CNST_MODALIDADE_CONTRATACAO = _constants.CNST_MODALIDADE_CONTRATACAO;
+      this._CNST_MODALIDADE_CONTRATACAO.find((contractType: any) => (contractType.value == _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA)).label = translations['CONTRACT_TYPES.PLATFORM'];
+      this._CNST_MODALIDADE_CONTRATACAO.find((contractType: any) => (contractType.value == _constants.CNST_MODALIDADE_CONTRATACAO_DEMO)).label = translations['CONTRACT_TYPES.DEMO'];
+      
+      this._CNST_ORIGEM = _constants.CNST_ORIGEM;
+      this._CNST_ORIGEM.find((source: any) => (source.value == _constants.CNST_ORIGEM_LOCAL)).label = translations['SOURCES.LOCALLY'];
+      this._CNST_ORIGEM.find((source: any) => (source.value == _constants.CNST_ORIGEM_CLOUD_OUTROS)).label = translations['SOURCES.CLOUD_OTHERS'];
+      
       this.lbl_edit = translations['BUTTONS.EDIT'];
       this.lbl_goBack = translations['BUTTONS.GO_BACK'];
       this.lbl_save = translations['BUTTONS.SAVE'];
@@ -181,7 +200,7 @@ export class WorkspaceAddComponent {
       this.lbl_dbDriverPath = translations['DATABASES.TABLE.DRIVER_PATH'];
       
       this.lbl_contractType = translations['WORKSPACES.TABLE.CONTRACT_TYPE'] + '*';
-      this.lbl_contractCode = translations['WORKSPACES.TABLE.CUSTOMER_CODE'] + '*';
+      this.lbl_customerCode = translations['WORKSPACES.TABLE.CUSTOMER_CODE'] + '*';
       this.lbl_erp = translations['WORKSPACES.TABLE.ERP'] + '*';
       this.lbl_module = translations['WORKSPACES.TABLE.MODULE'] + '*';
       this.lbl_source = translations['WORKSPACES.TABLE.SOURCE'] + '*';
@@ -194,6 +213,16 @@ export class WorkspaceAddComponent {
       this.lbl_GDProcessGraph = translations['WORKSPACES.TABLE.GRAPH'];
       this.lbl_databaseId = translations['WORKSPACES.TABLE.DATABASE'] + '*';
       this.lbl_name = translations['WORKSPACES.TABLE.NAME'] + '*';
+      
+      this.ttp_contractType = translations['WORKSPACES.TOOLTIPS.CONTRACT_TYPE'];
+      this.ttp_customerCode = translations['WORKSPACES.TOOLTIPS.CUSTOMER_CODE'];
+      this.ttp_GDEnvironment = translations['WORKSPACES.TOOLTIPS.ENVIRONMENT'];
+      this.ttp_GDUsername = translations['WORKSPACES.TOOLTIPS.USERNAME'];
+      this.ttp_GDPassword = translations['WORKSPACES.TOOLTIPS.PASSWORD'];
+      this.ttp_GDWorkspaceId = translations['WORKSPACES.TOOLTIPS.WORKSPACE'];
+      this.ttp_GDWorkspaceUploadURL = translations['WORKSPACES.TOOLTIPS.UPLOAD_URL'];
+      this.ttp_GDProcessId = translations['WORKSPACES.TOOLTIPS.PROCESS'];
+      this.ttp_GDProcessGraph = translations['WORKSPACES.TOOLTIPS.GRAPH'];
       
       this.CNST_FIELD_NAMES = [
         { key: 'contractType', value: translations['WORKSPACES.TABLE.CONTRACT_TYPE'] },
@@ -261,33 +290,59 @@ export class WorkspaceAddComponent {
         this.listProcess = [];
         this.listGraph = [];
       }
+      
+      this._CNST_ERP = _constants.CNST_ERP.map((v) => {
+        return { label: v.ERP, value: v.ERP };
+      }).sort((v1: any, v2: any) => {
+        if (v1.label < v2.label) {
+          return -1;
+        }
+        if (v1.label > v2.label) {
+          return 1;
+        }
+        return 0;
+      });
+      this._CNST_ERP.find((erp: any) => (erp.label == _constants.CNST_ERP_OTHER)).label = translations['ANGULAR.OTHER'];
+      if (this.project.contractType != _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA) this._CNST_ERP = this._CNST_ERP.filter((erp: any) => (erp.value != _constants.CNST_ERP_OTHER));
     });
   }
   
   protected onChangeContract(contractType: string): void {
-    this._CNST_ERP = _constants.CNST_ERP.map((v) => {
-      return { label: v.ERP, value: v.ERP };
-    }).sort((v1: any, v2: any) => {
-      if (v1.label < v2.label) {
-        return -1;
-      }
-      if (v1.label > v2.label) {
-        return 1;
-      }
-      return 0;
+    this._translateService.getTranslations([
+      new TranslationInput('ANGULAR.OTHER', [])
+    ]).subscribe((translations: any) => {
+      this._CNST_ERP = _constants.CNST_ERP.map((v) => {
+        return { label: v.ERP, value: v.ERP };
+      }).sort((v1: any, v2: any) => {
+        if (v1.label < v2.label) {
+          return -1;
+        }
+        if (v1.label > v2.label) {
+          return 1;
+        }
+        return 0;
+      });
+      
+      this._CNST_ERP.find((erp: any) => (erp.label == _constants.CNST_ERP_OTHER)).label = translations['ANGULAR.OTHER'];
+      if (contractType != _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA) this._CNST_ERP = this._CNST_ERP.filter((erp: any) => (erp.value != _constants.CNST_ERP_OTHER));
     });
-    
-    if (contractType != _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA) this._CNST_ERP = this._CNST_ERP.filter((erp: any) => (erp.value != _constants.CNST_ERP_OTHER));
   }
   
   private reloadDatabases(): Observable<boolean> {
-    return this._databaseService.getDatabases().pipe(switchMap(((database: Database[]) => {
-      this.listDatabase = database.map((db: Database) => {
-        return { label: db.name, value: db.id };
-      });
-      this.listDatabase.push(_constants.CNST_NO_OPTION_SELECTED);
-      return Promise.resolve(true);
-    })));
+    return this._translateService.getTranslations([
+      new TranslationInput('ANGULAR.NONE', [])
+    ]).pipe(switchMap((translations: any) => {
+      return this._databaseService.getDatabases().pipe(switchMap((database: Database[]) => {
+        this.listDatabase = database.map((db: Database) => {
+          return { label: db.name, value: db.id };
+        });
+        this.listDatabase.push({
+          label: translations['ANGULAR.NONE'],
+          value: _constants.CNST_NO_OPTION_SELECTED
+        });
+        return Promise.resolve(true);
+      }));
+    }));
   }
   
   protected getProjects(username: string, password: string, environment: string, rememberMe: boolean): Observable<boolean> {
@@ -341,21 +396,25 @@ export class WorkspaceAddComponent {
   }
   
   protected onChangeERP(e: string): void {
-    this._CNST_MODULO = _constants.CNST_ERP.filter((v: any) => v.ERP === e)[0].Modulos.sort((m1: any, m2: any) => {
-      if (m1.label < m2.label) {
-        return -1;
+    this._translateService.getTranslations([
+      new TranslationInput('ANGULAR.OTHER', [])
+    ]).subscribe((translations: any) => {
+      this._CNST_MODULO = _constants.CNST_ERP.filter((v: any) => v.ERP === e)[0].Modulos.sort((m1: any, m2: any) => {
+        if (m1.label < m2.label) {
+          return -1;
+        }
+        if (m1.label > m2.label) {
+          return 1;
+        }
+        return 0;
+      });
+      this._CNST_MODULO.find((module: any) => (module.value == _constants.CNST_ERP_OTHER)).label = translations['ANGULAR.OTHER'];
+      if (this._CNST_MODULO.length == 1) {
+        this.project.module = this._CNST_MODULO[0].value;
+      } else {
+        this.project.module = null;
       }
-      if (m1.label > m2.label) {
-        return 1;
-      }
-      return 0;
     });
-    
-    if (this._CNST_MODULO.length == 1) {
-      this.project.module = this._CNST_MODULO[0].value;
-    } else {
-      this.project.module = null;
-    }
   }
   
   protected onChangeProject(): Observable<boolean> {
@@ -396,7 +455,7 @@ export class WorkspaceAddComponent {
   }
   
   protected onChangeDatabase(id: string): void {
-    if (id != _constants.CNST_NO_OPTION_SELECTED.value) {
+    if (id != _constants.CNST_NO_OPTION_SELECTED) {
       this._databaseService.getDatabases().subscribe((db: Database[]) => {
         this.database = db.find((db: Database) => { return (db.id === id ); });
       }, (err: any) => {

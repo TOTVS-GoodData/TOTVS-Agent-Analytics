@@ -27,6 +27,7 @@
         [(ngModel)]="schedule.windows"
         [p-label]="lbl_windows"
         [p-options]="_CNST_EXECUTION_WINDOWS"
+        [p-tooltip]="ttp_windows"
         p-required="true"
         p-hide-select-all="true"
         p-sort="true">
@@ -41,7 +42,7 @@
     </div>
     
     <div class="po-row">
-      <po-input name="filename" class="form-control po-md-6 po-lg-6" [p-label]="lbl_GDZipFilename" p-required="true" [(ngModel)]="schedule.GDZipFilename"></po-input>
+      <po-input name="filename" class="form-control po-md-6 po-lg-6" [p-tooltip]="ttp_zipFilename" [p-label]="lbl_GDZipFilename" p-required="true" [(ngModel)]="schedule.GDZipFilename"></po-input>
       <po-select
         class="form-control po-md-6 po-lg-6"
         name="extension"
@@ -54,8 +55,8 @@
     
     <div class="po-row vertical-align conf-row">
       <div class="po-md-6 po-lg-6 flex footer">
-        <span>{{ lbl_fileFolder }}</span>
-        <po-input class="conf-select grow" name="po_fileFolder" [(ngModel)]="schedule.fileFolder" [p-disabled]="true"></po-input>
+        <po-label [p-label]="lbl_fileFolder" [p-field]="true" />
+        <po-input class="conf-select grow" name="po_fileFolder" [p-tooltip]="ttp_fileFolder" [(ngModel)]="schedule.fileFolder" [p-disabled]="true"></po-input>
         <po-button
           (p-click)="getFolder()"
           [p-disabled]="!isPlatform"
@@ -64,8 +65,8 @@
         />
       </div>
       <div class="po-md-6 po-lg-6 flex footer">
-        <span>{{ lbl_fileFolderWildcard }}</span>
-        <po-input class="grow" [p-disabled]="!isPlatform" name="po_fileFolderWildcard" [(ngModel)]="schedule.fileFolderWildcard"></po-input>
+        <po-label [p-label]="lbl_fileFolderWildcard" [p-field]="true" />
+        <po-input class="grow" [p-disabled]="!isPlatform" [p-tooltip]="ttp_fileWildcard" name="po_fileFolderWildcard" [(ngModel)]="schedule.fileFolderWildcard"></po-input>
       </div>
     </div>
     

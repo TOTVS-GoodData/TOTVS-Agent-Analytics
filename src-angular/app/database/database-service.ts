@@ -3,11 +3,12 @@ import { Injectable } from '@angular/core';
 
 import { ElectronService } from 'ngx-electronyzer';
 
-import { Database, JavaInputBuffer } from '../utilities/interfaces';
+import { Database, Configuration, JavaInputBuffer } from '../utilities/interfaces';
 import * as _constants from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
 
 import { TranslationService, TranslationInput } from '../service/translation/translation-service';
+import { ConfigurationService } from '../configuration/configuration-service';
 
 import { map, switchMap } from 'rxjs/operators';
 import { Observable, of, catchError, forkJoin } from 'rxjs';
@@ -23,6 +24,7 @@ export class DatabaseService {
   constructor(
     private http: HttpClient,
     private _electronService: ElectronService,
+    private _configurationService: ConfigurationService,
     private _translateService: TranslationService,
     private _utilities: Utilities
   ) {
@@ -67,7 +69,7 @@ export class DatabaseService {
       if (this._electronService.isElectronApp) {
         return of(this._electronService.ipcRenderer.sendSync('saveDatabase', db));
       } else {
-        newId = (db.id == null)
+        newId = (db.id == null);
         if (newId) db.id = uuid();
         db_name = results[1].filter((database: Database) => (database.id != db.id)).find((database: Database) => (database.name == db.name));
         if (db_name != undefined) {
@@ -128,14 +130,17 @@ export class DatabaseService {
       err: null
     };
     
-    return this._translateService.getTranslations([
-      new TranslationInput('DATABASES.MESSAGES.LOGIN', [db.name]),
-      new TranslationInput('DATABASES.MESSAGES.LOGIN_OK', []),
-      new TranslationInput('DATABASES.MESSAGES.LOGIN_ERROR', [db.name]),
-      new TranslationInput('DATABASES.MESSAGES.LOGIN_WARNING', []),
-    ]).pipe(switchMap((translations: any) => {
+    return forkJoin([
+      this._translateService.getTranslations([
+        new TranslationInput('DATABASES.MESSAGES.LOGIN', [db.name]),
+        new TranslationInput('DATABASES.MESSAGES.LOGIN_OK', []),
+        new TranslationInput('DATABASES.MESSAGES.LOGIN_ERROR', [db.name]),
+        new TranslationInput('DATABASES.MESSAGES.LOGIN_WARNING', []),
+      ]),
+      this._configurationService.getConfiguration(false)
+    ]).pipe(switchMap((results: [any, Configuration]) => {
       if (this._electronService.isElectronApp) {
-        this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['DATABASES.MESSAGES.LOGIN']);
+        this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, results[0]['DATABASES.MESSAGES.LOGIN']);
         if (decrypt) {
           db.password = this._electronService.ipcRenderer.sendSync('decrypt', db.password);
         }
@@ -145,22 +150,23 @@ export class DatabaseService {
           database: db,
           schedule: null,
           queries: null,
-          scripts: null
+          scripts: null,
+          configuration: results[1]
         }
         
         let params = this._electronService.ipcRenderer.sendSync('encrypt', JSON.stringify(javaInput));
         return this._electronService.ipcRenderer.invoke('testDatabaseConnection', params).then((testConnection: any) => {
           if (!testConnection.success) {
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.LOGIN_ERROR'], testConnection.err);
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, results[0]['DATABASES.MESSAGES.LOGIN_ERROR'], testConnection.err);
           } else {
             connectionResult = true;
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, translations['DATABASES.MESSAGES.LOGIN_OK']);
+            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, results[0]['DATABASES.MESSAGES.LOGIN_OK']);
           }
           return connectionResult;
         });
       } else {
         connectionResult = true;
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, translations['DATABASES.MESSAGES.LOGIN_WARNING']);
+        this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, results[0]['DATABASES.MESSAGES.LOGIN_WARNING']);
         return of(connectionResult);
       }
     }));

@@ -93,7 +93,7 @@ export class ScriptService {
       if (this._electronService.isElectronApp) {
         return of(this._electronService.ipcRenderer.sendSync('saveScript', s));
       } else {
-        newId = (s.id == null)
+        newId = (s.id == null);
         if (newId) s.id = uuid();
         script_name = results[1].filter((script: Script) => (script.id != s.id)).find((script: Script) => (script.name == s.name));
         if (script_name != undefined) {

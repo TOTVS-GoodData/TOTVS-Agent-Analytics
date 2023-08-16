@@ -12,6 +12,8 @@ import {
 
 import { DataBaseAddComponent } from './database-add.component';
 
+import { PoTooltipModule } from '@po-ui/ng-components';
+
 @NgModule({
   declarations: [DataBaseAddComponent],
   imports: [
@@ -19,6 +21,7 @@ import { DataBaseAddComponent } from './database-add.component';
     ,FormsModule
     ,PoLoadingModule
     ,PoPageModule
+    ,PoTooltipModule
     ,PoContainerModule
     ,PoFieldModule
     ,PoButtonModule

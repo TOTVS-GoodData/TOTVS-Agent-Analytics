@@ -1,36 +1,51 @@
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+
 import { HTTP_INTERCEPTORS, HttpClient, HttpClientModule } from '@angular/common/http';
 
-import { AppRoutingModule } from './app-routing.module';
+/* Componentes visuais do Portinari.UI */
+import {
+  PoMenuModule,
+  PoNotificationModule,
+  PoTableModule,
+  PoModule,
+  PoModalModule
+} from '@po-ui/ng-components';
 
-import { PoMenuModule } from '@po-ui/ng-components';
-import { PoNotificationModule } from '@po-ui/ng-components';
-import { PoTableModule } from '@po-ui/ng-components';
-import { PoModule } from '@po-ui/ng-components';
-
+/* Workspace */
 import { WorkspaceModule } from './workspace/workspace.module';
 import { WorkspaceAddModule } from './workspace-add/workspace-add.module';
+import { WorkspaceService } from './workspace/workspace-service';
+//aDADD
 import { DataBaseModule } from './database/database.module';
 import { DataBaseAddModule } from './database-add/database-add.module';
-import { LogModule } from './log/log.module';
+
 import { ScheduleModule } from './schedule/schedule.module';
 import { ScheduleAddModule } from './schedule-add/schedule-add.module';
+
 import { ConfigurationModule } from './configuration/configuration.module';
+
 import { MonitorModule } from './monitor/monitor.module';
+
 import { QueryModule } from './query/query.module';
+
 import { ScriptModule } from './script/script.module';
+
 import { SharedModule } from './shared/shared.module';
+import { LogModule } from './log/log.module';
 
 import { AppComponent } from './app.component';
+import { AppRoutingModule } from './app-routing.module';
 
-import { WorkspaceService } from './workspace/workspace-service';
+import { MenuService } from './service/menu-service';
 
 import { CustomTranslationLoader } from './service/translation/custom-translation-loader';
 import { TranslationModule } from './service/translation/translation.module';
-
-import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import {
+  TranslateModule,
+  TranslateLoader
+} from '@ngx-translate/core';
 
 @NgModule({
   declarations: [
@@ -42,6 +57,7 @@ import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
     BrowserModule,
     AppRoutingModule,
     PoMenuModule,
+    PoModalModule,
     WorkspaceModule,
     WorkspaceAddModule,
     DataBaseModule,
@@ -66,7 +82,13 @@ import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
      }),
      HttpClientModule
   ],
-  providers: [AppModule, WorkspaceService],
-  bootstrap: [ AppComponent ]
+  providers: [
+    AppModule,
+    WorkspaceService,
+    MenuService
+  ],
+  bootstrap: [
+    AppComponent
+  ]
 })
-export class AppModule { }
+export class AppModule {}

@@ -88,7 +88,7 @@ export class WorkspaceService {
       if (this._electronService.isElectronApp) {
         return of(this._electronService.ipcRenderer.sendSync('saveWorkspace', w));
       } else {
-        newId = (w.id == null)
+        newId = (w.id == null);
         if (newId) w.id = uuid();
         workspace_name = results[1].filter((workspace: Workspace) => (workspace.id != w.id)).find((workspace: Workspace) => (workspace.name == w.name));
         if (workspace_name != undefined) {

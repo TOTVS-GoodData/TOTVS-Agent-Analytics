@@ -40,7 +40,7 @@ export class QueryComponent implements OnInit {
   public queryToDelete: Query;
   public listProjectExport: Array<PoSelectOption> = null;
   public listSchedule: Array<PoSelectOption> = null;
-  protected _CNST_QUERY_EXECUTION_MODES: Array<PoSelectOption> = _constants.CNST_QUERY_EXECUTION_MODES;
+  protected _CNST_QUERY_EXECUTION_MODES: Array<PoSelectOption>;
   protected po_lo_text: any = { value: null };
   public schedulesQueryTotal: ScheduleQuery[] = [];
   public schedulesQuery: any[] = [];
@@ -61,6 +61,9 @@ export class QueryComponent implements OnInit {
   protected lbl_add: string;
   protected lbl_title: string;
   protected lbl_deleteConfirmation: string;
+  
+  protected ttp_queryName: string;
+  protected ttp_executionMode: string;
   
   /*************************************************/
   /*************************************************/
@@ -103,6 +106,10 @@ export class QueryComponent implements OnInit {
       new TranslationInput('QUERIES.MESSAGES.DELETE_ERROR', []),
       new TranslationInput('QUERIES.MESSAGES.EXPORT', []),
       new TranslationInput('QUERIES.MESSAGES.EXPORT_ERROR', []),
+      new TranslationInput('QUERIES.EXECUTION_MODES.COMPLETE', []),
+      new TranslationInput('QUERIES.EXECUTION_MODES.MONTHLY', []),
+      new TranslationInput('QUERIES.TOOLTIPS.QUERY_NAME', []),
+      new TranslationInput('QUERIES.TOOLTIPS.MODE', []),
       new TranslationInput('WORKSPACES.MESSAGES.LOADING', []),
       new TranslationInput('WORKSPACES.MESSAGES.LOADING_ERROR', [])
     ]).subscribe((translations: any) => {
@@ -111,6 +118,11 @@ export class QueryComponent implements OnInit {
         { key: 'name', value: translations['QUERIES.TABLE.QUERY_NAME'] },
         { key: 'executionMode', value: translations['QUERIES.TABLE.MODE'] },
         { key: 'query', value: translations['QUERIES.TABLE.SQL'] }
+      ];
+      
+      this._CNST_QUERY_EXECUTION_MODES = [
+        { label: translations['QUERIES.EXECUTION_MODES.COMPLETE'], value: 'C' },
+        { label: translations['QUERIES.EXECUTION_MODES.MONTHLY'], value: 'M' }
       ];
       
       this.setTableRowActions = [
@@ -138,6 +150,9 @@ export class QueryComponent implements OnInit {
       this.lbl_confirm = translations['BUTTONS.CONFIRM'];
       this.lbl_goBack = translations['BUTTONS.GO_BACK'];
       this.lbl_delete = translations['BUTTONS.DELETE'];
+      
+      this.ttp_queryName = translations['QUERIES.TOOLTIPS.QUERY_NAME'];
+      this.ttp_executionMode = translations['QUERIES.TOOLTIPS.MODE'];
       
       this.CNST_MESSAGES = {
         NEW_QUERY: translations['QUERIES.NEW_QUERY'],
@@ -185,18 +200,18 @@ export class QueryComponent implements OnInit {
         s.module = w.module;
         s.databaseType = (() => {
           let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
-          if (db == undefined) return _constants.CNST_NO_OPTION_SELECTED.label;
+          if (db == undefined) return _constants.CNST_NO_OPTION_SELECTED;
           else {
             let db_type: any = _constants.CNST_DATABASE_TYPES.find((type: any) => (type.value == db.type));
-            if (db_type.brand ==  _constants.CNST_DATABASE_OTHER) return _constants.CNST_NO_OPTION_SELECTED.label;
+            if (db_type.brand ==  _constants.CNST_DATABASE_OTHER) return _constants.CNST_NO_OPTION_SELECTED;
             else return db_type.brand;
           }
         })();
         return s;
       });
       
-      this.schedulesQuery = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType == _constants.CNST_NO_OPTION_SELECTED.label));
-      this.schedulesQueryExport = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType != _constants.CNST_NO_OPTION_SELECTED.label));
+      this.schedulesQuery = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType == _constants.CNST_NO_OPTION_SELECTED));
+      this.schedulesQueryExport = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType != _constants.CNST_NO_OPTION_SELECTED));
       this.listSchedule = results[0].filter((s: Schedule) => {
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
         let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));

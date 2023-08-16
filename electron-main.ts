@@ -1,41 +1,20 @@
 import { BrowserWindow, ipcMain, App, IpcMainEvent, dialog, Tray, Menu, nativeImage } from 'electron';
 import { autoUpdater } from 'electron-updater';
-import { AutoLaunch } from 'auto-launch';
+import AutoLaunch from 'auto-launch';
 
 import { Execute } from './src-electron/execute';
 import { Functions } from './src-electron/functions';
 import { Files2 } from './src-electron/files2';
+import { Translations, TranslationInput } from './src-electron/translations';
 
 import * as globals from './src-electron/constants-electron';
 import * as constants from './src-angular/app/utilities/constants-angular';
-
-import { CNST_WORKSPACE_MESSAGES } from './src-angular/app/workspace/workspace-messages';
-import { CNST_DATABASE_MESSAGES } from './src-angular/app/database/database-messages';
-import { CNST_SCHEDULE_MESSAGES } from './src-angular/app/schedule/schedule-messages';
-import { CNST_QUERY_MESSAGES } from './src-angular/app/query/query-messages';
-import { CNST_SCRIPT_MESSAGES } from './src-angular/app/script/script-messages';
-import { CNST_CONFIGURATION_MESSAGES } from './src-angular/app/configuration/configuration-messages';
 
 import { DatabaseData, Workspace, Database, Schedule, Query, Script, Configuration, Updater, UpdaterProgress } from './src-angular/app/utilities/interfaces';
 
 import { lastValueFrom, map } from 'rxjs';
 
 export default class Main {
-  public static CNST_MESSAGES: any = {
-     SYSTEM_START: '=== INICIALIZAÇÃO DO SISTEMA ==='
-    ,SYSTEM_WINDOW_CLOSE: '=== Janela fechada ==='
-    ,SYSTEM_FINISH: '=== DESLIGAMENTO DO SISTEMA ==='
-    ,SYSTEM_SERVICE: '=== Executando aplicação pelo backend... ==='
-    ,UPDATE_CHECK: 'Verificando atualizações...'
-    ,UPDATE_AVAILABLE: (oldVersion: string, newVersion: string) => `Atualização disponível: ${oldVersion} --> ${newVersion}`
-    ,UPDATE_NOT_AVAILABLE: (version: string) => `Nenhuma atualização do Agent disponível (${version})`
-    ,UPDATE_ERROR: 'Falha no download do pacote de atualização.'
-    ,AUTOLAUNCH_ERROR: 'Falha na configuração da inicialização automática do Agent.'
-    ,THREAD_ERROR: 'ERRO - Agent já está em execução. Esta instância será encerrada.'
-    ,UPDATE_DOWNLOAD: (total: string, perc: string, speed: string) => `Baixando atualização: ${total} (${perc}) -- vel: ${speed}`
-    ,UPDATE_DOWNLOAD_OK: (version: string) => `Atualização ${version} baixada com sucesso. A instalação automática ocorrerá após desligamento do Agent.`
-  };
-  
   public static mainWindow: Electron.BrowserWindow;
   static application: Electron.App;
   static execute: Execute = new Execute();
@@ -43,9 +22,10 @@ export default class Main {
   static hidden: boolean = false;
   static triggerSchedules: boolean = true;
   static terminate: boolean = false;
+  static trayMenu: Tray = null;
   
   private static setAutoLaunchOptions(): void {
-    /*let autoLaunch: AutoLaunch = new AutoLaunch({
+    let autoLaunch: AutoLaunch = new AutoLaunch({
 	    name: constants.CNST_PROGRAM_NAME.DEFAULT,
 	    path: process.execPath,
       isHidden: true
@@ -59,27 +39,46 @@ export default class Main {
 	      autoLaunch.enable();
       }
     }).catch((err: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.AUTOLAUNCH_ERROR, null, null, null);
-    });*/
+      let translations: any = Translations.getTranslations([
+        new TranslationInput('ELECTRON.AUTOLAUNCH_ERROR', [])
+      ]);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.AUTOLAUNCH_ERROR'], null, null, null);
+    });
   }
   
   private static setAutoUpdaterPreferences(): void {
     autoUpdater.checkForUpdatesAndNotify();
     
     autoUpdater.on('checking-for-update', () => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.INFO, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.UPDATE_CHECK, null, null, null);
+      let translations: any = Translations.getTranslations([
+        new TranslationInput('ELECTRON.UPDATE_CHECK', [])
+      ]);
+      
+      Files2.writeToLog(constants.CNST_LOGLEVEL.INFO, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_CHECK'], null, null, null);
     });
     
     autoUpdater.on('update-available', (info: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.INFO, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.UPDATE_AVAILABLE(autoUpdater.currentVersion, info.version), null, null, null);
+      let translations: any = Translations.getTranslations([
+        new TranslationInput('ELECTRON.UPDATE_AVAILABLE', [autoUpdater.currentVersion, info.version])
+      ]);
+      
+      Files2.writeToLog(constants.CNST_LOGLEVEL.INFO, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_AVAILABLE'], null, null, null);
     });
     
     autoUpdater.on('update-not-available', (info: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.INFO, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.UPDATE_NOT_AVAILABLE(info.version), null, null, null);
+      let translations: any = Translations.getTranslations([
+        new TranslationInput('ELECTRON.UPDATE_NOT_AVAILABLE', [info.version])
+      ]);
+      
+      Files2.writeToLog(constants.CNST_LOGLEVEL.INFO, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_NOT_AVAILABLE'], null, null, null);
     });
     
     autoUpdater.on('error', (err: Error) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.UPDATE_ERROR, null, null, err);
+      let translations: any = Translations.getTranslations([
+        new TranslationInput('ELECTRON.UPDATE_ERROR', [])
+      ]);
+      
+      Files2.writeToLog(constants.CNST_LOGLEVEL.ERROR, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_ERROR'], null, null, err);
     });
     
     autoUpdater.on('download-progress', (info: UpdaterProgress) => {
@@ -109,11 +108,19 @@ export default class Main {
       }
       str_perc = offset + Math.trunc(info.percent) + '%';
       
-      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.UPDATE_DOWNLOAD(str_total, str_perc, speed), null, null, null);
+      let translations: any = Translations.getTranslations([
+        new TranslationInput('ELECTRON.UPDATE_DOWNLOAD', [str_total, str_perc, speed])
+      ]);
+      
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_DOWNLOAD'], null, null, null);
     });
     
     autoUpdater.on('update-downloaded', (info: any) => {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.INFO, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.UPDATE_DOWNLOAD_OK(info.version), null, null, null);
+      let translations: any = Translations.getTranslations([
+        new TranslationInput('ELECTRON.UPDATE_DOWNLOAD_OK', [info.version])
+      ]);
+      
+      Files2.writeToLog(constants.CNST_LOGLEVEL.INFO, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_DOWNLOAD_OK'], null, null, null);
     });
   }
   
@@ -128,21 +135,32 @@ export default class Main {
     /*******************/
     ipcMain.on('getWorkspaces', (event: IpcMainEvent) => {
       Files2.getWorkspaces().subscribe((workspaces: Workspace[]) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('WORKSPACES.MESSAGES.LOADING_OK', [])
+        ]);
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.LOADING_OK'], null, null, null);
         event.returnValue = workspaces;
       });
     });
     
     ipcMain.on('getWorkspacesByDatabase', (event: IpcMainEvent, db: Database) => {
       Files2.getWorkspacesByDatabase(db).subscribe((workspaces: Workspace[]) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_LOADING_DATABASES_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('WORKSPACES.MESSAGES.LOADING_DATABASES_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.LOADING_DATABASES_OK'], null, null, null);
         event.returnValue = workspaces;
       });
     });
     
     ipcMain.on('saveWorkspace', (event: IpcMainEvent, w: Workspace) => {
       Files2.saveWorkspace(w).subscribe((b: boolean) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_SAVE_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('WORKSPACES.MESSAGES.SAVE_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE_OK'], null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -150,7 +168,11 @@ export default class Main {
     
     ipcMain.on('deleteWorkspace', (event: IpcMainEvent, w: Workspace) => {
       Files2.deleteWorkspace(w).subscribe((b: boolean) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_WORKSPACE_MESSAGES.WORKSPACE_DELETE_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('WORKSPACES.MESSAGES.DELETE_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.DELETE_OK'], null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -161,7 +183,11 @@ export default class Main {
     /*******************/
     ipcMain.on('getDatabases', (event: IpcMainEvent) => {
       Files2.getDatabases().subscribe((db: Database[]) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_DATABASE_MESSAGES.DATABASE_LOADING_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('DATABASES.MESSAGES.LOADING_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.LOADING_OK'], null, null, null);
         event.returnValue = db;
         return db;
       });
@@ -169,7 +195,11 @@ export default class Main {
     
     ipcMain.on('saveDatabase', (event: IpcMainEvent, db: Database) => {
       Files2.saveDatabase(db).subscribe((b: boolean) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_DATABASE_MESSAGES.DATABASE_SAVE_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('DATABASES.MESSAGES.SAVE_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE_OK'], null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -177,7 +207,11 @@ export default class Main {
     
     ipcMain.on('deleteDatabase', (event: IpcMainEvent, db: Database) => {
       Files2.deleteDatabase(db).subscribe((b: boolean) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_DATABASE_MESSAGES.DATABASE_DELETE_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('DATABASES.MESSAGES.DELETE_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.DELETE_OK'], null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -194,7 +228,14 @@ export default class Main {
     /*******************/
     ipcMain.on('getSchedules', (event: IpcMainEvent, showLogs: boolean) => {
       Files2.getSchedules(showLogs).subscribe((s: Schedule[]) => {
-        if (showLogs) Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.SCHEDULE_LOADING_OK, null, null, null);
+        if (showLogs) {
+          let translations: any = Translations.getTranslations([
+            new TranslationInput('SCHEDULES.MESSAGES.LOADING_OK', [])
+          ]);
+          
+          Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.LOADING_OK'], null, null, null);
+        }
+        
         event.returnValue = s;
         return s;
       });
@@ -202,7 +243,11 @@ export default class Main {
     
     ipcMain.on('saveSchedule', (event: IpcMainEvent, s: Schedule) => {
       Files2.saveSchedule(s).subscribe((b: boolean) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.SCHEDULE_SAVE_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('SCHEDULES.MESSAGES.SAVE_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE_OK'], null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -210,7 +255,11 @@ export default class Main {
     
     ipcMain.on('deleteSchedule', (event: IpcMainEvent, s: Schedule) => {
       Files2.deleteSchedule(s).subscribe((b: boolean) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCHEDULE_MESSAGES.SCHEDULE_DELETE_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('SCHEDULES.MESSAGES.DELETE_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.DELETE_OK'], null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -223,12 +272,23 @@ export default class Main {
       });
     });
     
+    ipcMain.handle('killProcess', (event: IpcMainEvent, scheduleId: string, execId: string) => {
+      return this.execute.killProcess(scheduleId, execId);
+    });
+    
     /*******************/
     /*  CONFIGURAÇÃO   */
     /*******************/
-    ipcMain.on('getConfiguration', (event: IpcMainEvent) => {
-      Files2.getConfiguration().subscribe((conf: Configuration) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_CONFIGURATION_MESSAGES.CONFIG_LOADING_OK, null, null, null);
+    ipcMain.on('getConfiguration', (event: IpcMainEvent, showLogs: boolean) => {
+      Files2.getConfiguration(showLogs).subscribe((conf: Configuration) => {
+        if (showLogs) {
+          let translations: any = Translations.getTranslations([
+            new TranslationInput('CONFIGURATION.MESSAGES.LOADING_OK', [])
+          ]);
+          
+          Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.LOADING_OK'], null, null, null);
+        }
+        
         event.returnValue = conf;
         return conf;
       });
@@ -236,7 +296,13 @@ export default class Main {
     
     ipcMain.on('saveConfiguration', (event: IpcMainEvent, conf: Configuration) => {
       Files2.saveConfiguration(conf).subscribe((b: boolean) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_CONFIGURATION_MESSAGES.CONFIG_SAVE_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('CONFIGURATION.MESSAGES.SAVE_OK', [])
+        ]);
+        
+        Main.updateTrayMenu();
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.SAVE_OK'], null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -252,7 +318,11 @@ export default class Main {
     /*******************/
     ipcMain.on('getQueries', (event: IpcMainEvent) => {
       Files2.getQueries().subscribe((q: Query[]) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_LOADING_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('QUERIES.MESSAGES.LOADING_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.LOADING_OK'], null, null, null);
         event.returnValue = q;
         return q;
       });
@@ -260,7 +330,11 @@ export default class Main {
     
     ipcMain.on('getQueriesBySchedule', (event: IpcMainEvent, sc: Schedule) => {
       Files2.getQueriesBySchedule(sc).subscribe((q: Query[]) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_SCHEDULE_LOADING_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('QUERIES.MESSAGES.SCHEDULE_LOADING_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null);
         event.returnValue = q;
         return q;
       });
@@ -268,7 +342,14 @@ export default class Main {
     
     ipcMain.on('saveQuery', (event: IpcMainEvent, q: Query) => {
       Files2.saveQuery(q).subscribe((b: boolean) => {
-        if (b) Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_SAVE_OK, null, null, null);
+        if (b) {
+          let translations: any = Translations.getTranslations([
+            new TranslationInput('QUERIES.MESSAGES.SAVE_OK', [])
+          ]);
+          
+          Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE_OK'], null, null, null);
+        }
+        
         event.returnValue = b;
         return b;
       });
@@ -276,17 +357,24 @@ export default class Main {
     
     ipcMain.on('deleteQuery', (event: IpcMainEvent, q: Query) => {
       Files2.deleteQuery(q).subscribe((b: boolean) => {
-        if (b) Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_QUERY_MESSAGES.QUERY_DELETE_OK, null, null, null);
+        if (b) {
+          let translations: any = Translations.getTranslations([
+            new TranslationInput('QUERIES.MESSAGES.DELETE_OK', [])
+          ]);
+          
+          Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.DELETE_OK'], null, null, null);
+        }
+        
         event.returnValue = b;
         return b;
       });
     });
     
-    ipcMain.on('exportQuery', (event: IpcMainEvent, inputBuffer: string) => {
-      this.execute.exportQuery(inputBuffer).subscribe((res: any) => {
+    ipcMain.handle('exportQuery', (event: IpcMainEvent, inputBuffer: string) => {
+      return lastValueFrom(this.execute.exportQuery(inputBuffer).pipe(map((res: any) => {
         event.returnValue = res;
         return res;
-      });
+      })));
     });
     
     /*******************/
@@ -294,7 +382,11 @@ export default class Main {
     /*******************/
     ipcMain.on('getScripts', (event: IpcMainEvent) => {
       Files2.getScripts().subscribe((s: Script[]) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_LOADING_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('SCRIPTS.MESSAGES.LOADING_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.LOADING_OK'], null, null, null);
         event.returnValue = s;
         return s;
       });
@@ -302,7 +394,11 @@ export default class Main {
     
     ipcMain.on('getScriptsBySchedule', (event: IpcMainEvent, sc: Schedule) => {
       Files2.getScriptsBySchedule(sc).subscribe((s: Script[]) => {
-        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_SCHEDULE_LOADING_OK, null, null, null);
+        let translations: any = Translations.getTranslations([
+          new TranslationInput('SCRIPTS.MESSAGES.SCHEDULE_LOADING_OK', [])
+        ]);
+        
+        Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null);
         event.returnValue = s;
         return s;
       });
@@ -310,7 +406,14 @@ export default class Main {
     
     ipcMain.on('saveScript', (event: IpcMainEvent, s: Script) => {
       Files2.saveScript(s).subscribe((b: boolean) => {
-        if (b) Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_SAVE_OK, null, null, null);
+        if (b) {
+          let translations: any = Translations.getTranslations([
+            new TranslationInput('SCRIPTS.MESSAGES.SAVE_OK', [])
+          ]);
+          
+          Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE_OK'], null, null, null);
+        }
+        
         event.returnValue = b;
         return b;
       });
@@ -318,7 +421,14 @@ export default class Main {
     
     ipcMain.on('deleteScript', (event: IpcMainEvent, s: Script) => {
       Files2.deleteScript(s).subscribe((b: boolean) => {
-        if (b) Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, CNST_SCRIPT_MESSAGES.SCRIPT_DELETE_OK, null, null, null);
+        if (b) {
+          let translations: any = Translations.getTranslations([
+            new TranslationInput('SCRIPTS.MESSAGES.DELETE_OK', [])
+          ]);
+          
+          Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.DELETE_OK'], null, null, null);
+        }
+        
         event.returnValue = b;
         return b;
       });
@@ -352,17 +462,13 @@ export default class Main {
     /*******************/
     /*    LOGFILES     */
     /*******************/
-    ipcMain.on('writeToLog', (event: IpcMainEvent, loglevel: any, system: string, message: string, err: any) => {console.log(message);
+    ipcMain.on('writeToLog', (event: IpcMainEvent, loglevel: any, system: string, message: string, err: any) => {
       event.returnValue = Files2.writeToLog(loglevel, system, message, null, null, err);
     });
     
     ipcMain.on('readLogs', (event: IpcMainEvent) => {
       event.returnValue = Files2.readLogs();
-    });
-    
-    ipcMain.on('openLogAgent', (event: IpcMainEvent) => {
-      event.returnValue = Files2.openLogAgent();
-      event.returnValue = true;
+      return;
     });
     
     ipcMain.on('deleteOldLogs', (event: IpcMainEvent) => {
@@ -379,59 +485,12 @@ export default class Main {
     
     
     
-    
-    
     ipcMain.on('checkToken', (event: IpcMainEvent, token: string) => {
       this.execute.checkToken(token).subscribe((res: any) => {
         event.returnValue = res;
         return res;
       });
     });
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    /*ipcMain.on('getServerPort', (event: IpcMainEvent) => {
-      event.returnValue = this.server.getServerPort();
-    });
-    
-    ipcMain.on('saveServerPort', (event: IpcMainEvent, port) => {
-      this.server.saveServerPort(port).then(() => {
-        event.returnValue = true;
-      }, () => {
-        event.returnValue =  false
-      });
-    });*/
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     /*
@@ -443,7 +502,7 @@ export default class Main {
   private static renderWindow(): void {
     if (Main.mainWindow == null) {
       Main.mainWindow = new BrowserWindow({
-        icon: __dirname + 'icon.ico',
+        icon: Main.getIconPath(),
         show: false,
         webPreferences: {
           contextIsolation: false,
@@ -475,29 +534,45 @@ export default class Main {
   }
   
   private static onReady(): void {
+    Files2.getConfiguration(true).subscribe((configuration: Configuration) => {
+      Translations.use((configuration.locale));
+      let translations: any = Translations.getTranslations([
+        new TranslationInput('ELECTRON.SYSTEM_START', [])
+      ]);
+      
+      Files2.writeToLog(constants.CNST_LOGLEVEL.INFO, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SYSTEM_START'], null, null, null);
+      Main.setAutoUpdaterPreferences();
+      Main.setIpcListeners();
+      Main.setAutoLaunchOptions();
+      Main.updateTrayMenu();
+      Main.renderWindow();
+    });
+  }
+  
+  private static getIconPath(): string {
+    if (process.platform == 'linux') return globals.CNST_ICON_LINUX;
+    else if (process.platform == 'win32') return globals.CNST_ICON_WINDOWS;
+    else return globals.CNST_ICON_WINDOWS;
+  }
+  
+  private static updateTrayMenu(): void {
     let iconPath: string = null;
-    
-    Files2.writeToLog(constants.CNST_LOGLEVEL.INFO, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.SYSTEM_START, null, null, null);
-    Main.setAutoUpdaterPreferences();
-    Main.setIpcListeners();
-    Main.setAutoLaunchOptions();
-    
-    if (process.platform == 'linux') {
-      iconPath = globals.CNST_PROGRAM_PATH + '/icons/linux/analytics.png';
-    } else if (process.platform == 'win32') {
-      iconPath = globals.CNST_PROGRAM_PATH + '/icons/windows/analytics.ico';
-    } else {
-      iconPath = globals.CNST_PROGRAM_PATH + '/icons/linux/analytics.ico';
-    }
-    
-    let tray: Tray = new Tray(nativeImage.createFromPath(iconPath));
-    const contextMenu: Menu = Menu.buildFromTemplate([
-       { label: 'Abrir interface', type: 'normal', click: () => { Main.hidden = false; Main.renderWindow(); }}
-      ,{ label: 'Encerrar processo', type: 'normal', click: () => { Main.willClose(true); }}
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('ELECTRON.TRAY_OPEN_INTERFACE', []),
+      new TranslationInput('ELECTRON.TRAY_FINISH_PROCESS', [])
     ]);
-    tray.setToolTip(constants.CNST_PROGRAM_NAME.DEFAULT);
-    tray.setContextMenu(contextMenu);
-    Main.renderWindow();
+    console.log(Main.getIconPath());
+    if (Main.trayMenu == null) Main.trayMenu = new Tray(
+      nativeImage.createFromPath(
+        Main.getIconPath()
+      ).resize({ width: 16, height: 16 })
+    );
+    const contextMenu: Menu = Menu.buildFromTemplate([
+       { label: translations['ELECTRON.TRAY_OPEN_INTERFACE'], type: 'normal', click: () => { Main.hidden = false; Main.renderWindow(); }}
+      ,{ label: translations['ELECTRON.TRAY_FINISH_PROCESS'], type: 'normal', click: () => { Main.willClose(true); }}
+    ]);
+    Main.trayMenu.setToolTip(constants.CNST_PROGRAM_NAME.DEFAULT);
+    Main.trayMenu.setContextMenu(contextMenu);
   }
   
   private static willClose(terminate?: boolean): void {
@@ -507,7 +582,11 @@ export default class Main {
   }
   
   private static onClose(): void {
-    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.SYSTEM_WINDOW_CLOSE, null, null, null);
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('ELECTRON.SYSTEM_WINDOW_CLOSE', [])
+    ]);
+    
+    Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SYSTEM_WINDOW_CLOSE'], null, null, null);
     Main.mainWindow = null;
   }
   
@@ -521,12 +600,17 @@ export default class Main {
     Main.application = _app;
     Main.application.disableHardwareAcceleration();
     Main.application.requestSingleInstanceLock();
+    Translations.setDefaultLanguage(constants.CNST_DEFAULT_LANGUAGE);
     
     if (!Main.application.hasSingleInstanceLock()) {
-      console.log(Main.CNST_MESSAGES.THREAD_ERROR);
+      let translations: any = Translations.getTranslations([
+        new TranslationInput('ELECTRON.THREAD_ERROR', [])
+      ]);
+      
+      console.log(translations['ELECTRON.THREAD_ERROR']);
       Main.application.quit();
     } else {
-      Files2.initApplicationData();
+      Files2.initApplicationData(_app.getLocale());
       this.hidden = (Main.application.commandLine.hasSwitch('hidden') ? true : false);
       this.triggerSchedules = (Main.application.commandLine.hasSwitch('triggerSchedules') ? true : false);
       
@@ -559,13 +643,18 @@ export default class Main {
   }
   
   public static terminateApplication(): void {
+    let translations: any = Translations.getTranslations([
+      new TranslationInput('ELECTRON.SYSTEM_FINISH', []),
+      new TranslationInput('ELECTRON.SYSTEM_SERVICE', [])
+    ]);
+    
     if (Main.terminate) {
       if (process.platform !== 'darwin') {
         Main.application.quit();
       }
-      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.SYSTEM_FINISH, null, null, null);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SYSTEM_FINISH'], null, null, null);
     } else {
-      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, Main.CNST_MESSAGES.SYSTEM_SERVICE, null, null, null);
+      Files2.writeToLog(constants.CNST_LOGLEVEL.DEBUG, constants.CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SYSTEM_SERVICE'], null, null, null);
     }
   }
 }

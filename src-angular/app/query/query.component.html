@@ -68,6 +68,7 @@
         name="po_queryName"
         [p-label]="lbl_queryName + '*'"
         p-required="true"
+        [p-tooltip]="ttp_queryName"
         [(ngModel)]="query.name">
       </po-input>
       
@@ -77,6 +78,7 @@
         [p-label]="lbl_queryExecutionMode + '*'"
         [p-options]="_CNST_QUERY_EXECUTION_MODES"
         p-required="true"
+        [p-tooltip]="ttp_executionMode"
         [(ngModel)]="query.executionMode">
       </po-select>
       

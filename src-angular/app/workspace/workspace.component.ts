@@ -13,7 +13,7 @@ import { TranslationService, TranslationInput } from '../service/translation/tra
 import { WorkspaceService } from './workspace-service';
 import { DatabaseService } from '../database/database-service';
 import { Workspace, Database } from '../utilities/interfaces';
-import { CNST_MODALIDADE_CONTRATACAO, CNST_NO_OPTION_SELECTED, CNST_LOGLEVEL } from '../utilities/constants-angular';
+import { CNST_MODALIDADE_CONTRATACAO, CNST_LOGLEVEL } from '../utilities/constants-angular';
 import { Utilities } from '../utilities/utilities';
 
 import { Observable, forkJoin, catchError, map, switchMap } from 'rxjs';
@@ -108,7 +108,9 @@ export class WorkspaceComponent implements OnInit {
     forkJoin([
        this._workspaceService.getWorkspaces()
       ,this._databaseService.getDatabases()
-    ]).subscribe((results: [Workspace[], Database[]]) => {
+      ,this._translateService.getTranslations([
+        new TranslationInput('BUTTONS.EDIT', [])])
+    ]).subscribe((results: [Workspace[], Database[], any]) => {
       this.databases = results[1];
       this.projects = results[0].map((w: Workspace) => {
         let db: Database = this.databases.find((db: Database) => {
@@ -116,7 +118,7 @@ export class WorkspaceComponent implements OnInit {
         })
         
         if (db != undefined) w.databaseName = db.name;
-        else w.databaseName = CNST_NO_OPTION_SELECTED.label;
+        else w.databaseName = results[2]['ANGULAR.NONE'];
         return w;
       });
       this.po_lo_text = { value: null };

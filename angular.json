@@ -18,10 +18,7 @@
             "main": "src-angular/main.ts",
             "polyfills": "src-angular/polyfills.ts",
             "tsConfig": "src-angular/tsconfig.app.json",
-            "assets": [
-              "src-angular/analytics.ico",
-              "src-angular/assets"
-            ],
+            "assets": [],
             "styles": [
               "node_modules/@totvs/po-theme/css/po-theme-default.min.css",
               "node_modules/@totvs/po-theme/css/po-theme-default-variables.min.css",
@@ -97,7 +94,6 @@
             ],
             "scripts": [],
             "assets": [
-              "src-angular/analytics.ico",
               "src-angular/assets"
             ]
           }

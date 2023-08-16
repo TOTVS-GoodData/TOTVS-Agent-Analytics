@@ -1,4 +1,47 @@
 export const CNST_TRANSLATIONS_EN_US: any = {
+  ELECTRON: {
+    SYSTEM_START: '=== SYSTEM ONLINE ===',
+    SYSTEM_FINISH: '=== SYSTEM OFFLINE ===',
+    SYSTEM_WINDOW_CLOSE: '=== Window closed ===',
+    SYSTEM_SERVICE: '=== Switching Agent to backend mode... ===',
+    UPDATE_CHECK: 'Looking for updates...',
+    UPDATE_AVAILABLE: 'Update available: ${p1} --> ${p2}',
+    UPDATE_NOT_AVAILABLE: 'No updates available for this version (${p1})',
+    UPDATE_ERROR: 'Error - Failed to download Agent\'s update package.',
+    AUTOLAUNCH_ERROR: 'Error - Agent\'s automatic startup has failed.',
+    THREAD_ERROR: 'Error - ${p1} is already being executed. This instance will exit.',
+    UPDATE_DOWNLOAD: 'Downloading update: ${p1} (${p2}) -- spd: ${p3}',
+    UPDATE_DOWNLOAD_OK: 'Update ${p1} downloaded successfully. It\'s installation will start automatically when Agent is turned off.',
+    TRAY_OPEN_INTERFACE: 'Open interface',
+    TRAY_FINISH_PROCESS: 'Finish process',
+    DATABASE_DEVELOPMENT: 'Using development database.',
+    DATABASE_PRODUCTION: 'Using production database.',
+    DATABASE_CREATE: 'New installation detected. Creating new database.',
+    DATABASE_CREATE_OK: 'Database successfully created.',
+    DELETE_OLD_LOGS: 'Removing old logfiles.',
+    DELETE_OLD_LOGS_OK: 'Old logfiles successfully deleted.',
+    DATABASE_LOGIN_ELEC_START: 'Requesting database conection test to java...',
+    DATABASE_LOGIN_ELEC_FINISH: 'Database connection test has finished. Execution result: ${p1}',
+    EXPORT_QUERY_ELEC_START: 'Requesting I01\'s table export to java...',
+    EXPORT_QUERY_ELEC_FINISH: 'I01\'s table export has finished. Execution result: ${p1}',
+    RUN_AGENT_ELEC_START: 'Requesting data extraction to java...',
+    RUN_AGENT_ELEC_FINISH: 'Data extraction has finished. Execution result: ${p1}',
+    PROCESS_KILL: 'Forcing process termination [Sch: ${p1} - Exec: ${p2}]...',
+    PROCESS_KILL_OK: 'Process [Sch: ${p1} - Exec: ${p2}] terminated successfully.',
+    PROCESS_KILL_WARN: 'Warning - Process [Sch: ${p1}, Exec: ${p2}] is no longer being executed.',
+    PROCESS_KILL_ERROR: 'Error - Failed to terminate process execution [Sch: ${p1}, Exec: ${p2}].',
+    JAVA_EXECUTION_START: '===Agent\'s execution start: (.*)===',
+    JAVA_EXECUTION_END: '===Agent\'s execution end: (.*)===',
+    JAVA_EXECUTION_DURATION: '===Agent\'s execution time: (.*)===',
+    JAVA_EXECUTION_CANCELLED: '===Process terminated by user\'s request==='
+  },
+  ANGULAR: {
+    SYSTEM_EXIT: 'Are you sure you want to close Agent?',
+    SYSTEM_FINISH_USER: '=== System shutdown request received from user (exit menu) ===',
+    SYSTEM_FINISH_USER_WARNING: 'Warning - System shutdown can only be tested with Electron.',
+    OTHER: 'Other',
+    NONE: 'None'
+  },
   SERVICES: {
     GOODDATA: {
       MESSAGES: {
@@ -13,9 +56,18 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     }
   },
   LANGUAGES: {
+    TITLE: 'Application\'s language',
     en_US: 'English',
     pt_BR: 'Portuguese',
     es_ES: 'Spanish'
+  },
+  CONTRACT_TYPES: {
+    PLATFORM: 'GoodData platform',
+    DEMO: 'Demonstration'
+  },
+  SOURCES: {
+    LOCALLY: 'Locally',
+    CLOUD_OTHERS: 'Cloud (Other)'
   },
   MENU: {
     WORKSPACES: 'Workspaces',
@@ -85,6 +137,17 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       GRAPH: 'Graph',
       DATABASE: 'Database',
       NAME: 'Configuration\'s name'
+    },
+    TOOLTIPS: {
+      CONTRACT_TYPE: 'Contract type, brought by the customer.',
+      CUSTOMER_CODE: 'TOTVS\'s customer code. If you don\'t know this code, please reach out to your TOTVS\'s sales representative (ESN).',
+      ENVIRONMENT: 'GoodData\'s platform domain name.',
+      USERNAME: 'GoodData\'s platform username. This user must already have an account, and admin rights to the workspace.',
+      PASSWORD: 'Username\'s password.',
+      WORKSPACE: 'Choose the workspace for which the data will be uploaded.',
+      UPLOAD_URL: 'GoodData\'s FTP / WebDAV server\'s fullpath, where the data will be uploaded by Agent.',
+      PROCESS: 'Choose the ETL\'s process name (CloudConnect / Bricks) that will process the data sent.',
+      GRAPH: 'Choose CloudConnect\'s main graph, that the ETL process will begin it\'s execution.'
     }
   },
   DATABASES: {
@@ -136,6 +199,14 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       ERROR_INVALID_IP: 'Error - Invalid IP address. Please check it\'s type (ipv4 / ipv6 / hostname).',
       ERROR_INVALID_PORT: 'Error - Invalid database port. Please check if it\'s number is between the valid range (1024 - 65536).',
       PASSWORD_ENCRYPT: 'Criptografando senhas...',
+    },
+    TOOLTIPS: {
+      DRIVER_CLASS: 'JDBC driver\'s main Java class name. This name can be found using database connection IDEs',
+      DRIVER_PATH: 'JDBC driver\'s full path. This file must have the ".jar" extension',
+      HOST_TYPE: 'Host type: "Ipv4": Format "255.255.255.255". "Ipv6": Format "FF:FF:...:FF". "Hostname": Name of the machine.',
+      HOST_NAME: 'IP address that the database is located at.',
+      PORT: 'Choose the port\'s number that the database listens to. This number must be between 1024 and 65535.',
+      CONNECTION_STRING: 'Final connection string command, for database connections. This command will be used by Agent when connecting to the database.'
     }
   },
   SCHEDULES: {
@@ -197,6 +268,12 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       RUN_ERROR: 'Error - An unexpected error has happened while requesting schedule\'s \'${p1}\' execution. Please try again.',
       RUN_PREPARE: 'Preparing request package to send to java...',
       RUN_WARNING: 'Warning - Schedule\'s executions can only be tested with Electron.'
+    },
+    TOOLTIPS: {
+      WINDOWS: 'Choose the time which Agent will trigger this schedule, on a daily basis.',
+      ZIP_FILENAME: 'Compressed filename to be sent to GoodData. This file will have all extracted data inside of it.',
+      FILE_FOLDER: 'Directory to be sent to GoodData. All files in this directory will be added to dataload.',
+      FILE_WILDCARD: 'Use this field to filter out some files to be sent to GoodData. Example: To upload only Excel files, with any name, use: *.xlsx. If there\'s no restrictions, use: *.*'
     }
   },
   QUERIES: {
@@ -210,6 +287,10 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       QUERY_NAME: 'Query name',
       MODE: 'Execution mode',
       SQL: 'SQL command'
+    },
+    EXECUTION_MODES: {
+      COMPLETE: 'Complete',
+      MONTHLY: 'Monthly'
     },
     MESSAGES: {
       LOADING: 'Loading queries...',
@@ -240,6 +321,10 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       EXPORT_I01_ERROR_NOTPROTHEUS: 'Error - I01\'s queries exports are only supported for Protheus ERP.',
       ENCRYPT: 'Encrypting query: ${p1}',
       VALIDATE: 'Validating query...'
+    },
+    TOOLTIPS: {
+      QUERY_NAME: 'Query\'s name. This name will be shown by Agent\'s logfiles.',
+      MODE: 'Query\'s execution mode: "Complete" - Agent will attempt to replace schedule\'s parameters inside query\'s SQL instruction, and execute it only once. "Monthly" - Agent will generate new START_DATE / FINAL_DATE parameters that are between the schedule\'s predefined values, on a monthly basis, in order to execute the query multiple times. Example: If this schedule is set to execute for the last 3 months, Agent will execute this query 3 times, once for each month.'
     }
   },
   SCRIPTS: {
@@ -278,17 +363,22 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       EXPORT_SAVE_ERROR: 'Error - An unexpected error has happened while saving FAST\'s standard scripts on schedule \'${p1}\'. Please try again.',
       ENCRYPT: 'Encrypting script: \'${p1}\'',
       VALIDATE: 'Validating script...'
+    },
+    TOOLTIPS: {
+      SCRIPT_NAME: 'Script\'s name. This name will be shown by Agent\'s logfiles.'
     }
   },
   MONITOR: {
     TITLE: 'Execution Monitor',
     TABLE: {
       STATUS: 'Status',
+      LINES: 'Lines',
       SCHEDULE: 'Schedule',
       START_DATE: 'Date/Time start',
       FINAL_DATE: 'Date/Time finish',
       EXECUTION_TIME: 'Execution time',
       DETAILS: {
+        TITLE: 'Execution details',
         TIMESTAMP: 'Timestamp',
         LEVEL: 'Level',
         SOURCE: 'Source',
@@ -302,7 +392,8 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       }
     },
     MESSAGES: {
-      WARNING: 'Warning - Log monitoring can only be tested with Electron.'
+      WARNING: 'Warning - Log monitoring can only be tested with Electron.',
+      KILL_PROCESS_TITLE: 'Are you sure you want to kill this execution?'
     }
   },
   CONFIGURATION: {
@@ -313,9 +404,9 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     DEBUGMODE_ON: 'Debug mode: On',
     DEBUGMODE_OFF: 'Debug mode: Off',
     LOGFILES_TO_KEEP: 'Minimum number of logfiles to be kept',
-    JAVA_XMS: 'Minimum memory allocation (MB)',
     JAVA_XMX: 'Maximum memory allocation (MB)',
     JAVA_TMPDIR: 'Temporary files directory',
+    JAVA_JREDIR: 'Java\'s JRE directory',
     MESSAGES: {
       LOADING: 'Loading configurations...',
       LOADING_OK: 'Configurations loaded.',
@@ -324,6 +415,12 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       SAVE: 'Saving configuration...',
       SAVE_ERROR: 'Error - An unexpected error has happened. Please try again.',
       SAVE_OK: 'Configuration successfully saved!'
+    },
+    TOOLTIPS: {
+      LOGFILES: 'Maximum number of logfiles to be kept inside Agent\'s log directory. Agent will automatically delete logfiles older than this parameter.',
+      JAVA_XMX: 'Maximum RAM memory allocation (MB - Megabytes) that Agent is allowed to use when running schedules. If this threshold is not enough to upload data, Agent will terminate it\'s execution, with an error message.',
+      JAVA_TMPDIR: 'Temporary directory, used by Agent to store files before uploading to GoodData. Choose a directory that can be completely deleted if necessary.',
+      JAVA_JREDIR: './bin directory, where Java\'s binary files are located. If not informed, Agent will search for Java under the system\'s environment variables.'
     }
   },
   FORM_ERRORS: {
