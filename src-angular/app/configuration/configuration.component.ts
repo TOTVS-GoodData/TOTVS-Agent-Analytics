@@ -1,21 +1,35 @@
+/* Componentes padrões do Angular */
 import { Component, OnInit, EventEmitter } from '@angular/core';
-import { Router, Navigation } from '@angular/router';
+import { Router } from '@angular/router';
 
+/* Componentes visuais da biblioteca Portinari.UI */
+import { PoSwitchLabelPosition } from '@po-ui/ng-components';
+
+/* Componentes de utilitários do Agent */
+import { Utilities } from '../utilities/utilities';
+import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
+import { CNST_MANDATORY_FORM_FIELD } from '../utilities/constants-angular';
+import { CNST_JAVA_XMX_MINIMUM } from '../utilities/java-constants';
+import { CNST_DEFAULT_LANGUAGE } from '../services/translation/translation-constants';
+
+/* Serviço de comunicação com o Electron */
 import { ElectronService } from 'ngx-electronyzer';
 
-import { PoSwitchLabelPosition } from '@po-ui/ng-components';
-import { PoNotification, PoToasterOrientation, PoButtonGroupItem } from '@po-ui/ng-components';
-
-import { Configuration } from '../utilities/interfaces';
-import * as _constants from '../utilities/constants-angular';
-import { Utilities } from '../utilities/utilities';
-import { TranslationService, TranslationInput } from '../service/translation/translation-service';
-import { CustomTranslationLoader } from '../service/translation/custom-translation-loader';
-import { MenuService } from '../service/menu-service';
-
+/* Serviço de configuração do Agent */
 import { ConfigurationService } from './configuration-service';
+import { Configuration } from './configuration-interface';
+import { CNST_LOGFILES_MINIMUM } from './configuration-constants';
 
-import { Observable, map, switchMap, catchError } from 'rxjs';
+/* Serviço de tradução do Agent */
+import { TranslationService } from '../services/translation/translation-service';
+import { TranslationInput } from '../services/translation/translation-interface';
+import { CustomTranslationLoader } from '../services/translation/custom-translation-loader';
+
+/* Componentes rxjs para controle de Promise / Observable */
+import { map } from 'rxjs';
+
+/* Constantes do Agent */
+import { CNST_PROGRAM_NAME, CNST_PROGRAM_VERSION } from '../app-constants';
 
 @Component({
   selector: 'app-configuration',
@@ -23,209 +37,250 @@ import { Observable, map, switchMap, catchError } from 'rxjs';
   styleUrls: ['./configuration.component.css']
 })
 export class ConfigurationComponent implements OnInit {
-  protected updateMenuLanguage: EventEmitter<void> = new EventEmitter<void>();
-  public CNST_MESSAGES: any = {};
+  
+  /**************************/
+  /***     VARIÁVEIS      ***/
+  /**************************/
+  /********* Gerais *********/
+  //Variável de suporte, para mostrar ao usuário os campos obrigatórios não preenchidos.
   protected CNST_FIELD_NAMES: Array<any> = [];
   
-  public poDebugModeLabelPosition: PoSwitchLabelPosition = PoSwitchLabelPosition.Left;
-  protected CNST_LANGUAGES: Array<any> = [];
+  //Versões do Agent / Java
+  protected AgentVersion: string = null;
+  protected JavaVersion: string = null;
   
-  public AgentVersion: string = '';
-  public JavaVersion: string = '';
+  //Objeto de configuração do formulário
+  protected configuration: Configuration = new Configuration(3, true, 2048, '', CNST_DEFAULT_LANGUAGE, true);
   
-  protected configuration: Configuration = new Configuration(10, true, 2048, '', _constants.CNST_DEFAULT_LANGUAGE);
+  /****** Portinari.UI ******/
+  //Posicionamento do texto do label do modo debug (Esquerda)
+  protected poDebugModeLabelPosition: PoSwitchLabelPosition = PoSwitchLabelPosition.Left;
+  
+  //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
   
-  /*************************************************/
-  /* MAPEAMENTO DOS NOMES DOS CAMPOS DO FORMULÁRIO */
-  /*************************************************/
-  protected lbl_title: string;
-  protected lbl_logfilesToKeep: string;
-  protected lbl_javaXmx: string;
-  protected lbl_javaTmpDir: string;
-  protected lbl_javaJREDir: string;
-  protected lbl_debugModeOn: string;
-  protected lbl_debugModeOff: string;
-  protected lbl_save: string;
-  protected lbl_locale: string;
+  //Idiomas disponíveis no Agent
+  protected CNST_LANGUAGES: Array<any> = [];
   
-  protected lbl_application: string;
-  protected lbl_version: string;
-  protected lbl_java: string;
+  //Variável de suporte, que armazena o valor mínimo aceitável d parâmetro Xmx do Java.
+  protected _CNST_JAVA_XMX_MINIMUM: number = CNST_JAVA_XMX_MINIMUM;
   
-  protected ttp_javaTmpDir: string;
-  protected ttp_javaJREDir: string;
-  protected ttp_javaXmx: string;
-  protected ttp_logfilesToKeep: string;
+  //Variável de suporte, que armazena o numero mínimo de arquivos de log a serem mantidos pelo Agent.
+  protected _CNST_LOGFILES_MINIMUM: number = CNST_LOGFILES_MINIMUM;
   
-  /*************************************************/
-  /*************************************************/
-  /*************************************************/
+  /****** Formulários *******/
+  //Títulos
+  protected lbl_title: string = null;
+  protected lbl_application: string = null;
+  protected lbl_version: string = null;
+  protected lbl_java: string = null;
+  
+  //Campos
+  protected lbl_logfilesToKeep: string = null;
+  protected lbl_javaXmx: string = null;
+  protected lbl_javaTmpDir: string = null;
+  protected lbl_javaJREDir: string = null;
+  protected lbl_debugModeOn: string = null;
+  protected lbl_debugModeOff: string = null;
+  protected lbl_autoUpdateOn: string = null;
+  protected lbl_autoUpdateOff: string = null;
+  protected lbl_save: string = null;
+  protected lbl_locale: string = null;
+  
+  //Balões de ajuda
+  protected ttp_debugMode: string = null;
+  protected ttp_javaTmpDir: string = null;
+  protected ttp_javaJREDir: string = null;
+  protected ttp_javaXmx: string = null;
+  protected ttp_logfilesToKeep: string = null;
+  protected ttp_autoUpdate: string = null;
+  
+  /**************************/
+  /*** MÉTODOS DO MÓDULO  ***/
+  /**************************/
   constructor(
+    private _utilities: Utilities,
+    private _electronService: ElectronService,
     private _configurationService: ConfigurationService,
     private _translateService: TranslationService,
-    private _translationLoader: CustomTranslationLoader,
-    private _utilities: Utilities,
-    private _menuService: MenuService,
-    private _router: Router,
-    private _electronService: ElectronService
+    private _customTranslationLoader: CustomTranslationLoader,
+    private _router: Router
   ) {}
   
   public ngOnInit(): void {
-    this._translateService.getTranslations([
-      new TranslationInput('CONFIGURATION.TITLE', [_constants.CNST_PROGRAM_NAME.DEFAULT]),
-      new TranslationInput('CONFIGURATION.APPLICATION', []),
-      new TranslationInput('CONFIGURATION.VERSION', []),
-      new TranslationInput('CONFIGURATION.JAVA', []),
-      new TranslationInput('CONFIGURATION.DEBUGMODE_ON', []),
-      new TranslationInput('CONFIGURATION.DEBUGMODE_OFF', []),
-      new TranslationInput('CONFIGURATION.LOGFILES_TO_KEEP', []),
-      new TranslationInput('CONFIGURATION.JAVA_XMX', []),
-      new TranslationInput('CONFIGURATION.JAVA_TMPDIR', []),
-      new TranslationInput('CONFIGURATION.JAVA_JREDIR', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.VALIDATE', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.LOADING', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.LOADING_ERROR', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.VALIDATE', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.SAVE', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.SAVE_OK', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.SAVE_ERROR', []),
-      new TranslationInput('CONFIGURATION.TOOLTIPS.LOGFILES', []),
-      new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_XMX', []),
-      new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_TMPDIR', []),
-      new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_JREDIR', []),
-      new TranslationInput('LANGUAGES.TITLE', []),
-      new TranslationInput('LANGUAGES.en_US', []),
-      new TranslationInput('LANGUAGES.pt_BR', []),
-      new TranslationInput('LANGUAGES.es_ES', []),
-      new TranslationInput('BUTTONS.SAVE', []),
-      new TranslationInput('FORM_ERRORS.FOLDER_SELECT_WARNING', [])
-    ]).subscribe((translations: any) => {
-      this.po_lo_text = { value: translations['CONFIGURATION.MESSAGES.LOADING'] };
+    
+    //Consulta das traduções
+    this._translateService.updateStandardTranslations().subscribe(() => {
+      this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING'] };
       
-      this.lbl_title = translations['CONFIGURATION.TITLE'];
-      this.lbl_debugModeOn = translations['CONFIGURATION.DEBUGMODE_ON'];
-      this.lbl_debugModeOff = translations['CONFIGURATION.DEBUGMODE_OFF'];
+      //Tradução dos títulos
+      this.lbl_title = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TITLE'];
+      this.lbl_debugModeOn = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.DEBUGMODE_ON'];
+      this.lbl_debugModeOff = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.DEBUGMODE_OFF'];
+      this.lbl_autoUpdateOn = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.AUTOUPDATE_ON'];
+      this.lbl_autoUpdateOff = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.AUTOUPDATE_OFF'];
       
-      this.lbl_logfilesToKeep = translations['CONFIGURATION.LOGFILES_TO_KEEP'] + '*';
-      this.lbl_javaXmx = translations['CONFIGURATION.JAVA_XMX'] + '*';
-      this.lbl_javaTmpDir = translations['CONFIGURATION.JAVA_TMPDIR'] + '*';
-      this.lbl_javaJREDir = translations['CONFIGURATION.JAVA_JREDIR'];
-      this.lbl_application = translations['CONFIGURATION.APPLICATION'];
-      this.lbl_version = translations['CONFIGURATION.VERSION'];
-      this.lbl_java = translations['CONFIGURATION.JAVA'];
-      this.lbl_locale = translations['LANGUAGES.TITLE'];
+      //Tradução dos campos de formulário
+      this.lbl_logfilesToKeep = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.LOGFILES_TO_KEEP'] + CNST_MANDATORY_FORM_FIELD;
+      this.lbl_javaXmx = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_XMX'] + CNST_MANDATORY_FORM_FIELD;
+      this.lbl_javaTmpDir = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_TMPDIR'] + CNST_MANDATORY_FORM_FIELD;
+      this.lbl_javaJREDir = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_JREDIR'];
+      this.lbl_application = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.APPLICATION'];
+      this.lbl_version = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.VERSION'];
+      this.lbl_java = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA'];
+      this.lbl_locale = this._translateService.CNST_TRANSLATIONS['LANGUAGES.TITLE'];
+      this.lbl_save = this._translateService.CNST_TRANSLATIONS['BUTTONS.SAVE'];
       
-      this.ttp_javaTmpDir = translations['CONFIGURATION.TOOLTIPS.JAVA_TMPDIR'];
-      this.ttp_javaJREDir = translations['CONFIGURATION.TOOLTIPS.JAVA_JREDIR'];
-      this.ttp_javaXmx = translations['CONFIGURATION.TOOLTIPS.JAVA_XMX'];
-      this.ttp_logfilesToKeep = translations['CONFIGURATION.TOOLTIPS.LOGFILES'];
+      //Tradução dos balões de ajuda dos campos
+      this.ttp_debugMode = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.DEBUGMODE'];
+      this.ttp_javaTmpDir = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.JAVA_TMPDIR'];
+      this.ttp_javaJREDir = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.JAVA_JREDIR'];
+      this.ttp_logfilesToKeep = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.LOGFILES'];
+      this.ttp_autoUpdate = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.AUTOUPDATE'];
+      this._translateService.getTranslations([
+        new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_XMX', [CNST_JAVA_XMX_MINIMUM + ''])
+      ]).subscribe((translations: any) => {
+        this.ttp_javaXmx = translations['CONFIGURATION.TOOLTIPS.JAVA_XMX'];
+      });
       
+      //Definição dos campos obrigatórios do formulário
       this.CNST_FIELD_NAMES = [
-        { key: 'logfilesToKeep', value: translations['CONFIGURATION.LOGFILES_TO_KEEP'] },
-        { key: 'javaXmx', value: translations['CONFIGURATION.JAVA_XMX'] },
-        { key: 'javaTmpDir', value: translations['CONFIGURATION.JAVA_TMPDIR'] }
+        { key: 'logfilesToKeep', minimum: CNST_LOGFILES_MINIMUM, value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.LOGFILES_TO_KEEP'] },
+        { key: 'javaXmx', minimum: CNST_JAVA_XMX_MINIMUM, value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_XMX'] },
+        { key: 'javaTmpDir', value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_TMPDIR'] }
       ];
       
-      this.CNST_MESSAGES = {
-        LOADING: translations['CONFIGURATION.MESSAGES.LOADING'],
-        LOADING_ERROR: translations['CONFIGURATION.MESSAGES.LOADING_ERROR'],
-        VALIDATE: translations['CONFIGURATION.MESSAGES.VALIDATE'],
-        SAVE: translations['CONFIGURATION.MESSAGES.SAVE'],
-        SAVE_OK: translations['CONFIGURATION.MESSAGES.SAVE_OK'],
-        SAVE_ERROR: translations['CONFIGURATION.MESSAGES.SAVE_ERROR'],
-        FOLDER_SELECT_WARNING: translations['FORM_ERRORS.FOLDER_SELECT_WARNING']
-      };
-      
-      this.lbl_save = translations['BUTTONS.SAVE'];
-      
+      //Leitura da configuração atual do Agent
       return this._configurationService.getConfiguration(true).subscribe((conf: Configuration) => {
+        
+        //Caso exista uma configuração cadastrada, atualiza os campos do formulário
         if (conf != undefined) {
+          
           this.configuration = conf;
-          this.CNST_LANGUAGES = this._translationLoader.getAvailableLanguages().map((locale: string) => ({
-            label: translations['LANGUAGES.' + locale.replaceAll('\-','\_')],
-            action: this.setLanguage.bind(this),
+          this.CNST_LANGUAGES = this._customTranslationLoader.getAvailableLanguages().map((locale: string) => ({
+            label: this._translateService.CNST_TRANSLATIONS['LANGUAGES.' + locale],
+            action: (locale: any) => this.configuration.locale = locale.value,
             icon: 'po-icon-user',
             selected: (this.configuration.locale == locale),
             value: locale
           }));
         }
+        
+        //Atualização do número de versão do Java / Agent
         if (this._electronService.isElectronApp) {
-          this.AgentVersion = _constants.CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getVersion').version;
-          this.JavaVersion = '';
+          this.AgentVersion = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getAgentVersion').version;
+          this.JavaVersion = null;
         } else {
-          this.AgentVersion = _constants.CNST_PROGRAM_VERSION.DEVELOPMENT;
-          this.JavaVersion = '';
+          this.AgentVersion = CNST_PROGRAM_VERSION.DEVELOPMENT;
+          this.JavaVersion = null;
         }
         this.po_lo_text = { value: null };
         return null;
       }, (err: any) => {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.LOADING_ERROR, err);
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_ERROR'], err);
         this.po_lo_text = { value: null };
         throw err;
       });
     });
   }
   
-  public setLanguage(locale: any): void {
-    this.configuration.locale = locale.value;
-  }
-  
-  public saveConfiguration(): void {
+  /* Método de gravação das configurações do Agent */
+  protected saveConfiguration(): void {
+    
+    //Valida se os dados preenchidos no formulário são válidos
     if (this.validConfiguration()) {
-      this.po_lo_text = { value: this.CNST_MESSAGES.SAVE };
+      this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'] };
+      
+      //Grava a nova configuração do Agent
       this._configurationService.saveConfiguration(this.configuration).subscribe((b: boolean) => {
-        this._translateService.use(this.configuration.locale);
-        this._menuService.updateMenu();
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
+        
+        this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK']);
         this.po_lo_text = { value: null };
+        
+        //Recarrega a página de configuração do Agent
         this.ngOnInit();
       }, (err: any) => {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.SAVE_ERROR);
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR']);
         this.po_lo_text = { value: null };
       });
     }
   }
   
+  /* Método de validação dos dados de configuração preenchidos do Agent */
   private validConfiguration(): boolean {
+    //Valor de retorno do método
     let validate: boolean = true;
-    let configuration: Configuration = new Configuration(null, true, null, null, _constants.CNST_DEFAULT_LANGUAGE);
     
-    this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.VALIDATE);
-    this.po_lo_text = { value: this.CNST_MESSAGES.VALIDATE };
-    let propertiesNotDefined = Object.getOwnPropertyNames.call(Object, configuration).map((p: string) => {
+    //Objeto de suporte para validação dos campos
+    let configuration: Configuration = new Configuration(3, true, 2048, '', CNST_DEFAULT_LANGUAGE, true);
+    
+    this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.VALIDATE']);
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.VALIDATE'] };
+    
+    //Verifica se todos os campos da interface de configuração foram preenchidos
+    let propertiesNotDefined: string[] = Object.getOwnPropertyNames.call(Object, configuration).map((p: string) => {
       if (this.configuration[p] == undefined) return p;
     }).filter((p: string) => { return p != null; });
-    
-    // Validação dos campos de formulário //
     if (propertiesNotDefined.length > 0) {
       validate = false;
       let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
       this._translateService.getTranslations([
         new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName])
       ]).subscribe((translations: any) => {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED']);
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED']);
       });
       this.po_lo_text = { value: null };
+    } else {
+      //Verifica se a tipagem esperada de todos os campos da interface estão corretas
+      propertiesNotDefined = Object.getOwnPropertyNames.call(Object, configuration).map((p: string) => {
+        if (typeof this.configuration[p] != typeof configuration[p]) return p;
+      }).filter((p: string) => { return p != null; });
+      if (propertiesNotDefined.length > 0) {
+        validate = false;
+        this.po_lo_text = { value: null };
+        let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
+        this._translateService.getTranslations([
+          new TranslationInput('FORM_ERRORS.FIELD_TYPING_WRONG', [fieldName])
+        ]).subscribe((translations: any) => {
+          this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_TYPING_WRONG']);
+        });
+      }
+    }
+    
+    //Verifica se o valor mínimo da memória de alocação máxima do Java foi respeitado.
+    let minimums: any[] = this.CNST_FIELD_NAMES.filter((p: any) => {
+      if (p.minimum != undefined) return (this.configuration[p.key] < p.minimum);
+      else return false;
+    });
+    if (minimums.length > 0) {
+      validate = false;
+      this.po_lo_text = { value: null };
+      this._translateService.getTranslations([
+        new TranslationInput('FORM_ERRORS.FIELD_MINIMUM_ERROR', [minimums[0].value, minimums[0].minimum])
+      ]).subscribe((translations: any) => {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_MINIMUM_ERROR']);
+      });
     }
     
     return validate;
   }
   
-  public getTmpFolder(): void {
+  /* Método de seleção do diretório temporário do Agent (Apenas disponível c/ Electron) */
+  protected getTmpFolder(): void {
     if (this._electronService.isElectronApp) {
       this.configuration.javaTmpDir = this._electronService.ipcRenderer.sendSync('getFolder');
     } else {
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, this.CNST_MESSAGES.FOLDER_SELECT_WARNING);
+      this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['FORM_ERRORS.FOLDER_SELECT_WARNING']);
       this.po_lo_text = { value: null };
     }
   }
   
-  public getJREFolder(): void {
+  /* Método de seleção do diretório onde se encontram os binários da JRE do Java (Apenas disponível c/ Electron) */
+  protected getJREFolder(): void {
     if (this._electronService.isElectronApp) {
       this.configuration.javaJREDir = this._electronService.ipcRenderer.sendSync('getFolder');
     } else {
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, this.CNST_MESSAGES.FOLDER_SELECT_WARNING);
+      this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['FORM_ERRORS.FOLDER_SELECT_WARNING']);
       this.po_lo_text = { value: null };
     }
   }

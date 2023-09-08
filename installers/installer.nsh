@@ -81,13 +81,19 @@ FunctionEnd
   ClearErrors
   SetRegView 64
   ReadRegStr $R0 HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "TOTVS Agent Analytics"
-  
-  ; Check to see if already installed
+  ReadRegStr $R1 HKLM "Software\TOTVS Agent Analytics" "autoUpdate"
+
+  ; Verifica se o Agent já está instalado
   StrCmp $R0 "" NotInstalled +1
+  
+  ; Verifica se o comando de instalação foi disparado pelo autoUpdate do Electron
+  StrCmp $R1 "1" AutoUpdate +1
+  
   MessageBox MB_OK|MB_ICONEXCLAMATION "TOTVS Agent Analytics já está instalado. Por favor, desinstale a versão atual antes de executar este instalador novamente."
   Abort
   
   NotInstalled:
+  AutoUpdate:
   
 !macroend
 

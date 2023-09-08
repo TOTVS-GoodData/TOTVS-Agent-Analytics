@@ -1,34 +1,51 @@
+/* Dependência do Node, usada para consultar o endereço dos arquivos da Máquina */
 import * as path from 'path';
-import * as constants from '../src-angular/app/utilities/constants-angular';
+
+/* Caminho completo até o diretório de instalação do Agent */
 import { CNST_APPLICATION_ROOTDIR } from '../app';
 
-export const CNST_PROGRAM_PATH: string = CNST_APPLICATION_ROOTDIR;
+/* Periodicidade, em horas, que o Agent irá buscar atualizações */
+export const CNST_AUTOUPDATE_CHECK_INTERVAL: number = 3;
 
-export const CNST_COMMAND_FILE: string = '_jCommand';
-
-export const CNST_ICONS_PATH: string = path.join(CNST_PROGRAM_PATH, 'icons');
+/* Caminho completo do diretório de recursos visuais do Agent (ícones) */
+export const CNST_ICONS_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'icons');
 export const CNST_ICONS_PATH_WINDOWS: string = path.join(CNST_ICONS_PATH, 'windows');
 export const CNST_ICONS_PATH_LINUX: string = path.join(CNST_ICONS_PATH, 'linux');
 export const CNST_ICON_WINDOWS: string = path.join(CNST_ICONS_PATH_WINDOWS, 'analytics.ico');
 export const CNST_ICON_LINUX: string = path.join(CNST_ICONS_PATH_LINUX, 'analytics.png');
 
-export const CNST_TMP_PATH: string = path.join(CNST_PROGRAM_PATH, 'tmp');
-export const CNST_I18N_PATH: string = path.join(CNST_PROGRAM_PATH, 'i18n');
-export const CNST_DATABASE_PATH: string = path.join(CNST_PROGRAM_PATH, 'assets');
+/* Tamanho, em pixels, do ícone do Agent p/ renderização no menu (Tray) */
+export const CNST_ICON_SIZE: number = 16;
+
+/* Caminho completo dos diretórios do Agent */
+export const CNST_TMP_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'tmp');
+export const CNST_I18N_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'i18n');
+export const CNST_DATABASE_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'assets');
+export const CNST_LOGS_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'logs');
+export const CNST_JAVA_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'java');
+
+/* Caminho completo dos arquivos de cadastros do Agent (Produção / Desenv.) */
 export const CNST_DATABASE_NAME: string = path.join(CNST_DATABASE_PATH, 'db.json');
 export const CNST_DATABASE_NAME_DEV: string = path.join(CNST_DATABASE_PATH, 'dbDevelopment.json');
 
-export const CNST_PROGRAM_PATH_JAR_FAST: string = path.join(CNST_PROGRAM_PATH, 'java/TOTVS-FastAnalytics-Agent-1.7.8-jar-with-dependencies.jar');
-export const CNST_PROGRAM_PATH_JAR_SMART: string = path.join(CNST_PROGRAM_PATH, 'java/gdc-agent-totvs-3.2.2.jar');
-export const CNST_PROGRAM_PATH_LOGS: string = path.join(CNST_PROGRAM_PATH, '/logs');
-export const CNST_REGEX_LOGS: string = 'logfile\-[0-9]{4}\-[0-9]{2}\-[0-9]{2}';
+/* Nome das classes do Java, usadas para definir o ponto de entrada do Java */
+export const CNST_JAVA_CLASS_TESTCONNECTION: string = 'com.gooddata.agent.util.TestDatabaseConnection';
+export const CNST_JAVA_CLASS_EXPORTQUERY: string = 'com.gooddata.agent.jdbc.JdbcExport';
+export const CNST_JAVA_CLASS_RUNAGENT: string = 'com.gooddata.agent.Main';
 
-export const CNST_LINEBREAK: any = {
-  WIN: '\r\n',
-  LINUX: '\n',
-  MAC: '\r'
-}
+/* Caminho completo do arquivo .jar do Agent (FAST / SMART) */
+export const CNST_JAR_PATH_FAST: string = path.join(CNST_JAVA_PATH, 'TOTVS-FastAnalytics-Agent-1.7.8-jar-with-dependencies.jar');
 
+/* Nome do arquivo criptografado de comandos do Java, usado para comunicação */
+export const CNST_COMMAND_FILE: string = '_jCommand';
+
+/* RegEx usada para filtrar os arquivos de logs válidos do diretório do Agent */
+export const CNST_LOGS_FILENAME: string = 'logfile';
+export const CNST_LOGS_EXTENSION: string = 'log';
+export const CNST_LOGS_SPACING: number = 2;
+export const CNST_LOGS_REGEX: string = CNST_LOGS_FILENAME + '\-[0-9]{4}\-[0-9]{2}\-[0-9]{2}';
+
+/* Função usada para retornar o comando de quebra de linha padrão do sistema operacional*/
 export const CNST_OS_LINEBREAK = () => {
   if (process.platform == 'win32') {
     return CNST_LINEBREAK.WIN;
@@ -37,4 +54,11 @@ export const CNST_OS_LINEBREAK = () => {
   } else {
     return CNST_LINEBREAK.MAC;
   }
- }
+}
+
+/* Cadastro das quebras de linha, por sistema operacional */
+export const CNST_LINEBREAK: any = {
+  WIN: '\r\n',
+  LINUX: '\n',
+  MAC: '\r'
+}

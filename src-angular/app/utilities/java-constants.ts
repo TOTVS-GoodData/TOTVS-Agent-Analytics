@@ -1,0 +1,1 @@
+export const CNST_JAVA_XMX_MINIMUM: number = 1024;

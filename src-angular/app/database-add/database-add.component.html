@@ -1,8 +1,13 @@
 <po-page-list [p-title]="lbl_title">
+  
+  <!-- Componente de animação de carregamento do Portinari.UI -->
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  
   <form #dataBaseForm="ngForm">
     <po-container>
       <div class="po-row">
+        
+        <!-- Nome da configuração do banco de dados -->
         <po-input
           name="po_name"
           class="form-control po-md-6 po-lg-6"
@@ -10,6 +15,8 @@
           [(ngModel)]="database.name"
           p-required="true">
         </po-input>
+        
+        <!-- Marca do banco de dados (SQL Server, Oracle, Progress, etc) -->
         <po-select 
           name="po_databaseType"
           class="form-control po-md-6 po-lg-6"
@@ -20,80 +27,109 @@
           p-required="true">
         </po-select>
       </div>
+      
       <div class="po-row">
+        
+        <!-- Classe do driver de conexão do banco de dados -->
         <po-input
           name="po_driverClass"
           class="form-control po-md-6 po-lg-6"
           [p-label]="lbl_driverClass"
           [p-tooltip]="ttp_driverClass"
           [(ngModel)]="database.driverClass"
-          [p-disabled]="(database.type != 'Outro')"
+          [p-disabled]="(database.brand != _CNST_DATABASE_OTHER)"
           p-required="true">
         </po-input>
-        <po-input
-          name="poDriverPath"
-          class="form-control po-md-6 po-lg-6"
-          [p-label]="lbl_driverPath"
-          [p-tooltip]="ttp_driverPath"
-          [(ngModel)]="database.driverPath"
-          [p-disabled]="(database.type != 'Outro')"
-          p-required="true">
-        </po-input>
+        
+        <!-- Seletor do driver do banco de dados -->
+        <div class="form-control po-md-6 po-lg-6">
+          <po-label [p-label]="lbl_driverPath" [p-field]="true" [p-disabled]="(database.brand != _CNST_DATABASE_OTHER)" />
+          <div class="display-title">
+            <po-input class="conf-select grow" name="poDriverPath" [p-tooltip]="ttp_driverPath" [(ngModel)]="database.driverPath" [p-disabled]="true" p-required="true"></po-input>
+            <po-button
+              (p-click)="getDriverFolder()"
+              p-icon="po-icon-folder"
+              p-size="medium"
+              [p-disabled]="(database.brand != _CNST_DATABASE_OTHER)"
+            />
+          </div>
+        </div>
       </div>
-      <ng-template [ngIf]="(database.type != 'Outro')">
+      
+      <!-- Formulário do banco de dados (apenas disponível se o banco de dados não for "Outro" -->
+      <ng-template [ngIf]="(database.brand != _CNST_DATABASE_OTHER)">
         <div class="po-row">
-          <po-select 
-          name="po_databaseIpType"
-          class="form-control po-md-3 po-lg-3"
-          [p-label]="lbl_ipType"
-          [p-tooltip]="ttp_hostType"
-          [(ngModel)]="database.ipType"
-          [p-options]="_CNST_DATABASE_IPTYPES"
-          (p-change)="updateIpRegexPattern()"
-          p-required="true">
-        </po-select>
+          
+          <!-- Tipo de host do banco de dados (Ipv4, Ipv6, Hostname) -->
+          <po-select
+            name="po_databaseIpType"
+            class="form-control po-md-3 po-lg-3"
+            [p-label]="lbl_ipType"
+            [p-tooltip]="ttp_hostType"
+            [(ngModel)]="database.ipType"
+            [p-options]="_CNST_DATABASE_IPTYPES"
+            (p-change)="updateIpRegexPattern()"
+            p-required="true">
+          </po-select>
+          
+          <!-- Endereço IP do banco de dados -->
           <po-input
             name="po_ip"
             class="form-control po-md-3 po-lg-3"
             [p-label]="lbl_ip"
             [p-tooltip]="ttp_hostName"
             [(ngModel)]="database.ip"
-            (p-change)="updateConnectionString()"
+            (p-change-model)="updateConnectionString()"
             p-required="true"
-            [p-pattern]="regexPattern">
+            [p-pattern]="regexPattern"
+            [p-disabled]="(database.ipType == null || database.type == null)">
           </po-input>
-          <po-input
+          
+          <!-- Porta do banco de dados -->
+          <po-number
             name="po_port"
             class="form-control po-md-3 po-lg-3"
             [p-label]="lbl_port"
             [p-tooltip]="ttp_port"
             [(ngModel)]="database.port"
-            (p-change)="updateConnectionString()"
             p-required="true"
-            [p-pattern]="_CNST_DATABASE_PORT_REGEX">
-          </po-input>
+            [p-pattern]="CNST_DATABASE_PORT_REGEX"
+            [p-min]="_CNST_DATABASE_PORT_MINIMUM"
+            [p-max]="_CNST_DATABASE_PORT_MAXIMUM"
+            p-maxlength=5
+            p-regex="99999"
+            [p-disabled]="(database.type == null)"
+            (p-change-model)="updateConnectionString()">
+          </po-number>
+          
+          <!-- Nome / Serviço / SID do banco de dados -->
           <po-input
             name="po_schema"
             class="form-control po-md-3 po-lg-3"
             [p-label]="lbl_db_databaseName"
             [(ngModel)]="database.db_databaseName"
-            (p-change)="updateConnectionString()"
-            p-required="true">
+            (p-change-model)="updateConnectionString()"
+            p-required="true"
+            [p-disabled]="(database.type == null)">
           </po-input>
         </div>
       </ng-template>
-      <ng-template [ngIf]="(database.type === 'SQL_Server (2012)')">
+      
+      <!-- Instancia do banco de dados (apenas disponível se o banco de dados for "SQL Server" -->
+      <ng-template [ngIf]="(database.brand === _CNST_DATABASE_BRAND_SQLSERVER)">
         <div class="po-row">
           <po-input
             name="po_instance"
             class="form-control po-md-12 po-lg-12"
             [p-label]="lbl_instance"
             [(ngModel)]="database.instance"
-            (p-change)="updateConnectionString()"
+            (p-change-model)="updateConnectionString()"
             p-required="true">
           </po-input>
         </div>
       </ng-template>
+      
+      <!-- String de conexão final do banco de dados -->
       <div class="po-row">
         <po-input
           name="po_connectionString"
@@ -101,11 +137,14 @@
           [p-label]="lbl_connectionString"
           [p-tooltip]="ttp_connectionString"
           [(ngModel)]="database.connectionString"
-          [p-disabled]="(database.type != 'Outro')"
+          [p-disabled]="(database.brand != _CNST_DATABASE_OTHER)"
           p-required="true">
         </po-input>
       </div>
+      
       <div class="po-row vertical-align">
+        
+        <!-- Usuário do banco de dados -->
         <po-input
           name="po_username"
           class="form-control po-md-4 po-lg-4"
@@ -114,6 +153,8 @@
           p-required="true"
           p-icon="po-icon-user">
         </po-input>
+        
+        <!-- Senha do banco de dados -->
         <po-password
           name="po_password"
           class="form-control po-md-4 po-lg-4"
@@ -122,7 +163,9 @@
           [p-disabled]="(database.id != null)"
           p-required="true">
         </po-password>
-        <po-button class="po-sm-4 po-md-4 po-lg-4 po-xl-4 padding-button"
+        
+        <!-- Testar conexão com o banco de dados -->
+        <po-button class="po-sm-4 po-md-4 po-lg-4 po-xl-4 padding-bottom"
           (p-click)="testDatabaseConnection().subscribe()"
           [p-label]="lbl_testConnection"
           p-small="false"
@@ -132,14 +175,16 @@
                       || (database.port === null)
                       || (database.schema === null)
                       || (database.username === null)
-                      || (database.password === null))"
-        >
+                      || (database.password === null))">
         </po-button>
       </div>
+      
+      <!-- Rodapé do formulário -->
       <div class="po-row footer">
         <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_goBack" (p-click)="goBack()" />
-        <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_save" (p-click)="saveDatabase()" p-kind="primary" />
+        <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_save" (p-click)="saveDatabase()" />
       </div>
+      
     </po-container>
   </form>
 </po-page-list>

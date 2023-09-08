@@ -1,33 +1,36 @@
+/* Componentes padrões do Angular */
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { TranslationModule } from '../service/translation/translation.module';
+
+/* Componentes visuais da biblioteca Portinari.UI */
 import {
-   PoLoadingModule
-  ,PoPageModule
-  ,PoFieldModule
-  ,PoButtonModule
-  ,PoGridModule
-  ,PoModalModule
+  PoFieldModule,
+  PoPageModule,
+  PoLoadingModule,
+  PoButtonModule,
+  PoGridModule,
+  PoModalModule,
+  PoTooltipModule,
 } from '@po-ui/ng-components';
 
+/* Declaração de módulo de cadastro de agendamentos do Agent */
 import { ScheduleAddComponent } from '../schedule-add/schedule-add.component';
 
-import { PoTooltipModule } from '@po-ui/ng-components';
-
 @NgModule({
-  declarations: [ScheduleAddComponent],
+  declarations: [
+    ScheduleAddComponent
+  ],
   imports: [
-     FormsModule
-    ,CommonModule
-    ,PoTooltipModule
-    ,PoLoadingModule
-    ,PoPageModule
-    ,TranslationModule
-    ,PoFieldModule
-    ,PoButtonModule
-    ,PoGridModule
-    ,PoModalModule
+    FormsModule,
+    CommonModule,
+    PoFieldModule,
+    PoPageModule,
+    PoLoadingModule,
+    PoButtonModule,
+    PoGridModule,
+    PoModalModule,
+    PoTooltipModule
   ],
   providers: []
 })

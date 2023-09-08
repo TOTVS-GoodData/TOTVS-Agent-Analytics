@@ -1,53 +1,62 @@
 <po-page-list [p-title]="lbl_title">
   
+  <!-- Componente de animação de carregamento do Portinari.UI -->
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  
+  <!-- Botão de inclusão de novos bancos de dados no Agent -->
   <div class="po-row">
-    <po-button class="padding-button" [p-label]="lbl_add" p-icon="po-icon po-icon-plus" (p-click)="insertProject()" p-kind="primary"/>
+    <po-button
+      class="padding-bottom"
+      [p-label]="lbl_add"
+      p-icon="po-icon po-icon-plus"
+      (p-click)="addWorkspace()"
+      p-kind="primary" />
   </div>
   
-  <po-list-view p-property-title="name" [p-items]="projects" [p-actions]="setoptions">
+  <!-- Listagem dos ambientes atualmente disponíveis no Agent -->
+  <po-list-view p-property-title="name" [p-items]="workspaces" [p-actions]="setoptions" [p-literals]="setLiterals">
     <ng-template p-list-view-content-template let-item>
       <div class="po-row">
-        <po-info class="po-md-3" [p-label]="lbl_workspace" [p-value]="item.GDWorkspaceId" />
-        <po-info class="po-md-3" [p-label]="lbl_graph" [p-value]="item.GDProcessGraph" />
-        <po-info class="po-md-3" [p-label]="lbl_database" [p-value]="item.databaseName" />
-        <po-info class="po-md-3" [p-label]="lbl_contractType" [p-value]="item.contractType" />
+        <po-info class="po-md-4" [p-label]="lbl_workspace" [p-value]="item.GDWorkspaceId" />
+        <po-info class="po-md-4" [p-label]="lbl_database" [p-value]="item.databaseName" />
+        <po-info class="po-md-4" [p-label]="lbl_graph" [p-value]="item.GDProcessGraph" />
       </div>
     </ng-template>
   </po-list-view>
   
-  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
-  
-  <po-modal #modal_1
-    p-title="Preencha abaixo o produto contratado pelo cliente"
-    [p-primary-action]="modal_1_confirm"
-    [p-secondary-action]="modal_1_close"
-    p-size="auto"
-    p-hide-close="true"
-    p-click-out="true">
-    <form #projectForm="ngForm">
-      <po-select
-        class="form-control po-md-6"
-        name="po_contractType"
-        [(ngModel)]="contractType"
-        p-label="Modalidade de Contratação"
-        [p-options]="_CNST_MODALIDADE_CONTRATACAO"
-        p-required="true">
-      </po-select>
-      <po-input name="po_contractCode" class="form-control po-md-6" p-label="Código T do Cliente" p-required="true" [(ngModel)]="contractCode" ></po-input>
+  <!-- Modal de verificação do produto contratado pelo cliente -->
+  <po-modal #modal_checkContractProducts
+    [p-title]="lbl_checkContractProductsTitle">
+    <form #contractForm="ngForm">
+      <div class="po-row">
+        <span class="subtitle">{{ lbl_checkContractProductsDescription1 }}</span>
+      </div>
+      <div class="po-row padding-bottom">
+        <span class="subtitle">{{ lbl_checkContractProductsDescription2 }}</span>
+      </div>
+      <div class="po-row">
+        <po-input
+          name="po_contractToken"
+          class="form-control po-md-12"
+          [p-label]="lbl_contractToken"
+          p-required="true"
+          [(ngModel)]="contractToken"
+          (keydown.enter)="enterPassword($event)" />
+      </div>
     </form>
     <po-modal-footer>
-      <po-button p-label="Fechar" (p-click)="modal_1_close()"></po-button>
-      <po-button p-label="Confirmar" (p-click)="modal_1_confirm()" p-kind="primary" [p-disabled]="!projectForm.valid"></po-button>
+      <po-button [p-label]="lbl_goBack" (p-click)="checkContractProducts_NO()"></po-button>
+      <po-button [p-label]="lbl_confirm" (p-click)="checkContractProducts_YES()" p-kind="primary" [p-disabled]="!contractForm.valid"></po-button>
     </po-modal-footer>
   </po-modal>
   
-  <po-modal #modal_2
-    [p-title]="lbl_deleteConfirmation"
-    [p-primary-action]="modal_2_confirm"
-    [p-secondary-action]="modal_2_close">
+  <!-- Modal de confirmação de exclusão de um ambiente do Agent -->
+  <po-modal #modal_deleteWorkspace
+    [p-title]="lbl_deleteWorkspaceTitle">
     <po-modal-footer>
-        <po-button [p-label]="lbl_goBack" (p-click)="modal_2_close()"></po-button>
-        <po-button [p-label]="lbl_confirm" (p-click)="modal_2_confirm().subscribe()" p-kind="primary"></po-button>
+      <po-button [p-label]="lbl_goBack" (p-click)="deleteWorkspace_NO()"></po-button>
+      <po-button [p-label]="lbl_confirm" (p-click)="deleteWorkspace_YES().subscribe()" p-kind="primary"></po-button>
     </po-modal-footer>
-  </po-modal> 
+  </po-modal>
+  
 </po-page-list>

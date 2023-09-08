@@ -1,7 +1,12 @@
 <po-page-list [p-title]="lbl_title">
+  
+  <!-- Componente de animação de carregamento do Portinari.UI -->
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  
   <form #scheduleForm="ngForm">
     <div class="form-group po-row">
+      
+      <!-- Nome do agendamento a ser configurado -->
       <po-input
           class="form-control po-sm-6 po-md-6 po-lg-6 po-xl-6"
           name="po_name"
@@ -9,6 +14,8 @@
           [p-label]="lbl_name"
           p-required="true">
       </po-input>
+      
+      <!-- Ambientes disponíveis -->
       <po-select
           class="form-control po-sm-6 po-md-6 po-lg-6 po-xl-6"
           name="po_workspaceId"
@@ -21,6 +28,8 @@
     </div>
     
     <div class="form-group po-row vertical-align">
+      
+      <!-- Janelas de execução do agendamento -->
       <po-multiselect
         class="form-control po-md-6 po-lg-6"
         name="po_execution_windows"
@@ -32,8 +41,10 @@
         p-hide-select-all="true"
         p-sort="true">
       </po-multiselect>
+      
+      <!-- Agendamento habilitado? (sim / não) -->
       <po-checkbox
-        class="form-control vertical-align po-md-6 po-lg-6"
+        class="form-control vertical-align po-md-6 po-lg-6 padding-bottom"
         name="po_enabled"
         [(ngModel)]="schedule.enabled"
         [p-label]="lbl_enabled"
@@ -42,10 +53,21 @@
     </div>
     
     <div class="po-row">
-      <po-input name="filename" class="form-control po-md-6 po-lg-6" [p-tooltip]="ttp_zipFilename" [p-label]="lbl_GDZipFilename" p-required="true" [(ngModel)]="schedule.GDZipFilename"></po-input>
+      
+      <!-- Nome do arquivo de upload do agendamento -->
+      <po-input
+        name="filename"
+        class="form-control po-md-6 po-lg-6"
+        [p-tooltip]="ttp_zipFilename"
+        [p-label]="lbl_GDZipFilename"
+        p-required="true"
+        [(ngModel)]="schedule.GDZipFilename">
+      </po-input>
+      
+      <!-- Extensão do arquivo de upload do agendamento -->
       <po-select
         class="form-control po-md-6 po-lg-6"
-        name="extension"
+        name="po_extension"
         [(ngModel)]="schedule.GDZipExtension"
         [p-label]="lbl_GDZipExtension"
         [p-options]="_CNST_EXTENSION"
@@ -54,6 +76,8 @@
     </div>
     
     <div class="po-row vertical-align conf-row">
+      
+      <!-- Diretório local para upload -->
       <div class="po-md-6 po-lg-6 flex footer">
         <po-label [p-label]="lbl_fileFolder" [p-field]="true" />
         <po-input class="conf-select grow" name="po_fileFolder" [p-tooltip]="ttp_fileFolder" [(ngModel)]="schedule.fileFolder" [p-disabled]="true"></po-input>
@@ -64,47 +88,70 @@
           p-size="medium"
         />
       </div>
+      
+      <!-- Formatos válidos dos arquivos p/ upload -->
       <div class="po-md-6 po-lg-6 flex footer">
         <po-label [p-label]="lbl_fileFolderWildcard" [p-field]="true" />
         <po-input class="grow" [p-disabled]="!isPlatform" [p-tooltip]="ttp_fileWildcard" name="po_fileFolderWildcard" [(ngModel)]="schedule.fileFolderWildcard"></po-input>
       </div>
     </div>
     
+    <!-- Título / Descrição do grid de parâmetros SQL -->
     <div class="po-row">
-      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ 'SCHEDULES.TABLE.SQL_PARAMETERS.TITLE' | translateExtended | async }}</span>
-      <span class="subtitle po-sm-11 po-md-11 po-lg-11 po-xl-11">{{ 'SCHEDULES.TABLE.SQL_PARAMETERS.DESCRIPTION' | translateExtended | async }}</span>
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ lbl_SQLTableTitle }}</span>
+      <span class="subtitle po-sm-11 po-md-11 po-lg-11 po-xl-11">{{ lbl_SQLTableDescription }}</span>
     </div>
     
-    <div class="po-row padding-button">
-      <po-button class="po-button removeBorder padding-0" [p-disabled]="!isPlatform" p-size="medium" [p-label]="lbl_newParameter" (p-click)="onBeforeInsertSQL()" p-kind="primary" />
+    <!-- Botão de inclusão de novos parâmetros SQL -->
+    <div class="po-row padding-bottom">
+      <po-button
+        class="po-button removeBorder padding-0"
+        [p-disabled]="!isPlatform"
+        p-size="medium"
+        [p-label]="lbl_newParameter"
+        (p-click)="onBeforeInsertSQL()"
+        p-kind="primary" />
     </div>
     
-    <po-grid #po_grid_sql
+    <!-- Grid contendo todos os parâmetros SQL configurados para o agendamento -->
+    <po-grid
       class="form-control"
       [p-data]="schedule.SQLParameters"
       [p-columns]="po_grid_config_sql"
       [p-row-actions]="po_gridActionsSQL">
     </po-grid>
     
+    <!-- Título / Descrição do grid de parâmetros ETL -->
     <div class="po-row grid-title">
-      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ 'SCHEDULES.TABLE.ETL_PARAMETERS.TITLE' | translateExtended | async }}</span>
-      <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ 'SCHEDULES.TABLE.ETL_PARAMETERS.DESCRIPTION' | translateExtended | async }}</span>
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ lbl_ETLTableTitle }}</span>
+      <span class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">{{ lbl_ETLTableDescription }}</span>
     </div>
     
-    <div class="po-row padding-button">
-      <po-button class="po-button removeBorder padding-0" [p-disabled]="!isPlatform" p-size="medium" [p-disabled]="" [p-label]="lbl_newParameter" (p-click)="onBeforeInsertETL()" p-kind="primary" />
+    <!-- Botão de inclusão de novos parâmetros ETL -->
+    <div class="po-row padding-bottom">
+      <po-button
+        class="po-button removeBorder padding-0"
+        [p-disabled]="!isPlatform"
+        p-size="medium"
+        [p-disabled]=""
+        [p-label]="lbl_newParameter"
+        (p-click)="onBeforeInsertETL()"
+        p-kind="primary" />
     </div>
     
-    <po-grid #po_grid_etl
+    <!-- Grid contendo todos os parâmetros ETL configurados para o agendamento -->
+    <po-grid
       class="form-control"
       [p-data]="schedule.ETLParameters"
       [p-columns]="po_grid_config_etl"
       [p-row-actions]="po_gridActionsETL">
     </po-grid>
     
+    <!-- Rodapé do formulário -->
     <div class="po-row footer">
       <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_goBack" (p-click)="goToSchedules()" />
       <po-button class="po-button removeBorder padding-0" p-size="medium" [p-label]="lbl_save" (p-click)="saveSchedule()" p-kind="primary" />
     </div>
+    
   </form>
 </po-page-list>

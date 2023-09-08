@@ -1,21 +1,36 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { ElectronService } from 'ngx-electronyzer';
+/* Componentes padrões do Angular */
+import { Component, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { PoMenuItem, PoModalComponent } from '@po-ui/ng-components';
+/* Componentes visuais da biblioteca Portinari.UI */
+import {
+  PoMenuItem,
+  PoModalComponent
+} from '@po-ui/ng-components';
 
+/* Componentes de utilitários do Agent */
 import { Utilities } from './utilities/utilities';
-import { CNST_LOGLEVEL, CNST_PROGRAM_NAME, CNST_PROGRAM_VERSION } from './utilities/constants-angular';
+import { CNST_LOGLEVEL } from './utilities/utilities-constants';
 
-import { ScheduleService } from './schedule/schedule-service';
+/* Serviço de comunicação com o Electron */
+import { ElectronService } from 'ngx-electronyzer';
+
+/* Serviço de configuração do Agent */
 import { ConfigurationService } from './configuration/configuration-service';
-import { Configuration, Schedule } from './utilities/interfaces';
+import { Configuration } from './configuration/configuration-interface';
 
-import { TranslateService } from '@ngx-translate/core';
-import { TranslationService, TranslationInput } from './service/translation/translation-service';
-import { MenuService } from './service/menu-service';
+/* Serviço de tradução do Agent */
+import { TranslationService } from './services/translation/translation-service';
+import { TranslationInput } from './services/translation/translation-interface';
 
-import { map, switchMap, filter } from 'rxjs/operators';
+/* Serviço compartilhado de comunicação com o menu principal do Agent */
+import { MenuService } from './services/menu-service';
+
+/* Componentes rxjs para controle de Promise / Observable */
+import { switchMap } from 'rxjs/operators';
+
+/* Constantes do Agent */
+import { CNST_PROGRAM_NAME, CNST_PROGRAM_VERSION } from './app-constants';
 
 @Component({
   selector: 'app-root',
@@ -23,98 +38,140 @@ import { map, switchMap, filter } from 'rxjs/operators';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  @ViewChild('modal_1') modal_1: PoModalComponent;
   
-  private version: string = '';
-  private programName: string = '';
-  public menus: PoMenuItem[] = [];
+  /**************************/
+  /***     VARIÁVEIS      ***/
+  /**************************/
+  /********* Gerais *********/
+  private version: string = null;
+  private programName: string = null;
+  protected menus: PoMenuItem[] = [];
   
-  protected lbl_exitConfirmation: string;
-  protected lbl_confirm: string;
-  protected lbl_goBack: string;
+  /********* Modal **********/
+  @ViewChild('modal_closeAgentInterface') modal_closeAgentInterface: PoModalComponent = null;
+  protected lbl_closeAgentInterfaceTitle: string = null;
+  protected lbl_confirm: string = null;
+  protected lbl_goBack: string = null;
   
+  @ViewChild('modal_updateAgent') modal_updateAgent: PoModalComponent = null;
+  protected lbl_updateAgentTitle: string = null;
+  protected lbl_updateAgentDescription: string = null;
+  protected lbl_updateNow: string = null;
+  protected lbl_updateLater: string = null;
+  
+  /**************************/
+  /*** MÉTODOS DO MÓDULO  ***/
+  /**************************/
   constructor(
     private _electronService: ElectronService,
-    private _scheduleService: ScheduleService,
     private _translateService: TranslationService,
     private _configurationService: ConfigurationService,
     private _menuService: MenuService,
-    private _router: Router,
-    private _utilities: Utilities
+    private _utilities: Utilities,
+    private _changeDetectorService: ChangeDetectorRef,
+    private _router: Router
   ) {
+    //Configurações padrões do Agent
     this.programName = CNST_PROGRAM_NAME.SIMPLE;
-    this._translateService.setDefaultLang('en-US');
-    this._configurationService.getConfiguration(true).subscribe((conf: Configuration) => {
-      this._translateService.use(conf.locale);
-      if (this._electronService.isElectronApp) {
-        this._electronService.ipcRenderer.send('deleteOldLogs');
-        this.version = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getVersion').version;
-        if (conf.javaTmpDir == null) {
-          conf.javaTmpDir = this._electronService.ipcRenderer.sendSync('getTmpPath');
-          this._configurationService.saveConfiguration(conf).subscribe();
-        }
-      } else {
-        this.version = CNST_PROGRAM_VERSION.DEVELOPMENT;
-      }
-    });
+    this._translateService.init().subscribe();
     
-    this.setMenuTranslations();
-    this._menuService.menuRefObs$.subscribe(() => {
-      this.setMenuTranslations();
+    //Carrega as configurações atuais do Agent, caso existam
+    this._configurationService.getConfiguration(true).subscribe((conf: Configuration) => {
+      this._translateService.use(conf.locale).subscribe((b: boolean) => {
+        if (this._electronService.isElectronApp) {
+          
+          //Evento de abertura do modal de atualização do Agent (Disparado pelo Electron)
+          this._electronService.ipcRenderer.on('update-downloaded', () => {
+            this.modal_updateAgent.open();
+            this._changeDetectorService.detectChanges();
+          });
+          
+          //Solicita ao Electron a versão atual do Agent
+          this.version = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getAgentVersion').version;
+          
+          //Solicita ao Electron apagar os arquivos de log antigos
+          this._electronService.ipcRenderer.send('deleteOldLogs');
+          
+          //Define o valor padrão do diretório temporário do Java
+          if (conf.javaTmpDir == null) {
+            conf.javaTmpDir = this._electronService.ipcRenderer.sendSync('getTmpPath');
+            this._configurationService.saveConfiguration(conf).subscribe();
+          }
+        } else {
+          this.version = CNST_PROGRAM_VERSION.DEVELOPMENT;
+        }
+        
+        //Traduz os textos do menu principal do Agent, e vincula o serviço de comunicação do menu
+        this.setMenuTranslations();
+        this._menuService.menuRefObs$.subscribe(() => {
+          this.setMenuTranslations();
+        });
+      });
     });
   }
   
+  /* Método de tradução dos textos do menu principal do Agent */
   public setMenuTranslations(): void {
-    this._translateService.getTranslations([
-      new TranslationInput('MENU.WORKSPACES', []),
-      new TranslationInput('MENU.DATABASES', []),
-      new TranslationInput('MENU.SCHEDULES', []),
-      new TranslationInput('MENU.QUERIES', []),
-      new TranslationInput('MENU.SCRIPTS', []),
-      new TranslationInput('MENU.MONITOR', []),
-      new TranslationInput('MENU.CONFIGURATION', []),
-      new TranslationInput('MENU.EXIT', []),
-      new TranslationInput('ANGULAR.SYSTEM_EXIT', []),
-      new TranslationInput('BUTTONS.CONFIRM', []),
-      new TranslationInput('BUTTONS.GO_BACK', [])
-    ]).subscribe((translations: any) => {
-      this.menus = [
-        { label: translations['MENU.WORKSPACES'], link: './workspace', icon: 'po-icon-chart-columns' },
-        { label: translations['MENU.DATABASES'], link: './database', icon: 'po-icon-database' },
-        { label: translations['MENU.SCHEDULES'], link: './schedule', icon: 'po-icon-clock' },
-        { label: translations['MENU.QUERIES'], link: './query', icon: 'po-icon-filter' },
-        { label: translations['MENU.SCRIPTS'], link: './script', icon: 'po-icon-filter' },
-        { label: translations['MENU.MONITOR'], link: './monitor', icon: 'po-icon-device-desktop' },
-        { label: translations['MENU.CONFIGURATION'], link: './configuration', icon: 'po-icon-settings' },
-        { label: translations['MENU.EXIT'], icon: 'po-icon-exit', action: this.exitModal.bind(this) }
-      ];
-      
-      this.lbl_exitConfirmation = translations['ANGULAR.SYSTEM_EXIT'];
-      this.lbl_confirm = translations['BUTTONS.CONFIRM'];
-      this.lbl_goBack = translations['BUTTONS.GO_BACK'];
-    });
-  }
-  
-  private exitModal(): void {
-    this.modal_1.open();
-  }
-  
-  protected goBack(): void {
-    this.modal_1.close();
-  }
-  
-  public exit(): void {
-    this._translateService.getTranslations([
-      new TranslationInput('ANGULAR.SYSTEM_FINISH_USER', []),
-      new TranslationInput('ANGULAR.SYSTEM_FINISH_USER_WARNING', [])
-    ]).subscribe((translations: any) => {
-      this.modal_1.close();
-      if (this._electronService.isElectronApp) {
-        this._utilities.writeToLog(CNST_LOGLEVEL.INFO, translations['ANGULAR.SYSTEM_FINISH_USER']);
-        this._electronService.ipcRenderer.send('exit');
-      } else {
-        this._utilities.createNotification(CNST_LOGLEVEL.WARN, translations['ANGULAR.SYSTEM_FINISH_USER_WARNING']);
+    
+    //Tradução do menu principal
+    this.menus = [
+        { label: this._translateService.CNST_TRANSLATIONS['MENU.WORKSPACES'], icon: 'po-icon-chart-columns', link: './workspace'
+      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.DATABASES'], icon: 'po-icon-database', link: './database'
+      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.SCHEDULES'], icon: 'po-icon-clock', link: './schedule'
+      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.QUERIES'], icon: 'po-icon-filter', link: './query'
+      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.SCRIPTS'], icon: 'po-icon-filter', link: './script'
+      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.MONITOR'], icon: 'po-icon-device-desktop', link: './monitor'
+      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.CONFIGURATION'], icon: 'po-icon-settings', link: './configuration'
+      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.EXIT'],
+        icon: 'po-icon-exit',
+        action: () => {
+          this.modal_closeAgentInterface.open();
+        }
       }
-    });
+    ];
+    
+    //Tradução dos modais do menu (Título / botões)
+    this.lbl_closeAgentInterfaceTitle = this._translateService.CNST_TRANSLATIONS['ANGULAR.SYSTEM_EXIT'];
+    this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
+    this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
+    
+    //Tradução do modal de atualização
+    this.lbl_updateAgentTitle = this._translateService.CNST_TRANSLATIONS['ELECTRON.UPDATE_READY_TITLE'];
+    this.lbl_updateAgentDescription = this._translateService.CNST_TRANSLATIONS['ELECTRON.UPDATE_READY_DESCRIPTION'];
+    this.lbl_updateNow = this._translateService.CNST_TRANSLATIONS['BUTTONS.UPDATE_NOW'];
+    this.lbl_updateLater = this._translateService.CNST_TRANSLATIONS['BUTTONS.UPDATE_LATER'];
+  }
+  
+  /**************************/
+  /*** MÉTODOS DOS MODAIS ***/
+  /**************************/
+  /* Modal de fechamento da interface do Agent (NAO) */
+  protected closeAgentInterface_NO(): void {
+    this.modal_closeAgentInterface.close();
+  }
+  
+  /* Modal de fechamento da interface do Agent (SIM) */
+  protected closeAgentInterface_YES(): void {
+    if (this._electronService.isElectronApp) {
+      this._utilities.writeToLog(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['ANGULAR.SYSTEM_FINISH_USER']);
+      this._electronService.ipcRenderer.send('exit');
+    } else {
+      this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['ANGULAR.SYSTEM_FINISH_USER_WARNING']);
+    }
+    
+    this.modal_closeAgentInterface.close();
+  }
+  
+  /* Modal de atualização do Agent (AGORA) */
+  protected updateAgent_NOW(): void {
+    this.modal_updateAgent.close();
+    if (this._electronService.isElectronApp) {
+      this._electronService.ipcRenderer.send('updateAgentNow');
+    }
+  }
+  
+  /* Modal de atualização do Agent (DEPOIS) */
+  protected updateAgent_LATER(): void {
+    this.modal_updateAgent.close();
   }
 }

@@ -1,75 +1,107 @@
+/* Componentes padrões do Angular */
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
+/* Serviço de comunicação com o Electron */
 import { ElectronService } from 'ngx-electronyzer';
 
-import { Configuration } from '../utilities/interfaces';
-import * as _constants from '../utilities/constants-angular';
+/* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
+import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
 
-import { TranslationService, TranslationInput } from '../service/translation/translation-service';
+/* Serviço de tradução do Agent */
+import { TranslationService } from '../services/translation/translation-service';
+import { TranslationInput } from '../services/translation/translation-interface';
 
-import { map, switchMap } from 'rxjs/operators';
+/* Serviço compartilhado de comunicação com o menu principal do Agent */
+import { MenuService } from '../services/menu-service';
+
+/* Componentes rxjs para controle de Promise / Observable */
 import { Observable, of, catchError } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+
+//Interface de configuração do Agent
+import { Configuration } from './configuration-interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConfigurationService {
+  /**************************/
+  /***     VARIÁVEIS      ***/
+  /**************************/
+  /********* Gerais *********/
+  //Comunicação http com a API de testes (Angular).
   private _http: HttpClient;
   
+  /**************************/
+  /*** MÉTODOS DO SERVIÇO ***/
+  /**************************/
   constructor(
     private http: HttpClient,
     private _electronService: ElectronService,
+    private _utilities: Utilities,
     private _translateService: TranslationService,
-    private _utilities: Utilities
+    private _menuService: MenuService
   ) {
     this._http = http;
   }
   
-  public getConfiguration(showLogs: boolean): Observable<Configuration> {
-    return this._translateService.getTranslations([
-      new TranslationInput('CONFIGURATION.MESSAGES.LOADING', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.LOADING_OK', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.LOADING_ERROR', [])
-    ]).pipe(switchMap((translations: any) => {
-      if (showLogs) this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['CONFIGURATION.MESSAGES.LOADING']);
-      if (this._electronService.isElectronApp) {
-        return of(this._electronService.ipcRenderer.sendSync('getConfiguration', showLogs));
-      } else {
-        return this._http.get<Configuration>(this._utilities.getLocalhostURL() + '/configuration').pipe(
-        map((configuration: Configuration) => {
-          if (showLogs) this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['CONFIGURATION.MESSAGES.LOADING_OK']);
-          this._utilities.debugMode = configuration.debug;
-          return configuration;
-        }), catchError((err: any) => {
-          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['CONFIGURATION.MESSAGES.LOADING_ERROR'], err);
-          throw err;
-        }));
-      }
-    }));
+  /* Método de consulta das configuraçãoes salvas do Agent */
+  public getConfiguration(writeLogs: boolean): Observable<Configuration> {
+    
+    //Redirecionamento da requisição p/ Electron (caso disponível)
+    if (this._electronService.isElectronApp) {
+      return of(this._electronService.ipcRenderer.sendSync('getConfiguration', writeLogs));
+    } else {
+      
+      //Escrita de logs (caso solicitado)
+      if (writeLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING']);
+      
+      //Consulta da API de testes do Angular
+      return this._http.get<Configuration>(this._utilities.getLocalhostURL() + '/configuration').pipe(
+      map((configuration: Configuration) => {
+        
+        //Escrita de logs (caso solicitado)
+        if (writeLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK']);
+        
+        this._utilities.debugMode = configuration.debug;
+        return configuration;
+      }), catchError((err: any) => {
+        this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_ERROR'], err);
+        throw err;
+      }));
+    }
   }
   
+  /* Método de gravação das configurações do Agent */
   public saveConfiguration(conf: Configuration): Observable<boolean> {
-    return this._translateService.getTranslations([
-      new TranslationInput('CONFIGURATION.MESSAGES.SAVE', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.SAVE_OK', []),
-      new TranslationInput('CONFIGURATION.MESSAGES.SAVE_ERROR', [])
-    ]).pipe(switchMap((translations: any) => {
-      this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['CONFIGURATION.MESSAGES.SAVE']);
-      if (this._electronService.isElectronApp) {
-        return of(this._electronService.ipcRenderer.sendSync('saveConfiguration', conf));
-      } else {
-        return this._http.put(this._utilities.getLocalhostURL() + '/configuration', conf).pipe(
-        map(() => {
-          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['CONFIGURATION.MESSAGES.SAVE_OK']);
-          this._utilities.debugMode = conf.debug;
-          return true;
-        }), catchError((err: any) => {
-          this._utilities.writeToLog(_constants.CNST_LOGLEVEL.ERROR, translations['CONFIGURATION.MESSAGES.SAVE_ERROR'], err);
-          throw err;
+    
+    //Redirecionamento da requisição p/ Electron (caso disponível)
+    if (this._electronService.isElectronApp) {
+      return of(this._electronService.ipcRenderer.sendSync('saveConfiguration', conf)).pipe(switchMap((b: boolean) => {
+        return this._translateService.use(conf.locale).pipe(map((b: boolean) => {
+          this._menuService.updateMenu();
+          return b;
         }));
-      }
-    }));
+      }));
+    } else {
+      
+      //Consulta da API de testes do Angular
+      this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE']);
+      return this._http.put(this._utilities.getLocalhostURL() + '/configuration', conf).pipe(
+      switchMap(() => {
+        this._translateService.use(conf.locale);
+        return this._translateService.updateStandardTranslations().pipe(map((b: boolean) => {
+          this._menuService.updateMenu();
+          this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK']);
+          this._utilities.debugMode = conf.debug;
+          return b;
+        }));
+      }), catchError((err: any) => {
+        this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR'], err);
+        throw err;
+      }));
+    }
   }
 }

@@ -1,24 +1,37 @@
 <po-page-list [p-title]="lbl_title">
   
-  <div class="po-row">
-    <po-button class="padding-button" [p-label]="lbl_add" p-icon="po-icon po-icon-plus" (p-click)="newScript()" p-kind="primary"/>
-  </div>
-  
+  <!-- Componente de animação de carregamento do Portinari.UI -->
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
   
+  <!-- Botão de inclusão de novas rotinas no Agent -->
+  <div class="po-row">
+    <po-button
+      class="padding-bottom"
+      [p-label]="lbl_add"
+      p-icon="po-icon po-icon-plus"
+      (p-click)="newScript_OPEN()"
+      p-kind="primary"/>
+  </div>
+  
+  <!-- Mensagem de "Nenhum agendamento encontrado" -->
   <div class="po-sm-12 po-md-12 po-lg-12 po-xl-12 list-project list-project-empty" *ngIf="schedulesScriptTotal.length === 0">
-    <span>{{ 'SCHEDULES.NOT_FOUND' | translateExtended | async }}</span> 
+    <span>{{ 'SCRIPTS.NO_DATA' | translateExtended | async }}</span> 
   </div>
   
   <div class="po-row">
-    <po-list-view p-property-title="name" *ngIf="schedulesScript.length > 0" [p-items]="this.schedulesScript">
+    
+    <!-- Listagem de todos os agendamentos que não possuem exportação de rotina dispońivel -->
+    <po-list-view p-property-title="name" *ngIf="schedulesScript.length > 0" [p-items]="this.schedulesScript" [p-literals]="setLiterals">
       <ng-template p-list-view-content-template let-item>
         <div class="po-row">
+          
+          <!-- Tabela com todas as rotinas do agendamento -->
           <po-table
             class="table"
             [p-actions]="setTableRowActions"
-            [p-columns]="setcolumns"
+            [p-columns]="setColumns"
             [p-items]="item.scripts"
+            [p-literals]="setLiterals"
             p-hide-detail="true"
             p-hide-select-all="true"
             p-hide-columns-manager="true"
@@ -29,14 +42,18 @@
       </ng-template>
     </po-list-view>
     
-    <po-list-view p-property-title="name" *ngIf="schedulesScriptExport.length > 0" [p-items]="this.schedulesScriptExport" [p-actions]="setListViewActions">
+    <!-- Listagem de todos os agendamentos que possuem exportação de rotina dispońivel -->
+    <po-list-view p-property-title="name" *ngIf="schedulesScriptExport.length > 0" [p-items]="this.schedulesScriptExport" [p-actions]="setListViewActions" [p-literals]="setLiterals">
       <ng-template p-list-view-content-template let-item>
         <div class="po-row">
+          
+          <!-- Tabela com todas as rotinas do agendamento -->
           <po-table
             class="table"
             [p-actions]="setTableRowActions"
-            [p-columns]="setcolumns"
+            [p-columns]="setColumns"
             [p-items]="item.scripts"
+            [p-literals]="setLiterals"
             p-hide-detail="true"
             p-hide-select-all="true"
             p-hide-columns-manager="true"
@@ -48,54 +65,57 @@
     </po-list-view>
   </div>
   
-  <po-modal #modal_1
-    p-title={{modal_1_title}}
-    [p-primary-action]="modal_1_confirm"
-    [p-secondary-action]="modal_1_close">
+  <!-- Modal de cadastro de rotinas do Agent -->
+  <po-modal #modal_addScript
+    [p-title]=lbl_addScriptTitle>
     <form #queryForm="ngForm" class="po-row">
+      
+      <!-- Agendamento da rotina -->
       <po-select
         class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
         name="po_schedule"
-        [p-label]="lbl_schedule + '*'"
+        [p-label]="lbl_schedule"
         p-required="true"
         [(ngModel)]="script.scheduleId"
         [p-options]="listSchedule">
       </po-select>
       
+      <!-- Nome da rotina -->
       <po-input
         class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
         name="po_scriptName"
-        [p-label]="lbl_scriptName + '*'"
+        [p-label]="lbl_scriptName"
         p-required="true"
         [p-tooltip]="ttp_scriptName"
         [(ngModel)]="script.name">
       </po-input>
       
+      <!-- Comando SQL da rotina -->
       <po-textarea
         class="po-textarea po-sm-12 po-md-12 po-lg-12 po-xl-12 script-text removeBorder padding-0 textarea"
         name="po_scriptQuery"
-        [p-label]="lbl_scriptQuery + '*'"
+        [p-label]="lbl_scriptQuery"
         [(ngModel)]="script.script"
         p-rows="10">
       </po-textarea>
       
+      <!-- Rodapé do modal -->
       <po-modal-footer class="modal-footer">
         <div class="po-row footer">
-          <po-button [p-label]="lbl_goBack" (p-click)="modal_1_close()"></po-button>
-          <po-button [p-label]="lbl_confirm" (p-click)="modal_1_confirm()" p-kind="primary"></po-button>
+          <po-button [p-label]="lbl_goBack" (p-click)="newScript_NO()"></po-button>
+          <po-button [p-label]="lbl_confirm" (p-click)="newScript_YES()" p-kind="primary"></po-button>
         </div>
       </po-modal-footer>
     </form>
   </po-modal>
   
-  <po-modal #modal_2
-    [p-title]="lbl_deleteConfirmation"
-    [p-primary-action]="modal_2_confirm"
-    [p-secondary-action]="modal_2_close">
+  <!-- Modal de confirmação de exclusão de uma rotina do Agent -->
+  <po-modal #modal_deleteScript
+    [p-title]="lbl_deleteScriptTitle">
     <po-modal-footer class="modal-footer">
       <div class="po-row footer">
-        <po-button [p-label]="lbl_goBack" (p-click)="modal_2_close()"></po-button>
-        <po-button [p-label]="lbl_delete" (p-click)="modal_2_confirm()" p-kind="primary"></po-button>
+        <po-button [p-label]="lbl_goBack" (p-click)="deleteScript_NO()"></po-button>
+        <po-button [p-label]="lbl_delete" (p-click)="deleteScript_YES()" p-kind="primary"></po-button>
       </div>
     </po-modal-footer>
   </po-modal>

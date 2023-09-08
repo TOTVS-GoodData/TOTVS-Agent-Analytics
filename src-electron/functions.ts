@@ -1,28 +1,33 @@
+/* Algoritmo de criptografia de mensagens */
 import rc4 from 'arc4';
-import { CNST_FILE_ENCODING_INPUT, CNST_FILE_ENCODING_OUTPUT } from '../src-angular/app/utilities/constants-angular';
 
 export class Functions {
-  public static cipher: rc4.Cipher = rc4('arc4', 'rasgolkiebploisl');
   
+  /**************************/
+  /***     VARIÁVEIS      ***/
+  /**************************/
+  /********* Gerais *********/
+  //Inicialização do algoritmo de criptografia
+  private static cipher: rc4.Cipher = rc4('arc4', 'rasgolkiebploisl');
+  
+  //Codificação de entrada / saída do texto criptografado
+  private static CNST_FILE_ENCODING_INPUT: string = 'UTF-8';
+  private static CNST_FILE_ENCODING_OUTPUT: string = 'HEX';
+  
+  /**************************/
+  /*** MÉTODOS DO MÓDULO  ***/
+  /**************************/
+  /* Método de criptografia de um texto */
   public static encrypt(text: string): string {
-    return Functions.cipher.encodeString(text, CNST_FILE_ENCODING_INPUT, CNST_FILE_ENCODING_OUTPUT);
+    return Functions.cipher.encodeString(text, Functions.CNST_FILE_ENCODING_INPUT, Functions.CNST_FILE_ENCODING_OUTPUT);
   }
   
+  /* Método de descriptografia de um texto */
   public static decrypt(text: string): string {
-    return Functions.cipher.decodeString(text, CNST_FILE_ENCODING_OUTPUT, CNST_FILE_ENCODING_INPUT);
+    return Functions.cipher.decodeString(text, Functions.CNST_FILE_ENCODING_OUTPUT, Functions.CNST_FILE_ENCODING_INPUT);
   }
   
-  public static convertDate(dateTime, special): any {
-    function pad( s ) { return ( s < 10 ) ? '0' + s : s; }
-    const d = new Date( dateTime );
-  
-    if ( special ) {
-      return [ pad( d.getDate() ), pad( d.getMonth() + 1 ), d.getFullYear() ].join( '/' ) + ' ' + [ pad( d.getHours() ), pad( d.getMinutes() ) ].join( ':' );
-    } else {
-      return [ d.getFullYear() , pad( d.getMonth() + 1 ), pad( d.getDate() ) ].join( '' ) + 'T' + [ pad( d.getHours() ) , pad( d.getMinutes() ), pad ( d.getSeconds() ) ].join( '' );
-    }
-  }
-  
+  /* Método que formata um objeto de data do Javascript para a mesma máscara utilizada pela função de log do Agent */
   public static formatDate(date: Date): string {
     let year: any = date.getFullYear();
     let month: any = date.getMonth() + 1;
@@ -40,6 +45,7 @@ export class Functions {
     return year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
   }
   
+  /* Método que verifica se um número está entre um range */
   public static between(x: number, min: number, max: number): boolean {
     return ((x >= min) && (x <= max));
   }

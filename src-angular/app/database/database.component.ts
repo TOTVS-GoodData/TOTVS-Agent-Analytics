@@ -1,20 +1,30 @@
+/* Componentes padrões do Angular */
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { ElectronService } from 'ngx-electronyzer';
-
+/* Componentes visuais da biblioteca Portinari.UI */
 import {
-   PoModalComponent
-  ,PoListViewAction
+  PoModalComponent,
+  PoListViewAction,
+  PoListViewLiterals
 } from '@po-ui/ng-components';
 
-import { WorkspaceService } from '../workspace/workspace-service';
-import { DatabaseService } from './database-service';
-import * as _constants from '../utilities/constants-angular';
-import { Database, Workspace } from '../utilities/interfaces';
+/* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
+import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
 
-import { TranslationService, TranslationInput } from '../service/translation/translation-service';
+/* Serviço de ambientes do Agent */
+import { WorkspaceService } from '../workspace/workspace-service';
+import { Workspace } from '../workspace/workspace-interface';
+
+/* Serviço de banco de dados do Agent */
+import { DatabaseService } from './database-service';
+import { Database } from './database-interface';
+import { CNST_DATABASE_OTHER } from './database-constants';
+
+/* Serviço de tradução do Agent */
+import { TranslationService } from '../services/translation/translation-service';
+import { TranslationInput } from '../services/translation/translation-interface';
 
 @Component({
   selector: 'app-database',
@@ -24,22 +34,48 @@ import { TranslationService, TranslationInput } from '../service/translation/tra
 
 export class DataBaseComponent implements OnInit {
   
-  @ViewChild(PoModalComponent) modal_1: PoModalComponent;
+  /**************************/
+  /***     VARIÁVEIS      ***/
+  /**************************/
+  /********* Gerais *********/
+  //Título da página
+  protected lbl_title: string = null;
   
-  public CNST_MESSAGES: any = {};
+  //Botão de inclusão de novos bancos
+  protected lbl_add: string = null;
   
-  private databaseToDelete: Database;
-  protected databases: Database[];
+  //Listagem de todos os bancos de dados configurados no Agent
+  protected databases: Database[] = [];
+  
+  //Banco de dados selecionado p/ remoção
+  private databaseToDelete: Database = null;
+  
+  /****** Portinari.UI ******/
+  //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
   
+  //Títulos dos campos da listagem
+  private lbl_type: string = null;
+  private lbl_ip: string = null;
+  private lbl_port: string = null;
+  private lbl_db_databaseName: string = null;
+  private lbl_connectionString: string = null;
+  
+  //Menu de ações disponíveis dos bancos de dados
   protected setoptions: Array<PoListViewAction> = [];
   
-  protected lbl_add: string;
-  protected lbl_title: string;
-  protected lbl_deleteConfirmation: string;
-  protected lbl_goBack: string;
-  protected lbl_confirm: string;
+  //Mensagens padrões da listagem de banco de dados
+  protected setLiterals: PoListViewLiterals = null;
   
+  /********* Modal **********/
+  @ViewChild('modal_deleteDatabase') modal_deleteDatabase: PoModalComponent = null;
+  protected lbl_deleteDatabaseTitle: string = null;
+  protected lbl_goBack: string = null;
+  protected lbl_confirm: string = null;
+  
+  /**************************/
+  /*** MÉTODOS DO MÓDULO  ***/
+  /**************************/
   constructor(
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
@@ -47,101 +83,120 @@ export class DataBaseComponent implements OnInit {
     private _utilities: Utilities,
     private _router: Router
   ) {
-    this._translateService.getTranslations([
-      new TranslationInput('DATABASES.TITLE', []),
-      new TranslationInput('DATABASES.DELETE_CONFIRMATION', []),
-      new TranslationInput('BUTTONS.ADD', []),
-      new TranslationInput('BUTTONS.EDIT', []),
-      new TranslationInput('BUTTONS.DELETE', []),
-      new TranslationInput('BUTTONS.GO_BACK', []),
-      new TranslationInput('BUTTONS.CONFIRM', []),
-      new TranslationInput('DATABASES.MESSAGES.LOADING', []),
-      new TranslationInput('DATABASES.MESSAGES.LOADING_ERROR', []),
-      new TranslationInput('DATABASES.MESSAGES.DELETE_OK', []),
-      new TranslationInput('DATABASES.MESSAGES.DELETE_ERROR_WORKSPACES', [])
-    ]).subscribe((translations: any) => {
-      this.setoptions = [
-        { label: translations['BUTTONS.EDIT'],  action: this.editDatabase.bind(this) },
-        { label: translations['BUTTONS.DELETE'], action: this.deleteDatabase.bind(this) }
-      ];
+    //Tradução do menu de ações dos bancos de dados
+    this.setoptions = [
+      //Editar
+      {
+        label: this._translateService.CNST_TRANSLATIONS['BUTTONS.EDIT'],
+        action: (db: Database) => {
+          this._router.navigate(['/database-add'], { state: db })
+        }
+      //Remover
+      },{
+        label: this._translateService.CNST_TRANSLATIONS['BUTTONS.DELETE'],
+        action: (db: Database) => {
+          this.databaseToDelete = db;
+          this.modal_deleteDatabase.open();
+        }
+      }
+    ];
+    
+    //Tradução das mensagens padrões do componente de listagem do Portinari.UI
+    this.setLiterals = {
+      noData: this._translateService.CNST_TRANSLATIONS['DATABASES.NO_DATA']
+    };
+    
+    //Tradução dos títulos
+    this.lbl_title = this._translateService.CNST_TRANSLATIONS['DATABASES.TITLE'];
+    this.lbl_deleteDatabaseTitle = this._translateService.CNST_TRANSLATIONS['DATABASES.DELETE_CONFIRMATION'];
+    
+    //Tradução dos campos da listagem
+    this.lbl_type = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.TYPE'];
+    this.lbl_ip = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.HOST_NAME'];
+    this.lbl_port = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.PORT'];
+    this.lbl_db_databaseName = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.DATABASE'];
+    this.lbl_connectionString = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.CONNECTION_STRING'];
       
-      this.lbl_title = translations['DATABASES.TITLE'];
-      this.lbl_add = translations['BUTTONS.ADD'];
-      this.lbl_deleteConfirmation = translations['DATABASES.DELETE_CONFIRMATION'];
-      this.lbl_goBack = translations['BUTTONS.GO_BACK'];
-      this.lbl_confirm = translations['BUTTONS.CONFIRM'];
-      
-      this.CNST_MESSAGES = {
-        LOADING: translations['DATABASES.MESSAGES.LOADING'],
-        LOADING_ERROR: translations['DATABASES.MESSAGES.LOADING_ERROR'],
-        DELETE_OK: translations['DATABASES.MESSAGES.DELETE_OK'],
-        DELETE_ERROR_WORKSPACES: translations['DATABASES.MESSAGES.DELETE_ERROR_WORKSPACES']
-      };
-    });
+    //Tradução dos botões
+    this.lbl_add = this._translateService.CNST_TRANSLATIONS['BUTTONS.ADD'];
+    this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
+    this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
   }
   
+  /* Método de inicialização do componente */
   public ngOnInit(): void {
     this.loadDatabases();
   }
   
+  /* Método de consulta dos bancos de dados configurados no Agent */
   private loadDatabases(): void {
-    this.po_lo_text = { value: this.CNST_MESSAGES.LOADING };
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING'] };
+    
+    //Consulta dos bancos de dados cadastrados no Agent
     this._databaseService.getDatabases().subscribe((db: Database[]) => {
-      this.databases = db;
+      this.databases = db.map((db: Database) => {
+        
+        //Renomeia o tipo do banco de dados "Outro"
+        if (db.type == CNST_DATABASE_OTHER) db.type = this._translateService.CNST_TRANSLATIONS['ANGULAR.OTHER'];
+        
+        return db;
+      });
       this.po_lo_text = { value: null };
     }, (err: any) => {
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.LOADING_ERROR, err);
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_ERROR'], err);
       this.po_lo_text = { value: null };
     });
   }
   
-  private editDatabase(db: Database): void {
-    this._router.navigate(['/database-add'], { state: db });
-  }
-  
+  /* Método de redirecionamento para a página de cadastro de bancos de dados */
   protected addDatabase(): void {
     this._router.navigate(['/database-add']);
   }
   
-  private deleteDatabase(db: Database): void {
-    this.databaseToDelete = db;
-    this.modal_1.open();
+  /**************************/
+  /*** MÉTODOS DOS MODAIS ***/
+  /**************************/
+  /* Modal de remoção de um banco de dados configurado no Agent (NAO) */
+  protected deleteDatabase_NO(): void {
+    this.modal_deleteDatabase.close();
+    this.databaseToDelete = null;
   }
   
-  private deleteThisDatabase(db: Database): void {
+  /* Modal de remoção de um banco de dados configurado no Agent (SIM) */
+  protected deleteDatabase_YES(): void {
+    this.modal_deleteDatabase.close();
+    
+    //Consulta das traduções
     this._translateService.getTranslations([
       new TranslationInput('DATABASES.MESSAGES.DELETE', [this.databaseToDelete.name]),
       new TranslationInput('DATABASES.MESSAGES.DELETE_ERROR', [this.databaseToDelete.name])
     ]).subscribe((translations: any) => {
       this.po_lo_text = { value: translations['DATABASES.MESSAGES.DELETE'] };
-      this._workspaceService.getWorkspacesByDatabase(db).subscribe((w: Workspace[]) => {
+      
+      //Consulta dos ambientes de GoodData atualmente vinculados à este banco de dados
+      this._workspaceService.getWorkspacesByDatabase(this.databaseToDelete).subscribe((w: Workspace[]) => {
+        
+        //Caso exista um ambiente vinculado, o banco não pode ser apagado
         if (w.length > 0) {
-          this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.DELETE_ERROR_WORKSPACES);
+          this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.DELETE_ERROR_WORKSPACES']);
           this.po_lo_text = { value: null };
         } else {
-          this._databaseService.deleteDatabase(db).subscribe((b: boolean) => {
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.DELETE_OK);
+          
+          //Remoção do banco de dados configurado no Agent
+          this._databaseService.deleteDatabase(this.databaseToDelete).subscribe((b: boolean) => {
+            this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.DELETE_OK']);
             this.po_lo_text = { value: null };
+            this.databaseToDelete = null;
             this.loadDatabases();
           }, (err: any) => {
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.DELETE_ERROR'], err);
+            this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.DELETE_ERROR'], err);
             this.po_lo_text = { value: null };
           });
         }
       }, (err: any) => {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.DELETE_ERROR'], err);
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.DELETE_ERROR'], err);
         this.po_lo_text = { value: null };
       });
     });
-  }
-  
-  protected modal_1_confirm(): void {
-    this.modal_1.close();
-    this.deleteThisDatabase(this.databaseToDelete);
-  }
-  
-  protected modal_1_close(): void {
-    this.databaseToDelete = null;
-    this.modal_1.close();
   }
 }

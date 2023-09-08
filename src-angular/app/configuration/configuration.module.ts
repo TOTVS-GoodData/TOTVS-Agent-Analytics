@@ -1,31 +1,39 @@
+/* Componentes padrões do Angular */
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
-import { PoFieldModule } from '@po-ui/ng-components';
-import { PoPageModule, PoLoadingModule, PoButtonModule, PoButtonGroupModule } from '@po-ui/ng-components';
+/* Componentes visuais da biblioteca Portinari.UI */
+import {
+  PoFieldModule,
+  PoPageModule,
+  PoLoadingModule,
+  PoButtonModule,
+  PoButtonGroupModule,
+  PoTooltipModule
+} from '@po-ui/ng-components';
 
+/* Serviço de tradução do Agent */
+import { TranslationModule } from '../services/translation/translation.module';
+
+/* Declaração de módulo de configuração do Agent */
 import { ConfigurationComponent } from './configuration.component';
-import { TranslationModule } from '../service/translation/translation.module';
-
-import { PoTooltipModule } from '@po-ui/ng-components';
 
 @NgModule({
-    declarations: [
-        ConfigurationComponent
-    ],
-    imports: [
-        CommonModule,PoButtonGroupModule,
-        HttpClientModule,
-      PoLoadingModule,
-      PoTooltipModule,
-        FormsModule,
-      PoButtonModule,
-        PoFieldModule,
-      TranslationModule,
-        PoPageModule
-    ],
-    providers: []
+  declarations: [
+    ConfigurationComponent
+  ],
+  imports: [
+    FormsModule,
+    CommonModule,
+    TranslationModule,
+    PoFieldModule,
+    PoPageModule,
+    PoLoadingModule,
+    PoButtonModule,
+    PoButtonGroupModule,
+    PoTooltipModule
+  ],
+  providers: []
 })
 export class ConfigurationModule {}

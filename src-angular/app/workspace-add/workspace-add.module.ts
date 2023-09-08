@@ -1,48 +1,47 @@
+/* Componentes padrões do Angular */
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
-import { PoPageModule } from '@po-ui/ng-components';
-import { PoFieldModule } from '@po-ui/ng-components';
-import { PoInfoModule } from '@po-ui/ng-components';
-import { PoButtonModule } from '@po-ui/ng-components';
-import { PoListViewModule } from '@po-ui/ng-components';
-import { PoContainerModule } from '@po-ui/ng-components';
-import { PoGridModule } from '@po-ui/ng-components';
-import { PoLoadingModule } from '@po-ui/ng-components';
+/* Componentes visuais da biblioteca Portinari.UI */
+import {
+  PoFieldModule,
+  PoPageModule,
+  PoLoadingModule,
+  PoButtonModule,
+  PoContainerModule,
+  PoTooltipModule
+} from '@po-ui/ng-components';
 
+/* Declaração de módulo de cadastro de ambientes do Agent */
 import { WorkspaceAddComponent } from '../workspace-add/workspace-add.component';
-import { UserService } from '../service/user.service';
 
+/* Módulo de cadastro de bancos de dados do Agent */
 import { DataBaseAddModule } from '../database-add/database-add.module';
+
+/* Módulo de Modal customizado do Agent */
 import { ModalModule } from '../modal/modal.module';
 
-import { TranslationModule } from '../service/translation/translation.module';
-
-import { PoTooltipModule } from '@po-ui/ng-components';
+/* Módulo de tradução do Agent, importado para uso de sua Pipe no HTML do Angular */
+import { TranslationModule } from '../services/translation/translation.module';
 
 @NgModule({
-    declarations: [
-        WorkspaceAddComponent
-    ],
-    imports: [
-        CommonModule,
-        FormsModule,
-      PoLoadingModule,
-      PoGridModule,
-      PoTooltipModule,
-      PoListViewModule,
-      PoContainerModule,
-        HttpClientModule,
-        ModalModule,
-      DataBaseAddModule,
-        PoPageModule,
-      TranslationModule,
-        PoFieldModule,
-        PoInfoModule,
-        PoButtonModule
-    ],
-    providers: [UserService]
+  declarations: [
+    WorkspaceAddComponent
+  ],
+  imports: [
+    FormsModule,
+    CommonModule,
+    PoFieldModule,
+    PoPageModule,
+    PoLoadingModule,
+    PoButtonModule,
+    PoContainerModule,
+    PoTooltipModule,
+    ModalModule,
+    DataBaseAddModule,
+    TranslationModule
+  ],
+  providers: []
 })
 export class WorkspaceAddModule {}

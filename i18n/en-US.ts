@@ -8,6 +8,8 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     UPDATE_AVAILABLE: 'Update available: ${p1} --> ${p2}',
     UPDATE_NOT_AVAILABLE: 'No updates available for this version (${p1})',
     UPDATE_ERROR: 'Error - Failed to download Agent\'s update package.',
+    UPDATE_READY_TITLE: 'A new update is available!',
+    UPDATE_READY_DESCRIPTION: 'Would you like to install the updates now?',
     AUTOLAUNCH_ERROR: 'Error - Agent\'s automatic startup has failed.',
     THREAD_ERROR: 'Error - ${p1} is already being executed. This instance will exit.',
     UPDATE_DOWNLOAD: 'Downloading update: ${p1} (${p2}) -- spd: ${p3}',
@@ -30,15 +32,17 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     PROCESS_KILL_OK: 'Process [Sch: ${p1} - Exec: ${p2}] terminated successfully.',
     PROCESS_KILL_WARN: 'Warning - Process [Sch: ${p1}, Exec: ${p2}] is no longer being executed.',
     PROCESS_KILL_ERROR: 'Error - Failed to terminate process execution [Sch: ${p1}, Exec: ${p2}].',
-    JAVA_EXECUTION_START: '===Agent\'s execution start: (.*)===',
-    JAVA_EXECUTION_END: '===Agent\'s execution end: (.*)===',
-    JAVA_EXECUTION_DURATION: '===Agent\'s execution time: (.*)===',
-    JAVA_EXECUTION_CANCELLED: '===Process terminated by user\'s request==='
+    JAVA_EXECUTION_START: '===Agent execution start: (.*)===',
+    JAVA_EXECUTION_END: '===Agent execution end: (.*)===',
+    JAVA_EXECUTION_DURATION: '===Agent execution time: (.*)===',
+    JAVA_EXECUTION_CANCELLED: '===Process terminated by user request===',
+    WINDOWS_REGISTRY_ERROR: 'Windows Registry update error (autoUpdate)'
   },
   ANGULAR: {
     SYSTEM_EXIT: 'Are you sure you want to close Agent?',
     SYSTEM_FINISH_USER: '=== System shutdown request received from user (exit menu) ===',
     SYSTEM_FINISH_USER_WARNING: 'Warning - System shutdown can only be tested with Electron.',
+    ERROR: 'Error - An unexpected error has happened. Please try again.',
     OTHER: 'Other',
     NONE: 'None'
   },
@@ -57,9 +61,9 @@ export const CNST_TRANSLATIONS_EN_US: any = {
   },
   LANGUAGES: {
     TITLE: 'Application\'s language',
-    en_US: 'English',
-    pt_BR: 'Portuguese',
-    es_ES: 'Spanish'
+    "en-US": 'English',
+    "pt-BR": 'Portuguese',
+    "es-ES": 'Spanish'
   },
   CONTRACT_TYPES: {
     PLATFORM: 'GoodData platform',
@@ -86,19 +90,30 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     DELETE: 'Delete',
     CONFIRM: 'Confirm',
     GO_BACK: 'Back',
-    DETAILS: 'Detalhes',
+    DETAILS: 'Details',
     EXECUTE: 'Execute',
+    SELECT: 'Choose...',
     NEW_PARAMETER: 'New parameter',
     YES_SIMPLIFIED: 'Y',
     NO_SIMPLIFIED: 'N',
     TEST_CONNECTION: 'Test Connection',
-    LOAD_WORKSPACES: 'Load Workspaces'
+    LOAD_WORKSPACES: 'Load Workspaces',
+    NEXT_ERROR: 'Next error',
+    NO_ERRORS: 'No errors',
+    YES: 'Yes',
+    NO: 'No',
+    UPDATE_NOW: 'Yes (Will close Agent)',
+    UPDATE_LATER: 'No (On exit)'
   },
   WORKSPACES: {
     TITLE: 'Workspaces Management',
     NEW_WORKSPACE: 'New Workspace',
     EDIT_WORKSPACE: 'Edit Workspace',
     DELETE_CONFIRMATION: 'Are you sure you want to delete this workspace?',
+    NO_DATA: 'No workspaces were found',
+    CHECK_CONTRACT_PRODUCTS_TITLE: 'GoodData\'s contract verification',
+    CHECK_CONTRACT_PRODUCTS_DESCRIPTION_1: 'Enter GoodData\'s contract code.',
+    CHECK_CONTRACT_PRODUCTS_DESCRIPTION_2: 'If you don\'t know this code, please reach out to "suporte.gd@totvs.com.br".',
     SECTIONS: {
       1: '1 / 4 - Commercial information',
       2: '2 / 4 - GoodData\'s platform settings',
@@ -123,6 +138,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       PASSWORD_ENCRYPT: 'Encrypting password...'
     },
     TABLE: {
+      CONTRACT_TOKEN: 'Contract\'s code',
       CONTRACT_TYPE: 'Contract Type',
       CUSTOMER_CODE: 'Customer\'s TOTVS code',
       ERP: 'ERP',
@@ -155,11 +171,12 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     NEW_DATABASE: 'New Database',
     EDIT_DATABASE: 'Edit Database',
     DELETE_CONFIRMATION: 'Are you sure you want to delete this database?',
+    NO_DATA: 'No databases were found',
     CONNECTION_STRING: {
       IP_ADDRESS: '<IP_ADDRESS>',
       PORT: '<PORT>',
       DATABASE_NAME: '<DATABASE_NAME>',
-      SERVICE_NAME: '<SERVIÇE_NAME>',
+      SERVICE_NAME: '<SERVICE_NAME>',
       SID: '<SID>'
     },
     TABLE: {
@@ -197,15 +214,15 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       LOGIN_WARNING: 'Warning - Database connections can only be tested with Electron.',
       VALIDATE: 'Validating database...',
       ERROR_INVALID_IP: 'Error - Invalid IP address. Please check it\'s type (ipv4 / ipv6 / hostname).',
-      ERROR_INVALID_PORT: 'Error - Invalid database port. Please check if it\'s number is between the valid range (1024 - 65536).',
-      PASSWORD_ENCRYPT: 'Criptografando senhas...',
+      ERROR_INVALID_PORT: 'Error - Invalid database port. Please check if it\'s number is between the valid range (${p1} - ${p2}).',
+      PASSWORD_ENCRYPT: 'Criptografando senhas...'
     },
     TOOLTIPS: {
       DRIVER_CLASS: 'JDBC driver\'s main Java class name. This name can be found using database connection IDEs',
       DRIVER_PATH: 'JDBC driver\'s full path. This file must have the ".jar" extension',
       HOST_TYPE: 'Host type: "Ipv4": Format "255.255.255.255". "Ipv6": Format "FF:FF:...:FF". "Hostname": Name of the machine.',
       HOST_NAME: 'IP address that the database is located at.',
-      PORT: 'Choose the port\'s number that the database listens to. This number must be between 1024 and 65535.',
+      PORT: 'Choose the port\'s number that the database listens to. This number must be between ${p1} and ${p2}.',
       CONNECTION_STRING: 'Final connection string command, for database connections. This command will be used by Agent when connecting to the database.'
     }
   },
@@ -215,6 +232,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     EDIT_SCHEDULE: 'Edit Schedule',
     NOT_FOUND: 'No schedules found.',
     DELETE_CONFIRMATION: 'Are you sure you want to delete this schedule?',
+    NO_DATA: 'No schedules were found',
     TABLE: {
       NAME: 'Schedule name',
       WORKSPACE: 'Workspace',
@@ -282,6 +300,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     NEW_QUERY: 'New query',
     EDIT_QUERY: 'Edit query',
     DELETE_CONFIRMATION: 'Are you sure you want to delete this query?',
+    NO_DATA: 'No queries were found',
     TABLE: {
       SCHEDULE_NAME: 'Schedule name',
       QUERY_NAME: 'Query name',
@@ -289,7 +308,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       SQL: 'SQL command'
     },
     EXECUTION_MODES: {
-      COMPLETE: 'Complete',
+      COMPLETE: 'Full',
       MONTHLY: 'Monthly'
     },
     MESSAGES: {
@@ -324,7 +343,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     },
     TOOLTIPS: {
       QUERY_NAME: 'Query\'s name. This name will be shown by Agent\'s logfiles.',
-      MODE: 'Query\'s execution mode: "Complete" - Agent will attempt to replace schedule\'s parameters inside query\'s SQL instruction, and execute it only once. "Monthly" - Agent will generate new START_DATE / FINAL_DATE parameters that are between the schedule\'s predefined values, on a monthly basis, in order to execute the query multiple times. Example: If this schedule is set to execute for the last 3 months, Agent will execute this query 3 times, once for each month.'
+      MODE: 'Query\'s execution mode: "Full" - Agent will attempt to replace schedule\'s parameters inside query\'s SQL instruction, and execute it only once. "Monthly" - Agent will generate new START_DATE / FINAL_DATE parameters that are between the schedule\'s predefined values, on a monthly basis, in order to execute the query multiple times. Example: If this schedule is set to execute for the last 3 months, Agent will execute this query 3 times, once for each month.'
     }
   },
   SCRIPTS: {
@@ -333,6 +352,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     NEW_SCRIPT: 'New script',
     EDIT_SCRIPT: 'Edit script',
     DELETE_CONFIRMATION: 'Are you sure you want to delete this script?',
+    NO_DATA: 'No scripts were found',
     TABLE: {
       SCHEDULE_NAME: 'Schedule name',
       SCRIPT_NAME: 'Script name',
@@ -370,6 +390,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
   },
   MONITOR: {
     TITLE: 'Execution Monitor',
+    NO_DATA: 'No execution logs were found',
     TABLE: {
       STATUS: 'Status',
       LINES: 'Lines',
@@ -393,7 +414,8 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     },
     MESSAGES: {
       WARNING: 'Warning - Log monitoring can only be tested with Electron.',
-      KILL_PROCESS_TITLE: 'Are you sure you want to kill this execution?'
+      KILL_PROCESS_TITLE: 'Are you sure you want to kill this execution?',
+      SCHEDULE_NOT_FOUND: 'Unknown'
     }
   },
   CONFIGURATION: {
@@ -403,6 +425,8 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     VERSION: 'Version',
     DEBUGMODE_ON: 'Debug mode: On',
     DEBUGMODE_OFF: 'Debug mode: Off',
+    AUTOUPDATE_ON: 'Auto update: On',
+    AUTOUPDATE_OFF: 'Auto update: Off',
     LOGFILES_TO_KEEP: 'Minimum number of logfiles to be kept',
     JAVA_XMX: 'Maximum memory allocation (MB)',
     JAVA_TMPDIR: 'Temporary files directory',
@@ -417,15 +441,19 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       SAVE_OK: 'Configuration successfully saved!'
     },
     TOOLTIPS: {
+      DEBUGMODE: 'Adds extra logging messages on Agent\'s execution log.',
       LOGFILES: 'Maximum number of logfiles to be kept inside Agent\'s log directory. Agent will automatically delete logfiles older than this parameter.',
-      JAVA_XMX: 'Maximum RAM memory allocation (MB - Megabytes) that Agent is allowed to use when running schedules. If this threshold is not enough to upload data, Agent will terminate it\'s execution, with an error message.',
+      JAVA_XMX: 'Maximum RAM memory allocation (MB - Megabytes) that Agent is allowed to use when running schedules. If this threshold is not enough to upload data, Agent will terminate it\'s execution, with an error message. Minimum value: ${p1}MB',
       JAVA_TMPDIR: 'Temporary directory, used by Agent to store files before uploading to GoodData. Choose a directory that can be completely deleted if necessary.',
-      JAVA_JREDIR: './bin directory, where Java\'s binary files are located. If not informed, Agent will search for Java under the system\'s environment variables.'
+      JAVA_JREDIR: './bin directory, where Java\'s binary files are located. If not informed, Agent will search for Java under the system\'s environment variables.',
+      AUTOUPDATE: 'Defines if Agent will automatically install any updates created by TOTVS. If positive, the user will be prompted when a new update has been found, which in turn will be installed immediately. If negative, Agent will never try to update itself.'
     }
   },
   FORM_ERRORS: {
     FIELD_NOT_FILLED: 'Error - Mandatory field \'${p1}\' not informed.',
     FIELD_NOT_FILLED_GRAPH: 'Error - Mandatory field  \'${p1}\' not informed. Please select a graph to execute, or remove field\'s \'ETL Process\' selecion.',
+    FIELD_TYPING_WRONG: 'Error: Field \'${p1}\' data is not valid. Please check its typing.',
+    FIELD_MINIMUM_ERROR: 'Error - Field \'${p1}\'s value is smaller than it\'s minimum value (${p2}).',
     FOLDER_SELECT_WARNING: 'Warning - Folder selection can only be tested with Electron.',
     ONLY_YES_OR_NO: 'Error - SQL Parameters can only be \'Y\' or \'N\'. Please check its typing.'
   }

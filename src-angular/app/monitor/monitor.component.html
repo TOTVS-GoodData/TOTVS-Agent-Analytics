@@ -1,5 +1,9 @@
 <po-page-list [p-title]="lbl_title">
+  
+  <!-- Componente de animação de carregamento do Portinari.UI -->
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  
+  <!-- Tabela com todas as execuções dos agendamentos -->
   <po-table
     class="executions"
     p-container="shadow"
@@ -10,14 +14,17 @@
     [p-columns]="setColumns"
     [p-actions]="setTableRowActions"
     [p-actions-right]="true"
-    [p-items]="agentLog" />
+    [p-items]="agentLog"
+    [p-literals]="setLiterals"/>
   
-  <po-modal #modal_1
+  <!-- Modal de detalhamento do log de execução do agendamento -->
+  <po-modal #modal_logDetails
     p-click-out="true"
     p-size="auto"
-    [p-title]="lbl_executionDetails">
+    [p-title]="lbl_modalLogDetailsTitle">
     <div class="details">
       <po-table
+        id="tableLogDetails"
         class="gridDetails"
         p-infinite-scroll="true"
         p-hide-columns-manager="true"
@@ -27,19 +34,27 @@
     </div>
     <po-modal-footer class="modal-footer">
       <div class="po-row footer">
-        <po-button [p-label]="lbl_goBack" (p-click)="modal_1_close()" p-kind="primary"></po-button>
+        <po-button
+          class="padding-bottom"
+          [p-label]="((errorIndexes.length == 0) ? lbl_noErrors : lbl_nextError)"
+          [p-disabled]="(errorIndexes.length == 0)"
+          (p-click)="logDetails_SCROLL()"
+          p-danger="true"/>
+        <po-button
+          [p-label]="lbl_goBack"
+          (p-click)="logDetails_CLOSE()"
+          p-kind="primary"/>
       </div>
     </po-modal-footer>
   </po-modal>
   
-  <po-modal #modal_2
-    [p-title]="lbl_killProcess"
-    [p-primary-action]="killProcess"
-    [p-secondary-action]="modal_2_close">
+  <!-- Modal de encerramento de um processo em execução -->
+  <po-modal #modal_killProcess
+    [p-title]="lbl_modalKillProcessTitle">
     <po-modal-footer class="modal-footer">
       <div class="po-row footer">
-        <po-button [p-label]="lbl_goBack" (p-click)="modal_2_close()"></po-button>
-        <po-button [p-label]="lbl_confirm" (p-click)="killProcess()" p-kind="primary"></po-button>
+        <po-button [p-label]="lbl_goBack" (p-click)="killProcess_NO()"></po-button>
+        <po-button [p-label]="lbl_confirm" (p-click)="killProcess_YES()" p-kind="primary"></po-button>
       </div>
     </po-modal-footer>
   </po-modal>

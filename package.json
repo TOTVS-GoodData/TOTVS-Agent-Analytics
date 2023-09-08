@@ -61,7 +61,7 @@
     }
   },
   "name": "TOTVS-Agent-Analytics",
-  "version": "1.0.12",
+  "version": "1.0.14",
   "author": "Diego Matos Guedes <suporte.gd@totvs.com.br> (https://www.totvs.com/)",
   "description": "Programa de envio de dados para a plataforma GoodData.",
   "main": "./dist/TOTVS-Agent-Analytics/app.js",
@@ -109,13 +109,12 @@
     "electron-updater": "^5.3.0",
     "fs-extra": "^11.1.1",
     "ngx-electronyzer": "^1.0.0",
-    "node-linux": "^0.1.12",
-    "node-windows": "^1.0.0-beta.8",
     "path": "^0.12.7",
     "rxjs": "~7.5.5",
     "tslib": "^2.5.2",
     "uuid-v4": "^0.1.0",
     "uuidv4": "^6.2.13",
+    "winreg": "^1.2.4",
     "winston": "^3.8.2",
     "zone.js": "~0.11.4"
   },

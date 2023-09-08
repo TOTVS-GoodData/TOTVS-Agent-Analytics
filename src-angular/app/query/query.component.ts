@@ -1,25 +1,48 @@
+/* Componentes padrões do Angular */
 import { Component, OnInit, ViewChild } from '@angular/core';
 
-import { ElectronService } from 'ngx-electronyzer';
-
+/* Componentes visuais da biblioteca Portinari.UI */
 import {
-   PoModalComponent
-  ,PoTableAction
-  ,PoListViewAction
-  ,PoTableColumn
-  ,PoSelectOption
+  PoModalComponent,
+  PoTableAction,
+  PoListViewAction,
+  PoTableColumn,
+  PoSelectOption,
+  PoListViewLiterals
 } from '@po-ui/ng-components';
 
-import { WorkspaceService } from '../workspace/workspace-service';
-import { DatabaseService } from '../database/database-service';
-import { QueryService } from './query-service';
-
-import { ScheduleService } from '../schedule/schedule-service';
-import { Schedule, Query, ScheduleQuery, Workspace, Database, JavaInputBuffer } from '../utilities/interfaces';
-import * as _constants from '../utilities/constants-angular';
+/* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
-import { TranslationService, TranslationInput } from '../service/translation/translation-service';
+import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
+import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities/constants-angular';
 
+/* Serviço de comunicação com o Electron */
+import { ElectronService } from 'ngx-electronyzer';
+
+/* Serviço de ambientes do Agent */
+import { WorkspaceService } from '../workspace/workspace-service';
+import { Workspace } from '../workspace/workspace-interface';
+import { CNST_MODALIDADE_CONTRATACAO_PLATAFORMA } from '../workspace/workspace-constants';
+
+/* Serviço de banco de dados do Agent */
+import { DatabaseService } from '../database/database-service';
+import { Database } from '../database/database-interface';
+import { CNST_DATABASE_TYPES, CNST_DATABASE_OTHER } from '../database/database-constants';
+
+/* Serviço de consultas do Agent */
+import { QueryService } from './query-service';
+import { Query } from './query-interface';
+import { CNST_QUERY_VERSION_STANDARD } from './query-constants';
+
+/* Serviço de agendamentos do Agent */
+import { ScheduleService } from '../schedule/schedule-service';
+import { Schedule, ScheduleQuery } from '../schedule/schedule-interface';
+
+/* Serviço de tradução do Agent */
+import { TranslationService } from '../services/translation/translation-service';
+import { TranslationInput } from '../services/translation/translation-interface';
+
+/* Componentes rxjs para controle de Promise / Observable */
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -28,51 +51,81 @@ import { forkJoin } from 'rxjs';
   styleUrls: ['./query.component.css']
 })
 export class QueryComponent implements OnInit {
-  @ViewChild('modal_1') modal_1: PoModalComponent;
-  @ViewChild('modal_2') modal_2: PoModalComponent;
   
+  /**************************/
+  /***     VARIÁVEIS      ***/
+  /**************************/
+  /********* Gerais *********/
+  //Título da página
+  protected lbl_title: string = null;
+  
+  //Consulta selecionada p/ remoção
+  protected queryToDelete: Query = null;
+  
+  //Listagem de todos os agendamentos cadastrados, e suas consultas
+  protected schedulesQueryTotal: ScheduleQuery[] = [];
+  
+  //Listagem de todos os agendamentos cadastrados, e suas consultas (sem permissão p/ exportação)
+  protected schedulesQuery: ScheduleQuery[] = [];
+  
+  //Listagem de todos os agendamentos cadastrados, e suas consultas (com permissão p/ exportação)
+  protected schedulesQueryExport: ScheduleQuery[] = [];
+  
+  //Listagem de todos os agendamentos válidos para receberem novas consultas
+  protected listSchedule: Array<PoSelectOption> = null;
+  
+  //Variável de suporte, para mostrar ao usuário os campos obrigatórios não preenchidos.
   protected CNST_FIELD_NAMES: Array<any> = [];
-  public CNST_MESSAGES: any = {};
   
-  public query = new Query();
-  public bkpQuery: string = null;
-  public modal_1_title: string = null;
-  public queryToDelete: Query;
-  public listProjectExport: Array<PoSelectOption> = null;
-  public listSchedule: Array<PoSelectOption> = null;
-  protected _CNST_QUERY_EXECUTION_MODES: Array<PoSelectOption>;
+  //Variável de suporte, que mostra os modos de execução disponíveis das consultas (Completa / Mensal)
+  protected CNST_QUERY_EXECUTION_MODES: Array<PoSelectOption> = [];
+  
+  /****** Portinari.UI ******/
+  //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
-  public schedulesQueryTotal: ScheduleQuery[] = [];
-  public schedulesQuery: any[] = [];
-  public schedulesQueryExport: any[] = [];
-  protected _CNST_FIELD_NAMES: any;
-  public projectExport: Workspace = null;
   
-  /*************************************************/
-  /* MAPEAMENTO DOS NOMES DOS CAMPOS DO FORMULÁRIO */
-  /*************************************************/
-  protected lbl_schedule: string;
-  protected lbl_queryName: string;
-  protected lbl_queryExecutionMode: string;
-  protected lbl_queryQuery: string;
-  protected lbl_delete: string;
-  protected lbl_goBack: string;
-  protected lbl_confirm: string;
-  protected lbl_add: string;
-  protected lbl_title: string;
-  protected lbl_deleteConfirmation: string;
+  //Ações disponíveis para cada agendamento
+  protected setListViewActions: Array<PoListViewAction> = [];
   
-  protected ttp_queryName: string;
-  protected ttp_executionMode: string;
+  //Colunas da tabela de consultas dos agendamentos
+  protected setColumns: Array<PoTableColumn> = [];
   
-  /*************************************************/
-  /*************************************************/
-  /*************************************************/
+  //Ações disponíveis para cada linha da tabela de consultas
+  protected setTableRowActions: Array<PoTableAction> = [];
   
-  public setTableRowActions: Array<PoTableAction> = [];
-  public setListViewActions: Array<PoListViewAction> = [];
-  public setColumns: Array<PoTableColumn> = [];
+  //Mensagens padrões da listagem das consultas
+  protected setLiterals: PoListViewLiterals = null;
   
+  /********* Modal **********/
+  //Cadastro de consultas
+  @ViewChild('modal_addQuery') modal_addQuery: PoModalComponent;
+  protected lbl_addQueryTitle: string = null;
+  
+  //Objeto de consulta do formulário (Modal)
+  protected query = new Query(CNST_QUERY_VERSION_STANDARD);
+  
+  //Remoção de consultas
+  @ViewChild('modal_deleteQuery') modal_deleteQuery: PoModalComponent;
+  protected lbl_deleteQueryTitle: string = null;
+  
+  /******* Formulário *******/
+  //Títulos dos campos
+  protected lbl_schedule: string = null;
+  protected lbl_queryName: string = null;
+  protected lbl_queryExecutionMode: string = null;
+  protected lbl_queryQuery: string = null;
+  protected lbl_delete: string = null;
+  protected lbl_goBack: string = null;
+  protected lbl_confirm: string = null;
+  protected lbl_add: string = null;
+  
+  //Balões de ajuda
+  protected ttp_queryName: string = null;
+  protected ttp_executionMode: string = null;
+  
+  /**************************/
+  /*** MÉTODOS DO MÓDULO  ***/
+  /**************************/
   constructor(
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
@@ -82,113 +135,101 @@ export class QueryComponent implements OnInit {
     private _translateService: TranslationService,
     private _utilities: Utilities
   ) {
-    this._translateService.getTranslations([
-      new TranslationInput('QUERIES.TITLE', []),
-      new TranslationInput('QUERIES.IMPORT_QUERIES', []),
-      new TranslationInput('QUERIES.NEW_QUERY', []),
-      new TranslationInput('QUERIES.EDIT_QUERY', []),
-      new TranslationInput('QUERIES.DELETE_CONFIRMATION', []),
-      new TranslationInput('QUERIES.TABLE.SCHEDULE_NAME', []),
-      new TranslationInput('QUERIES.TABLE.QUERY_NAME', []),
-      new TranslationInput('QUERIES.TABLE.MODE', []),
-      new TranslationInput('QUERIES.TABLE.SQL', []),
-      new TranslationInput('BUTTONS.ADD', []),
-      new TranslationInput('BUTTONS.EDIT', []),
-      new TranslationInput('BUTTONS.DELETE', []),
-      new TranslationInput('BUTTONS.CONFIRM', []),
-      new TranslationInput('BUTTONS.GO_BACK', []),
-      new TranslationInput('QUERIES.MESSAGES.LOADING', []),
-      new TranslationInput('QUERIES.MESSAGES.LOADING_ERROR', []),
-      new TranslationInput('QUERIES.MESSAGES.VALIDATE', []),
-      new TranslationInput('QUERIES.MESSAGES.SAVE_OK', []),
-      new TranslationInput('QUERIES.MESSAGES.DELETE', []),
-      new TranslationInput('QUERIES.MESSAGES.DELETE_OK', []),
-      new TranslationInput('QUERIES.MESSAGES.DELETE_ERROR', []),
-      new TranslationInput('QUERIES.MESSAGES.EXPORT', []),
-      new TranslationInput('QUERIES.MESSAGES.EXPORT_ERROR', []),
-      new TranslationInput('QUERIES.EXECUTION_MODES.COMPLETE', []),
-      new TranslationInput('QUERIES.EXECUTION_MODES.MONTHLY', []),
-      new TranslationInput('QUERIES.TOOLTIPS.QUERY_NAME', []),
-      new TranslationInput('QUERIES.TOOLTIPS.MODE', []),
-      new TranslationInput('WORKSPACES.MESSAGES.LOADING', []),
-      new TranslationInput('WORKSPACES.MESSAGES.LOADING_ERROR', [])
-    ]).subscribe((translations: any) => {
-      this.CNST_FIELD_NAMES = [
-        { key: 'scheduleId', value: translations['QUERIES.TABLE.SCHEDULE_NAME'] },
-        { key: 'name', value: translations['QUERIES.TABLE.QUERY_NAME'] },
-        { key: 'executionMode', value: translations['QUERIES.TABLE.MODE'] },
-        { key: 'query', value: translations['QUERIES.TABLE.SQL'] }
-      ];
+    //Tradução dos modos de execução das consutlas (completa / mensal)
+    this.CNST_QUERY_EXECUTION_MODES = [
+      { label: this._translateService.CNST_TRANSLATIONS['QUERIES.EXECUTION_MODES.COMPLETE'], value: 'C' },
+      { label: this._translateService.CNST_TRANSLATIONS['QUERIES.EXECUTION_MODES.MONTHLY'], value: 'M' }
+    ];
+    
+    //Tradução das ações de apagar / editar uma consulta de um agendamento
+    this.setTableRowActions = [
+      {
+        label: this._translateService.CNST_TRANSLATIONS['BUTTONS.EDIT'],
+        visible: (q: Query) => q.canDecrypt,
+        action: (query: Query) => {
+          this.lbl_addQueryTitle = this._translateService.CNST_TRANSLATIONS['QUERIES.EDIT_QUERY'];
+          this.query = query;
+          this.modal_addQuery.open();
+        }
+      },{
+        label: this._translateService.CNST_TRANSLATIONS['BUTTONS.DELETE'],
+        visible: true ,
+        action: (query: Query) => {
+          this.queryToDelete = query;
+          this.modal_deleteQuery.open();
+        }
+      }
+    ];
+    
+    //Tradução do botão de exportar consultas dos agendamentos
+    this.setListViewActions = [
+      { label: this._translateService.CNST_TRANSLATIONS['QUERIES.IMPORT_QUERIES'], action: this.exportQuery.bind(this), visible: true }
+    ];
+    
+    //Tradução das colunas da tabela de consultas dos agendamentos
+    this.setColumns = [
+      { property: "name", label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.QUERY_NAME'], type: 'string', width: '20%', sortable: true },
+      { property: "executionModeName", label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODE'], type: 'string', width: '20%', sortable: true },
+      { property: "query", label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'], type: 'string', width: '60%', sortable: false }
+    ];
+    
+    //Tradução das mensagens padrões do componente de listagem do Portinari.UI
+    this.setLiterals = {
+      noData: this._translateService.CNST_TRANSLATIONS['QUERIES.NO_DATA']
+    };
       
-      this._CNST_QUERY_EXECUTION_MODES = [
-        { label: translations['QUERIES.EXECUTION_MODES.COMPLETE'], value: 'C' },
-        { label: translations['QUERIES.EXECUTION_MODES.MONTHLY'], value: 'M' }
-      ];
-      
-      this.setTableRowActions = [
-        { label: translations['BUTTONS.EDIT'],  action: this.editQuery.bind(this), visible: (q: Query) => q.canDecrypt },
-        { label: translations['BUTTONS.DELETE'], action: this.deleteQuery.bind(this), visible: true }
-      ];
-      
-      this.setListViewActions = [
-        { label: translations['QUERIES.IMPORT_QUERIES'], action: this.exportQuery.bind(this), visible: true }
-      ];
-      
-      this.setColumns = [
-        { property: "name", label: translations['QUERIES.TABLE.QUERY_NAME'], type: 'string', width: '20%', sortable: true },
-        { property: "executionMode", label: translations['QUERIES.TABLE.MODE'], type: 'string', width: '20%', sortable: true },
-        { property: "query", label: translations['QUERIES.TABLE.SQL'], type: 'string', width: '60%', sortable: false }
-      ];
-      
-      this.lbl_title = translations['QUERIES.TITLE'];
-      this.lbl_schedule = translations['QUERIES.TABLE.SCHEDULE_NAME'];
-      this.lbl_queryName = translations['QUERIES.TABLE.QUERY_NAME'];
-      this.lbl_queryExecutionMode = translations['QUERIES.TABLE.MODE'];
-      this.lbl_queryQuery = translations['QUERIES.TABLE.SQL'];
-      this.lbl_deleteConfirmation = translations['QUERIES.DELETE_CONFIRMATION'];
-      this.lbl_add = translations['BUTTONS.ADD'];
-      this.lbl_confirm = translations['BUTTONS.CONFIRM'];
-      this.lbl_goBack = translations['BUTTONS.GO_BACK'];
-      this.lbl_delete = translations['BUTTONS.DELETE'];
-      
-      this.ttp_queryName = translations['QUERIES.TOOLTIPS.QUERY_NAME'];
-      this.ttp_executionMode = translations['QUERIES.TOOLTIPS.MODE'];
-      
-      this.CNST_MESSAGES = {
-        NEW_QUERY: translations['QUERIES.NEW_QUERY'],
-        EDIT_QUERY: translations['QUERIES.EDIT_QUERY'],
-        LOADING: translations['QUERIES.MESSAGES.LOADING'],
-        LOADING_ERROR: translations['QUERIES.MESSAGES.LOADING_ERROR'],
-        VALIDATE: translations['QUERIES.MESSAGES.VALIDATE'],
-        SAVE_OK: translations['QUERIES.MESSAGES.SAVE_OK'],
-        DELETE: translations['QUERIES.MESSAGES.DELETE'],
-        DELETE_OK: translations['QUERIES.MESSAGES.DELETE_OK'],
-        DELETE_ERROR: translations['QUERIES.MESSAGES.DELETE_ERROR'],
-        EXPORT: translations['QUERIES.MESSAGES.EXPORT'],
-        EXPORT_ERROR: translations['QUERIES.MESSAGES.EXPORT_ERROR'],
-        LOADING_WORKSPACES: translations['WORKSPACES.MESSAGES.LOADING'],
-        LOADING_WORKSPACES_ERROR: translations['WORKSPACES.MESSAGES.LOADING_ERROR']
-      };
-    });
+    //Tradução dos botões
+    this.lbl_add = this._translateService.CNST_TRANSLATIONS['BUTTONS.ADD'];
+    this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
+    this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
+    this.lbl_delete = this._translateService.CNST_TRANSLATIONS['BUTTONS.DELETE'];
+    
+    //Tradução dos campos de formulário
+    this.lbl_title = this._translateService.CNST_TRANSLATIONS['QUERIES.TITLE'];
+    this.lbl_deleteQueryTitle = this._translateService.CNST_TRANSLATIONS['QUERIES.DELETE_CONFIRMATION'];
+    this.lbl_schedule = this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SCHEDULE_NAME'] + CNST_MANDATORY_FORM_FIELD;
+    this.lbl_queryName = this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.QUERY_NAME'] + CNST_MANDATORY_FORM_FIELD;
+    this.lbl_queryExecutionMode = this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODE'] + CNST_MANDATORY_FORM_FIELD;
+    this.lbl_queryQuery = this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'] + CNST_MANDATORY_FORM_FIELD;
+    
+    //Tradução dos balões de ajuda dos campos
+    this.ttp_queryName = this._translateService.CNST_TRANSLATIONS['QUERIES.TOOLTIPS.QUERY_NAME'];
+    this.ttp_executionMode = this._translateService.CNST_TRANSLATIONS['QUERIES.TOOLTIPS.MODE'];
+    
+    //Definição dos campos obrigatórios do formulário
+    this.CNST_FIELD_NAMES = [
+      { key: 'scheduleId', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SCHEDULE_NAME'] },
+      { key: 'name', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.QUERY_NAME'] },
+      { key: 'executionMode', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODE'] },
+      { key: 'query', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'] }
+    ];
   }
   
+  /* Método de inicialização dos dados das consultas do Agent */
   public ngOnInit(): void {
     this.loadQueries();
-    this.loadWorkspaces();
   }
   
+  /* Método de carregamento das consultas cadastradas no Agent */
   private loadQueries(): void {
-    this.po_lo_text = { value: this.CNST_MESSAGES.LOADING };
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING'] };
+    
+    //Consulta das informações
     forkJoin([
        this._scheduleService.getSchedules(true)
       ,this._queryService.getQueries()
       ,this._workspaceService.getWorkspaces()
       ,this._databaseService.getDatabases()
     ]).subscribe((results: [Schedule[], Query[], Workspace[], Database[]]) => {
+      
+      //Combinação dos agendamentos com suas consultas
       this.schedulesQueryTotal = results[0].map((s: any) => {
         s.schedule = s;
         s.queries = results[1].filter((q: Query) => (q.scheduleId === s.id));
+        
+        //Descriptografia das consultas (caso permitido)
         s.queries.map((q: Query) => {
+          q.executionModeName = this.CNST_QUERY_EXECUTION_MODES.find((exec: any) => exec.value == q.executionMode).label;
           if ((this._electronService.isElectronApp) && (q.canDecrypt)) {
             q.query = this._electronService.ipcRenderer.sendSync('decrypt', q.query);
           }
@@ -198,117 +239,70 @@ export class QueryComponent implements OnInit {
         s.erp = w.erp;
         s.contractType = w.contractType;
         s.module = w.module;
+        
+        //Definição do tipo do banco de dados do agendamento
         s.databaseType = (() => {
           let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
-          if (db == undefined) return _constants.CNST_NO_OPTION_SELECTED;
+          if (db == undefined) return CNST_NO_OPTION_SELECTED;
           else {
-            let db_type: any = _constants.CNST_DATABASE_TYPES.find((type: any) => (type.value == db.type));
-            if (db_type.brand ==  _constants.CNST_DATABASE_OTHER) return _constants.CNST_NO_OPTION_SELECTED;
+            let db_type: any = CNST_DATABASE_TYPES.find((type: any) => (type.value == db.type));
+            if (db_type.brand == CNST_DATABASE_OTHER) return CNST_NO_OPTION_SELECTED;
             else return db_type.brand;
           }
         })();
         return s;
       });
       
-      this.schedulesQuery = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType == _constants.CNST_NO_OPTION_SELECTED));
-      this.schedulesQueryExport = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType != _constants.CNST_NO_OPTION_SELECTED));
+      //Definição dos arrays de agendamentos com / sem permissão de exportação de consultas
+      this.schedulesQuery = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType == CNST_NO_OPTION_SELECTED));
+      this.schedulesQueryExport = this.schedulesQueryTotal.filter((sq: any) => (sq.databaseType != CNST_NO_OPTION_SELECTED));
+      
+      //Definição dos agendamentos válidos para receber novas consultas
       this.listSchedule = results[0].filter((s: Schedule) => {
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
         let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
-        return ((db != undefined) && (w.contractType == _constants.CNST_MODALIDADE_CONTRATACAO_PLATAFORMA));
+        return ((db != undefined) && (w.contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA));
       }).map((s: Schedule) => {
         return { label: s.name, value: s.id };
-      });
-      this.po_lo_text = { value: null };
-    }, (err: any) => {
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.LOADING_ERROR, err);
-      this.po_lo_text = { value: null };
-    });
-  }
-  
-  private loadWorkspaces(): void {
-    this.po_lo_text = { value: this.CNST_MESSAGES.LOADING_WORKSPACES };
-    this._workspaceService.getWorkspaces().subscribe((workspaces: Workspace[]) => {
-      this.listProjectExport = workspaces.filter((w: Workspace) => {
-        return (w.erp === _constants.CNST_ERP_PROTHEUS);
-      }).map((w: Workspace) => {
-        return {
-          label: w.name,
-          value: w.id
-        }
       });
       
       this.po_lo_text = { value: null };
     }, (err: any) => {
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.LOADING_WORKSPACES_ERROR, err);
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_ERROR'], err);
       this.po_lo_text = { value: null };
     });
   }
   
-  protected newQuery(): void {
-    this.modal_1_title = this.CNST_MESSAGES.NEW_QUERY;
-    this.query = new Query();
-    this.query.canDecrypt = true;
-    this.modal_1.open();
+  /* Método de exportação das consultas padrões do Agent */
+  protected exportQuery(sc: ScheduleQuery): void {
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT'] };
+    this._queryService.exportQuery(sc).subscribe((res: boolean) => {
+      if (res) this.loadQueries();
+      this.po_lo_text = { value: null };
+    }, (err: any) => {
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT_ERROR'], err);
+      this.po_lo_text = { value: null };
+    });
   }
   
-  private editQuery(query: Query): void {
-    this.modal_1_title = this.CNST_MESSAGES.EDIT_QUERY;
-    this.query = query;
-    this.bkpQuery = query.query;
-    this.modal_1.open();
-  }
-  
-  protected modal_1_close(): void {
-    this.bkpQuery = null;
-    this.modal_1.close();
-  }
-  
-  protected modal_1_confirm(): void {
-    if (this.validateQuery()) {
-      this.modal_1.close();
-      this._translateService.getTranslations([
-        new TranslationInput('QUERIES.MESSAGES.SAVE', [this.query.name]),
-        new TranslationInput('QUERIES.MESSAGES.ENCRYPT', [this.query.name]),
-        new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [this.query.name]),
-        new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME', [this.query.name])
-      ]).subscribe((translations: any) => {
-        this.po_lo_text = { value: translations['QUERIES.MESSAGES.SAVE'] };
-        if (this._electronService.isElectronApp) {
-          if (this.query.query != this.bkpQuery) {
-            this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.ENCRYPT']);
-            this.po_lo_text = { value: translations['QUERIES.MESSAGES.ENCRYPT'] };
-            this.query.query = this._electronService.ipcRenderer.sendSync('encrypt', this.query.query);
-          }
-        }
-        this._queryService.saveQuery({...this.query}).subscribe((res: boolean) => {
-          if (res) {
-            this.loadQueries();
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.SAVE_OK);
-          } else {
-            this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME']);
-          }
-          this.po_lo_text = { value: null };
-        }, (err: any) => {
-          this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR'], err);
-          this.po_lo_text = { value: null };
-        });
-      });
-    }
-  }
-  
+  /* Método de validação da consulta do Agent */
   private validateQuery(): boolean {
-    this._utilities.writeToLog(_constants.CNST_LOGLEVEL.DEBUG, this.CNST_MESSAGES.VALIDATE);
-    this.po_lo_text = { value: this.CNST_MESSAGES.VALIDATE };
     
-    let query = new Query();
+    //Valor de retorno do método
     let validate: boolean = true;
     
+    //Objeto de suporte para validação dos campos
+    let query: Query = new Query(CNST_QUERY_VERSION_STANDARD);
+    
+    this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.VALIDATE']);
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.VALIDATE'] };
+    
+    //Verifica se todos os campos da interface de consultas foram preenchidos
     let propertiesNotDefined = Object.getOwnPropertyNames.call(Object, query).map((p: string) => {
-      if ((this.query[p] == undefined) && (p != 'id')) return p;
+      if ((this.query[p] == '') && (p != 'id')) return p;
     }).filter((p: string) => { return p != null; });
     
-    // Validação dos campos de formulário //
+    // Validação dos campos de formulário
     if (propertiesNotDefined.length > 0) {
       validate = false;
       this.po_lo_text = { value: null };
@@ -316,43 +310,104 @@ export class QueryComponent implements OnInit {
       this._translateService.getTranslations([
         new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName])
       ]).subscribe((translations: any) => {
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED']);
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED']);
       });
+      
+    //Verifica se a tipagem esperada de todos os campos da interface estão corretas
+    } else {
+      propertiesNotDefined = Object.getOwnPropertyNames.call(Object, query).map((p: string) => {
+        if ((typeof this.query[p] != typeof query[p]) && (p != 'id')) return p;
+      }).filter((p: string) => { return p != null; });
+      if (propertiesNotDefined.length > 0) {
+        validate = false;
+        this.po_lo_text = { value: null };
+        let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
+        this._translateService.getTranslations([
+          new TranslationInput('FORM_ERRORS.FIELD_TYPING_WRONG', [fieldName])
+        ]).subscribe((translations: any) => {
+          this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_TYPING_WRONG']);
+        });
+      }
     }
     
     return validate;
   }
   
-  private deleteQuery(query: Query): void {
-    this.queryToDelete = query;
-    this.modal_2.open();
+  /**************************/
+  /*** MÉTODOS DOS MODAIS ***/
+  /**************************/
+  /* Modal de cadastro de consultas no Agent (OPEN) */
+  protected newQuery_OPEN(): void {
+    this.lbl_addQueryTitle = this._translateService.CNST_TRANSLATIONS['QUERIES.NEW_QUERY'];
+    this.query = new Query(CNST_QUERY_VERSION_STANDARD);
+    this.query.canDecrypt = true;
+    this.modal_addQuery.open();
   }
   
-  protected modal_2_close(): void {
+  /* Modal de edição de consultas no Agent (NAO) */
+  protected newQuery_NO(): void {
+    this.modal_addQuery.close();
+  }
+  
+  /* Modal de edição de consultas no Agent (SIM) */
+  protected newQuery_YES(): void {
+    if (this.validateQuery()) {
+      this.modal_addQuery.close();
+      
+      //Consulta das traduções
+      this._translateService.getTranslations([
+        new TranslationInput('QUERIES.MESSAGES.SAVE', [this.query.name]),
+        new TranslationInput('QUERIES.MESSAGES.ENCRYPT', [this.query.name]),
+        new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [this.query.name]),
+        new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME', [this.query.name])
+      ]).subscribe((translations: any) => {
+        this.po_lo_text = { value: translations['QUERIES.MESSAGES.SAVE'] };
+        
+        //Criptografia da consulta escrita, caso o Electron esteja disponível
+        if (this._electronService.isElectronApp) {
+          this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.ENCRYPT']);
+          this.po_lo_text = { value: translations['QUERIES.MESSAGES.ENCRYPT'] };
+          this.query.query = this._electronService.ipcRenderer.sendSync('encrypt', this.query.query);
+        }
+        
+        //Gravação da nova consulta no Agent
+        this._queryService.saveQuery(this.query).subscribe((res: boolean) => {
+          if (res) {
+            this.loadQueries();
+            this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SAVE_OK']);
+          } else {
+            this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME']);
+          }
+          this.po_lo_text = { value: null };
+        }, (err: any) => {
+          this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR'], err);
+          this.po_lo_text = { value: null };
+        });
+      });
+    }
+  }
+  
+  /* Modal de remoção de consultas no Agent (NAO) */
+  protected deleteQuery_NO(): void {
     this.queryToDelete = null;
-    this.modal_2.close();
+    this.modal_deleteQuery.close();
   }
   
-  protected modal_2_confirm(): void {
-    this.modal_2.close();
-    this.po_lo_text = { value: this.CNST_MESSAGES.DELETE };
+  /* Modal de remoção de consultas no Agent (SIM) */
+  protected deleteQuery_YES(): void {
+    this.modal_deleteQuery.close();
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE'] };
+    
+    //Remoção da consulta configurada no Agent
     this._queryService.deleteQuery(this.queryToDelete).subscribe((b: boolean) => {
+      
+      //Recarga das consultas disponíveis atualmente
       this.loadQueries();
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.DELETE_OK);
+      
+      this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_OK']);
       this.po_lo_text = { value: null };
     }, (err: any) => {
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.DELETE_ERROR, err);
-      this.po_lo_text = { value: null };
-    });
-  }
-  
-  protected exportQuery(sc: ScheduleQuery): void {
-    this.po_lo_text = { value: this.CNST_MESSAGES.EXPORT };
-    this._queryService.exportQuery(sc).subscribe((res: boolean) => {
-      if (res) this.loadQueries();
-      this.po_lo_text = { value: null };
-    }, (err: any) => {
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.EXPORT_ERROR, err);
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_ERROR'], err);
       this.po_lo_text = { value: null };
     });
   }

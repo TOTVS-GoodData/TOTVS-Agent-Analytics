@@ -1,8 +1,13 @@
 <po-page-list [p-title]="lbl_title">
+  
+  <!-- Componente de animação de carregamento do Portinari.UI -->
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  
   <form #configurationForm="ngForm">
     <div class="po-row">
       <div class="po-row-50">
+        
+        <!-- Título da seção "Aplicação" do Agent -->
         <div class="po-row display-title">
           <span class="title">{{ lbl_application }}</span>
           <span class="subtitle">({{ lbl_version }} {{ AgentVersion }})</span>
@@ -11,9 +16,11 @@
         <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
         
         <div class="po-row fields">
+          
+          <!-- Número máximo de arquivos de log a serem mantidos -->
           <po-number
             class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
-            p-min="1"
+            [p-min]="_CNST_LOGFILES_MINIMUM"
             name="po_logfilesToKeep"
             [(ngModel)]="configuration.logfilesToKeep"
             [p-label]="lbl_logfilesToKeep"
@@ -22,14 +29,27 @@
             p-regex="999">
           </po-number>
           
+          <!-- Chave de habilitação do modo debug -->
           <po-switch class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12"
             name="po_debugMode"
             [(ngModel)]="configuration.debug"
             [p-label-off]="lbl_debugModeOff"
             [p-label-on]="lbl_debugModeOn"
-            [p-label-position]="poDebugModeLabelPosition">
+            [p-label-position]="poDebugModeLabelPosition"
+            [p-tooltip]="ttp_debugMode">
           </po-switch>
           
+          <!-- Chave de habilitação da atualização automática -->
+          <po-switch class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12"
+            name="po_autoUpdate"
+            [(ngModel)]="configuration.autoUpdate"
+            [p-label-off]="lbl_autoUpdateOff"
+            [p-label-on]="lbl_autoUpdateOn"
+            [p-label-position]="poDebugModeLabelPosition"
+            [p-tooltip]="ttp_autoUpdate">
+          </po-switch>
+          
+          <!-- Seletor de idioma (botões) -->
           <div class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12">
             <po-label [p-label]="lbl_locale" [p-field]="true" />
             <po-button-group
@@ -41,17 +61,21 @@
       </div>
       
       <div class="po-row-50">
+        
+        <!-- Título da seção "Java" do Agent -->
         <div class="po-row display-title">
           <span class="title">{{ lbl_java }}</span>
-          <span class="subtitle">({{ lbl_version }} {{ JavaVersion }})</span>
+          <!--<span class="subtitle">({{ lbl_version }} {{ JavaVersion }})</span>-->
         </div>
         
         <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
         
         <div class="po-row fields">
+          
+          <!-- Alocação máxima de memória do Java -->
           <po-number
             class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
-            p-min="1024"
+            [p-min]="_CNST_JAVA_XMX_MINIMUM"
             name="po_javaXmx"
             [(ngModel)]="configuration.javaXmx"
             [p-label]="lbl_javaXmx"
@@ -60,6 +84,7 @@
             p-regex="99999">
           </po-number>
           
+          <!-- Diretório p/ armazenamento dos arquivos temporários do Agent -->
           <div class="po-md-12 po-lg-12">
             <po-label [p-label]="lbl_javaTmpDir" [p-field]="true" />
             <div class="display-title">
@@ -72,6 +97,7 @@
             </div>
           </div>
           
+          <!-- Diretório onde se encontra os binários da JRE do Java (opcional) -->
           <div class="po-md-12 po-lg-12">
             <po-label [p-label]="lbl_javaJREDir" [p-field]="true" />
             <div class="display-title">
@@ -86,9 +112,11 @@
         </div>
       </div>
     </div>
-
+    
+    <!-- Rodapé do formulário -->
     <div class="po-row footer">
-      <po-button class="removeBorder padding-0 po-button po-text-ellipsis po-button-primary" p-size="medium" [p-label]="lbl_save" (p-click)="saveConfiguration()" p-kind="primary" />
+      <po-button class="removeBorder padding-0 po-button" p-size="medium" [p-label]="lbl_save" (p-click)="saveConfiguration()" />
     </div>
+    
   </form>
 </po-page-list>

@@ -93,8 +93,6 @@ Executar um dos comandos abaixo, de acordo com o SO de destino:
 ```
 Cada um dos comandos acima irá gerar um pacote pronto para instalação, de acordo com o SO, na pasta ```release-builds``` do projeto. Estes pacotes podem ser copiados para um segundo computador e instalados, porém os mesmos não são publicados oficialmente neste GitHub, evitando a atualização automática de todos os Agents da TOTVS.
 
-Vale lembrar que estes pacotes já serão atualizados automaticamente, caso um novo pacote seja oficialmente publicado neste GitHub.
-
 Para liberar um pacote oficial para todos os Agents da TOTVS, execute um dos comandos abaixo, de acordo com o SO de destino:
 
 ```powershell
@@ -119,10 +117,32 @@ Não tem ainda.
 ## Assinatura
 Não tá pronto.
 
-1. Instalar o Signtool.exe (`http://www.microsoft.com/en-us/download/details.aspx?id=6510`)
-2. Possuir o certificado digital da Totvs instalado na maquina
-3. Acessar via prompt o caminho onde o sigtool foi instalado (ex. `C:\Program Files\Microsoft Platform SDK\Bin`)
-4. Executar o comando `signtool signwizard`
-5. Na janela do wizard selecione o executavel do `totvs agent` e o `schedule windows`
-6. Aguarde cerca de 2min caso ocorra erro de arquivo não encontrado ou somente leitura
-7. Selecione o certificado, informe a senha e por fim conclua o procedimento.
+### Windows
+
+Para assinar manualmente o arquivo .exe gerado pelo comandos ```release-windows-32``` ou ```release-windows-64```, realizar os seguintes passos:
+
+1.Copie o arquivo .exe gerado para uma máquina Windows.
+2.Abra um chamado para a equipe de TI da TOTVS, solicitando a instalação dos programas necessários para assinatura de arquivos, e geração do certificado:
+2.1 "SignTool", do Windows, usado para aplicar a certificação em um arquivo.
+2.2 "Dinamo Console", usado hoje pela TOTVS como repositório dos certificados.
+
+3.Conecte-se à VPN da TOTVS (Obrigatório p/ uso do Dinamo Console).
+4.Juntamente com a equipe de TI, configure um novo usuário no Dinamo para fazer o download dos certificados.
+5.Configure um novo container HSM no Dinamo Console, que é aonde os certificados são armazenados.
+6.Faça o download do certificado da TOTVS para sua máquina (extensão .cer).
+7.Execute o seguinte comando no terminal do Windows, em como administrador:
+
+```powershell
+   signtool sign /f <CERTIFICADO> /csp "Dinamo HSM Cryptographic Provider" /k CodeSigning /fd sha256 /debug <ARQUIVO>
+```
+Onde:
+<CERTIFICADO> é o caminho até o arquivo de certificado (Extensão .cer)
+<ARQUIVO> é o caminho do arquivo .exe copiado no passo 1.
+
+Caso a certificação tenha sido feita com sucesso, o arquivo de instalação, ao ser executado, passará a mostrar a TOTVS como um "Fornecedor Verificado" na popup de instalação do mesmo.
+
+Também é possível verificar a certificação do arquivo de instalação clicando com o botão direito no mesmo, e acessando "Propriedades" -> "Assinaturas Digitais".
+
+Caso o arquivo não possua esta opção "Assinaturas Digitais", ele não foi assinado corretamente.
+
+Finalmente, a instalação do Agent nos clientes, de forma certificada, remove a necessidade de rodá-lo como Administrador, e evita conflitos de segurança com o Windows.

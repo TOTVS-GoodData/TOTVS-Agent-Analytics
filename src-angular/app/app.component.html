@@ -1,21 +1,39 @@
 <div class="po-wrapper">
+  
+  <!-- Menu principal do Agent -->
   <po-menu [p-menus]="menus">
     <ng-template p-menu-header-template>
-    <h2 class="menu-title po-menu-item po-menu-icon-container po-menu-icon-label">{{ programName }} - {{ version }}</h2>
+      <h2 class="menu-title po-menu-item">
+        {{ programName }} - {{ version }}
+      </h2>
     </ng-template>
   </po-menu>
   
-  <po-modal #modal_1
-    [p-title]="lbl_exitConfirmation"
-    [p-primary-action]="exit"
-    [p-secondary-action]="goBack">
-    <po-modal-footer class="modal-footer">
+  <!-- Modal de fechamento da interface do Agent -->
+  <po-modal #modal_closeAgentInterface
+    [p-title]="lbl_closeAgentInterfaceTitle">
+    <po-modal-footer>
       <div class="po-row footer">
-        <po-button [p-label]="lbl_goBack" (p-click)="goBack()"></po-button>
-        <po-button [p-label]="lbl_confirm" (p-click)="exit()" p-kind="primary"></po-button>
+        <po-button [p-label]="lbl_goBack" (p-click)="closeAgentInterface_NO()"></po-button>
+        <po-button [p-label]="lbl_confirm" (p-click)="closeAgentInterface_YES()" p-kind="primary"></po-button>
       </div>
     </po-modal-footer>
   </po-modal>
   
+  <!-- Modal de fechamento da interface do Agent -->
+  <po-modal #modal_updateAgent
+    [p-title]="lbl_updateAgentTitle">
+    <div class="po-row display-title">
+      <span class="subtitle">{{ lbl_updateAgentDescription }}</span>
+    </div>
+    <po-modal-footer>
+      <div class="po-row footer">
+        <po-button [p-label]="lbl_updateLater" (p-click)="updateAgent_LATER()"></po-button>
+        <po-button [p-label]="lbl_updateNow" (p-click)="updateAgent_NOW()" p-kind="primary"></po-button>
+      </div>
+    </po-modal-footer>
+  </po-modal>
+  
+  <!-- Raiz de redirecionamento para roteamento do Angular -->
   <router-outlet></router-outlet>
 </div>

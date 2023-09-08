@@ -1,21 +1,35 @@
+/* Componentes padrões do Angular */
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 
+/* Componentes visuais da biblioteca Portinari.UI */
 import {
-   PoModalComponent
-  ,PoListViewAction
-  ,PoButtonGroupItem
+  PoModalComponent,
+  PoListViewAction,
+  PoListViewLiterals
 } from '@po-ui/ng-components';
 
+/* Componentes de utilitários do Agent */
+import { Utilities } from '../utilities/utilities';
+import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
+
+/* Serviço de comunicação com o Electron */
 import { ElectronService } from 'ngx-electronyzer';
 
+/* Serviço de ambientes do Agent */
 import { WorkspaceService } from '../workspace/workspace-service';
-import { ScheduleService} from './schedule-service';
-import * as _constants from '../utilities/constants-angular';
-import { Schedule } from '../utilities/interfaces';
-import { Utilities } from '../utilities/utilities';
+import { Workspace } from '../workspace/workspace-interface';
 
-import { TranslationService, TranslationInput } from '../service/translation/translation-service';
+/* Serviço de agendamentos do Agent */
+import { ScheduleService } from './schedule-service';
+import { Schedule } from '../schedule/schedule-interface';
+
+/* Serviço de tradução do Agent */
+import { TranslationService } from '../services/translation/translation-service';
+import { TranslationInput } from '../services/translation/translation-interface';
+
+/* Componentes rxjs para controle de Promise / Observable */
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-schedule',
@@ -24,140 +38,183 @@ import { TranslationService, TranslationInput } from '../service/translation/tra
 })
 export class ScheduleComponent implements OnInit {
   
-  @ViewChild(PoModalComponent) modal_1: PoModalComponent;
+  /**************************/
+  /***     VARIÁVEIS      ***/
+  /**************************/
+  /********* Gerais *********/
+  //Título da página
+  protected lbl_title: string = null;
   
-  private scheduleToDelete: Schedule;
-  protected schedules: Schedule[];
+  //Botão de inclusão de novos bancos
+  protected lbl_add: string = null;
+  
+  //Listagem de todos os agendamentos configurados no Agent
+  protected schedules: Schedule[] = [];
+  
+  //Agendamento selecionado p/ remoção
+  private scheduleToDelete: Schedule = null;
+  
+  /****** Portinari.UI ******/
+  //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
   
+  //Títulos dos campos da listagem
+  protected lbl_enabled: string = null;
+  protected lbl_workspace: string = null;
+  protected lbl_lastExecution: string = null;
+  protected lbl_windows: string = null;
+  protected lbl_yes: string = null;
+  protected lbl_no: string = null;
+  
+  //Menu de ações disponíveis dos agendamentos
   protected setoptions: Array<PoListViewAction> = [];
   
-  public CNST_MESSAGES: any = {};
+  //Mensagens padrões da listagem de banco de dados
+  protected setLiterals: PoListViewLiterals = null;
   
-  protected lbl_title: string;
-  protected lbl_deleteConfirmation: string;
-  protected lbl_enabled: string;
-  protected lbl_workspace: string;
-  protected lbl_lastExecution: string;
-  protected lbl_windows: string;
-  protected lbl_add: string;
-  protected lbl_confirm: string;
-  protected lbl_goBack: string;
+  /********* Modal **********/
+  @ViewChild('modal_deleteSchedule') modal_deleteSchedule: PoModalComponent;
+  protected lbl_deleteScheduleTitle: string = null;
+  protected lbl_goBack: string = null;
+  protected lbl_confirm: string = null;
   
+  /**************************/
+  /*** MÉTODOS DO MÓDULO  ***/
+  /**************************/
   constructor(
     private _workspaceService: WorkspaceService,
     private _scheduleService: ScheduleService,
-    private _translateService: TranslationService,
     private _electronService: ElectronService,
+    private _translateService: TranslationService,
     private _utilities: Utilities,
     private _router: Router
   ) {
-    this._translateService.getTranslations([
-      new TranslationInput('SCHEDULES.TITLE', []),
-      new TranslationInput('SCHEDULES.DELETE_CONFIRMATION', []),
-      new TranslationInput('SCHEDULES.TABLE.ENABLED', []),
-      new TranslationInput('SCHEDULES.TABLE.WORKSPACE', []),
-      new TranslationInput('SCHEDULES.TABLE.LAST_EXECUTION', []),
-      new TranslationInput('SCHEDULES.TABLE.WINDOWS', []),
-      new TranslationInput('BUTTONS.ADD', []),
-      new TranslationInput('BUTTONS.EDIT', []),
-      new TranslationInput('BUTTONS.DELETE', []),
-      new TranslationInput('BUTTONS.EXECUTE', []),
-      new TranslationInput('BUTTONS.CONFIRM', []),
-      new TranslationInput('BUTTONS.GO_BACK', []),
-      new TranslationInput('SCHEDULES.MESSAGES.LOADING', []),
-      new TranslationInput('SCHEDULES.MESSAGES.LOADING_ERROR', []),
-      new TranslationInput('SCHEDULES.MESSAGES.DELETE_OK', []),
-      new TranslationInput('SCHEDULES.MESSAGES.RUN_OK', []),
-      new TranslationInput('SCHEDULES.MESSAGES.RUN_WARNING', [])
-    ]).subscribe((translations: any) => {
-      this.setoptions = [
-        { label: translations['BUTTONS.EDIT'], action: this.editSchedule.bind(this) },
-        { label: translations['BUTTONS.DELETE'], action: this.deleteSchedule.bind(this) },
-        { label: translations['BUTTONS.EXECUTE'], action: this.runAgent.bind(this) }
-      ];
-      
-      this.lbl_title = translations['SCHEDULES.TITLE'];
-      this.lbl_deleteConfirmation = translations['SCHEDULES.DELETE_CONFIRMATION'];
-      this.lbl_enabled = translations['SCHEDULES.TABLE.ENABLED'];
-      this.lbl_workspace = translations['SCHEDULES.TABLE.WORKSPACE'];
-      this.lbl_lastExecution = translations['SCHEDULES.TABLE.LAST_EXECUTION'];
-      this.lbl_windows = translations['SCHEDULES.TABLE.WINDOWS'];
-      this.lbl_add = translations['BUTTONS.ADD'];
-      this.lbl_confirm = translations['BUTTONS.CONFIRM'];
-      this.lbl_goBack = translations['BUTTONS.GO_BACK'];
-      
-      this.CNST_MESSAGES = {
-        LOADING: translations['SCHEDULES.MESSAGES.LOADING'],
-        LOADING_ERROR: translations['SCHEDULES.MESSAGES.LOADING_ERROR'],
-        DELETE_OK: translations['SCHEDULES.MESSAGES.DELETE_OK'],
-        RUN_OK: translations['SCHEDULES.MESSAGES.RUN_OK'],
-        RUN_WARNING: translations['SCHEDULES.MESSAGES.RUN_WARNING'],
-      };
-    });
+    //Tradução do menu de ações dos agendamentos
+    this.setoptions = [
+      {
+        label: this._translateService.CNST_TRANSLATIONS['BUTTONS.EDIT'],
+        action: (s: Schedule) => {
+          this._router.navigate(['/schedule-add'], { state: s });
+        }
+      },{
+        label: this._translateService.CNST_TRANSLATIONS['BUTTONS.DELETE'],
+        action: (s: Schedule) => {
+          this.scheduleToDelete = s;
+          this.modal_deleteSchedule.open();
+        }
+      },{
+        label: this._translateService.CNST_TRANSLATIONS['BUTTONS.EXECUTE'],
+        action: this.runAgent.bind(this)
+      }
+    ];
+    
+    //Tradução das mensagens padrões do componente de listagem do Portinari.UI
+    this.setLiterals = {
+      noData: this._translateService.CNST_TRANSLATIONS['SCHEDULES.NO_DATA']
+    };
+    
+    //Tradução dos títulos
+    this.lbl_title = this._translateService.CNST_TRANSLATIONS['SCHEDULES.TITLE'];
+    this.lbl_deleteScheduleTitle = this._translateService.CNST_TRANSLATIONS['SCHEDULES.DELETE_CONFIRMATION'];
+    
+    //Tradução dos campos da listagem
+    this.lbl_enabled = this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.ENABLED'];
+    this.lbl_workspace = this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.WORKSPACE'];
+    this.lbl_lastExecution = this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.LAST_EXECUTION'];
+    this.lbl_windows = this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.WINDOWS'];
+    
+    //Tradução dos botões
+    this.lbl_add = this._translateService.CNST_TRANSLATIONS['BUTTONS.ADD'];
+    this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
+    this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
+    this.lbl_yes = this._translateService.CNST_TRANSLATIONS['BUTTONS.YES'];
+    this.lbl_no = this._translateService.CNST_TRANSLATIONS['BUTTONS.NO'];
   }
   
+  /* Método de inicialização do componente */
   public ngOnInit(): void {
     this.loadSchedules();
   }
   
+  /* Método de consulta dos agendamentos configurados no Agent */
   private loadSchedules(): void {
-    this.po_lo_text = { value: this.CNST_MESSAGES.LOADING };
-    this._scheduleService.getSchedules(true).subscribe((schedule: Schedule[]) => {
-      this.schedules = schedule;
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING'] };
+    
+    //Consulta dos agendamentos cadastrados no Agent
+    forkJoin([
+      this._workspaceService.getWorkspaces(),
+      this._scheduleService.getSchedules(true)
+    ]).subscribe((results: [Workspace[], Schedule[]]) => {
+      this.schedules = results[1].map((s: Schedule) => {
+        let w: Workspace = results[0].find((w: Workspace) => (w.id == s.workspaceId));
+        if (w) s.workspaceName = w.name;
+        
+        return s;
+      });
       this.po_lo_text = { value: null };
     }, (err: any) => {
       this.po_lo_text = { value: null };
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, this.CNST_MESSAGES.LOADING_ERROR, err);
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_ERROR'], err);
     });
   }
   
-  protected editSchedule(s?: Schedule): void {
-    this._router.navigate(['/schedule-add'], { state: s });
-  }
-  
-  protected deleteSchedule(s: Schedule): void {
-    this.scheduleToDelete = s;
-    this.modal_1.open();
-  }
-  
-  protected modal_1_close(): void {
-    this.scheduleToDelete = null;
-    this.modal_1.close();
-  }
-  
-  protected modal_1_confirm(): void {
-    this.modal_1.close();
-    this._translateService.getTranslations([
-      new TranslationInput('SCHEDULES.MESSAGES.DELETE', [this.scheduleToDelete.name]),
-      new TranslationInput('SCHEDULES.MESSAGES.DELETE_ERROR', [this.scheduleToDelete.name])
-    ]).subscribe((translations: any) => {
-      this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.DELETE'] };
-      this._scheduleService.deleteSchedule(this.scheduleToDelete).subscribe((b: boolean) => {
-        this.po_lo_text = { value: null };
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.DELETE_OK);
-        this.loadSchedules();
-      }, (err: any) => {
-        this.po_lo_text = { value: null };
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.ERROR, translations['SCHEDULES.MESSAGES.DELETE_ERROR'], err);
-      });
-    });
-  }
-  
+  /* Método de disparo da execução do Agent (Apenas disponível com o Electron) */
   public runAgent(s: Schedule): void {
     if (this._electronService.isElectronApp) {
+      
+      //Consulta das traduções
       this._translateService.getTranslations([
         new TranslationInput('SCHEDULES.MESSAGES.RUN', [s.name]),
         new TranslationInput('SCHEDULES.MESSAGES.RUN_MANUAL', [s.name])
       ]).subscribe((translations: any) => {
         this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.RUN'] };
-        this._utilities.writeToLog(_constants.CNST_LOGLEVEL.INFO, translations['SCHEDULES.MESSAGES.RUN_MANUAL']);
+        this._utilities.writeToLog(CNST_LOGLEVEL.INFO, translations['SCHEDULES.MESSAGES.RUN_MANUAL']);
+        
+        //Solicita a execução do agendamento pelo Electron (assíncrono)
         this._electronService.ipcRenderer.sendSync('executeAndUpdateSchedule', s);
-        this._utilities.createNotification(_constants.CNST_LOGLEVEL.INFO, this.CNST_MESSAGES.RUN_OK);
+        
+        this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_OK']);
         this.po_lo_text = { value: null };
       });
     } else {
-      this._utilities.createNotification(_constants.CNST_LOGLEVEL.WARN, this.CNST_MESSAGES.RUN_WARNING, null);
+      this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_WARNING'], null);
     }
+  }
+  
+  /* Método de redirecionamento para a página de cadastro de agendamentos */
+  protected addSchedule(): void {
+    this._router.navigate(['/schedule-add']);
+  }
+  
+  /**************************/
+  /*** MÉTODOS DOS MODAIS ***/
+  /**************************/
+  /* Modal de remoção de um agendamento configurado no Agent (NAO) */
+  protected deleteSchedule_NO(): void {
+    this.scheduleToDelete = null;
+    this.modal_deleteSchedule.close();
+  }
+  
+  /* Modal de remoção de um agendamento configurado no Agent (SIM) */
+  protected deleteSchedule_YES(): void {
+    this.modal_deleteSchedule.close();
+    
+    //Consulta das traduções
+    this._translateService.getTranslations([
+      new TranslationInput('SCHEDULES.MESSAGES.DELETE', [this.scheduleToDelete.name]),
+      new TranslationInput('SCHEDULES.MESSAGES.DELETE_ERROR', [this.scheduleToDelete.name])
+    ]).subscribe((translations: any) => {
+      this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.DELETE'] };
+      
+      //Remoção do agendamento configurado no Agent
+      this._scheduleService.deleteSchedule(this.scheduleToDelete).subscribe((b: boolean) => {
+        this.po_lo_text = { value: null };
+        this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.DELETE_OK']);
+        this.loadSchedules();
+      }, (err: any) => {
+        this.po_lo_text = { value: null };
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['SCHEDULES.MESSAGES.DELETE_ERROR'], err);
+      });
+    });
   }
 }

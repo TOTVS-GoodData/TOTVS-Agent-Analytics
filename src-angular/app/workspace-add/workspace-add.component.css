@@ -1,9 +1,3 @@
-@media screen and (min-width: 970px) {
-  .db-row {
-    max-width: 50%;
-  }
-}
-
 .m-left {
   margin-left: auto;
 }
@@ -20,16 +14,8 @@
   padding: 1em;
 }
 
-.padding-bottom {
-  padding-bottom: 4em;
-}
-
-.conf-row {
-  max-width: 100%;
-}
-
-.conf-select {
-  flex-grow: 1;
+.padding-bottom-section {
+  padding-bottom: 1em;
 }
 
 .db-select {
@@ -39,58 +25,4 @@
 .align-left {
   justify-content: left;
 }
-
-@media screen and (max-width: 1366px) {
-
-    .buttom-folder{
-        margin-top: 32px !important;
-        margin-bottom: 29px !important;
-    }
-
-    .buttom-add{
-        margin-top: 32px !important;
-        margin-bottom: 29px !important;
-    }
-
-    .smartOptions{
-        text-align: start !important;
-    }
-}    
-
-.grid-title{
-    margin-top: 3%;
-}
-
-.buttom-folder{
-    margin-top: 31px;
-}
-
-.buttom-properties{
-    margin-top: 37px;
-}
-
-.margin-zero{
-    padding: 0px;
-}
-
-.margin-line-product{
-    margin-top: 5px;
-    margin-bottom: 0px !important;
-}
-
-.buttom-add{
-    margin-top: 32px;
-    font-size: 25px;
-}
-
-.smartOptions{
-    text-align: center;
-    margin-top: 25px;
-}
-
-.typeProduct{
-    text-align: -webkit-right;
-    text-align: -moz-right;
-    text-align: -o-right; 
-    text-align: -ms-right;
-}
+ 

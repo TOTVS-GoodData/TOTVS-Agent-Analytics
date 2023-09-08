@@ -1,25 +1,37 @@
 <po-page-list [p-title]="lbl_title">
   
-  <div class="po-row">
-    <po-button class="padding-button" [p-label]="lbl_add" p-icon="po-icon po-icon-plus" (p-click)="newQuery()" p-kind="primary"/>
-  </div>
-  
+  <!-- Componente de animação de carregamento do Portinari.UI -->
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
   
+  <!-- Botão de inclusão de novas consultas no Agent -->
+  <div class="po-row">
+    <po-button
+      class="padding-bottom"
+      [p-label]="lbl_add"
+      p-icon="po-icon po-icon-plus"
+      (p-click)="newQuery_OPEN()"
+      p-kind="primary" />
+  </div>
+  
+  <!-- Mensagem de "Nenhum agendamento encontrado" -->
   <div class="po-sm-12 po-md-12 po-lg-12 po-xl-12 list-project list-project-empty" *ngIf="schedulesQueryTotal.length === 0">
-    <span>{{ 'SCHEDULES.NOT_FOUND' | translateExtended | async }}</span> 
+    <span>{{ 'QUERIES.NO_DATA' | translateExtended | async }}</span> 
   </div>
   
   <div class="po-row">
     
-    <po-list-view p-property-title="name" *ngIf="schedulesQuery.length > 0" [p-items]="this.schedulesQuery">
+    <!-- Listagem de todos os agendamentos que não possuem exportação de consulta dispońivel -->
+    <po-list-view p-property-title="name" *ngIf="schedulesQuery.length > 0" [p-items]="this.schedulesQuery" [p-literals]="setLiterals">
       <ng-template p-list-view-content-template let-item>
         <div class="po-row">
+          
+          <!-- Tabela com todas as consultas do agendamento -->
           <po-table
             class="table"
             [p-actions]="setTableRowActions"
             [p-columns]="setColumns"
             [p-items]="item.queries"
+            [p-literals]="setLiterals"
             p-hide-detail="true"
             p-hide-select-all="true"
             p-hide-columns-manager="true"
@@ -30,14 +42,18 @@
       </ng-template>
     </po-list-view>
     
-    <po-list-view p-property-title="name" *ngIf="schedulesQueryExport.length > 0" [p-items]="this.schedulesQueryExport" [p-actions]="setListViewActions">
+    <!-- Listagem de todos os agendamentos que possuem exportação de consulta dispońivel -->
+    <po-list-view p-property-title="name" *ngIf="schedulesQueryExport.length > 0" [p-items]="this.schedulesQueryExport" [p-actions]="setListViewActions" [p-literals]="setLiterals">
       <ng-template p-list-view-content-template let-item>
         <div class="po-row">
+          
+          <!-- Tabela com todas as consultas do agendamento -->
           <po-table
             class="table"
             [p-actions]="setTableRowActions"
             [p-columns]="setColumns"
             [p-items]="item.queries"
+            [p-literals]="setLiterals"
             p-hide-detail="true"
             p-hide-select-all="true"
             p-hide-columns-manager="true"
@@ -49,64 +65,68 @@
     </po-list-view>
   </div>
   
-  <po-modal #modal_1
-    p-title={{modal_1_title}}
-    [p-primary-action]="modal_1_confirm"
-    [p-secondary-action]="modal_1_close">
+  <!-- Modal de cadastro de consultas do Agent -->
+  <po-modal #modal_addQuery
+    [p-title]=lbl_addQueryTitle>
     <form #queryForm="ngForm" class="po-row">
+      
+      <!-- Agendamento da consulta -->
       <po-select
         class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
         name="po_schedule"
-        [p-label]="lbl_schedule + '*'"
+        [p-label]="lbl_schedule"
         p-required="true"
         [(ngModel)]="query.scheduleId"
         [p-options]="listSchedule">
       </po-select>
       
+      <!-- Nome da consulta -->
       <po-input
         class="po-sm-8 po-md-8 po-lg-8 po-xl-8"
         name="po_queryName"
-        [p-label]="lbl_queryName + '*'"
+        [p-label]="lbl_queryName"
         p-required="true"
         [p-tooltip]="ttp_queryName"
         [(ngModel)]="query.name">
       </po-input>
       
+      <!-- Modo de execução da consulta (completa / mensal) -->
       <po-select
         class="po-sm-4 po-md-4 po-lg-4 po-xl-4"
         name="po_queryExecutionMode"
-        [p-label]="lbl_queryExecutionMode + '*'"
-        [p-options]="_CNST_QUERY_EXECUTION_MODES"
-        p-required="true"
+        [p-label]="lbl_queryExecutionMode"
         [p-tooltip]="ttp_executionMode"
+        [p-options]="CNST_QUERY_EXECUTION_MODES"
+        p-required="true"
         [(ngModel)]="query.executionMode">
       </po-select>
       
+      <!-- Comando SQL da consulta -->
       <po-textarea
         class="po-textarea po-sm-12 po-md-12 po-lg-12 po-xl-12 query-text removeBorder padding-0 textarea"
         name="po_queryQuery"
-        [p-label]="lbl_queryQuery + '*'"
+        [p-label]="lbl_queryQuery"
         [(ngModel)]="query.query"
         p-rows="10">
       </po-textarea>
       
+      <!-- Rodapé do modal -->
       <po-modal-footer class="modal-footer">
         <div class="po-row footer">
-          <po-button [p-label]="lbl_goBack" (p-click)="modal_1_close()"></po-button>
-          <po-button [p-label]="lbl_confirm" (p-click)="modal_1_confirm()" p-kind="primary"></po-button>
+          <po-button [p-label]="lbl_goBack" (p-click)="newQuery_NO()"></po-button>
+          <po-button [p-label]="lbl_confirm" (p-click)="newQuery_YES()" p-kind="primary"></po-button>
         </div>
       </po-modal-footer>
     </form>
   </po-modal>
   
-  <po-modal #modal_2
-    [p-title]="lbl_deleteConfirmation"
-    [p-primary-action]="modal_2_confirm"
-    [p-secondary-action]="modal_2_close">
+  <!-- Modal de confirmação de exclusão de uma consulta do Agent -->
+  <po-modal #modal_deleteQuery
+    [p-title]="lbl_deleteQueryTitle">
     <po-modal-footer class="modal-footer">
       <div class="po-row footer">
-        <po-button [p-label]="lbl_goBack" (p-click)="modal_2_close()"></po-button>
-        <po-button [p-label]="lbl_delete" (p-click)="modal_2_confirm()" p-kind="primary"></po-button>
+        <po-button [p-label]="lbl_goBack" (p-click)="deleteQuery_NO()"></po-button>
+        <po-button [p-label]="lbl_delete" (p-click)="deleteQuery_YES()" p-kind="primary"></po-button>
       </div>
     </po-modal-footer>
   </po-modal>

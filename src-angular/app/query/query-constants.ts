@@ -1,0 +1,1 @@
+export const CNST_QUERY_VERSION_STANDARD: string = '0.0.0';

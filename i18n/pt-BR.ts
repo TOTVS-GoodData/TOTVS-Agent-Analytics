@@ -8,6 +8,8 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     UPDATE_AVAILABLE: 'Atualização disponível: ${p1} --> ${p2}',
     UPDATE_NOT_AVAILABLE: 'Nenhuma atualização do Agent disponível (${p1})',
     UPDATE_ERROR: 'Falha no download do pacote de atualização.',
+    UPDATE_READY_TITLE: 'Uma nova atualização do Agent foi baixada!',
+    UPDATE_READY_DESCRIPTION: 'Quando gostaria de aplicar a atualização?',
     AUTOLAUNCH_ERROR: 'Falha na configuração da inicialização automática do Agent.',
     THREAD_ERROR: 'ERRO - ${p1} já está em execução. Esta instância será encerrada.',
     UPDATE_DOWNLOAD: 'Baixando atualização: ${p1} (${p2}) -- vel: ${p3}',
@@ -34,12 +36,14 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     JAVA_EXECUTION_START: '===Início da execução do Agent: (.*)===',
     JAVA_EXECUTION_END: '===Término da execução do Agent: (.*)===',
     JAVA_EXECUTION_DURATION: '===Tempo total de execução do Agent: (.*)===',
-    JAVA_EXECUTION_CANCELLED: '===Execução cancelada via pedido do usuário==='
+    JAVA_EXECUTION_CANCELLED: '===Execução cancelada via pedido do usuário===',
+    WINDOWS_REGISTRY_ERROR: 'Falha na atualização do Registro do Windows (autoUpdate)'
   },
   ANGULAR: {
     SYSTEM_EXIT: 'Tem certeza que deseja sair do Agent?',
     SYSTEM_FINISH_USER: '=== Desligamento solicitado pelo usuário (menu manual) ===',
     SYSTEM_FINISH_USER_WARNING: 'Aviso - Desligamento do sistema não pode ser testado sem o electron.',
+    ERROR: 'Erro - Um erro inesperado ocorreu. Por favor tente novamente.',
     OTHER: 'Outro',
     NONE: 'Nenhum'
   },
@@ -68,9 +72,9 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
   },
   LANGUAGES: {
     TITLE: 'Idioma da aplicação',
-    en_US: 'Inglês',
-    pt_BR: 'Português',
-    es_ES: 'Espanhol'
+    "en-US": 'Inglês',
+    "pt-BR": 'Português',
+    "es-ES": 'Espanhol'
   },
   CONTRACT_TYPES: {
     PLATFORM: 'Plataforma GoodData',
@@ -89,17 +93,28 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     GO_BACK: 'Voltar',
     DETAILS: 'Detalhes',
     EXECUTE: 'Executar',
+    SELECT: 'Selecione...',
     NEW_PARAMETER: 'Novo parâmetro',
     YES_SIMPLIFIED: 'S',
     NO_SIMPLIFIED: 'N',
     TEST_CONNECTION: 'Testar Conexão',
-    LOAD_WORKSPACES: 'Carregar Ambientes'
+    LOAD_WORKSPACES: 'Carregar Ambientes',
+    NEXT_ERROR: 'Próximo erro',
+    NO_ERRORS: 'Sem erros',
+    YES: 'Sim',
+    NO: 'Não',
+    UPDATE_NOW: 'Agora (Irá fechar o Agent)',
+    UPDATE_LATER: 'Depois (Ao encerrar)'
   },
   WORKSPACES: {
     TITLE: 'Cadastro de Ambientes',
     NEW_WORKSPACE: 'Cadastrar Ambiente',
     EDIT_WORKSPACE: 'Alterar Ambiente',
-    DELETE_CONFIRMATION: ' Deseja realmente excluir este ambiente?',
+    DELETE_CONFIRMATION: 'Deseja realmente excluir este ambiente?',
+    NO_DATA: 'Nenhum ambiente foi encontrado',
+    CHECK_CONTRACT_PRODUCTS_TITLE: 'Verificação do contrato do GoodData',
+    CHECK_CONTRACT_PRODUCTS_DESCRIPTION_1: 'Informe abaixo o código de contratação do GoodData.',
+    CHECK_CONTRACT_PRODUCTS_DESCRIPTION_2: 'Caso não conheça este código, entre em contato com "suporte.gd@totvs.com.br".',
     SECTIONS: {
       1: '1 / 4 - Informações comerciais',
       2: '2 / 4 - Informações da plataforma GoodData',
@@ -124,6 +139,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       PASSWORD_ENCRYPT: 'Criptografando senha...',
     },
     TABLE: {
+      CONTRACT_TOKEN: 'Código de contratação',
       CONTRACT_TYPE: 'Modalidade de contratação',
       CUSTOMER_CODE: 'Código T do cliente',
       ERP: 'ERP',
@@ -156,6 +172,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     NEW_DATABASE: 'Cadastrar Banco de Dados',
     EDIT_DATABASE: 'Alterar Banco de Dados',
     DELETE_CONFIRMATION: ' Deseja realmente excluir este banco de dados?',
+    NO_DATA: 'Nenhum banco de dados foi encontrado',
     CONNECTION_STRING: {
       IP_ADDRESS: '<ENDERECO_IP>',
       PORT: '<PORTA>',
@@ -197,7 +214,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       LOGIN_WARNING: 'Aviso - Conexões a banco de dados não podem ser testadas sem o electron.',
       VALIDATE: 'Validando informações do banco de dados...',
       ERROR_INVALID_IP: 'Erro - Endereço IP inválido. Verifique o tipo informado (ipv4 / ipv6 / hostname) e se o preenchimento está correto.',
-      ERROR_INVALID_PORT: 'Erro - Porta do banco de dados inválida. Verifique se a porta está no range permitido (1024 - 65536).',
+      ERROR_INVALID_PORT: 'Erro - Porta do banco de dados inválida. Verifique se a porta está no range permitido (${p1} - ${p2}).',
       PASSWORD_ENCRYPT: 'Criptografando senhas...',
     },
     TOOLTIPS: {
@@ -205,7 +222,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       DRIVER_PATH: 'Caminho completo do driver JDBC de conexão do banco de dados. Este arquivo deve possuir a extensão ".jar".',
       HOST_TYPE: 'Tipo de endereço IP: "Ipv4": Formato "255.255.255.255". "Ipv6": Formato "FF:FF:...:FF". "Hostname": Informar o nome da máquina.',
       HOST_NAME: 'Informe o endereço IP da máquina em que o banco de dados está localizado.',
-      PORT: 'Informe a porta de conexão ao banco de dados. Este valor deve estar entre 1024 e 65535.',
+      PORT: 'Informe a porta de conexão ao banco de dados. Este valor deve estar entre ${p1} e ${p2}.',
       CONNECTION_STRING: 'Comando final para conexão ao banco de dados. Este comando será utilizado pelo Agent ao tentar se conectar ao banco de dados.'
     }
   },
@@ -215,6 +232,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     EDIT_SCHEDULE: 'Editar Agendamento',
     NOT_FOUND: 'Nenhum agendamento encontrado.',
     DELETE_CONFIRMATION: 'Deseja realmente excluir este agendamento?',
+    NO_DATA: 'Nenhum agendamento foi encontrado',
     TABLE: {
       NAME: 'Nome do agendamento',
       WORKSPACE: 'Ambiente',
@@ -281,6 +299,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     IMPORT_QUERIES: 'Importar consultas FAST',
     NEW_QUERY: 'Nova consulta',
     EDIT_QUERY: 'Editar consulta',
+    NO_DATA: 'Nenhuma consulta foi encontrada',
     DELETE_CONFIRMATION: 'Deseja realmente excluir esta consulta?',
     TABLE: {
       SCHEDULE_NAME: 'Nome do agendamento',
@@ -332,6 +351,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     IMPORT_SCRIPTS: 'Importar rotinas FAST',
     NEW_SCRIPT: 'Nova Rotina',
     EDIT_SCRIPT: 'Editar Rotina',
+    NO_DATA: 'Nenhuma rotina foi encontrada',
     DELETE_CONFIRMATION: 'Deseja realmente excluir esta rotina?',
     TABLE: {
       SCHEDULE_NAME: 'Nome do agendamento',
@@ -370,6 +390,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
   },
   MONITOR: {
     TITLE: 'Monitor de Execução',
+    NO_DATA: 'Nenhum log de execução foi encontrado',
     TABLE: {
       STATUS: 'Status',
       LINES: 'Linhas',
@@ -393,7 +414,8 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     },
     MESSAGES: {
       WARNING: 'Aviso - Monitoramento de logs não pode ser testado sem o Electron.',
-      KILL_PROCESS_TITLE: 'Tem certeza que deseja terminar a execução deste agendamento?'
+      KILL_PROCESS_TITLE: 'Tem certeza que deseja terminar a execução deste agendamento?',
+      SCHEDULE_NOT_FOUND: 'Desconhecido'
     }
   },
   CONFIGURATION: {
@@ -403,6 +425,8 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     VERSION: 'Versão',
     DEBUGMODE_ON: 'Modo de depuração: Ativado',
     DEBUGMODE_OFF: 'Modo de depuração: Desativado',
+    AUTOUPDATE_ON: 'Atualização automática: Ativada',
+    AUTOUPDATE_OFF: 'Atualização automática: Desativada',
     LOGFILES_TO_KEEP: 'Número mínimo, em dias, de arquivos de log para serem mantidos',
     JAVA_XMX: 'Alocação de memória máxima (em MB)',
     JAVA_TMPDIR: 'Diretório de arquivos temporários',
@@ -414,18 +438,22 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       VALIDATE: 'Validando configuração...',
       SAVE: 'Gravando configuração...',
       SAVE_ERROR: 'Erro - Um erro inesperado ocorreu. Por favor tente novamente.',
-      SAVE_OK: 'Configuração atualizada com sucesso!',
+      SAVE_OK: 'Configuração atualizada com sucesso!'
     },
     TOOLTIPS: {
+      DEBUGMODE: 'Permite que mensagens de debug do log de execuções do Agent sejam vistas.',
       LOGFILES: 'Número máximo, em dias, de arquivos de log a serem mantidos pelo Agent. O Agent irá apagar automaticamente os arquivos de log mais antigos do que este parâmetro.',
-      JAVA_XMX: 'Alocação máxima de memória RAM (MB - Megabytes) que o Agent pode utilizar ao executar agendamentos. Caso a memória não seja suficiente, o Agent irá finalizar a execução, com uma mensagem de erro.',
+      JAVA_XMX: 'Alocação máxima de memória RAM (MB - Megabytes) que o Agent pode utilizar ao executar agendamentos. Caso a memória não seja suficiente, o Agent irá finalizar a execução, com uma mensagem de erro. Valor mínimo: ${p1}MB',
       JAVA_TMPDIR: 'Diretório temporário, usado pelo Agent para guardar os arquivos antes de enviá-los para o GoodData. Selecione um diretório que pode ser completamente apagado, caso necessário.',
-      JAVA_JREDIR: 'Diretório ./bin, onde estão os arquivos binários da JRE do Java. Caso não seja informado, o Agent irá procurar o Java nas variáveis de ambiente do sistema.'
+      JAVA_JREDIR: 'Diretório ./bin, onde estão os arquivos binários da JRE do Java. Caso não seja informado, o Agent irá procurar o Java nas variáveis de ambiente do sistema.',
+      AUTOUPDATE: 'Define se o Agent irá baixar atualizações disponibilizadas pela TOTVS. Em caso positivo, o Agent irá avisar ao usuário quando encontrar uma nova versão, que será aplicada logo em sequência. Em caso negativo, nenhuma atualização será instalada.'
     }
   },
   FORM_ERRORS: {
     FIELD_NOT_FILLED: 'Erro - Campo obrigatório \'${p1}\' não preenchido.',
     FIELD_NOT_FILLED_GRAPH: 'Erro - Campo obrigatório  \'${p1}\' não preenchido. Por favor selecione um graph para ser executado, ou remova a seleção do campo de processo de ETL.',
+    FIELD_TYPING_WRONG: 'Erro: O valor informado no campo \'${p1}\' não é válido.',
+    FIELD_MINIMUM_ERROR: 'Erro - O valor informado no campo \'${p1}\' é infeerior ao valor mínimo permitido (${p2}).',
     FOLDER_SELECT_WARNING: 'Aviso - Seleção de diretórios não podem ser testados sem o Electron.',
     ONLY_YES_OR_NO: 'Erro - Os parâmetros SQL só podem ser do tipo \'S\' ou \'N\'. Por favor, verifique o preenchimento dos mesmos.'
   }
