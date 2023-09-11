@@ -3,4 +3,6 @@ release-builds/
 dist/
 logs/
 tmp/
+assets/db.json
+assets/dbDevelopment.json
 .angular
