@@ -48,6 +48,7 @@ export class Utilities {
     let headers = new HttpHeaders();
     headers = headers.append('Accept', 'application/json');
     headers = headers.append('Content-type', 'application/json');
+    headers = headers.append('X-PO-No-Message', 'true');
     return headers;
   }
   
@@ -81,7 +82,7 @@ export class Utilities {
     
     //Criação do objeto de popup
     let notification: PoNotification = {
-       message: message
+       message: (errObj != null ? errObj : message)
       ,orientation: PoToasterOrientation.Top
       ,duration: 4000
     };

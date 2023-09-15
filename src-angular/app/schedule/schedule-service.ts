@@ -29,6 +29,10 @@ import { Query } from '../query/query-interface';
 import { ScriptService } from '../script/script-service';
 import { Script } from '../script/script-interface';
 
+/* Serviço de rotinas do Agent */
+import { ConfigurationService } from '../configuration/configuration-service';
+import { Configuration } from '../configuration/configuration-interface';
+
 /* Componentes rxjs para controle de Promise / Observable */
 import { Observable, of, catchError, map, switchMap, forkJoin } from 'rxjs';
 
@@ -58,6 +62,7 @@ export class ScheduleService {
     private _electronService: ElectronService,
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
+    private _configurationService: ConfigurationService,
     private _translateService: TranslationService,
     private _queryService: QueryService,
     private _scriptService: ScriptService,
@@ -74,13 +79,28 @@ export class ScheduleService {
       return of(this._electronService.ipcRenderer.sendSync('getSchedules', showLogs));
     } else {
       
+      //Escrita de logs (caso solicitado)
       if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING']);
       
       //Consulta da API de testes do Angular
       return this._http.get<Schedule[]>(this._utilities.getLocalhostURL() + '/schedules').pipe(
-      map((schedules: Schedule[]) => {
-        if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_OK']);
-        return schedules;
+      switchMap((schedules: Schedule[]) => {
+        
+        //Converte a data de execução de cada agendamento, para o fuso horário configurado no Agent.
+        return this._configurationService.getConfiguration(false).pipe(map((conf: Configuration) => {
+          schedules = schedules.map((s: Schedule) => {
+            if (s.lastExecution != undefined) s.lastExecutionString = s.lastExecution.toLocaleString(conf.locale, { timeZone: conf.timezone });
+            return s;
+          });
+          
+          //Escrita de logs (caso solicitado)
+          if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_OK']);
+          
+          return schedules;
+        }), catchError((err: any) => {
+          this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_ERROR'], err);
+          throw err;
+        }));
       }), catchError((err: any) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_ERROR'], err);
         throw err;
@@ -127,7 +147,7 @@ export class ScheduleService {
           if (newId) {
             return this._http.post(this._utilities.getLocalhostURL() + '/schedules', s).pipe(
             map(() => {
-              this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['SCHEDULES.MESSAGES.SAVE_OK']);
+              this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.SAVE_OK']);
               return true;
             }), catchError((err: any) => {
               this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCHEDULES.MESSAGES.SAVE_ERROR'], err);
@@ -136,7 +156,7 @@ export class ScheduleService {
           } else {
             return this._http.put(this._utilities.getLocalhostURL() + '/schedules/' + s.id, s).pipe(
             map(() => {
-              this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['SCHEDULES.MESSAGES.SAVE_OK']);
+              this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.SAVE_OK']);
               return true;
             }), catchError((err: any) => {
               this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCHEDULES.MESSAGES.SAVE_ERROR'], err);

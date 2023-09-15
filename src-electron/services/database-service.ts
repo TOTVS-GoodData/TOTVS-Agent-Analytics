@@ -26,8 +26,10 @@ export class DatabaseService {
   /*** MÉTODOS DO SERVIÇO ***/
   /**************************/
   /* Método de consulta dos bancos de dados salvos do Agent */
-  public static getDatabases(): Observable<Database[]> {
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING'], null, null, null);
+  public static getDatabases(showLogs: boolean): Observable<Database[]> {
+    
+    //Escrita de logs (caso solicitado)
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno dos bancos de dados cadastrados
     return Files.readApplicationData().pipe(map((_dbd: DatabaseData) => {

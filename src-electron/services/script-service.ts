@@ -11,17 +11,29 @@ import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../../src-angular/app/utilities
 /* Interface do banco de dados do Agent */
 import { DatabaseData } from '../electron-interface';
 
+/* Serviço de ambientes do Agent */
+import { WorkspaceService } from './workspace-service';
+import { Workspace } from '../../src-angular/app/workspace/workspace-interface';
+import { CNST_ERP } from '../../src-angular/app/workspace/workspace-constants';
+
+/* Serviço de bancos de dados do Agent */
+import { DatabaseService } from './database-service';
+import { Database } from '../../src-angular/app/database/database-interface';
+
 /* Interface de agendamentos do Agent */
+import { ScheduleService } from './schedule-service';
 import { Schedule } from '../../src-angular/app/schedule/schedule-interface';
 
 /* Interface de rotinas do Agent */
 import { Script } from '../../src-angular/app/script/script-interface';
+import { Version } from '../../src-angular/app/query/query-interface';
+import { CNST_QUERY_VERSION_STANDARD } from '../../src-angular/app/query/query-constants';
 
 /* Componente de geração de Id's únicos para os registros */
 import uuid from 'uuid-v4';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, switchMap, map, of, catchError } from 'rxjs';
+import { Observable, switchMap, map, of, catchError, forkJoin } from 'rxjs';
 
 export class ScriptService {
   
@@ -29,8 +41,10 @@ export class ScriptService {
   /*    ROTINAS      */
   /*******************/
   /* Método de consulta das rotinas salvas do Agent */
-  public static getScripts(): Observable<Script[]> {
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING'], null, null, null);
+  public static getScripts(showLogs: boolean): Observable<Script[]> {
+    
+    //Escrita de logs (caso solicitado)
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno das rotinas cadastradas
     return Files.readApplicationData().pipe(map((db: DatabaseData) => {
@@ -42,14 +56,15 @@ export class ScriptService {
   }
   
   /* Método de consulta das rotinas pertencentes a um agendamento do Agent */
-  public static getScriptsBySchedule(sc: Schedule): Observable<Script[]> {
+  public static getScriptsBySchedule(sc: Schedule, showLogs: boolean): Observable<Script[]> {
     
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
       new TranslationInput('SCRIPTS.MESSAGES.SCHEDULE_LOADING', [sc.name])
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SCHEDULE_LOADING'], null, null, null);
+    //Escrita de logs (caso solicitado)
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SCHEDULE_LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno das rotinas válidas
     return Files.readApplicationData().pipe(map((_dbd: DatabaseData) => {
@@ -130,6 +145,124 @@ export class ScriptService {
     }), catchError((err: any) => {
         Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.ERROR'], null, null, err);
         throw err;
+    }));
+  }
+  
+  /* Método de atualização das rotinas padrões */
+  public static updateAllScripts(): Observable<boolean> {
+    
+    //Variável de suporte, que armazena a versão atualizada disponível de cada rotina do Agent
+    let updatedScripts: Script[] = [];
+    
+    //Variável de suporte, que armazena todas as requisições de gravação das rotinas
+    let obs_scripts: Observable<boolean>[] = [];
+    
+    //Consulta das informações cadastradas no Agent
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SCRIPT_UPDATER'], null, null, null);
+    return forkJoin([
+      ScriptService.getScripts(false),
+      ScheduleService.getSchedules(false),
+      WorkspaceService.getWorkspaces(false),
+      DatabaseService.getDatabases(false)
+    ]).pipe(switchMap((results: [Script[], Schedule[], Workspace[], Database[]]) => {
+      
+      /*
+        Itera por todas as rotinas cadastradas pelo usuário,
+        procurando uma versão mais atualizada de cada.
+        
+        Rotinas customizadas, ou criadas pelo usuário são ignoradas.
+        Apenas a rotina mais recente para cada versão Major/Minor é retornada.
+      */
+      updatedScripts = results[0].map((script: Script) => {
+        
+        //Extrai o ERP e o banco de dados de cada consulta cadastrada
+        let s: Schedule = results[1].find((s: Schedule) => (script.scheduleId == s.id));
+        let w: Workspace = results[2].find((w: Workspace) => (s.workspaceId == w.id));
+        let db: Database = results[3].find((db: Database) => (w.databaseIdRef == db.id));
+        
+        //Filtra apenas as consultas padrões, e que não foram customizadas pelo usuário
+        let isStandardScript: boolean = ((CNST_ERP.find((erp: any) => (erp.ERP == w.erp)).Scripts[db.brand].find((s_erp: any) => {
+          let version: Version = new Version(s_erp.version);
+          return (
+               (s_erp.name == script.name)
+            && (s_erp.script == script.script)
+            && (version.major == script.version.major)
+            && (version.minor == script.version.minor)
+            && (version.patch == script.version.patch)
+          );
+        })) != undefined);
+        
+        //Caso a rotina seja válida, procura por atualizações da mesma
+        if (isStandardScript) {
+          
+          //Retorna todas as atualizações válidas da consulta padrão, e ordena a partir da mais recente
+          let updates: any[] = CNST_ERP.find((erp: any) => (erp.ERP == w.erp)).Scripts[db.brand].filter((s_erp: any) => {
+            let version: Version = new Version(s_erp.version);
+            return (
+                 (s_erp.name == script.name)
+              && (version.major == script.version.major)
+              && (version.minor == script.version.minor)
+              && (version.patch > script.version.patch)
+            );
+          }).sort((a: any, b: any) => {
+            let aVersion: Version = new Version(a.version);
+            let bVersion: Version = new Version(b.version);
+            
+            return (bVersion.patch - aVersion.patch);
+          });
+          
+          //Retorna apenas a rotina mais recente (Se houver)
+          if (updates[0] != undefined) {
+            
+            //Conversão de JSON -> Objeto (Para uso dos métodos da interface "Version")
+            let v1 = new Version(CNST_QUERY_VERSION_STANDARD);
+            let v2 = new Version(updates[0].version);
+            v1.jsonToObject(script.version);
+            
+            //Consulta das traduções
+            let translations: any = TranslationService.getTranslations([
+              new TranslationInput('ELECTRON.SCRIPT_UPDATER_AVAILABLE', [script.name, v1.getVersion(), v2.getVersion()])
+            ]);
+            
+            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SCRIPT_UPDATER_AVAILABLE'], null, null, null);
+            script.version = v2;
+            script.script = updates[0].script;
+            return script;
+          } else {
+            return undefined;
+          }
+        } else {
+          
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SCRIPT_UPDATER_NOT_STANDARD', [script.name])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SCRIPT_UPDATER_NOT_STANDARD'], null, null, null);
+          
+          return undefined;
+        }
+      }).filter((script: Script) => (script != undefined));
+      
+      //Prepara as requisições de atualização a serem disparadas
+      if (updatedScripts.length > 0) {
+        obs_scripts = updatedScripts.map((script: Script) => {
+          return this.saveScript(script).pipe(map((res: boolean) => {
+            return res;
+          }));
+        });
+        
+        //Dispara todas as gravações de consultas, simultaneamente
+        return forkJoin(obs_scripts).pipe(map(() => {
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SCRIPT_UPDATER_OK'], null, null, null);
+          return true;
+        }), catchError((err: any) => {
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SCRIPT_UPDATER_ERROR'], null, null, null);
+          throw err;
+        }));
+      } else {
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SCRIPT_UPDATER_NO_UPDATES'], null, null, null);
+        return of(true);
+      }
     }));
   }
 }

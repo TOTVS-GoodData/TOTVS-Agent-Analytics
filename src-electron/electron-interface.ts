@@ -1,5 +1,6 @@
-/* Idioma padrão do Agent */
+/* Componentes de utilitários do Agent */
 import { CNST_DEFAULT_LANGUAGE } from '../src-angular/app/services/translation/translation-constants';
+import { CNST_TMP_PATH } from './constants-electron';
 
 /* Interface de ambientes do Agent */
 import { Workspace } from '../src-angular/app/workspace/workspace-interface';
@@ -34,7 +35,7 @@ export class DatabaseData {
     this.schedules = [];
     this.queries = [];
     this.scripts = [];
-    this.configuration = new Configuration(10, true, 2048, '', CNST_DEFAULT_LANGUAGE, true);
+    this.configuration = new Configuration(10, true, 2048, CNST_TMP_PATH, CNST_DEFAULT_LANGUAGE, true);
   }
 }
 

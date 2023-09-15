@@ -62,18 +62,23 @@ export class ScriptService {
   }
   
   /* Método de consulta das consultas salvas do Agent */
-  public getScripts(): Observable<Script[]> {
+  public getScripts(showLogs: boolean): Observable<Script[]> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getScripts'));
+      return of(this._electronService.ipcRenderer.sendSync('getScripts', showLogs));
     } else {
       
+      //Escrita de logs (caso solicitado)
+      if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING']);
+      
       //Consulta da API de testes do Angular
-      this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING']);
       return this._http.get<Script[]>(this._utilities.getLocalhostURL() + '/scripts').pipe(
       map((scripts: Script[]) => {
-        this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_OK']);
+        
+        //Escrita de logs (caso solicitado)
+        if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_OK']);
+        
         return scripts;
       }), catchError((err: any) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_ERROR'], err);
@@ -130,7 +135,7 @@ export class ScriptService {
           new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [s.name]),
           new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [s.name])
         ]),
-        this.getScripts())
+        this.getScripts(false))
       .pipe(switchMap((results: [TranslationInput[], Script[]]) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['SCRIPTS.MESSAGES.SAVE']);
         

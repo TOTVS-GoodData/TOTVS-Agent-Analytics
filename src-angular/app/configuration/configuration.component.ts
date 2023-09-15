@@ -11,6 +11,7 @@ import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
 import { CNST_MANDATORY_FORM_FIELD } from '../utilities/constants-angular';
 import { CNST_JAVA_XMX_MINIMUM } from '../utilities/java-constants';
 import { CNST_DEFAULT_LANGUAGE } from '../services/translation/translation-constants';
+import { CNST_TIMEZONES } from '../services/timezones';
 
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from 'ngx-electronyzer';
@@ -44,6 +45,9 @@ export class ConfigurationComponent implements OnInit {
   /********* Gerais *********/
   //Variável de suporte, para mostrar ao usuário os campos obrigatórios não preenchidos.
   protected CNST_FIELD_NAMES: Array<any> = [];
+  
+  //Variável de suporte, para mostrar ao usuário os fusos horários disponíveis.
+  protected _CNST_TIMEZONES: Array<any> = [];
   
   //Versões do Agent / Java
   protected AgentVersion: string = null;
@@ -86,6 +90,7 @@ export class ConfigurationComponent implements OnInit {
   protected lbl_autoUpdateOff: string = null;
   protected lbl_save: string = null;
   protected lbl_locale: string = null;
+  protected lbl_timezone: string = null;
   
   //Balões de ajuda
   protected ttp_debugMode: string = null;
@@ -107,7 +112,24 @@ export class ConfigurationComponent implements OnInit {
     private _router: Router
   ) {}
   
+  /* Método de inicialização do componente */
   public ngOnInit(): void {
+    
+    /*
+      Definição dos fusos horários disponíveis
+    
+      Isso tem que rodar só 1x, no init do Angular,
+      porque o PO.UI é louco.
+    */
+    this._CNST_TIMEZONES = CNST_TIMEZONES.sort().map((timezone: string) => {
+      return { label: timezone, value: timezone };
+    });
+    
+    this.reloadConfiguration();
+  }
+  
+  /* Método de recarga do componente de Configuração do Agent */
+  protected reloadConfiguration(): void {
     
     //Consulta das traduções
     this._translateService.updateStandardTranslations().subscribe(() => {
@@ -129,6 +151,7 @@ export class ConfigurationComponent implements OnInit {
       this.lbl_version = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.VERSION'];
       this.lbl_java = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA'];
       this.lbl_locale = this._translateService.CNST_TRANSLATIONS['LANGUAGES.TITLE'];
+      this.lbl_timezone = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TIMEZONE'];
       this.lbl_save = this._translateService.CNST_TRANSLATIONS['BUTTONS.SAVE'];
       
       //Tradução dos balões de ajuda dos campos
@@ -150,37 +173,33 @@ export class ConfigurationComponent implements OnInit {
         { key: 'javaTmpDir', value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_TMPDIR'] }
       ];
       
-      //Leitura da configuração atual do Agent
-      return this._configurationService.getConfiguration(true).subscribe((conf: Configuration) => {
+      //Atualização do número de versão do Java / Agent
+      if (this._electronService.isElectronApp) {
+        this.AgentVersion = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getAgentVersion').version;
+        this.JavaVersion = null;
+      } else {
+        this.AgentVersion = CNST_PROGRAM_VERSION.DEVELOPMENT;
+        this.JavaVersion = null;
+      }
+      
+      this._configurationService.getConfiguration(true).subscribe((conf: Configuration) => {
+        this.configuration = conf;
         
-        //Caso exista uma configuração cadastrada, atualiza os campos do formulário
-        if (conf != undefined) {
-          
-          this.configuration = conf;
-          this.CNST_LANGUAGES = this._customTranslationLoader.getAvailableLanguages().map((locale: string) => ({
-            label: this._translateService.CNST_TRANSLATIONS['LANGUAGES.' + locale],
-            action: (locale: any) => this.configuration.locale = locale.value,
-            icon: 'po-icon-user',
-            selected: (this.configuration.locale == locale),
-            value: locale
-          }));
-        }
+        //Aualização dos idiomas disponíveis no Agent
+        this.CNST_LANGUAGES = this._customTranslationLoader.getAvailableLanguages().map((locale: string) => ({
+          label: this._translateService.CNST_TRANSLATIONS['LANGUAGES.' + locale],
+          action: (locale: any) => this.configuration.locale = locale.value,
+          icon: 'po-icon-user',
+          selected: (this.configuration.locale == locale),
+          value: locale
+        }));
         
-        //Atualização do número de versão do Java / Agent
-        if (this._electronService.isElectronApp) {
-          this.AgentVersion = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getAgentVersion').version;
-          this.JavaVersion = null;
-        } else {
-          this.AgentVersion = CNST_PROGRAM_VERSION.DEVELOPMENT;
-          this.JavaVersion = null;
-        }
         this.po_lo_text = { value: null };
-        return null;
-      }, (err: any) => {
-        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_ERROR'], err);
-        this.po_lo_text = { value: null };
-        throw err;
       });
+    }, (err: any) => {
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_ERROR'], err);
+      this.po_lo_text = { value: null };
+      throw err;
     });
   }
   
@@ -198,7 +217,7 @@ export class ConfigurationComponent implements OnInit {
         this.po_lo_text = { value: null };
         
         //Recarrega a página de configuração do Agent
-        this.ngOnInit();
+        this.reloadConfiguration();
       }, (err: any) => {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR']);
         this.po_lo_text = { value: null };

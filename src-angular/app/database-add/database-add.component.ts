@@ -221,7 +221,7 @@ export class DataBaseAddComponent {
   
   /* Método que atualiza o alvo da conexão (Banco / Serviço / SID) */
   protected updateDatabaseField(): void {
-    switch(this.database.type) {
+    switch(this.database.connectionType) {
       case CNST_DATABASE_TYPE_SID:
         this.lbl_db_databaseName = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.SID'] + CNST_MANDATORY_FORM_FIELD;
         this.CNST_FIELD_NAMES.find((field: any) => (field.key == 'db_databaseName')).value = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.SID'];
@@ -248,6 +248,7 @@ export class DataBaseAddComponent {
     this.database.driverPath = dbType.driverPath;
     this.database.brand = dbType.brand;
     this.database.port = dbType.defaultPort;
+    this.database.connectionType = dbType.connectionType;
     
     //Adiciona um texto de ajuda no campo seletor de drivers (Obrigatório p/ testes do Angular)
     if (this.database.type == CNST_DATABASE_OTHER) this.database.driverPath = this._translateService.CNST_TRANSLATIONS['BUTTONS.SELECT'];
@@ -399,7 +400,7 @@ export class DataBaseAddComponent {
     
     //Verifica se todos os campos obrigatórios da interface de banco de dados foram preenchidos
     let propertiesNotDefined: string[] = Object.getOwnPropertyNames.call(Object, db).map((p: string) => {
-      if (((this.database[p] == '') || (this.database[p] == null)) && (p != 'id') && (p != 'instance')) return p;
+      if (((this.database[p] == '') || (this.database[p] == null) || (this.database[p] == this._translateService.CNST_TRANSLATIONS['BUTTONS.SELECT'])) && (p != 'id') && (p != 'instance')) return p;
     }).filter((p: string) => { return p != null; });
     
     // Validação dos campos de formulário
@@ -479,9 +480,9 @@ export class DataBaseAddComponent {
   }
   
   /* Método de seleção do driver do banco de dados (Apenas disponível c/ Electron) */
-  protected getDriverFolder(): void {
+  protected getDriverFile(): void {
     if (this._electronService.isElectronApp) {
-      this.database.driverPath = this._electronService.ipcRenderer.sendSync('getFolder');
+      this.database.driverPath = this._electronService.ipcRenderer.sendSync('getFile');
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['FORM_ERRORS.FOLDER_SELECT_WARNING']);
       this.po_lo_text = { value: null };

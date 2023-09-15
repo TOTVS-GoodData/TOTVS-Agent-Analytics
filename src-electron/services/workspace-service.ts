@@ -29,8 +29,10 @@ export class WorkspaceService {
   /*** MÉTODOS DO SERVIÇO ***/
   /**************************/
   /* Método de consulta dos ambientes salvos do Agent */
-  public static getWorkspaces(): Observable<Workspace[]> {
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING'], null, null, null);
+  public static getWorkspaces(showLogs: boolean): Observable<Workspace[]> {
+    
+    //Escrita de logs (caso solicitado)
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno dos ambientes cadastrados
     return Files.readApplicationData().pipe(map((_dbd: DatabaseData) => {

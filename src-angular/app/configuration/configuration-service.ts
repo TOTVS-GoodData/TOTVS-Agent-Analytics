@@ -48,22 +48,22 @@ export class ConfigurationService {
   }
   
   /* Método de consulta das configuraçãoes salvas do Agent */
-  public getConfiguration(writeLogs: boolean): Observable<Configuration> {
+  public getConfiguration(showLogs: boolean): Observable<Configuration> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getConfiguration', writeLogs));
+      return of(this._electronService.ipcRenderer.sendSync('getConfiguration', showLogs));
     } else {
       
       //Escrita de logs (caso solicitado)
-      if (writeLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING']);
+      if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING']);
       
       //Consulta da API de testes do Angular
       return this._http.get<Configuration>(this._utilities.getLocalhostURL() + '/configuration').pipe(
       map((configuration: Configuration) => {
         
         //Escrita de logs (caso solicitado)
-        if (writeLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK']);
+        if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK']);
         
         this._utilities.debugMode = configuration.debug;
         return configuration;

@@ -179,22 +179,7 @@ export class ScheduleAddComponent {
       { key: 'GDZipExtension', value: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.ZIP_EXTENSION'] }
     ];
     
-    //Consulta o cadastro de ambientes / bancos de dados disponíveis no Agent
-    forkJoin([
-      this._workspaceService.getWorkspaces(),
-      this._databaseService.getDatabases()
-    ]).subscribe((results: [Workspace[], Database[]]) => {
-      this.projects = results[0];
-      this.databases = results[1];
-      this.listProjects = this.projects.map((w: Workspace) => {
-        return { label: w.name, value: w.id }
-      });
-    }, (err: any) => {
-      this.po_lo_text = { value: null };
-      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_ERROR'], err);
-    });
-    
-    //Realiza a leitura do banco de dados a ser editado (se houver)
+    //Realiza a leitura do agendamento a ser editado (se houver)
     let nav: Navigation = this._router.getCurrentNavigation();
     if ((nav != undefined) && (nav.extras.state)) {
       Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
@@ -202,22 +187,37 @@ export class ScheduleAddComponent {
       });
     }
     
-    //Verifica se é um novo cadastro, ou uma atualização do agendamento
-    if (this.schedule.id == null) this.lbl_title = this._translateService.CNST_TRANSLATIONS['SCHEDULES.NEW_SCHEDULE'];
-    else {
-      this.lbl_title = this._translateService.CNST_TRANSLATIONS['SCHEDULES.EDIT_SCHEDULE'];
-      
-      this.isPlatform = (this.projects.find((workspace: Workspace) => (workspace.id == this.schedule.workspaceId)).contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA);
-        
-      //Converte o valor da coluna "SQL" dos parâmetros SQL, em texto (boolean -> string)
-      this.schedule.SQLParameters = this.schedule.SQLParameters.map((p: SQLParameter) => {
-        return {
-          name: p.name,
-          value: p.value,
-          sql: (p.sql == true ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED'])
-        };
+    //Consulta o cadastro de ambientes / bancos de dados disponíveis no Agent
+    forkJoin([
+      this._workspaceService.getWorkspaces(false),
+      this._databaseService.getDatabases(false)
+    ]).subscribe((results: [Workspace[], Database[]]) => {
+      this.projects = results[0];
+      this.databases = results[1];
+      this.listProjects = this.projects.map((w: Workspace) => {
+        return { label: w.name, value: w.id }
       });
-    }
+      
+      //Verifica se é um novo cadastro, ou uma atualização do agendamento
+      if (this.schedule.id == null) this.lbl_title = this._translateService.CNST_TRANSLATIONS['SCHEDULES.NEW_SCHEDULE'];
+      else {
+        
+        this.isPlatform = (this.projects.find((workspace: Workspace) => (workspace.id == this.schedule.workspaceId)).contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA);
+        this.lbl_title = this._translateService.CNST_TRANSLATIONS['SCHEDULES.EDIT_SCHEDULE'];
+        
+        //Converte o valor da coluna "SQL" dos parâmetros SQL, em texto (boolean -> string)
+        this.schedule.SQLParameters = this.schedule.SQLParameters.map((p: SQLParameter) => {
+          return {
+            name: p.name,
+            value: p.value,
+            sql: (p.sql == true ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED'])
+          };
+        });
+      }
+    }, (err: any) => {
+      this.po_lo_text = { value: null };
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_ERROR'], err);
+    });
   }
   
   /* Método executado ao trocar o ambiente do agendamento */
@@ -290,13 +290,13 @@ export class ScheduleAddComponent {
     
     //Verifica se todos os campos da interface de agendamento foram preenchidos
     let propertiesNotDefined: string[] = Object.getOwnPropertyNames.call(Object, schedule).map((p: string) => {
-      if ((this.schedule[p] == '') && (p != 'id') && (p != 'enabled')) return p;
+      if ((this.schedule[p] == '') && (p != 'id') && (p != 'enabled') && (p != 'SQLParameters') && (p != 'ETLParameters')) return p;
     }).filter((p: string) => { return (p != null); });
     
     // Validação dos campos de formulário
     if (propertiesNotDefined.length > 0) {
       validate = false;
-      this.po_lo_text = { value: null };
+      this.po_lo_text = { value: null };console.log(propertiesNotDefined[0]);
       let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
       this._translateService.getTranslations([
         new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName])
@@ -310,7 +310,7 @@ export class ScheduleAddComponent {
         if ((typeof this.schedule[p] != typeof schedule[p]) && (p != 'id')) return p;
       }).filter((p: string) => { return p != null; });
       if (propertiesNotDefined.length > 0) {
-        validate = false;console.log(propertiesNotDefined[0]);
+        validate = false;
         this.po_lo_text = { value: null };
         let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
         this._translateService.getTranslations([
@@ -318,7 +318,7 @@ export class ScheduleAddComponent {
         ]).subscribe((translations: any) => {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_TYPING_WRONG']);
         });
-        
+      
       // Validação dos parâmetros SQL
       } else {
         this.schedule.SQLParameters.map((p: any) => {
@@ -333,6 +333,10 @@ export class ScheduleAddComponent {
         }
       }
     }
+    
+    // Remoção dos parâmetros default (Caso existam)
+    this.schedule.ETLParameters = this.schedule.ETLParameters.filter((p: ETLParameter) => ((p.name != CNST_NEW_PARAMETER_VALUE) && (p.name != '')));
+    this.schedule.SQLParameters = this.schedule.SQLParameters.filter((p: SQLParameter) => ((p.name != CNST_NEW_PARAMETER_VALUE) && (p.name != '')));
     
     return validate;
   }
@@ -371,7 +375,7 @@ export class ScheduleAddComponent {
   }
   
   /* Método executado antes da remoção de um parâmetro de ETL */
-  protected onBeforeRemoveETL() {console.log('RODOU');
+  protected onBeforeRemoveETL() {
     this.schedule.ETLParameters = this.schedule.ETLParameters.filter((p: ETLParameter) => { 
       p.value = p.value.replace(/\s+/g, '');
       return ((p.value != null) && (p.value != '') && (p.value != CNST_NEW_PARAMETER_VALUE));
@@ -391,7 +395,9 @@ export class ScheduleAddComponent {
     
     //Caso seja encontrado, não é incluído um segundo parâmetro
     if (new_parameter === undefined) {
-      this.schedule.SQLParameters.push(new SQLParameter());
+      let param: SQLParameter = new SQLParameter();
+      param.sql = this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED'];
+      this.schedule.SQLParameters.push(param);
       valid = true;
     }
     

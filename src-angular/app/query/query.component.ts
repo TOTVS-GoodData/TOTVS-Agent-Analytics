@@ -216,10 +216,10 @@ export class QueryComponent implements OnInit {
     
     //Consulta das informações
     forkJoin([
-       this._scheduleService.getSchedules(true)
-      ,this._queryService.getQueries()
-      ,this._workspaceService.getWorkspaces()
-      ,this._databaseService.getDatabases()
+       this._scheduleService.getSchedules(false)
+      ,this._queryService.getQueries(true)
+      ,this._workspaceService.getWorkspaces(false)
+      ,this._databaseService.getDatabases(false)
     ]).subscribe((results: [Schedule[], Query[], Workspace[], Database[]]) => {
       
       //Combinação dos agendamentos com suas consultas

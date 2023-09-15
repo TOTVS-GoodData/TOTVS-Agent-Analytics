@@ -142,7 +142,7 @@ export class ScheduleComponent implements OnInit {
     
     //Consulta dos agendamentos cadastrados no Agent
     forkJoin([
-      this._workspaceService.getWorkspaces(),
+      this._workspaceService.getWorkspaces(false),
       this._scheduleService.getSchedules(true)
     ]).subscribe((results: [Workspace[], Schedule[]]) => {
       this.schedules = results[1].map((s: Schedule) => {
@@ -173,6 +173,7 @@ export class ScheduleComponent implements OnInit {
         //Solicita a execução do agendamento pelo Electron (assíncrono)
         this._electronService.ipcRenderer.sendSync('executeAndUpdateSchedule', s);
         
+        this.loadSchedules();
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_OK']);
         this.po_lo_text = { value: null };
       });

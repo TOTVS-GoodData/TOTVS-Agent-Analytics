@@ -206,10 +206,10 @@ export class ScriptComponent implements OnInit {
     
     //Consulta das informações
     forkJoin([
-       this._scheduleService.getSchedules(true)
-      ,this._scriptService.getScripts()
-      ,this._workspaceService.getWorkspaces()
-      ,this._databaseService.getDatabases()
+       this._scheduleService.getSchedules(false)
+      ,this._scriptService.getScripts(true)
+      ,this._workspaceService.getWorkspaces(false)
+      ,this._databaseService.getDatabases(false)
     ]).subscribe((results: [Schedule[], Script[], Workspace[], Database[]]) => {
       
       //Combinação dos agendamentos com suas rotinas

@@ -25,18 +25,8 @@ export class TranslationService {
   
   /* Método de inicialização do serviço de tradução */
   public static init(language?: string): void {
-    
-    /*
-      Verifica se o arquivo de tradução existe para o idioma solicitado.
-      Caso não exista, utiliza o idioma padrão.
-    */
-    if (fs.existsSync(path.join(globals.CNST_I18N_PATH, language + '.ts'))) {
-      TranslationService.languageObj = CNST_TRANSLATIONS[language];
-    } else {
-      TranslationService.languageObj = CNST_TRANSLATIONS[CNST_DEFAULT_LANGUAGE];
-    }
-    
-    //Atualiza todas as mensagens do Agent
+    language = ((language == undefined) ? CNST_DEFAULT_LANGUAGE : language); 
+    TranslationService.languageObj = CNST_TRANSLATIONS[language];
     TranslationService.updateStandardTranslations();
   }
   
@@ -77,6 +67,7 @@ export class TranslationService {
   /* Método de atualização das traduções do Agent */
   public static updateStandardTranslations(): boolean {
     let translations: any = TranslationService.getTranslations([
+      new TranslationInput('BUTTONS.SELECT', []),
       new TranslationInput('CONFIGURATION.MESSAGES.LOADING', []),
       new TranslationInput('CONFIGURATION.MESSAGES.LOADING_OK', []),
       new TranslationInput('CONFIGURATION.MESSAGES.LOADING_ERROR', []),
@@ -93,7 +84,6 @@ export class TranslationService {
       new TranslationInput('ELECTRON.TRAY_OPEN_INTERFACE', []),
       new TranslationInput('ELECTRON.TRAY_FINISH_PROCESS', []),
       new TranslationInput('ELECTRON.THREAD_ERROR', []),
-      new TranslationInput('ELECTRON.RUN_AGENT_ELEC_START', []),
       new TranslationInput('ELECTRON.WINDOWS_REGISTRY_ERROR', []),
       new TranslationInput('ELECTRON.SYSTEM_START', []),
       new TranslationInput('ELECTRON.SYSTEM_WINDOW_CLOSE', []),
@@ -104,6 +94,7 @@ export class TranslationService {
       new TranslationInput('ELECTRON.UPDATE_CHECK', []),
       new TranslationInput('ELECTRON.UPDATE_ERROR', []),
       new TranslationInput('ELECTRON.FOLDER_SELECT', []),
+      new TranslationInput('ELECTRON.FILE_SELECT_DRIVER', []),
       new TranslationInput('ELECTRON.DATABASE_DEVELOPMENT', []),
       new TranslationInput('ELECTRON.DATABASE_PRODUCTION', []),
       new TranslationInput('ELECTRON.DATABASE_CREATE', []),
@@ -111,6 +102,17 @@ export class TranslationService {
       new TranslationInput('ELECTRON.DELETE_OLD_LOGS', []),
       new TranslationInput('ELECTRON.DELETE_OLD_LOGS_OK', []),
       new TranslationInput('ELECTRON.JAVA_EXECUTION_CANCELLED', []),
+      new TranslationInput('ELECTRON.PROCESS_KILL_ALL', []),
+      new TranslationInput('ELECTRON.PROCESS_KILL_ALL_OK', []),
+      new TranslationInput('ELECTRON.QUERY_UPDATER', []),
+      new TranslationInput('ELECTRON.QUERY_UPDATER_OK', []),
+      new TranslationInput('ELECTRON.QUERY_UPDATER_ERROR', []),
+      new TranslationInput('ELECTRON.QUERY_UPDATER_NO_UPDATES', []),
+      new TranslationInput('ELECTRON.RUN_AGENT_ELEC_START', []),
+      new TranslationInput('ELECTRON.SCRIPT_UPDATER', []),
+      new TranslationInput('ELECTRON.SCRIPT_UPDATER_OK', []),
+      new TranslationInput('ELECTRON.SCRIPT_UPDATER_ERROR', []),
+      new TranslationInput('ELECTRON.SCRIPT_UPDATER_NO_UPDATES', []),
       new TranslationInput('QUERIES.MESSAGES.LOADING', []),
       new TranslationInput('QUERIES.MESSAGES.LOADING_OK', []),
       new TranslationInput('QUERIES.MESSAGES.LOADING_ERROR', []),
@@ -123,9 +125,8 @@ export class TranslationService {
       new TranslationInput('SCHEDULES.MESSAGES.LOADING_ERROR', []),
       new TranslationInput('SCHEDULES.MESSAGES.SAVE_OK', []),
       new TranslationInput('SCHEDULES.MESSAGES.DELETE_OK', []),
-      new TranslationInput('SCHEDULES.MESSAGES.TRIGGERSCHEDULES_ERROR', []),
-      new TranslationInput('SCHEDULES.MESSAGES.TRIGGERSCHEDULES_OK', []),
-      new TranslationInput('SCHEDULES.MESSAGES.RUN_PREPARE', []),
+      new TranslationInput('SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING_OK', []),
+      new TranslationInput('SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING_ERROR', []),
       new TranslationInput('SCRIPTS.MESSAGES.LOADING', []),
       new TranslationInput('SCRIPTS.MESSAGES.LOADING_OK', []),
       new TranslationInput('SCRIPTS.MESSAGES.LOADING_ERROR', []),

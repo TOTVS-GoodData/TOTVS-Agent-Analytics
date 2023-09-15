@@ -7,6 +7,7 @@ export class Database {
   name: string;
   type: string;
   brand: string;
+  connectionType: string;
   driverClass: string;
   driverPath: string;
   ipType: string;
@@ -25,6 +26,7 @@ export class Database {
     this.brand = '';
     this.driverClass = '';
     this.driverPath = '';
+    this.connectionType = '';
     this.ip = '';
     this.ipType = '';
     this.port = CNST_DATABASE_PORT_MINIMUM;

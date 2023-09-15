@@ -65,6 +65,13 @@ export class ScheduleService {
     
     //Leitura do banco de dados atual do Agent, e retorno dos agendamentos cadastrados
     return Files.readApplicationData().pipe(map((db: DatabaseData) => {
+      
+      //Converte a data de execução de cada agendamento, para o fuso horário configurado no Agent.
+      db.schedules = db.schedules.map((s: Schedule) => {
+        if (s.lastExecution != undefined) s.lastExecutionString = new Date(s.lastExecution).toLocaleString(db.configuration.locale, {timeZone: db.configuration.timezone});
+        return s;
+      });
+      
       return db.schedules;
     }), catchError((err: any) => {
       Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_ERROR'], null, null, err);
@@ -90,21 +97,20 @@ export class ScheduleService {
           //Define a data/hora atual
           let now: Date = new Date();
           
-          //
-          if (s.lastExecution == null) s.windows = s.windows.filter((w: string) => {
+          //Filtra todas as janelas de execução válidas para o disparo do agendamento
+          let windows: string[] = s.windows.filter((w: string) => {
             let execute: boolean = false;
+            let executionDate: Date = (s.lastExecution == undefined ? new Date('2000-01-01') : new Date(s.lastExecution));
             
             let dateWindow = new Date();
+            
             let hour: number = parseInt(w.substring(0, 2));
             let minute: number = parseInt(w.substring(3, 5));
-            dateWindow.setHours(hour, minute, 0);
-            if ((dateWindow <= now) && ((dateWindow > s.lastExecution) || (s.lastExecution == null))) {
-              execute = true;
-            }
+            dateWindow.setHours(hour, minute, 0, 0);
+            if ((dateWindow.getTime() > executionDate.getTime()) && (dateWindow.getTime() <= now.getTime())) execute = true;
             return execute;
           });
-          
-          return ((s.windows.length > 0) && (s.enabled));
+          return ((windows.length > 0) && (s.enabled));
         });
         
         //Retorna todos os agendamentos a serem executados
@@ -200,16 +206,24 @@ export class ScheduleService {
   
   /* Método de execução de um agendamento do Agent */
   public static executeAndUpdateSchedule(s: Schedule): Observable<boolean> {
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_PREPARE'], null, null, null);
     
     //Consulta todas as informações necessárias para execução do agendamento pelo Java
     return forkJoin([
-      WorkspaceService.getWorkspaces(),
-      DatabaseService.getDatabases(),
-      QueryService.getQueriesBySchedule(s),
-      ScriptService.getScriptsBySchedule(s),
+      WorkspaceService.getWorkspaces(false),
+      DatabaseService.getDatabases(false),
+      QueryService.getQueriesBySchedule(s, false),
+      ScriptService.getScriptsBySchedule(s, false),
       ConfigurationService.getConfiguration(false)
     ]).pipe(switchMap(((results: [Workspace[], Database[], Query[], Script[], Configuration]) => {
+      
+      //Consulta das traduções
+      let translations: any = TranslationService.getTranslations([
+        new TranslationInput('SCHEDULES.MESSAGES.RUN_EXECUTIONDATE', [s.lastExecution + '']),
+        new TranslationInput('SCHEDULES.MESSAGES.RUN_PREPARE', [s.name]),
+        new TranslationInput('SCHEDULES.MESSAGES.RUN_ERROR', [s.name])
+      ]);
+      
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_PREPARE'], null, null, null);
       
       //Define o ambiente do agendamento
       let w: Workspace = results[0].find((w: Workspace) => (w.id === s.workspaceId));
@@ -254,19 +268,15 @@ export class ScheduleService {
       //Solicita a execução do pacote criptografado ao Java, e atualiza os dados do agendamento imediatamente
       return Execute.runAgent(params, s.id).pipe(switchMap((b: boolean) => {
         
-        //Consulta das traduções
-        let translations2: any = TranslationService.getTranslations([
-          new TranslationInput('SCHEDULES.MESSAGES.RUN_EXECUTIONDATE', [s.lastExecution + '']),
-          new TranslationInput('SCHEDULES.MESSAGES.RUN_ERROR', [s.name])
-        ]);
-        
         //Atualiza a data de última execução do agendamento, e grava o mesmo no banco de dados do Agent
         s.lastExecution = new Date();
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.RUN_EXECUTIONDATE'], null, null, null);
+        s.lastExecutionString = new Date(s.lastExecution).toLocaleString(conf.locale, {timeZone: conf.timezone});
+
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_EXECUTIONDATE'], null, null, null);
         return ScheduleService.saveSchedule(s).pipe(map((b: boolean) => {
           return b;
         }), catchError((err: any) => {
-          Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.RUN_ERROR'], null, null, err);
+          Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_ERROR'], null, null, err);
           throw err;
         }));
       }));

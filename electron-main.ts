@@ -57,7 +57,7 @@ import { ConfigurationService } from './src-electron/services/configuration-serv
 import { Configuration } from './src-angular/app/configuration/configuration-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, from, lastValueFrom, map } from 'rxjs';
+import { Observable, from, lastValueFrom, map, switchMap } from 'rxjs';
 
 export default class Main {
   
@@ -240,9 +240,9 @@ export default class Main {
     /********* Ambientes *********/
     /*****************************/
     //Consulta de ambientes
-    ipcMain.on('getWorkspaces', (event: IpcMainEvent) => {
-      WorkspaceService.getWorkspaces().subscribe((workspaces: Workspace[]) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_OK'], null, null, null);
+    ipcMain.on('getWorkspaces', (event: IpcMainEvent, showLogs: boolean) => {
+      WorkspaceService.getWorkspaces(showLogs).subscribe((workspaces: Workspace[]) => {
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_OK'], null, null, null);
         event.returnValue = workspaces;
       });
     });
@@ -277,9 +277,9 @@ export default class Main {
     /****** Bancos de dados ******/
     /*****************************/
     //Consulta de bancos de dados
-    ipcMain.on('getDatabases', (event: IpcMainEvent) => {
-      DatabaseService.getDatabases().subscribe((db: Database[]) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_OK'], null, null, null);
+    ipcMain.on('getDatabases', (event: IpcMainEvent, showLogs: boolean) => {
+      DatabaseService.getDatabases(showLogs).subscribe((db: Database[]) => {
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_OK'], null, null, null);
         event.returnValue = db;
         return db;
       });
@@ -385,18 +385,18 @@ export default class Main {
     /******** Consultas **********/
     /*****************************/
     //Consulta das queries
-    ipcMain.on('getQueries', (event: IpcMainEvent) => {
-      QueryService.getQueries().subscribe((q: Query[]) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_OK'], null, null, null);
+    ipcMain.on('getQueries', (event: IpcMainEvent, showLogs: boolean) => {
+      QueryService.getQueries(showLogs).subscribe((q: Query[]) => {
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_OK'], null, null, null);
         event.returnValue = q;
         return q;
       });
     });
     
     //Consulta das queries pertencentes à um agendamento
-    ipcMain.on('getQueriesBySchedule', (event: IpcMainEvent, sc: Schedule) => {
-      QueryService.getQueriesBySchedule(sc).subscribe((q: Query[]) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null);
+    ipcMain.on('getQueriesBySchedule', (event: IpcMainEvent, sc: Schedule, showLogs: boolean) => {
+      QueryService.getQueriesBySchedule(sc, showLogs).subscribe((q: Query[]) => {
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null);
         event.returnValue = q;
         return q;
       });
@@ -433,18 +433,18 @@ export default class Main {
     /********* Rotinas ***********/
     /*****************************/
     //Consulta das rotinas
-    ipcMain.on('getScripts', (event: IpcMainEvent) => {
-      ScriptService.getScripts().subscribe((s: Script[]) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_OK'], null, null, null);
+    ipcMain.on('getScripts', (event: IpcMainEvent, showLogs: boolean) => {
+      ScriptService.getScripts(showLogs).subscribe((s: Script[]) => {
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_OK'], null, null, null);
         event.returnValue = s;
         return s;
       });
     });
     
     //Consulta das rotinas pertencentes à um agendamento
-    ipcMain.on('getScriptsBySchedule', (event: IpcMainEvent, sc: Schedule) => {
-      ScriptService.getScriptsBySchedule(sc).subscribe((s: Script[]) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null);
+    ipcMain.on('getScriptsBySchedule', (event: IpcMainEvent, sc: Schedule, showLogs: boolean) => {
+      ScriptService.getScriptsBySchedule(sc, showLogs).subscribe((s: Script[]) => {
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null);
         event.returnValue = s;
         return s;
       });
@@ -491,6 +491,13 @@ export default class Main {
       });
     });
     
+    //Seleção de um arquivo
+    ipcMain.on('getFile', (event: IpcMainEvent) => {
+      Files.getFile(Main.mainWindow).subscribe((folder: string) => {
+        event.returnValue = folder;
+      });
+    });
+    
     //Consulta do diretório temporário usado pelo Agent
     ipcMain.on('getTmpPath', (event: IpcMainEvent) => {
       event.returnValue = CNST_TMP_PATH;
@@ -508,11 +515,6 @@ export default class Main {
       return;
     });
     
-    //Remoção dos arquivos de log antigos
-    ipcMain.on('deleteOldLogs', (event: IpcMainEvent) => {
-      event.returnValue = Files.deleteOldLogs();
-    });
-    
     /*****************************/
     /******* Desligamento ********/
     /*****************************/
@@ -523,7 +525,8 @@ export default class Main {
     
     //Desligamento do Agent, e disparo da atualização (Executado via pedido do usuário)
     ipcMain.on('updateAgentNow', (event: IpcMainEvent) => {
-      autoUpdater.quitAndInstall();
+      if (Main.mainWindow != null) Main.willClose();
+      Main.terminateApplication();
     });
   }
   
@@ -630,15 +633,7 @@ export default class Main {
   /* Método de inicialização do Electron */
   static main(_app: App) {
     Main.application = _app;
-    
-    
-    
-    
     Main.application.disableHardwareAcceleration();
-    
-    
-    
-    
     
     //Inicialização do serviço de tradução
     TranslationService.init();
@@ -656,7 +651,6 @@ export default class Main {
       
       //Leitura dos parâmetros de linha de comando
       Main.hidden = (Main.application.commandLine.hasSwitch('hidden') ? true : false);
-      Main.triggerSchedules = (Main.application.commandLine.hasSwitch('triggerSchedules') ? true : false);
       
       //Configuração dos eventos a serem disparados após a inicialização do Electron
       Main.application.on('ready', Main.onReady);
@@ -681,14 +675,27 @@ export default class Main {
       
       //Configuração do temporizador de execuções automática do Agent, a cada segundo
       if (Main.triggerSchedules) {
+        let thisDay: number = 0;
         setInterval(() => {
-          if (new Date().getSeconds() == 0) {
+          let date: Date = new Date();
+          
+          if (date.getSeconds() == 0) {
             ScheduleService.getSchedulesToExecute().subscribe((schedules: Schedule[]) => {
+              console.log(schedules);
               schedules.map(async (s: Schedule) => {
                 await ScheduleService.executeAndUpdateSchedule(s).subscribe((b: boolean) => {
                   return b;
                 });
               });
+            });
+          }
+          
+          //Reinicialização dos arquivos de log, a cada dia (meia noite)
+          if (date.getDate() != thisDay) {
+            ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
+              Files.deleteOldLogs();
+              Files.initApplicationData(conf.locale);
+              thisDay = date.getDate();
             });
           }
         }, 1000);
@@ -708,7 +715,7 @@ export default class Main {
       Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_START'], null, null, null);
       
       //Atualização do registro do Windows p/ atualização automática (false)
-      if (process.platform !== 'win32') Main.setWindowsAutoUpdateRegistry(0);
+      if (process.platform == 'win32') Main.setWindowsAutoUpdateRegistry(0);
       
       //Configuração da atualização automática do Agent
       Main.setAutoUpdaterPreferences();
@@ -724,6 +731,13 @@ export default class Main {
       
       //Configuração do menu minimizado do Agent (Tray)
       Main.updateTrayMenu();
+      
+      //Atualização das consultas / rotinas padrões do FAST (Caso necessário).
+      QueryService.updateAllQueries().pipe(switchMap((b: boolean) => {
+        return ScriptService.updateAllScripts().pipe(map((b: boolean) => {
+          return b;
+        }));
+      })).subscribe();
       
       //Configuração da interface do Agent (Angular)
       Main.createWindowObject();
@@ -750,6 +764,13 @@ export default class Main {
   
   /* Método de desligamento completo do Agent (Solicitado pelo Tray) */
   private static terminateApplication(): void {
+    
+    //Desliga todos os processos do Java atualmente em execução
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL'], null, null, null);
+    Execute.killAllProcesses();
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL_OK'], null, null, null);
+    
+    //Encerra a aplicação completamente
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_FINISH'], null, null, null);
     if (process.platform !== 'darwin') Main.application.quit();
   }

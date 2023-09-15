@@ -89,9 +89,6 @@ export class AppComponent {
           //Solicita ao Electron a versão atual do Agent
           this.version = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getAgentVersion').version;
           
-          //Solicita ao Electron apagar os arquivos de log antigos
-          this._electronService.ipcRenderer.send('deleteOldLogs');
-          
           //Define o valor padrão do diretório temporário do Java
           if (conf.javaTmpDir == null) {
             conf.javaTmpDir = this._electronService.ipcRenderer.sendSync('getTmpPath');

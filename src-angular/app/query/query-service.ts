@@ -29,7 +29,7 @@ import { Database } from '../database/database-interface';
 import { Schedule, ScheduleQuery } from '../schedule/schedule-interface';
 
 //Interface de consultas do Agent
-import { Query } from './query-interface';
+import { Query, Version } from './query-interface';
 import { CNST_QUERY_VERSION_STANDARD } from './query-constants';
 
 /* Serviço de configuração do Agent */
@@ -70,18 +70,23 @@ export class QueryService {
   }
   
   /* Método de consulta das consultas salvas do Agent */
-  public getQueries(): Observable<Query[]> {
+  public getQueries(showLogs: boolean): Observable<Query[]> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getQueries'));
+      return of(this._electronService.ipcRenderer.sendSync('getQueries', showLogs));
     } else {
       
+      //Escrita de logs (caso solicitado)
+      if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING']);
+      
       //Consulta da API de testes do Angular
-      this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING']);
       return this._http.get<Query[]>(this._utilities.getLocalhostURL() + '/queries').pipe(
       map((queries: Query[]) => {
-        this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_OK']);
+        
+        //Escrita de logs (caso solicitado)
+        if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_OK']);
+        
         return queries;
       }), catchError((err: any) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_ERROR'], err);
@@ -138,7 +143,7 @@ export class QueryService {
           new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [q.name]),
           new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME', [q.name])
         ]),
-        this.getQueries())
+        this.getQueries(false))
       .pipe(switchMap((results: [TranslationInput[], Query[]]) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['QUERIES.MESSAGES.SAVE']);
         
@@ -266,14 +271,10 @@ export class QueryService {
         
         //Prepara as requisições a serem disparadas
         obs_queries = queries.map((query: any) => {
-          let q: Query = new Query(CNST_QUERY_VERSION_STANDARD);
-          q.scheduleId = sc.schedule.id;
-          q.name = query.name;
-          q.executionMode = query.executionMode;
-          q.canDecrypt = CNST_MODALIDADE_CONTRATACAO.find((v: any) => { return v.value == sc.contractType }).canDecrypt;
-          q.query = query.query;
+          query.scheduleId = sc.schedule.id;
+          query.canDecrypt = CNST_MODALIDADE_CONTRATACAO.find((v: any) => { return v.value == sc.contractType }).canDecrypt;
           
-          return this.saveQuery(q).pipe(map((res: boolean) => {
+          return this.saveQuery(query).pipe(map((res: boolean) => {
             return res;
           }));
         });
@@ -307,7 +308,7 @@ export class QueryService {
     ]).pipe(map((translations: any) => {
       this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.EXPORT_STANDARD']);
       
-      //Consulta todas as queries válidas para o agendamento atual
+      //Consulta todas as consultas válidas para o agendamento atual
       let obj_queries: any[] = CNST_ERP.find((erp: any) => erp.ERP == sc.erp).Queries[sc.databaseType]
         .filter((q: any) => (q.Modulos.includes(sc.module) || (q.Modulos.length == 0)));
       
@@ -323,12 +324,41 @@ export class QueryService {
         
         return q;
       });
-                  
-      if (queries.length > 0) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.EXPORT_STANDARD_OK']);
+      
+      //Filtra apenas as consultas mais recentes, pelo seu número de versão
+      let queries_filtered: Query[] = [];
+      queries.map((q: Query) => {
+        let query: Query = queries_filtered.find((q1: Query) => (q1.name == q.name));
+        let index: number = queries_filtered.findIndex((q1: Query) => (q1.name == q.name));
+        if (query == null) {
+          queries_filtered.push(q);
+        } else if (
+          (
+               (q.getMajorVersion() >  query.getMajorVersion())
+          )
+          ||
+          (
+               (q.getMajorVersion() == query.getMajorVersion())
+            && (q.getMinorVersion() >  query.getMinorVersion())
+          )
+          ||
+          (
+               (q.getMajorVersion() == query.getMajorVersion())
+            && (q.getMinorVersion() == query.getMinorVersion())
+            && (q.getPatchVersion() >  query.getPatchVersion())
+          )
+        ) {
+          queries_filtered[index] = q;
+        }
+        
+        return;
+      });
+      
+      if (queries_filtered.length > 0) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.EXPORT_STANDARD_OK']);
       else if (sc.erp == CNST_ERP_PROTHEUS) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT_STANDARD_WARNING']);
       else this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT_STANDARD_WARNING']);
       
-      return queries;
+      return queries_filtered;
     }));
   }
   
@@ -349,8 +379,8 @@ export class QueryService {
         
         //Consulta as informações necessárias para acessar o banco de dados de destino
         return forkJoin([
-          this._workspaceService.getWorkspaces(),
-          this._databaseService.getDatabases(),
+          this._workspaceService.getWorkspaces(false),
+          this._databaseService.getDatabases(false),
           this._configurationService.getConfiguration(false)
         ]).pipe(switchMap((results: [Workspace[], Database[], Configuration]) => {
           this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT_I01_PREPARE'], null);
@@ -382,6 +412,7 @@ export class QueryService {
                 queries = res.message.map((q: Query) => {
                   q.scheduleId = sc.schedule.id;
                   q.canDecrypt = decrypt;
+                  q.version = new Version(CNST_QUERY_VERSION_STANDARD);
                   q.query = this._electronService.ipcRenderer.sendSync('encrypt', q.query);
                   return q;
                 });

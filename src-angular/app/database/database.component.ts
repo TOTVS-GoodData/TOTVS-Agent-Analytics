@@ -133,7 +133,7 @@ export class DataBaseComponent implements OnInit {
     this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING'] };
     
     //Consulta dos bancos de dados cadastrados no Agent
-    this._databaseService.getDatabases().subscribe((db: Database[]) => {
+    this._databaseService.getDatabases(true).subscribe((db: Database[]) => {
       this.databases = db.map((db: Database) => {
         
         //Renomeia o tipo do banco de dados "Outro"

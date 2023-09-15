@@ -1,11 +1,14 @@
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { switchMap, mergeMap, map, catchError } from 'rxjs/operators';
 
 import { SessionService } from './session-service';
 import { Utilities } from '../utilities/utilities';
+
+/* Serviço de tradução do Agent */
+import { TranslationService } from './translation/translation-service';
 
 import { environment } from '../../environments/environment';
 
@@ -16,6 +19,7 @@ export class LoginService {
   constructor(
      private _http: HttpClient
     ,private _sessionService: SessionService
+    ,private _translateService: TranslationService
     ,private _utilities: Utilities
   ) {}
   
@@ -39,7 +43,7 @@ export class LoginService {
       this._sessionService.TOKEN_SST = res2.body.userLogin.token;
       return this.refreshLoginSection();
     }), catchError((authError: any) => {
-      this._utilities.createNotification('ERR', authError.error.message);
+      if (authError.status == 401) authError.error.message = this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_ERROR'];
       throw(authError);
     }));
   }

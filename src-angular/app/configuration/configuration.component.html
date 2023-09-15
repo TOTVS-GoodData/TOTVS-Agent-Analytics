@@ -57,6 +57,16 @@
               p-toggle="single">
             </po-button-group>
           </div>
+          
+          <!-- Fuso horário das datas -->
+          <po-select 
+            name="po_timezone"
+            class="form-control po-md-12 po-lg-12"
+            [p-label]="lbl_timezone"
+            [(ngModel)]="configuration.timezone"
+            [p-options]="_CNST_TIMEZONES"
+            p-required="true">
+          </po-select>
         </div>
       </div>
       

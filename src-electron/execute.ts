@@ -98,9 +98,6 @@ export class Execute {
       let commandPath: string = path.join(conf.javaTmpDir, CNST_COMMAND_FILE);
       fs.writeFile(commandPath, inputBuffer);
       
-      console.log('<<AGENT>>');
-      console.log(inputBuffer);
-      
       //Define o idioma/país atualmente utilizado pelo Agent para configuração da JVM do Java (Locale)
       let language: string = conf.getLocaleLanguage();
       let country: string = conf.getLocaleCountry();
@@ -365,6 +362,15 @@ export class Execute {
       },
       null
     );
+  }
+  
+  /* Método que finaliza todos os processos mapeados pelo Agent */
+  public static killAllProcesses(): boolean {
+    Execute.processes.map((jp: JavaProcess) => {
+      Execute.killProcess(jp.scheduleId, jp.execId);      
+    });
+    
+    return true;
   }
   
   /* Método que finaliza um processo de maneira forçada (Solicitado pelo usuário) */

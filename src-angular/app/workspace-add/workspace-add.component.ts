@@ -252,25 +252,32 @@ export class WorkspaceAddComponent {
     //Realiza a leitura do ambiente a ser editado (se houver)
     let nav: Navigation = this._router.getCurrentNavigation();
     if ((nav != undefined) && (nav.extras.state)) {
-      
+      this.workspace.id = nav.extras.state['id'];
+        
       //Dispara antecipadamente o evento de alteração do ERP do formulário
       this.onChangeERP(nav.extras.state['erp']);
       
-      //Copia todos os valores do ambiente a ser editado, para o objeto de ambiente do formulário
-      Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
-        this.workspace[p] = nav.extras.state[p];
-      });
-      
       //Dispara antecipadamente o evento de alteração do banco de dados do formuláro
-      this.onChangeDatabase(this.workspace.databaseIdRef);
+      this.onChangeDatabase(nav.extras.state['databaseIdRef']);
       
       //Método disparado para atualiza a listagem de ambientes de GoodData disponíveis para o usuário cadastrado
       this.getWorkspaces(
-        this.workspace.GDUsername,
-        this.workspace.GDPassword,
-        this.workspace.GDEnvironment,
+        nav.extras.state['GDUsername'],
+        nav.extras.state['GDPassword'],
+        nav.extras.state['GDEnvironment'],
         false
-      ).subscribe();
+      ).subscribe((res: boolean) => {
+        this.workspace.GDWorkspaceId = nav.extras.state['GDWorkspaceId'];
+        this.onChangeWorkspace().subscribe((res: boolean) => {
+          this.workspace.GDProcessId = nav.extras.state['GDProcessId'];
+          this.onChangeProcess();
+          
+          //Copia todos os valores do ambiente a ser editado, para o objeto de ambiente do formulário
+          Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
+            this.workspace[p] = nav.extras.state[p];
+          });
+        });
+      });
     }
     
     //Verifica se é um novo cadastro, ou uma atualização do ambiente
@@ -300,7 +307,7 @@ export class WorkspaceAddComponent {
   private getDatabases(): Observable<void> {
     
     //Consulta todos os bancos de dados cadastrados no Agent
-    return this._databaseService.getDatabases().pipe(map((database: Database[]) => {
+    return this._databaseService.getDatabases(true).pipe(map((database: Database[]) => {
       
       //Atualiza o objeto de lista dos bancos de dados
       this.listDatabase = database.map((db: Database) => {
@@ -327,7 +334,7 @@ export class WorkspaceAddComponent {
     if ((this._electronService.isElectronApp) && (this.workspace.id != null)) {
       password = this._electronService.ipcRenderer.sendSync('decrypt', password);
     }
-    
+    console.log(password);
     //Efetua o login no GoodData
     return this._loginService.doLogin(
       username,
@@ -403,7 +410,7 @@ export class WorkspaceAddComponent {
         throw err;
       }));
     }), catchError((err: any) => {
-      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_ERROR'], err);
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_ERROR'], err.error.message);
       this.po_lo_text = { value: null };
       throw err;
     }));
@@ -411,13 +418,28 @@ export class WorkspaceAddComponent {
   
   /*
     Método executado ao alterar a modalidade de contratação do GoodData
-    Caso a modalidade selecionada seja "Plataforma", adiciona a opção "Outro" no formulário.
-    Caso não seja, remove a opção.
+    Caso a modalidade selecionada não seja "Plataforma", remove a opção "Outro" do formulário.
   */
   protected onChangeContract(contractType: string): void {
+    this._CNST_ERP = CNST_ERP.map((v: any) => {
+      return { label: v.ERP, value: v.ERP };
+    }).sort((v1: any, v2: any) => {
+      let order: number = null;
+      
+      if (v1.label < v2.label) order = -1;
+      else if (v1.label > v2.label) order =  1;
+      else order = 0;
+      
+      return order;
+    });
+    this._CNST_ERP.find((erp: any) => (erp.label == CNST_ERP_OTHER)).label = this._translateService.CNST_TRANSLATIONS['ANGULAR.OTHER'];
+    
     if (contractType != CNST_MODALIDADE_CONTRATACAO_PLATAFORMA) this._CNST_ERP = this._CNST_ERP.filter((erp: any) => (erp.value != CNST_ERP_OTHER));
-    else this._CNST_ERP.push({ label: this._translateService.CNST_TRANSLATIONS['ANGULAR.OTHER'], value: CNST_ERP_OTHER });
-  }
+    
+    //Atualiza as opções de ERP's disponíveis
+    this.workspace.erp = '';
+    this.workspace.module = '';
+    }
   
   /* Método executado ao trocar o ERP do ambiente */
   protected onChangeERP(e: string): void {
@@ -436,6 +458,9 @@ export class WorkspaceAddComponent {
     //Realiza a tradução da opção "Outro" dos módulos
     let outros: any = this._CNST_MODULO.find((module: any) => (module.value == CNST_ERP_OTHER));
     if (outros) outros.label = this._translateService.CNST_TRANSLATIONS['ANGULAR.OTHER'];
+    
+    //Remove a opção "Outro" para os contratos que não são do tipo "Plataforma"
+    if (this.workspace.contractType != CNST_MODALIDADE_CONTRATACAO_PLATAFORMA) this._CNST_MODULO = this._CNST_MODULO.filter((module: any) => (module.value != CNST_ERP_OTHER));
     
     //Define o valor padrão do campo de módulo
     if (this._CNST_MODULO.length == 1) {
@@ -493,7 +518,7 @@ export class WorkspaceAddComponent {
     if (id != CNST_NO_OPTION_SELECTED) {
       
       //Procura o banco de dados selecionado no banco do Agent
-      this._databaseService.getDatabases().subscribe((db: Database[]) => {
+      this._databaseService.getDatabases(false).subscribe((db: Database[]) => {
         this.database = db.find((db: Database) => { return (db.id === id ); });
       }, (err: any) => {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_ERROR']);

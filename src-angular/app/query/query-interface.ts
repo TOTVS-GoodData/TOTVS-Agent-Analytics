@@ -11,6 +11,16 @@ export class Version {
     this.minor = parseInt(numbers[1]);
     this.patch = parseInt(numbers[2]);
   }
+  
+  public jsonToObject(v: Version): void {
+    this.major = v.major;
+    this.minor = v.minor;
+    this.patch = v.patch;    
+  }
+  
+  public getVersion(): string {
+    return this.major + '.' + this.minor + '.' + this.patch;
+  }
 }
 
 /* Interface de consultas do Agent */

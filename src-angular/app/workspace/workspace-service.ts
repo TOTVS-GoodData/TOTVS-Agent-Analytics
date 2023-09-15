@@ -50,18 +50,23 @@ export class WorkspaceService {
   }
   
   /* Método de consulta dos ambientes salvos do Agent */
-  public getWorkspaces(): Observable<Workspace[]> {
+  public getWorkspaces(showLogs: boolean): Observable<Workspace[]> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getWorkspaces'));
+      return of(this._electronService.ipcRenderer.sendSync('getWorkspaces', showLogs));
     } else {
       
+      //Escrita de logs (caso solicitado)
+      if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING']);
+      
       //Consulta da API de testes do Angular
-      this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING']);
       return this._http.get<Workspace[]>(this._utilities.getLocalhostURL() + '/workspaces').pipe(
       map((workspaces: Workspace[]) => {
-        this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_OK']);
+        
+        //Escrita de logs (caso solicitado)
+        if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_OK']);
+        
         return workspaces;
       }), catchError((err: any) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_ERROR'], err);
@@ -118,7 +123,7 @@ export class WorkspaceService {
           new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR', [w.name]),
           new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME', [w.name])
         ]),
-        this.getWorkspaces()
+        this.getWorkspaces(false)
       ).pipe(switchMap((results: [TranslationInput[], Workspace[]]) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['WORKSPACES.MESSAGES.SAVE']);
         

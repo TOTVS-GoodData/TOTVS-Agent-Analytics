@@ -101,4 +101,5 @@ FunctionEnd
   ClearErrors
   SetRegView 64
   DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "TOTVS Agent Analytics"
+  DeleteRegKey HKLM "Software\TOTVS Agent Analytics"
 !macroend

@@ -20,7 +20,7 @@
       <div class="po-row">
         <po-info class="po-md-3" [p-label]="lbl_enabled" [p-value]="(item.enabled ? lbl_yes : lbl_no)" />
         <po-info class="po-md-3" [p-label]="lbl_workspace" [p-value]="item.workspaceName" />
-        <po-info class="po-md-3" [p-label]="lbl_lastExecution" [p-value]="item.lastExecution" />
+        <po-info class="po-md-3" [p-label]="lbl_lastExecution" [p-value]="item.lastExecutionString" />
         <po-info class="po-md-3" [p-label]="lbl_windows" [p-value]="item.windows.toString().replaceAll(',',' ')" />
       </div>
     </ng-template>

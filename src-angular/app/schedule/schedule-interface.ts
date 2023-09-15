@@ -18,6 +18,7 @@ export class Schedule {
   ETLParameters: ETLParameter[];
   enabled: boolean;
   lastExecution: Date;
+  lastExecutionString?: string;
   GDZipFilename: string;
   GDZipExtension: string;
   fileFolder?: string;
@@ -31,6 +32,8 @@ export class Schedule {
     this.enabled = false;
     this.GDZipFilename = '';
     this.GDZipExtension = '';
+    this.ETLParameters = [];
+    this.SQLParameters = [];
   }
 }
 

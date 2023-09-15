@@ -47,7 +47,7 @@
           <div class="display-title">
             <po-input class="conf-select grow" name="poDriverPath" [p-tooltip]="ttp_driverPath" [(ngModel)]="database.driverPath" [p-disabled]="true" p-required="true"></po-input>
             <po-button
-              (p-click)="getDriverFolder()"
+              (p-click)="getDriverFile()"
               p-icon="po-icon-folder"
               p-size="medium"
               [p-disabled]="(database.brand != _CNST_DATABASE_OTHER)"

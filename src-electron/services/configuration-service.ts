@@ -38,6 +38,7 @@ export class ConfigurationService {
         db.configuration.locale,
         db.configuration.autoUpdate
       );
+      conf.timezone = db.configuration.timezone;
       conf.javaJREDir = db.configuration.javaJREDir;
       return conf;
     }), catchError((err: any) => {

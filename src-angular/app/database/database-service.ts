@@ -55,18 +55,23 @@ export class DatabaseService {
   }
   
   /* Método de consulta dos bancos de dados salvos do Agent */
-  public getDatabases(): Observable<Database[]> {
+  public getDatabases(showLogs: boolean): Observable<Database[]> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getDatabases'));
+      return of(this._electronService.ipcRenderer.sendSync('getDatabases', showLogs));
     } else {
       
+      //Escrita de logs (caso solicitado)
+      if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING']);
+      
       //Consulta da API de testes do Angular
-      this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING']);
       return this._http.get<Database[]>(this._utilities.getLocalhostURL() + '/databases').pipe(
       map((databases: Database[]) => {
-        this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_OK']);
+        
+        //Escrita de logs (caso solicitado)
+        if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_OK']);
+        
         return databases;
       }), catchError((err: any) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_ERROR'], err);
@@ -96,7 +101,7 @@ export class DatabaseService {
           new TranslationInput('DATABASES.MESSAGES.SAVE_ERROR', [db.name]),
           new TranslationInput('DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME', [db.name])
         ]),
-        this.getDatabases()
+        this.getDatabases(false)
       ).pipe(switchMap((results: [TranslationInput[], Database[]]) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['DATABASES.MESSAGES.SAVE']);
         

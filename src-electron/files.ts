@@ -95,7 +95,6 @@ export class Files {
             let day: number = file.substring(file.length - 6, file.length - 4);
             let logDate: Date = new Date(year, month - 1, day);
             
-            console.log(logDate);
             if (logDate.getTime() < maxDate.getTime()) fs.remove(CNST_LOGS_PATH + '/' + file);
           }
         });
@@ -256,14 +255,35 @@ export class Files {
   /* Método de seleção de um diretório da máquina do usuário */
   public static getFolder(b: any): Observable<string> {
     return from(dialog.showOpenDialog(b, {
-        title: TranslationService.CNST_TRANSLATIONS['ELECTRON.FOLDER_SELECT'],
-        properties: [
-          'openDirectory'
-        ]
+      title: TranslationService.CNST_TRANSLATIONS['ELECTRON.FOLDER_SELECT'],
+      properties: [
+        'openDirectory'
+      ]
     //Retorna o caminho informado, caso o popup não tenha sido cancelado
     })).pipe(map((r: any) => {
       if (r.canceled) {
         return null;
+      } else {
+        return '' + r.filePaths[0];
+      }
+    }));
+  }
+  
+  /* Método de seleção de um diretório da máquina do usuário */
+  public static getFile(b: any): Observable<string> {
+    return from(dialog.showOpenDialog(b, {
+      title: TranslationService.CNST_TRANSLATIONS['ELECTRON.FILE_SELECT_DRIVER'],
+      properties: [],
+      filters: [
+        {
+          name: 'Java files (.jar)',
+          extensions: ['jar']
+        }
+      ]
+    //Retorna o caminho informado, caso o popup não tenha sido cancelado
+    })).pipe(map((r: any) => {
+      if (r.canceled) {
+        return TranslationService.CNST_TRANSLATIONS['BUTTONS.SELECT'];
       } else {
         return '' + r.filePaths[0];
       }
