@@ -59,6 +59,17 @@ export class AppComponent {
   protected lbl_updateNow: string = null;
   protected lbl_updateLater: string = null;
   
+  @ViewChild('modal_registerAgent') modal_registerAgent: PoModalComponent = null;
+  protected lbl_registerAgentTitle: string = null;
+  protected lbl_registerAgentDescription1: string = null;
+  protected lbl_registerAgentDescription2: string = null;
+  protected lbl_registerAgentField: string = null;
+  protected registerAgent: string = null;
+  
+  /****** Portinari.UI ******/
+  //Comunicação c/ animação (gif) de carregamento
+  protected po_lo_text: any = { value: null };
+  
   /**************************/
   /*** MÉTODOS DO MÓDULO  ***/
   /**************************/
@@ -99,44 +110,84 @@ export class AppComponent {
         }
         
         //Traduz os textos do menu principal do Agent, e vincula o serviço de comunicação do menu
-        this.setMenuTranslations();
+        this.setMenuTranslations(conf.serialNumber);
         this._menuService.menuRefObs$.subscribe(() => {
-          this.setMenuTranslations();
+          this.setMenuTranslations(conf.serialNumber);
         });
       });
     });
   }
   
   /* Método de tradução dos textos do menu principal do Agent */
-  public setMenuTranslations(): void {
+  public setMenuTranslations(serialNumber: string): void {
     
-    //Tradução do menu principal
-    this.menus = [
-        { label: this._translateService.CNST_TRANSLATIONS['MENU.WORKSPACES'], icon: 'po-icon-chart-columns', link: './workspace'
-      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.DATABASES'], icon: 'po-icon-database', link: './database'
-      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.SCHEDULES'], icon: 'po-icon-clock', link: './schedule'
-      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.QUERIES'], icon: 'po-icon-filter', link: './query'
-      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.SCRIPTS'], icon: 'po-icon-filter', link: './script'
-      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.MONITOR'], icon: 'po-icon-device-desktop', link: './monitor'
-      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.CONFIGURATION'], icon: 'po-icon-settings', link: './configuration'
-      },{ label: this._translateService.CNST_TRANSLATIONS['MENU.EXIT'],
-        icon: 'po-icon-exit',
-        action: () => {
-          this.modal_closeAgentInterface.open();
+    //Tradução das opções do menu principal do Agent, caso a instalação já tenha sido validada
+    if (serialNumber != null) {
+      this.menus = [
+          { label: this._translateService.CNST_TRANSLATIONS['MENU.WORKSPACES'], icon: 'po-icon-chart-columns', link: './workspace'
+        },{ label: this._translateService.CNST_TRANSLATIONS['MENU.DATABASES'], icon: 'po-icon-database', link: './database'
+        },{ label: this._translateService.CNST_TRANSLATIONS['MENU.SCHEDULES'], icon: 'po-icon-clock', link: './schedule'
+        },{ label: this._translateService.CNST_TRANSLATIONS['MENU.QUERIES'], icon: 'po-icon-filter', link: './query'
+        },{ label: this._translateService.CNST_TRANSLATIONS['MENU.SCRIPTS'], icon: 'po-icon-filter', link: './script'
+        },{ label: this._translateService.CNST_TRANSLATIONS['MENU.MONITOR'], icon: 'po-icon-device-desktop', link: './monitor'
+        },{
+          label: this._translateService.CNST_TRANSLATIONS['MENU.CONFIGURATION'],
+          icon: 'po-icon-settings',
+          link: './configuration'
+        },{
+          label: this._translateService.CNST_TRANSLATIONS['MENU.EXIT'],
+          icon: 'po-icon-exit',
+          action: () => {
+            this.modal_closeAgentInterface.open();
+          }
         }
-      }
-    ];
+      ];
+      
+    //Tradução do menu do Agent, caso a instalação não tenha sido validada
+    } else {
+      this.menus = [
+        {
+          label: this._translateService.CNST_TRANSLATIONS['MENU.CONFIGURATION'],
+          icon: 'po-icon-settings',
+          link: './configuration'
+        },{
+          label: this._translateService.CNST_TRANSLATIONS['MENU.ACTIVATION'],
+          icon: 'po-icon-handshake',
+          action: () => {
+            this.modal_registerAgent.open();
+          }
+        },{
+          label: this._translateService.CNST_TRANSLATIONS['MENU.EXIT'],
+          icon: 'po-icon-exit',
+          action: () => {
+            this.modal_closeAgentInterface.open();
+          }
+        }
+      ];
+    }
     
     //Tradução dos modais do menu (Título / botões)
     this.lbl_closeAgentInterfaceTitle = this._translateService.CNST_TRANSLATIONS['ANGULAR.SYSTEM_EXIT'];
     this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
     this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
     
+    //Tradução do modal de ativação da instalação do Agent
+    this.lbl_registerAgentTitle = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_TITLE'];
+    this.lbl_registerAgentDescription1 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_1'];
+    this.lbl_registerAgentDescription2 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_2'];
+    this.lbl_registerAgentField = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_FIELD'];
+    
     //Tradução do modal de atualização
     this.lbl_updateAgentTitle = this._translateService.CNST_TRANSLATIONS['ELECTRON.UPDATE_READY_TITLE'];
     this.lbl_updateAgentDescription = this._translateService.CNST_TRANSLATIONS['ELECTRON.UPDATE_READY_DESCRIPTION'];
     this.lbl_updateNow = this._translateService.CNST_TRANSLATIONS['BUTTONS.UPDATE_NOW'];
     this.lbl_updateLater = this._translateService.CNST_TRANSLATIONS['BUTTONS.UPDATE_LATER'];
+  }
+  
+  /* Método usado para ler o comando de "Enter" no campo de registro da instalação do Agent */
+  protected enterPassword(event: any): void {
+    event.preventDefault();
+    this.registerAgent_YES();
   }
   
   /**************************/
@@ -170,5 +221,32 @@ export class AppComponent {
   /* Modal de atualização do Agent (DEPOIS) */
   protected updateAgent_LATER(): void {
     this.modal_updateAgent.close();
+  }
+  
+  /* Modal de verificação da instalação do Agent (NAO) */
+  protected registerAgent_NO(): void {
+    this.modal_registerAgent.close();
+    this.registerAgent = null;
+  }
+  
+  /* Modal de verificação da instalação do Agent (SIM) */
+  protected registerAgent_YES(): void {
+    if (this._electronService.isElectronApp) {
+      this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT'] };
+      let registerAgent: boolean = this._electronService.ipcRenderer.sendSync('requestSerialNumber', this.registerAgent);
+      if (registerAgent) {
+        this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
+          this.setMenuTranslations(conf.serialNumber);
+          this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_OK'], null);
+          this.po_lo_text = { value: null };
+          this.modal_registerAgent.close();
+        });
+      } else {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_ERROR'], null);
+        this.po_lo_text = { value: null };
+      }
+    } else {
+      this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_WARNING'], null);
+    }
   }
 }

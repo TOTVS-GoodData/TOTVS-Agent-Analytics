@@ -94,8 +94,8 @@
             [(ngModel)]="database.port"
             p-required="true"
             [p-pattern]="CNST_DATABASE_PORT_REGEX"
-            [p-min]="_CNST_DATABASE_PORT_MINIMUM"
-            [p-max]="_CNST_DATABASE_PORT_MAXIMUM"
+            [p-min]="_CNST_PORT_MINIMUM"
+            [p-max]="_CNST_PORT_MAXIMUM"
             p-maxlength=5
             p-regex="99999"
             [p-disabled]="(database.type == null)"

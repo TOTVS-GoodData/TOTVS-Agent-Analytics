@@ -7,6 +7,11 @@ import { CNST_APPLICATION_ROOTDIR } from '../app';
 /* Periodicidade, em horas, que o Agent irá buscar atualizações */
 export const CNST_AUTOUPDATE_CHECK_INTERVAL: number = 3;
 
+/* Hostname / Porta do Agent-Server da TOTVS */
+export const CNST_SERVER_PORT: number = 2000;
+export const CNST_SERVER_HOSTNAME: string = 'localhost';
+export const CNST_SERVER_SOURCE: string = 'SERVER';
+
 /* Caminho completo do diretório de recursos visuais do Agent (ícones) */
 export const CNST_ICONS_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'icons');
 export const CNST_ICONS_PATH_WINDOWS: string = path.join(CNST_ICONS_PATH, 'windows');

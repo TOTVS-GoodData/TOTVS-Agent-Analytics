@@ -34,6 +34,32 @@
     </po-modal-footer>
   </po-modal>
   
+  <!-- Modal de registro desta instalação do Agent -->
+  <po-modal #modal_registerAgent
+    [p-title]="lbl_registerAgentTitle">
+    <form #registerAgentForm="ngForm">
+      <div class="po-row">
+        <span class="subtitle">{{ lbl_registerAgentDescription1 }}</span>
+      </div>
+      <div class="po-row padding-bottom">
+        <span class="subtitle">{{ lbl_registerAgentDescription2 }}</span>
+      </div>
+      <div class="po-row">
+        <po-input
+          name="po_registerAgent"
+          class="form-control po-md-12"
+          [p-label]="lbl_registerAgentField"
+          p-required="true"
+          [(ngModel)]="registerAgent"
+          (keydown.enter)="enterPassword($event)" />
+      </div>
+    </form>
+    <po-modal-footer>
+      <po-button [p-label]="lbl_goBack" (p-click)="registerAgent_NO()"></po-button>
+      <po-button [p-label]="lbl_confirm" (p-click)="registerAgent_YES()" p-kind="primary" [p-disabled]="!registerAgentForm.valid"></po-button>
+    </po-modal-footer>
+  </po-modal>
+  
   <!-- Raiz de redirecionamento para roteamento do Angular -->
   <router-outlet></router-outlet>
 </div>

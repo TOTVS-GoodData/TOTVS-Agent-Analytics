@@ -52,15 +52,39 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     SCRIPT_UPDATER_NO_UPDATES: 'Nenhuma atualização encontrada.',
     SCRIPT_UPDATER_ERROR: 'Erro - Falha na atualização automática de rotinas do FAST.',
     SCRIPT_UPDATER_AVAILABLE: '  ${p1} ([${p2}] --> [${p3}])',
-    SCRIPT_UPDATER_NOT_STANDARD: '  ${p1} ([Ignorada])'
+    SCRIPT_UPDATER_NOT_STANDARD: '  ${p1} ([Ignorada])',
+    SERVER_COMMUNICATION: {
+      MESSAGES: {
+        START: '=== LISTENER ATIVADO NA PORTA [${p1}]===',
+        FINISH: '=== LISTENER DESATIVADO NA PORTA [${p1}]===',
+        ERROR: 'Erro - Falha na inicialização do servidor.',
+        NEW_WORD: '[${p1}] Nova palavra de comando recebida: \'${p2}\'.',
+        CONNECTED: '=== CONECTADO COM O SERVIDOR (CLIENT) ===',
+        DISCONNECTED: '=== CONEXÃO ENCERRADA COM O SERVIDOR (CLIENT) ===',
+        SEND_COMMAND: 'Enviando comando \'${p1}\' ao servidor da TOTVS...',
+        SEND_COMMAND_RESPONSE: 'Resposta do comando \'${p1}\' foi recebida.',
+        SEND_COMMAND_OK: 'Requisição enviada. Aguardando resposta...',
+        SERIAL_NUMBER: 'Registrando instalação do Agent...',
+        SERIAL_NUMBER_OK: 'Agent registrado com sucesso.',
+        SERIAL_NUMBER_ERROR: 'Falha na ativação do Agent. Por favor, tente novamente.'
+      }
+    }
   },
   ANGULAR: {
     SYSTEM_EXIT: 'Tem certeza que deseja sair do Agent?',
     SYSTEM_FINISH_USER: '=== Desligamento solicitado pelo usuário (menu manual) ===',
-    SYSTEM_FINISH_USER_WARNING: 'Aviso - Desligamento do sistema não pode ser testado sem o electron.',
+    SYSTEM_FINISH_USER_WARNING: 'Aviso - Desligamento do sistema não pode ser testado sem o Electron.',
     ERROR: 'Erro - Um erro inesperado ocorreu. Por favor tente novamente.',
     OTHER: 'Outro',
-    NONE: 'Nenhum'
+    NONE: 'Nenhum',
+    REGISTER_AGENT_TITLE: 'Ativação da instalação',
+    REGISTER_AGENT_DESCRIPTION_1: 'Informe abaixo o código de contratação do GoodData, informado pela TOTVS.',
+    REGISTER_AGENT_DESCRIPTION_2: 'Caso não conheça este código, entre em contato com "suporte.gd@totvs.com.br".',
+    REGISTER_AGENT: 'Ativando licença...',
+    REGISTER_AGENT_FIELD: 'Código de verificação',
+    REGISTER_AGENT_OK: 'Licença ativada com sucesso. O Agent está disponível para uso.',
+    REGISTER_AGENT_ERROR: 'Erro - Falha na ativação da licença do Agent. Por favor tente novamente.',
+    REGISTER_AGENT_WARNING: 'Aviso - Ativação da instalação do Agent não pode ser testada sem o Electron.'
   },
   SERVICES: {
     GOODDATA: {
@@ -83,6 +107,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     SCRIPTS: 'Rotinas (Scripts)',
     MONITOR: 'Monitor',
     CONFIGURATION: 'Configurações',
+    ACTIVATION: 'Ativação',
     EXIT: 'Sair'
   },
   LANGUAGES: {
@@ -447,6 +472,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     JAVA_TMPDIR: 'Diretório de arquivos temporários',
     JAVA_JREDIR: 'Diretório da JRE do Java',
     TIMEZONE: 'Fuso horário',
+    CLIENT_PORT: 'Porta de comunicação com o servidor da TOTVS',
     MESSAGES: {
       LOADING: 'Carregando configurações...',
       LOADING_OK: 'Configurações carregadas.',
@@ -462,14 +488,15 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       JAVA_XMX: 'Alocação máxima de memória RAM (MB - Megabytes) que o Agent pode utilizar ao executar agendamentos. Caso a memória não seja suficiente, o Agent irá finalizar a execução, com uma mensagem de erro. Valor mínimo: ${p1}MB',
       JAVA_TMPDIR: 'Diretório temporário, usado pelo Agent para guardar os arquivos antes de enviá-los para o GoodData. Selecione um diretório que pode ser completamente apagado, caso necessário.',
       JAVA_JREDIR: 'Diretório ./bin, onde estão os arquivos binários da JRE do Java. Caso não seja informado, o Agent irá procurar o Java nas variáveis de ambiente do sistema.',
-      AUTOUPDATE: 'Define se o Agent irá baixar atualizações disponibilizadas pela TOTVS. Em caso positivo, o Agent irá avisar ao usuário quando encontrar uma nova versão, que será aplicada logo em sequência. Em caso negativo, nenhuma atualização será instalada.'
+      AUTOUPDATE: 'Define se o Agent irá baixar atualizações disponibilizadas pela TOTVS. Em caso positivo, o Agent irá avisar ao usuário quando encontrar uma nova versão, que será aplicada logo em sequência. Em caso negativo, nenhuma atualização será instalada.',
+      CLIENT_PORT: 'Informe a porta deste computador a ser utilizada pelo Agent, para comunicação com o servidor da TOTVS. Este valor deve estar entre ${p1} e ${p2}.'
     }
   },
   FORM_ERRORS: {
     FIELD_NOT_FILLED: 'Erro - Campo obrigatório \'${p1}\' não preenchido.',
     FIELD_NOT_FILLED_GRAPH: 'Erro - Campo obrigatório  \'${p1}\' não preenchido. Por favor selecione um graph para ser executado, ou remova a seleção do campo de processo de ETL.',
     FIELD_TYPING_WRONG: 'Erro: O valor informado no campo \'${p1}\' não é válido.',
-    FIELD_MINIMUM_ERROR: 'Erro - O valor informado no campo \'${p1}\' é infeerior ao valor mínimo permitido (${p2}).',
+    FIELD_RANGE_ERROR: 'Erro - O valor informado no campo \'${p1}\' não está entre o limite exigido (${p2} - ${p3}).',
     FOLDER_SELECT_WARNING: 'Aviso - Seleção de diretórios não podem ser testados sem o Electron.',
     ONLY_YES_OR_NO: 'Erro - Os parâmetros SQL só podem ser do tipo \'S\' ou \'N\'. Por favor, verifique o preenchimento dos mesmos.'
   }

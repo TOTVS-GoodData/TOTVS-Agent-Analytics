@@ -139,6 +139,14 @@ Onde:
 <CERTIFICADO> é o caminho até o arquivo de certificado (Extensão .cer)
 <ARQUIVO> é o caminho do arquivo .exe copiado no passo 1.
 
+O executável "signtool" geralmente está instalado na seguinte pasta do Windows:
+
+```C:\Program Files (x86)\Windows Kits\<VERSAO>\bin\<PATCH>\x64\```
+
+Onde:
+<VERSAO> é a versão do Windows (Windows 8, Windows 10...)
+<PATCH> é a versão do patch do Windows (Ex: 10.0.22621.0)
+
 Caso a certificação tenha sido feita com sucesso, o arquivo de instalação, ao ser executado, passará a mostrar a TOTVS como um "Fornecedor Verificado" na popup de instalação do mesmo.
 
 Também é possível verificar a certificação do arquivo de instalação clicando com o botão direito no mesmo, e acessando "Propriedades" -> "Assinaturas Digitais".

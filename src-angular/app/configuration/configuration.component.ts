@@ -19,7 +19,7 @@ import { ElectronService } from 'ngx-electronyzer';
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './configuration-service';
 import { Configuration } from './configuration-interface';
-import { CNST_LOGFILES_MINIMUM } from './configuration-constants';
+import { CNST_LOGFILES_MINIMUM, CNST_LOGFILES_MAXIMUM, CNST_DEFAULT_CLIENT_PORT } from './configuration-constants';
 
 /* Serviço de tradução do Agent */
 import { TranslationService } from '../services/translation/translation-service';
@@ -30,7 +30,12 @@ import { CustomTranslationLoader } from '../services/translation/custom-translat
 import { map } from 'rxjs';
 
 /* Constantes do Agent */
-import { CNST_PROGRAM_NAME, CNST_PROGRAM_VERSION } from '../app-constants';
+import {
+  CNST_PROGRAM_NAME,
+  CNST_PROGRAM_VERSION,
+  CNST_PORT_MINIMUM,
+  CNST_PORT_MAXIMUM
+} from '../app-constants';
 
 @Component({
   selector: 'app-configuration',
@@ -55,6 +60,10 @@ export class ConfigurationComponent implements OnInit {
   
   //Objeto de configuração do formulário
   protected configuration: Configuration = new Configuration(3, true, 2048, '', CNST_DEFAULT_LANGUAGE, true);
+  
+  //Valores mínimo / máximo permitidos para a porta de comunicação com o servidor da TOTVS
+  protected _CNST_PORT_MINIMUM: number = CNST_PORT_MINIMUM;
+  protected _CNST_PORT_MAXIMUM: number = CNST_PORT_MAXIMUM;
   
   /****** Portinari.UI ******/
   //Posicionamento do texto do label do modo debug (Esquerda)
@@ -91,6 +100,7 @@ export class ConfigurationComponent implements OnInit {
   protected lbl_save: string = null;
   protected lbl_locale: string = null;
   protected lbl_timezone: string = null;
+  protected lbl_clientPort: string = null;
   
   //Balões de ajuda
   protected ttp_debugMode: string = null;
@@ -99,6 +109,7 @@ export class ConfigurationComponent implements OnInit {
   protected ttp_javaXmx: string = null;
   protected ttp_logfilesToKeep: string = null;
   protected ttp_autoUpdate: string = null;
+  protected ttp_clientPort: string = null;
   
   /**************************/
   /*** MÉTODOS DO MÓDULO  ***/
@@ -152,6 +163,7 @@ export class ConfigurationComponent implements OnInit {
       this.lbl_java = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA'];
       this.lbl_locale = this._translateService.CNST_TRANSLATIONS['LANGUAGES.TITLE'];
       this.lbl_timezone = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TIMEZONE'];
+      this.lbl_clientPort = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.CLIENT_PORT'] + CNST_MANDATORY_FORM_FIELD;
       this.lbl_save = this._translateService.CNST_TRANSLATIONS['BUTTONS.SAVE'];
       
       //Tradução dos balões de ajuda dos campos
@@ -160,6 +172,7 @@ export class ConfigurationComponent implements OnInit {
       this.ttp_javaJREDir = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.JAVA_JREDIR'];
       this.ttp_logfilesToKeep = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.LOGFILES'];
       this.ttp_autoUpdate = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.AUTOUPDATE'];
+      this.ttp_clientPort = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.CLIENT_PORT'];
       this._translateService.getTranslations([
         new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_XMX', [CNST_JAVA_XMX_MINIMUM + ''])
       ]).subscribe((translations: any) => {
@@ -168,7 +181,8 @@ export class ConfigurationComponent implements OnInit {
       
       //Definição dos campos obrigatórios do formulário
       this.CNST_FIELD_NAMES = [
-        { key: 'logfilesToKeep', minimum: CNST_LOGFILES_MINIMUM, value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.LOGFILES_TO_KEEP'] },
+        { key: 'logfilesToKeep', minimum: CNST_LOGFILES_MINIMUM, maximum: CNST_LOGFILES_MAXIMUM, value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.LOGFILES_TO_KEEP'] },
+        { key: 'clientPort', minimum: CNST_PORT_MINIMUM, maximum: CNST_PORT_MAXIMUM, value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.CLIENT_PORT'] },
         { key: 'javaXmx', minimum: CNST_JAVA_XMX_MINIMUM, value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_XMX'] },
         { key: 'javaTmpDir', value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_TMPDIR'] }
       ];
@@ -238,7 +252,7 @@ export class ConfigurationComponent implements OnInit {
     
     //Verifica se todos os campos da interface de configuração foram preenchidos
     let propertiesNotDefined: string[] = Object.getOwnPropertyNames.call(Object, configuration).map((p: string) => {
-      if (this.configuration[p] == undefined) return p;
+      if ((this.configuration[p] == undefined) && (p != 'serialNumber')) return p;
     }).filter((p: string) => { return p != null; });
     if (propertiesNotDefined.length > 0) {
       validate = false;
@@ -250,9 +264,10 @@ export class ConfigurationComponent implements OnInit {
       });
       this.po_lo_text = { value: null };
     } else {
+      
       //Verifica se a tipagem esperada de todos os campos da interface estão corretas
       propertiesNotDefined = Object.getOwnPropertyNames.call(Object, configuration).map((p: string) => {
-        if (typeof this.configuration[p] != typeof configuration[p]) return p;
+        if ((typeof this.configuration[p] != typeof configuration[p]) && (p != 'serialNumber')) return p;
       }).filter((p: string) => { return p != null; });
       if (propertiesNotDefined.length > 0) {
         validate = false;
@@ -266,18 +281,18 @@ export class ConfigurationComponent implements OnInit {
       }
     }
     
-    //Verifica se o valor mínimo da memória de alocação máxima do Java foi respeitado.
-    let minimums: any[] = this.CNST_FIELD_NAMES.filter((p: any) => {
-      if (p.minimum != undefined) return (this.configuration[p.key] < p.minimum);
+    //Verifica se os valores mínimos do formulário foram respeitados.
+    let range: any[] = this.CNST_FIELD_NAMES.filter((p: any) => {
+      if (p.minimum != undefined) return ((this.configuration[p.key] < p.minimum) || (this.configuration[p.key] > p.maximum));
       else return false;
     });
-    if (minimums.length > 0) {
+    if (range.length > 0) {
       validate = false;
       this.po_lo_text = { value: null };
       this._translateService.getTranslations([
-        new TranslationInput('FORM_ERRORS.FIELD_MINIMUM_ERROR', [minimums[0].value, minimums[0].minimum])
+        new TranslationInput('FORM_ERRORS.FIELD_RANGE_ERROR', [range[0].value, range[0].minimum, range[0].maximum])
       ]).subscribe((translations: any) => {
-        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_MINIMUM_ERROR']);
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_RANGE_ERROR']);
       });
     }
     

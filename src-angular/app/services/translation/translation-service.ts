@@ -7,9 +7,9 @@ import { TranslationInput } from './translation-interface';
 
 /* Constantes de banco de dados */
 import {
-  CNST_DATABASE_PORT_MINIMUM,
-  CNST_DATABASE_PORT_MAXIMUM
-} from '../../database/database-constants';
+  CNST_PORT_MINIMUM,
+  CNST_PORT_MAXIMUM
+} from '../../app-constants';
 
 /* Nome da aplicação (Agent) */
 import { CNST_PROGRAM_NAME } from '../../app-constants';
@@ -100,6 +100,14 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('ANGULAR.SYSTEM_EXIT', []),
       new TranslationInput('ANGULAR.SYSTEM_FINISH_USER', []),
       new TranslationInput('ANGULAR.SYSTEM_FINISH_USER_WARNING', []),
+      new TranslationInput('ANGULAR.REGISTER_AGENT_TITLE', []),
+      new TranslationInput('ANGULAR.REGISTER_AGENT_DESCRIPTION_1', []),
+      new TranslationInput('ANGULAR.REGISTER_AGENT_DESCRIPTION_2', []),
+      new TranslationInput('ANGULAR.REGISTER_AGENT', []),
+      new TranslationInput('ANGULAR.REGISTER_AGENT_FIELD', []),
+      new TranslationInput('ANGULAR.REGISTER_AGENT_OK', []),
+      new TranslationInput('ANGULAR.REGISTER_AGENT_ERROR', []),
+      new TranslationInput('ANGULAR.REGISTER_AGENT_WARNING', []),
       new TranslationInput('BUTTONS.ADD', []),
       new TranslationInput('BUTTONS.EDIT', []),
       new TranslationInput('BUTTONS.DELETE', []),
@@ -133,6 +141,7 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('CONFIGURATION.JAVA_TMPDIR', []),
       new TranslationInput('CONFIGURATION.JAVA_JREDIR', []),
       new TranslationInput('CONFIGURATION.TIMEZONE', []),
+      new TranslationInput('CONFIGURATION.CLIENT_PORT', []),
       new TranslationInput('CONFIGURATION.MESSAGES.VALIDATE', []),
       new TranslationInput('CONFIGURATION.MESSAGES.LOADING', []),
       new TranslationInput('CONFIGURATION.MESSAGES.LOADING_OK', []),
@@ -147,6 +156,7 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_TMPDIR', []),
       new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_JREDIR', []),
       new TranslationInput('CONFIGURATION.TOOLTIPS.AUTOUPDATE', []),
+      new TranslationInput('CONFIGURATION.TOOLTIPS.CLIENT_PORT', ['' + CNST_PORT_MINIMUM, '' + CNST_PORT_MAXIMUM]),
       new TranslationInput('CONTRACT_TYPES.PLATFORM', []),
       new TranslationInput('CONTRACT_TYPES.DEMO', []),
       new TranslationInput('DATABASES.TITLE', []),
@@ -178,7 +188,7 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('DATABASES.TOOLTIPS.DRIVER_PATH', []),
       new TranslationInput('DATABASES.TOOLTIPS.HOST_TYPE', []),
       new TranslationInput('DATABASES.TOOLTIPS.HOST_NAME', []),
-      new TranslationInput('DATABASES.TOOLTIPS.PORT', ['' + CNST_DATABASE_PORT_MINIMUM, '' + CNST_DATABASE_PORT_MAXIMUM]),
+      new TranslationInput('DATABASES.TOOLTIPS.PORT', ['' + CNST_PORT_MINIMUM, '' + CNST_PORT_MAXIMUM]),
       new TranslationInput('DATABASES.TOOLTIPS.CONNECTION_STRING', []),
       new TranslationInput('DATABASES.MESSAGES.LOADING', []),
       new TranslationInput('DATABASES.MESSAGES.LOADING_OK', []),
@@ -189,7 +199,7 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('DATABASES.MESSAGES.LOGIN_OK', []),
       new TranslationInput('DATABASES.MESSAGES.LOGIN_WARNING', []),
       new TranslationInput('DATABASES.MESSAGES.ERROR_INVALID_IP', []),
-      new TranslationInput('DATABASES.MESSAGES.ERROR_INVALID_PORT', ['' + CNST_DATABASE_PORT_MINIMUM, '' + CNST_DATABASE_PORT_MAXIMUM]),
+      new TranslationInput('DATABASES.MESSAGES.ERROR_INVALID_PORT', ['' + CNST_PORT_MINIMUM, '' + CNST_PORT_MAXIMUM]),
       new TranslationInput('DATABASES.MESSAGES.VALIDATE', []),
       new TranslationInput('DATABASES.MESSAGES.PASSWORD_ENCRYPT', []),
       new TranslationInput('ELECTRON.UPDATE_READY_TITLE', []),
@@ -208,6 +218,7 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('MENU.SCRIPTS', []),
       new TranslationInput('MENU.MONITOR', []),
       new TranslationInput('MENU.CONFIGURATION', []),
+      new TranslationInput('MENU.ACTIVATION', []),
       new TranslationInput('MENU.EXIT', []),
       new TranslationInput('MONITOR.TITLE', []),
       new TranslationInput('MONITOR.NO_DATA', []),

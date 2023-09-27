@@ -52,7 +52,23 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     SCRIPT_UPDATER_NO_UPDATES: 'No script updates were found for FAST.',
     SCRIPT_UPDATER_ERROR: 'Error - FAST\'s script updates has failed.',
     SCRIPT_UPDATER_AVAILABLE: '  ${p1} ([${p2}] --> [${p3}])',
-    SCRIPT_UPDATER_NOT_STANDARD: '  ${p1} ([Ignored])'
+    SCRIPT_UPDATER_NOT_STANDARD: '  ${p1} ([Ignored])',
+    SERVER_COMMUNICATION: {
+      MESSAGES: {
+        START: '=== LISTENER ONLINE ON PORT [${p1}]===',
+        FINISH: '=== LISTENER OFFLINE ON PORT [${p1}]===',
+        ERROR: 'Error - Server initialization has failed.',
+        NEW_WORD: '[${p1}] New command word received: \'${p2}\'.',
+        CONNECTED: '=== CONNECTED TO SERVER ===',
+        DISCONNECTED: '=== DISCONNECTED FROM SERVER ===',
+        SEND_COMMAND: 'Sending \'${p1}\' command to TOTVS\'s server...',
+        SEND_COMMAND_RESPONSE: '\'${p1}\'s command response was received.',
+        SEND_COMMAND_OK: 'Request sent. Listening for a reponse...',
+        SERIAL_NUMBER: 'Activating Agent...',
+        SERIAL_NUMBER_OK: 'Agent successfully registered.',
+        SERIAL_NUMBER_ERROR: 'Agent\'s activation has failed. Please try again.'
+      }
+    }
   },
   ANGULAR: {
     SYSTEM_EXIT: 'Are you sure you want to close Agent?',
@@ -60,7 +76,15 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     SYSTEM_FINISH_USER_WARNING: 'Warning - System shutdown can only be tested with Electron.',
     ERROR: 'Error - An unexpected error has happened. Please try again.',
     OTHER: 'Other',
-    NONE: 'None'
+    NONE: 'None',
+    REGISTER_AGENT_TITLE: 'Installation activation',
+    REGISTER_AGENT_DESCRIPTION_1: 'Enter GoodData\'s verification code, which was sent by TOTVS.',
+    REGISTER_AGENT_DESCRIPTION_2: 'If you don\'t know this code, please reach out to "suporte.gd@totvs.com.br".',
+    REGISTER_AGENT: 'Registering license...',
+    REGISTER_AGENT_FIELD: 'Verification code',
+    REGISTER_AGENT_OK: 'License sucessfully activated. Agent is ready to use.',
+    REGISTER_AGENT_ERROR: 'Error - License activation has failed. Please try again.',
+    REGISTER_AGENT_WARNING: 'Warning - Agent\'s installation activation can only be tested with Electron.'
   },
   SERVICES: {
     GOODDATA: {
@@ -97,6 +121,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     SCRIPTS: 'Scripts',
     MONITOR: 'Monitor',
     CONFIGURATION: 'Settings',
+    ACTIVATION: 'Activation',
     EXIT: 'Exit'
   },
   BUTTONS: {
@@ -448,6 +473,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     JAVA_TMPDIR: 'Temporary files directory',
     JAVA_JREDIR: 'Java\'s JRE directory',
     TIMEZONE: 'Timezone',
+    CLIENT_PORT: 'TOTVS Server\'s communication port',
     MESSAGES: {
       LOADING: 'Loading configurations...',
       LOADING_OK: 'Configurations loaded.',
@@ -463,14 +489,15 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       JAVA_XMX: 'Maximum RAM memory allocation (MB - Megabytes) that Agent is allowed to use when running schedules. If this threshold is not enough to upload data, Agent will terminate it\'s execution, with an error message. Minimum value: ${p1}MB',
       JAVA_TMPDIR: 'Temporary directory, used by Agent to store files before uploading to GoodData. Choose a directory that can be completely deleted if necessary.',
       JAVA_JREDIR: './bin directory, where Java\'s binary files are located. If not informed, Agent will search for Java under the system\'s environment variables.',
-      AUTOUPDATE: 'Defines if Agent will automatically install any updates created by TOTVS. If positive, the user will be prompted when a new update has been found, which in turn will be installed immediately. If negative, Agent will never try to update itself.'
+      AUTOUPDATE: 'Defines if Agent will automatically install any updates created by TOTVS. If positive, the user will be prompted when a new update has been found, which in turn will be installed immediately. If negative, Agent will never try to update itself.',
+      CLIENT_PORT: 'Choose the port\'s number that Agent will use to communicate with TOTVS\'s server. This number must be between ${p1} and ${p2}.'
     }
   },
   FORM_ERRORS: {
     FIELD_NOT_FILLED: 'Error - Mandatory field \'${p1}\' not informed.',
     FIELD_NOT_FILLED_GRAPH: 'Error - Mandatory field  \'${p1}\' not informed. Please select a graph to execute, or remove field\'s \'ETL Process\' selecion.',
     FIELD_TYPING_WRONG: 'Error: Field \'${p1}\' data is not valid. Please check its typing.',
-    FIELD_MINIMUM_ERROR: 'Error - Field \'${p1}\'s value is smaller than it\'s minimum value (${p2}).',
+    FIELD_MINIMUM_ERROR: 'Error - Field \'${p1}\'s value is not within the expected range (${p2} - ${p3}).',
     FOLDER_SELECT_WARNING: 'Warning - Folder selection can only be tested with Electron.',
     ONLY_YES_OR_NO: 'Error - SQL Parameters can only be \'Y\' or \'N\'. Please check its typing.'
   }

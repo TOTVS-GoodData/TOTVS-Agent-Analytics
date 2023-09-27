@@ -29,6 +29,19 @@
             p-regex="999">
           </po-number>
           
+          <!-- Porta de comunicação com o servidor da TOTVS -->
+          <po-number
+            class="po-sm-12 po-md-12 po-lg-12 po-xl-12"
+            [p-min]="_CNST_PORT_MINIMUM"
+            [p-max]="_CNST_PORT_MAXIMUM"
+            name="po_clientPort"
+            [(ngModel)]="configuration.clientPort"
+            [p-label]="lbl_clientPort"
+            [p-tooltip]="ttp_clientPort"
+            p-maxlength=5
+            p-regex="99999">
+          </po-number>
+          
           <!-- Chave de habilitação do modo debug -->
           <po-switch class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12"
             name="po_debugMode"

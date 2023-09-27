@@ -5,6 +5,12 @@ import { Router, Navigation } from '@angular/router';
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from 'ngx-electronyzer';
 
+/* Porta mínima / máxima aceitável pelo Agent */
+import {
+  CNST_PORT_MINIMUM,
+  CNST_PORT_MAXIMUM,
+} from '../app-constants';
+
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from '../workspace/workspace-service';
 
@@ -22,8 +28,6 @@ import {
   CNST_DATABASE_BRAND_ORACLE,
   CNST_DATABASE_BRAND_PROGRESS,
   CNST_DATABASE_BRAND_INFORMIX,
-  CNST_DATABASE_PORT_MINIMUM,
-  CNST_DATABASE_PORT_MAXIMUM,
   CNST_DATABASE_CONNECTIONSTRING_IP,
   CNST_DATABASE_CONNECTIONSTRING_PORT,
   CNST_DATABASE_CONNECTIONSTRING_DATABASE,
@@ -82,8 +86,8 @@ export class DataBaseAddComponent {
   protected _CNST_DATABASE_TYPES: any;
   
   //Valores mínimo / máximo permitidos para a porta do banco de dados
-  protected _CNST_DATABASE_PORT_MINIMUM: number = CNST_DATABASE_PORT_MINIMUM;
-  protected _CNST_DATABASE_PORT_MAXIMUM: number = CNST_DATABASE_PORT_MAXIMUM;
+  protected _CNST_PORT_MINIMUM: number = CNST_PORT_MINIMUM;
+  protected _CNST_PORT_MAXIMUM: number = CNST_PORT_MAXIMUM;
   
   //Variável de suporte, para mostrar os tipos de IP's disponíveis (Ipv4, Ipv6, Hostname)
   protected _CNST_DATABASE_IPTYPES: any = CNST_DATABASE_IPTYPES.map((type: any) => {
@@ -179,7 +183,7 @@ export class DataBaseAddComponent {
       { key: 'driverPath', value: this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.DRIVER_PATH'] },
       { key: 'ipType', value: this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.HOST_TYPE'] },
       { key: 'ip', value: this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.HOST_NAME'] },
-      { key: 'port', value: this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.PORT'] },
+      { key: 'port', minimum: CNST_PORT_MINIMUM, maximum: CNST_PORT_MAXIMUM, value: this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.PORT'] },
       { key: 'db_databaseName', value: this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.DATABASE'] },
       { key: 'connectionString', value: this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.CONNECTION_STRING'] },
       { key: 'username', value: this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.USERNAME'] },
@@ -428,14 +432,30 @@ export class DataBaseAddComponent {
         ]).subscribe((translations: any) => {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_TYPING_WRONG']);
         });
-      
-      //Validação do ip digitado, via RegEx
-      } else if (this.database.type != CNST_DATABASE_OTHER) {
-        let regexIp = new RegExp(this.regexPattern);
-        if (!regexIp.test(this.database.ip)) {
+        
+      //Verifica se os valores mínimos do formulário foram respeitados.
+      } else {
+        let range: any[] = this.CNST_FIELD_NAMES.filter((p: any) => {
+          if (p.minimum != undefined) return ((this.database[p.key] < p.minimum) || (this.database[p.key] > p.maximum));
+          else return false;
+        });
+        if (range.length > 0) {
           validate = false;
           this.po_lo_text = { value: null };
-          this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.ERROR_INVALID_IP']);
+          this._translateService.getTranslations([
+            new TranslationInput('FORM_ERRORS.FIELD_RANGE_ERROR', [range[0].value, range[0].minimum, range[0].maximum])
+          ]).subscribe((translations: any) => {
+            this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_RANGE_ERROR']);
+          });
+          
+        //Validação do ip digitado, via RegEx
+        } else if (this.database.type != CNST_DATABASE_OTHER) {
+          let regexIp = new RegExp(this.regexPattern);
+          if (!regexIp.test(this.database.ip)) {
+            validate = false;
+            this.po_lo_text = { value: null };
+            this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.ERROR_INVALID_IP']);
+          }
         }
       }
     }

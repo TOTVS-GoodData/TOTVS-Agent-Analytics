@@ -1,5 +1,5 @@
 /* Constantes do banco de dados */
-import { CNST_DATABASE_PORT_MINIMUM } from './database-constants';
+import { CNST_PORT_MINIMUM } from '../app-constants';
 
 /* Interface de bancos de dados do Agent */
 export class Database {
@@ -29,7 +29,7 @@ export class Database {
     this.connectionType = '';
     this.ip = '';
     this.ipType = '';
-    this.port = CNST_DATABASE_PORT_MINIMUM;
+    this.port = CNST_PORT_MINIMUM;
     this.instance = '';
     this.db_databaseName = '';
     this.connectionString = '';

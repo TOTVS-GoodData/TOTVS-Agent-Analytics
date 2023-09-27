@@ -10,6 +10,9 @@ import { Execute } from './src-electron/execute';
 import { Functions } from './src-electron/functions';
 import { Files } from './src-electron/files';
 
+/* Serviço de comunicação com o Agent-Server */
+import { ServerService } from './src-electron/services/server-service';
+
 /* Serviço de tradução do Electron */
 import { TranslationService } from './src-electron/services/translation-service';
 import { TranslationInput } from './src-angular/app/services/translation/translation-interface';
@@ -22,7 +25,7 @@ import {
   CNST_ICON_SIZE,
   CNST_ICON_WINDOWS,
   CNST_ICON_LINUX,
-  CNST_TMP_PATH
+  CNST_TMP_PATH,
 } from './src-electron/constants-electron';
 
 /* Dependência de comunicação com o Registro do Windows */
@@ -67,6 +70,8 @@ export default class Main {
   /********* Gerais *********/
   //Interface do Agent
   private static mainWindow: Electron.BrowserWindow = null;
+  
+  private static client: any = null;
   
   //Referência da aplicação como um todo, passada ao inicializar o Electron
   static application: Electron.App = null;
@@ -528,6 +533,20 @@ export default class Main {
       if (Main.mainWindow != null) Main.willClose();
       Main.terminateApplication();
     });
+    
+    ipcMain.on('sendDataToServer', (event: IpcMainEvent) => {
+      Main.client.write('Hello, server! Love, Client.');
+    });
+    
+    /*****************************/
+    /** Comunicação c/ Servidor **/
+    /*****************************/
+    ipcMain.on('requestSerialNumber', (event: IpcMainEvent, args: string[]) => {
+      ServerService.requestSerialNumber(args).subscribe((res: boolean) => {
+        event.returnValue = res;
+        return res;
+      });
+    });
   }
   
   /*********************************/
@@ -641,9 +660,14 @@ export default class Main {
     
     //Solicita a trava de única instância do Agent. Caso não consiga, este Agent é encerrado
     //Este processo é utilizado para bloquear a abertura de 2 Agents ao mesmo tempo
-    Main.application.requestSingleInstanceLock();
-    if (!Main.application.hasSingleInstanceLock()) {
-      console.log(TranslationService.CNST_TRANSLATIONS['ELECTRON.THREAD_ERROR']);
+    //Main.application.requestSingleInstanceLock();
+    if (false) {
+    //if (!Main.application.hasSingleInstanceLock()) {
+      let translations: any = TranslationService.getTranslations([
+        new TranslationInput('ELECTRON.THREAD_ERROR', [CNST_PROGRAM_NAME.DEFAULT])
+      ]);
+      
+      console.log(translations['ELECTRON.THREAD_ERROR']);
       Main.application.quit();
     } else {
       //Inicialização do arquivo de banco do Agent (Leitura das configurações existentes)
@@ -681,7 +705,6 @@ export default class Main {
           
           if (date.getSeconds() == 0) {
             ScheduleService.getSchedulesToExecute().subscribe((schedules: Schedule[]) => {
-              console.log(schedules);
               schedules.map(async (s: Schedule) => {
                 await ScheduleService.executeAndUpdateSchedule(s).subscribe((b: boolean) => {
                   return b;
@@ -722,6 +745,9 @@ export default class Main {
       
       //Disparo da atualização automática do Agent (Caso habilitado)
       Main.autoUpdaterCheck(configuration.autoUpdate);
+      
+      //Inicialização do servidor local do Agent, para receber comandos do servidor da TOTVS
+      if (configuration.serialNumber != null) ServerService.startServer(configuration.clientPort).subscribe();
       
       //Configuração da comunicação c/ Angular (IPC)
       Main.setIpcListeners();

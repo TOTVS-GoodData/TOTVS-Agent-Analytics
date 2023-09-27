@@ -52,7 +52,23 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     SCRIPT_UPDATER_NO_UPDATES: 'Ninguna actualización fue encontrada.',
     SCRIPT_UPDATER_ERROR: 'Error - La atualización automatica de las rutinas ha fallado.',
     SCRIPT_UPDATER_AVAILABLE: '  ${p1} ([${p2}] --> [${p3}])',
-    SCRIPT_UPDATER_NOT_STANDARD: '  ${p1} ([Ignorada])'
+    SCRIPT_UPDATER_NOT_STANDARD: '  ${p1} ([Ignorada])',
+    SERVER_COMMUNICATION: {
+      MESSAGES: {
+        START: '=== LISTENER ACTIVADO EN LA PUERTA [${p1}]===',
+        FINISH: '=== LISTENER DESACTIVADO EN LA PUERTA [${p1}]===',
+        ERROR: 'Error - La inicialización del servidor ha fallado.',
+        NEW_WORD: '[${p1}] Nueva palabra de comando recibida: \'${p2}\'.',
+        CONNECTED: '=== CONECTADO COM EL SERVIDOR (CLIENT) ===',
+        DISCONNECTED: '=== CONEXIÓN CERRADA CON EL SERVIDOR (CLIENT) ===',
+        SEND_COMMAND: 'Enviando comando \'${p1}\' para el servidor TOTVS...',
+        SEND_COMMAND_RESPONSE: 'Respuesta del comando \'${p1}\' fue recibida.',
+        SEND_COMMAND_OK: 'Comando enviado. Esperando por una respuesta...',
+        SERIAL_NUMBER: 'Activando Agent...',
+        SERIAL_NUMBER_OK: 'Agent activado con éxito.',
+        SERIAL_NUMBER_ERROR: 'La activación del Agent ha fallado. Por favor intenta novamente.'
+      }
+    }
   },
   ANGULAR: {
     SYSTEM_EXIT: '¿Seguro que quieres cerrar el Agent?',
@@ -60,7 +76,15 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     SYSTEM_FINISH_USER_WARNING: 'Aviso - Desligamento del sistema no puede ser probado sin el Electron.',
     ERROR: 'Error - Un error inesperado ocurrió. Por favor intenta otra vez.',
     OTHER: 'Otro',
-    NONE: 'Ninguno'
+    NONE: 'Ninguno',
+    REGISTER_AGENT_TITLE: 'Activación de la instalación',
+    REGISTER_AGENT_DESCRIPTION_1: 'Ingrese el codigo de contratación del GoodData, informado por TOTVS.',
+    REGISTER_AGENT_DESCRIPTION_2: 'Si no lo conoces, por favor entre en contacto con "suporte.gd@totvs.com.br".',
+    REGISTER_AGENT: 'Activando licencia...',
+    REGISTER_AGENT_FIELD: 'Codigo de verificación',
+    REGISTER_AGENT_OK: 'Licencia activada con éxito. El Agent esta listo para utilización.',
+    REGISTER_AGENT_ERROR: 'Error - La activación de la licencia del Agent ha fallado. Por favor intenta otra vez.',
+    REGISTER_AGENT_WARNING: 'Aviso - Activación de la instalación del Agent no puede ser probada sin el Electron.'
   },
   SERVICES: {
     GOODDATA: {
@@ -97,6 +121,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     SCRIPTS: 'Rutinas (Scripts)',
     MONITOR: 'Monitor',
     CONFIGURATION: 'Configuración',
+    ACTIVATION: 'Activación',
     EXIT: 'Salir',
   },
   BUTTONS: {
@@ -215,12 +240,12 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       LOADING: 'Cargando bancos de datos...',
       LOADING_OK: 'Bancos de datos cargados.',
       LOADING_ERROR: 'Error - Un error inesperado ocurrió. Por favor intenta otra vez.',
-      SAVE: 'Gravando banco de dato: ${p1}',
-      SAVE_OK: 'Banco de dato gravado con éxito!',
+      SAVE: 'Gravando banco de datos: ${p1}',
+      SAVE_OK: 'Banco de datos gravado con éxito!',
       SAVE_ERROR: 'Error - Un error inesperado ocurrió mientras gravación del banco de datos ${p1}. Por favor intenta otra vez.',
       SAVE_ERROR_SAME_NAME: 'Error - El banco de datos \'${p1}\' no puede ser gravado, porqué ya existe un banco con este nombre.',
-      DELETE: 'Borrando banco de dato: ${p1}',
-      DELETE_OK: 'Banco de dato borrado con éxito!',
+      DELETE: 'Borrando banco de datos: ${p1}',
+      DELETE_OK: 'Banco de datos borrado con éxito!',
       DELETE_ERROR: 'Error - Un error inesperado ocurrió mientras borro del banco de datos ${p1}. Por favor intenta otra vez.',
       DELETE_ERROR_WORKSPACES: 'Error - No fue posible borrar este banco de datos, porqué existen ambientes lo utilizando.',
       LOGIN: 'Probando conexión con banco de datos: ${p1}',
@@ -447,6 +472,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     JAVA_TMPDIR: 'Directorio de archivos temporarios',
     JAVA_JREDIR: 'Directorio de la JRE del Java',
     TIMEZONE: 'Fuso horario',
+    CLIENT_PORT: 'Puerta de comunicación con el servidor de TOTVS',
     MESSAGES: {
       LOADING: 'Cargando configuración...',
       LOADING_OK: 'Configuración cargada.',
@@ -462,14 +488,15 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       JAVA_XMX: 'Alocación máxima de memoria RAM (MB - Megabytes) que el Agent puede utilizar mientras ejecuta los horarios. Si la alocación no es suficiente para cargar los datos, Agent va cerrar el proceso con una mensaje de error. Valor minimo: ${p1}MB',
       JAVA_TMPDIR: 'Directorio temporario, utilizar por el Agent para almacenar los archivos antes de cargar al GoodData. Selecciona un directorio que puede ser borrado, si necesario.',
       JAVA_JREDIR: 'Directorio ./bin, donde se encuentra los archivos binarios de la JRE del Java. Si no informado, Agent buscará el Java en las variables de ambiente del sistema.',
-      AUTOUPDATE: 'Define si el Agent va bajar actualizaciones creadas por TOTVS automaticamente. En caso positivo, Agent va contestar el usuario cuando encontrar una nueva versión, y va hacer la instalación inmediatamente. En caso negativo, Agent no va actualizar a nadie.'
+      AUTOUPDATE: 'Define si el Agent va bajar actualizaciones creadas por TOTVS automaticamente. En caso positivo, Agent va contestar el usuario cuando encontrar una nueva versión, y va hacer la instalación inmediatamente. En caso negativo, Agent no va actualizar a nadie.',
+      CLIENT_PORT: 'Selecciona el numero de la puerta para hacer la comunicación con el servidor del TOTVS. Este numero debe estar entre ${p1} y ${p2}.'
     }
   },
   FORM_ERRORS: {
     FIELD_NOT_FILLED: 'Error - Campo obligatorio \'${p1}\' sin información.',
     FIELD_NOT_FILLED_GRAPH: 'Error - Campo obligatorio  \'${p1}\' sin información. Por favor selecciona um graph para ejecución, o entoces borre la selección del campo \'Proceso de ETL\'.',
     FIELD_TYPING_WRONG: 'Error: El contenido del campo \'${p1}\' es invalido. Por favor verifica su valor.',
-    FIELD_MINIMUM_ERROR: 'Error - El valor del campo \'${p1}\' es menor que el valor mínimo permitido (${p2}).',
+    FIELD_RANGE_ERROR: 'Error - El valor del campo \'${p1}\' no esta entre el range permitido (${p2} - ${p3}).',
     FOLDER_SELECT_WARNING: 'Atención - Selección de diretorios no puede ser probada sin el Electron.',
     ONLY_YES_OR_NO: 'Error - Los parámetros SQL solo pueden ser \'Y\' or \'N\'. Por favor verifica los valores.'
   }

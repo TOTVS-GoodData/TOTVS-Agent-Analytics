@@ -1,3 +1,6 @@
+//Porta mínima aceitável p/ conexão ao banco de dados
+import { CNST_PORT_MINIMUM } from '../app-constants';
+
 //Tipo de banco de dados desconhecido (Outro)
 export const CNST_DATABASE_OTHER = 'O';
 
@@ -26,10 +29,6 @@ export const CNST_DATABASE_CONNECTIONSTRING_SID = '<SID>';
 export const CNST_DATABASE_CONNECTIONSTRING_INSTANCE_1 = ';InstanceName=';
 export const CNST_DATABASE_CONNECTIONSTRING_INSTANCE_2 = '<INSTANCE>';
 
-//Valores mínimo / máximo de porta do banco de dados
-export const CNST_DATABASE_PORT_MINIMUM: number = 1024
-export const CNST_DATABASE_PORT_MAXIMUM: number = 65535
-      
 //Validação do ip do banco de dados
 export const CNST_DATABASE_IPTYPES: any = [
   { label: 'IPv4', value: 'IPV4', pattern: '^(\\b25[0-5]|\\b2[0-4][0-9]|\\b[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$' },
@@ -110,6 +109,6 @@ export const CNST_DATABASE_TYPES = [
     driverClass: '',
     driverPath: '',
     driverConnectionString: '',
-    defaultPort: CNST_DATABASE_PORT_MINIMUM
+    defaultPort: CNST_PORT_MINIMUM
   }
 ];
