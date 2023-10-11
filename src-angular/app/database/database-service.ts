@@ -18,7 +18,7 @@ import { ConfigurationService } from '../configuration/configuration-service';
 import { Configuration } from '../configuration/configuration-interface';
 
 /* Interface de comunicação com o Java */
-import { JavaInputBuffer } from '../utilities/interface-java';
+import { JavaInputBuffer } from '../utilities/java-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
 import { Observable, of, catchError, map, switchMap, forkJoin } from 'rxjs';

@@ -24,32 +24,6 @@
     </ng-template>
   </po-list-view>
   
-  <!-- Modal de verificação do produto contratado pelo cliente -->
-  <po-modal #modal_checkContractProducts
-    [p-title]="lbl_checkContractProductsTitle">
-    <form #contractForm="ngForm">
-      <div class="po-row">
-        <span class="subtitle">{{ lbl_checkContractProductsDescription1 }}</span>
-      </div>
-      <div class="po-row padding-bottom">
-        <span class="subtitle">{{ lbl_checkContractProductsDescription2 }}</span>
-      </div>
-      <div class="po-row">
-        <po-input
-          name="po_contractToken"
-          class="form-control po-md-12"
-          [p-label]="lbl_contractToken"
-          p-required="true"
-          [(ngModel)]="contractToken"
-          (keydown.enter)="enterPassword($event)" />
-      </div>
-    </form>
-    <po-modal-footer>
-      <po-button [p-label]="lbl_goBack" (p-click)="checkContractProducts_NO()"></po-button>
-      <po-button [p-label]="lbl_confirm" (p-click)="checkContractProducts_YES()" p-kind="primary" [p-disabled]="!contractForm.valid"></po-button>
-    </po-modal-footer>
-  </po-modal>
-  
   <!-- Modal de confirmação de exclusão de um ambiente do Agent -->
   <po-modal #modal_deleteWorkspace
     [p-title]="lbl_deleteWorkspaceTitle">
@@ -58,5 +32,4 @@
       <po-button [p-label]="lbl_confirm" (p-click)="deleteWorkspace_YES().subscribe()" p-kind="primary"></po-button>
     </po-modal-footer>
   </po-modal>
-  
 </po-page-list>

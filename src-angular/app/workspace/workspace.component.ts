@@ -43,8 +43,10 @@ export class WorkspaceComponent implements OnInit {
   //Título da página
   protected lbl_title: string = null;
   
-  //Botão de inclusão de novos bancos
+  //Botões de formulário
   protected lbl_add: string = null;
+  protected lbl_goBack: string = null;
+  protected lbl_confirm: string = null;
   
   //Listagem de todos os ambientes configurados no Agent
   protected workspaces: Workspace[] = [];
@@ -72,15 +74,7 @@ export class WorkspaceComponent implements OnInit {
   //Mensagens padrões da listagem de ambientes
   protected setLiterals: PoListViewLiterals = null;
   
-  /********* Modal **********/
-  //Modal de verificação do contrato do cliente
-  @ViewChild('modal_checkContractProducts') modal_checkContractProducts: PoModalComponent = null;
-  protected lbl_checkContractProductsTitle: string = null;
-  protected lbl_checkContractProductsDescription1: string = null;
-  protected lbl_checkContractProductsDescription2: string = null;
-  protected lbl_goBack: string = null;
-  protected lbl_confirm: string = null;
-  
+  /********* Modal **********/  
   //Modal de remoção de um ambiente do Agent
   @ViewChild('modal_deleteWorkspace') modal_deleteWorkspace: PoModalComponent = null;
   protected lbl_deleteWorkspaceTitle: string = null;
@@ -121,9 +115,6 @@ export class WorkspaceComponent implements OnInit {
     //Tradução dos títulos
     this.lbl_title = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TITLE'];
     this.lbl_deleteWorkspaceTitle = this._translateService.CNST_TRANSLATIONS['WORKSPACES.DELETE_CONFIRMATION'];
-    this.lbl_checkContractProductsTitle = this._translateService.CNST_TRANSLATIONS['WORKSPACES.CHECK_CONTRACT_PRODUCTS_TITLE'];
-    this.lbl_checkContractProductsDescription1 = this._translateService.CNST_TRANSLATIONS['WORKSPACES.CHECK_CONTRACT_PRODUCTS_DESCRIPTION_1'];
-    this.lbl_checkContractProductsDescription2 = this._translateService.CNST_TRANSLATIONS['WORKSPACES.CHECK_CONTRACT_PRODUCTS_DESCRIPTION_2'];
     
     //Tradução dos campos da listagem
     this.lbl_workspace = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.WORKSPACE'];
@@ -176,30 +167,12 @@ export class WorkspaceComponent implements OnInit {
   
   /* Método de redirecionamento para a página de cadastro de ambientes */
   protected addWorkspace(): void {
-    this.modal_checkContractProducts.open();
-  }
-  
-  /* Método usado para ler o comando de "Enter" no campo de verificação de contrato */
-  protected enterPassword(event: any): void {
-    event.preventDefault();
-    this.checkContractProducts_YES();
+    this._router.navigate(['/workspace-add']);
   }
   
   /**************************/
   /*** MÉTODOS DOS MODAIS ***/
   /**************************/
-  /* Modal de verificação do contrato do cliente (NAO) */
-  protected checkContractProducts_NO(): void {
-    this.contractToken = null;
-    this.modal_checkContractProducts.close();
-  }
-  
-  /* Modal de verificação do contrato do cliente (SIM) */
-  protected checkContractProducts_YES(): void {
-    this.modal_checkContractProducts.close();
-    this._router.navigate(['/workspace-add']);
-  }
-  
   /* Modal de remoção de um ambiente configurado no Agent (NÃO) */
   protected deleteWorkspace_NO(): void {
     this.workspaceToDelete = null;

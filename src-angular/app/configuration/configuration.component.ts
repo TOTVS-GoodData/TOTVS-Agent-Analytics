@@ -8,7 +8,7 @@ import { PoSwitchLabelPosition } from '@po-ui/ng-components';
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
-import { CNST_MANDATORY_FORM_FIELD } from '../utilities/constants-angular';
+import { CNST_MANDATORY_FORM_FIELD } from '../utilities/angular-constants';
 import { CNST_JAVA_XMX_MINIMUM } from '../utilities/java-constants';
 import { CNST_DEFAULT_LANGUAGE } from '../services/translation/translation-constants';
 import { CNST_TIMEZONES } from '../services/timezones';

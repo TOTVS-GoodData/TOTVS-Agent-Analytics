@@ -25,7 +25,7 @@ import { ScheduleService } from './schedule-service';
 import { Schedule } from '../../src-angular/app/schedule/schedule-interface';
 
 /* Interface de consultas do Agent */
-import { Query, Version } from '../../src-angular/app/query/query-interface';
+import { QueryClient, Version } from '../../src-angular/app/query/query-interface';
 import { CNST_QUERY_VERSION_STANDARD } from '../../src-angular/app/query/query-constants';
 
 /* Componente de geração de Id's únicos para os registros */
@@ -40,7 +40,7 @@ export class QueryService {
   /*   CONSULTAS     */
   /*******************/
   /* Método de consulta das queries salvas do Agent */
-  public static getQueries(showLogs: boolean): Observable<Query[]> {
+  public static getQueries(showLogs: boolean): Observable<QueryClient[]> {
     
     //Escrita de logs (caso solicitado)
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING'], null, null, null);
@@ -55,7 +55,7 @@ export class QueryService {
   }
   
   /* Método de consulta das queries pertencentes a um agendamento do Agent */
-  public static getQueriesBySchedule(sc: Schedule, showLogs: boolean): Observable<Query[]> {
+  public static getQueriesBySchedule(sc: Schedule, showLogs: boolean): Observable<QueryClient[]> {
     let translations: any = TranslationService.getTranslations([
       new TranslationInput('QUERIES.MESSAGES.SCHEDULE_LOADING', [sc.name])
     ]);
@@ -65,7 +65,7 @@ export class QueryService {
     
     //Leitura do banco de dados atual do Agent, e retorno das consultas válidas
     return Files.readApplicationData().pipe(map((_dbd: DatabaseData) => {
-      return _dbd.queries.filter((query: Query) => {
+      return _dbd.queries.filter((query: QueryClient) => {
         return (query.scheduleId === sc.id)
       });
     }), catchError((err: any) => {
@@ -75,10 +75,10 @@ export class QueryService {
   }
   
   /* Método de gravação das consultas do Agent */
-  public static saveQuery(q: Query): Observable<boolean> {
+  public static saveQuery(q: QueryClient): Observable<boolean> {
     
     //Objeto que detecta se já existe uma consulta cadastrada com o mesmo nome da que será gravada
-    let query_name: Query = null;
+    let query_name: QueryClient = null;
     
     //Define se o banco de dados a ser cadastrado já possui um Id registrado, ou não
     let newId: boolean = (q.id == null);
@@ -99,7 +99,7 @@ export class QueryService {
       if (newId) q.id = uuid();
       
       //Impede o cadastro de uma consulta com o mesmo nome
-      query_name = _dbd.queries.filter((query: Query) => (query.id != q.id)).find((query: Query) => (query.name == q.name));
+      query_name = _dbd.queries.filter((query: QueryClient) => (query.id != q.id)).find((query: QueryClient) => (query.name == q.name));
       if (query_name != undefined) {
         Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
         return of(false);
@@ -112,7 +112,7 @@ export class QueryService {
         if (newId) {
           _dbd.queries.push(q);
         } else {
-          let index = _dbd.queries.findIndex((query: Query) => { return query.id === q.id; });
+          let index = _dbd.queries.findIndex((query: QueryClient) => { return query.id === q.id; });
           _dbd.queries[index] = q;
         }
       }
@@ -126,7 +126,7 @@ export class QueryService {
   }
   
   /* Método de remoção das consultas do Agent */
-  public static deleteQuery(q: Query): Observable<boolean> {
+  public static deleteQuery(q: QueryClient): Observable<boolean> {
     
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
@@ -138,7 +138,7 @@ export class QueryService {
     
     //Leitura do banco de dados atual do Agent, e remoção da consulta cadastrada
     return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
-      let index = _dbd.queries.findIndex((query: Query) => { return query.id === q.id; });
+      let index = _dbd.queries.findIndex((query: QueryClient) => { return query.id === q.id; });
       _dbd.queries.splice(index, 1);
       
       return Files.writeApplicationData(_dbd);
@@ -152,7 +152,7 @@ export class QueryService {
   public static updateAllQueries(): Observable<boolean> {
     
     //Variável de suporte, que armazena a versão atualizada disponível de cada consulta do Agent
-    let updatedQueries: Query[] = [];
+    let updatedQueries: QueryClient[] = [];
     
     //Variável de suporte, que armazena todas as requisições de gravação das consultas
     let obs_queries: Observable<boolean>[] = [];
@@ -164,7 +164,7 @@ export class QueryService {
       ScheduleService.getSchedules(false),
       WorkspaceService.getWorkspaces(false),
       DatabaseService.getDatabases(false)
-    ]).pipe(switchMap((results: [Query[], Schedule[], Workspace[], Database[]]) => {
+    ]).pipe(switchMap((results: [QueryClient[], Schedule[], Workspace[], Database[]]) => {
       
       /*
         Itera por todas as consultas cadastradas pelo usuário,
@@ -173,7 +173,7 @@ export class QueryService {
         Consultas customizadas, ou criadas pelo usuário são ignoradas.
         Apenas a consulta mais recente para cada versão Major/Minor é retornada.
       */
-      updatedQueries = results[0].map((q: Query) => {
+      updatedQueries = results[0].map((q: QueryClient) => {
         
         //Extrai o ERP e o banco de dados de cada consulta cadastrada
         let s: Schedule = results[1].find((s: Schedule) => (q.scheduleId == s.id));
@@ -181,7 +181,7 @@ export class QueryService {
         let db: Database = results[3].find((db: Database) => (w.databaseIdRef == db.id));
         
         //Filtra apenas as consultas padrões, e que não foram customizadas pelo usuário
-        let isStandardQuery: boolean = ((CNST_ERP.find((erp: any) => (erp.ERP == w.erp)).Queries[db.brand].find((q_erp: any) => {
+        let isStandardQuery: boolean = ((CNST_ERP.find((erp: any) => (erp.ERP == w.license.source)).Queries[db.brand].find((q_erp: any) => {
           let version: Version = new Version(q_erp.version);
           return (
                (q_erp.name == q.name)
@@ -196,7 +196,7 @@ export class QueryService {
         if (isStandardQuery) {
           
           //Retorna todas as atualizações válidas da consulta padrão, e ordena a partir da mais recente
-          let updates: any[] = CNST_ERP.find((erp: any) => (erp.ERP == w.erp)).Queries[db.brand].filter((q_erp: any) => {
+          let updates: any[] = CNST_ERP.find((erp: any) => (erp.ERP == w.license.source)).Queries[db.brand].filter((q_erp: any) => {
             let version: Version = new Version(q_erp.version);
             return (
                  (q_erp.name == q.name)
@@ -241,11 +241,11 @@ export class QueryService {
           
           return undefined;
         }
-      }).filter((q: Query) => (q != undefined));
+      }).filter((q: QueryClient) => (q != undefined));
       
       //Prepara as requisições de atualização a serem disparadas
       if (updatedQueries.length > 0) {
-        obs_queries = updatedQueries.map((q: Query) => {
+        obs_queries = updatedQueries.map((q: QueryClient) => {
           return this.saveQuery(q).pipe(map((res: boolean) => {
             return res;
           }));

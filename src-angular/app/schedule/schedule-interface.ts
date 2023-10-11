@@ -1,8 +1,9 @@
 /* Interface de consultas do Agent */
-import { Query } from '../query/query-interface';
+import { QueryClient, Version } from '../query/query-interface';
+import { CNST_QUERY_VERSION_STANDARD } from '../query/query-constants';
 
 /* Interface de rotinas do Agent */
-import { Script } from '../script/script-interface';
+import { ScriptClient } from '../script/script-interface';
 
 /* Interface de consultas do Agent */
 import { CNST_NEW_PARAMETER_VALUE } from './schedule-constants';
@@ -14,8 +15,8 @@ export class Schedule {
   workspaceId: string;
   workspaceName: string;
   windows: string[];
-  SQLParameters: SQLParameter[];
-  ETLParameters: ETLParameter[];
+  SQLParameters: SQLParameterClient[];
+  ETLParameters: ETLParameterClient[];
   enabled: boolean;
   lastExecution: Date;
   lastExecutionString?: string;
@@ -38,33 +39,37 @@ export class Schedule {
 }
 
 /* Interface de parâmetros de ETL do Agent */
-export class ETLParameter {
+export class ETLParameterClient {
   name: string;
   value: string;
+  version: Version;
   
   constructor() {
     this.name = CNST_NEW_PARAMETER_VALUE;
     this.value = CNST_NEW_PARAMETER_VALUE;
+    this.version = new Version(CNST_QUERY_VERSION_STANDARD);
   }
 }
 
 /* Interface de parâmetros de SQL do Agent */
-export class SQLParameter {
+export class SQLParameterClient {
   name: string;
   value: string;
   sql: boolean | string;
+  version: Version;
   
   constructor() {
     this.name = CNST_NEW_PARAMETER_VALUE;
     this.value = CNST_NEW_PARAMETER_VALUE;
     this.sql = false;
+    this.version = new Version(CNST_QUERY_VERSION_STANDARD);
   }
 }
 
 /* Interface de combinação do agendamento, com suas consultas */
 export class ScheduleQuery {
   schedule: Schedule;
-  queries: Query[];
+  queries: QueryClient[];
   erp: string;
   module: string;
   contractType: string;
@@ -74,7 +79,7 @@ export class ScheduleQuery {
 /* Interface de combinação do agendamento, com suas rotinas */
 export class ScheduleScript {
   schedule: Schedule;
-  scripts: Script[];
+  scripts: ScriptClient[];
   erp: string;
   module: string;
   contractType: string;

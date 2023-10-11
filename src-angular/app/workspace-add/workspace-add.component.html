@@ -15,64 +15,27 @@
       
       <div class="po-row">
         
-        <!-- Modalidade de contratação -->
-        <po-select
-          (p-change)="onChangeContract($event)"
-          class="form-control po-md-6 po-lg-6"
-          name="po_modalidadeContratacao"
-          [(ngModel)]="workspace.contractType"
-          [p-label]="lbl_contractType"
-          [p-tooltip]="ttp_contractType"
-          [p-options]="_CNST_MODALIDADE_CONTRATACAO"
-          p-required="true">
-        </po-select>
-        
         <!-- ERP -->
-        <po-select
+        <po-select #po_workspaceSource
           class="form-control po-md-6 po-lg-6"
           name="po_erp"
           [p-label]="lbl_erp"
           (p-change)="onChangeERP($event)"
-          [(ngModel)]="workspace.erp"
+          [(ngModel)]="workspaceSource"
           [p-options]="_CNST_ERP"
           p-required="true"
-          [p-disabled]="(workspace.contractType === '')">
+          [p-disabled]="(_CNST_ERP.length == 1)">
         </po-select>
-      </div>
-      
-      <div class="po-row">
-        
-        <!-- Código T (TOTVS) do cliente -->
-        <po-input
-          name="po_codigot"
-          class="form-control po-md-6 po-lg-6" 
-          [p-label]="lbl_customerCode"
-          [p-tooltip]="ttp_customerCode"
-          [(ngModel)]="workspace.contractCode"
-          [p-required]="true">
-        </po-input>
         
         <!-- Módulo do ERP -->
-        <po-select
+        <po-select #po_workspaceModule
           class="form-control po-md-6 po-lg-6"
           name="po_modulo"
           [p-label]="lbl_module"
-          [(ngModel)]="workspace.module"
+          [(ngModel)]="workspaceModule"
           [p-options]="_CNST_MODULO"
           p-required="true"
-          [p-disabled]="((workspace.erp === '') || (_CNST_MODULO.length == 1))">
-        </po-select>
-      </div>
-      
-      <!-- Origem dos dados -->
-      <div class="po-row">
-        <po-select
-          class="form-control po-md-6 po-lg-6 m-left"
-          name="po_origem"
-          [p-label]="lbl_source"
-          [(ngModel)]="workspace.source"
-          [p-options]="_CNST_ORIGEM"
-          p-required="true">
+          [p-disabled]="((workspaceSource === '') || (_CNST_MODULO.length == 1))">
         </po-select>
       </div>
     </po-container>
@@ -142,7 +105,7 @@
       <div class="po-row">
         
         <!-- Ambiente do GoodData -->
-        <po-select #po_name
+        <po-select #po_workspace
           (p-change)="onChangeWorkspace().subscribe()"
           class="form-control po-md-6 po-lg-6"
           name="projectId"
@@ -169,7 +132,7 @@
       <div class="po-row">
         
         <!-- Processo de ETL do GoodData a ser executado -->
-        <po-select
+        <po-select #po_workspaceProcess
           (p-change)="onChangeProcess()"
           class="form-control po-md-6 po-lg-6"
           name="process"
@@ -182,7 +145,7 @@
         </po-select>
         
         <!-- Graph do CloudConnect a ser executado -->
-        <po-select
+        <po-select #po_workspaceGraph
           class="form-control po-md-6 po-lg-6"
           name="graph"
           [(ngModel)]="workspace.GDProcessGraph"

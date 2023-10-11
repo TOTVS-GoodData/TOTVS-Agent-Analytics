@@ -118,11 +118,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
   },
   CONTRACT_TYPES: {
     PLATFORM: 'Plataforma GoodData',
-    DEMO: 'Demonstração'
-  },
-  SOURCES: {
-    LOCALLY: 'Local',
-    CLOUD_OTHERS: 'Cloud (Outro)'
+    FAST: 'FAST Analytics'
   },
   BUTTONS: {
     SAVE: 'Salvar',
@@ -135,16 +131,28 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     EXECUTE: 'Executar',
     SELECT: 'Selecione...',
     NEW_PARAMETER: 'Novo parâmetro',
-    YES_SIMPLIFIED: 'S',
-    NO_SIMPLIFIED: 'N',
-    TEST_CONNECTION: 'Testar Conexão',
-    LOAD_WORKSPACES: 'Carregar Ambientes',
-    NEXT_ERROR: 'Próximo erro',
-    NO_ERRORS: 'Sem erros',
-    YES: 'Sim',
-    NO: 'Não',
-    UPDATE_NOW: 'Agora (Irá fechar o Agent)',
-    UPDATE_LATER: 'Depois (Ao encerrar)'
+    OTHER: 'Outro',
+    NONE: 'Nenhum',
+    REGISTER_AGENT_TITLE: 'Ativação da instalação',
+    REGISTER_AGENT_DESCRIPTION_1: 'Informe abaixo o código de contratação do GoodData, informado pela TOTVS.',
+    REGISTER_AGENT_DESCRIPTION_2: 'Caso não conheça este código, entre em contato com "suporte.gd@totvs.com.br".',
+    REGISTER_AGENT: 'Ativando licença...',
+    REGISTER_AGENT_FIELD: 'Código de verificação',
+    REGISTER_AGENT_OK: 'Licença ativada com sucesso. O Agent está disponível para uso.',
+    REGISTER_AGENT_ERROR: 'Erro - Falha na ativação da licença do Agent. Por favor tente novamente.',
+    WORKSPACES: 'Ambientes',
+    DATABASES: 'Bancos de Dados',
+    SCHEDULES: 'Agendamentos',
+    QUERIES: 'Consultas (Queries)',
+    SCRIPTS: 'Rotinas (Scripts)',
+    MONITOR: 'Monitor',
+    CONFIGURATION: 'Configurações',
+    ACTIVATION: 'Ativação',
+    EXIT: 'Sair'
+  },
+  SOURCES: {
+    LOCALLY: 'Local',
+    CLOUD_OTHERS: 'Cloud (Outro)'
   },
   WORKSPACES: {
     TITLE: 'Cadastro de Ambientes',
@@ -152,9 +160,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     EDIT_WORKSPACE: 'Alterar Ambiente',
     DELETE_CONFIRMATION: 'Deseja realmente excluir este ambiente?',
     NO_DATA: 'Nenhum ambiente foi encontrado',
-    CHECK_CONTRACT_PRODUCTS_TITLE: 'Verificação do contrato do GoodData',
-    CHECK_CONTRACT_PRODUCTS_DESCRIPTION_1: 'Informe abaixo o código de contratação do GoodData.',
-    CHECK_CONTRACT_PRODUCTS_DESCRIPTION_2: 'Caso não conheça este código, entre em contato com "suporte.gd@totvs.com.br".',
+    REGISTER_AGENT_WARNING: 'Aviso - Ativação da instalação do Agent não pode ser testada sem o Electron.',
     SECTIONS: {
       1: '1 / 4 - Informações comerciais',
       2: '2 / 4 - Informações da plataforma GoodData',
@@ -170,21 +176,21 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       LOADING_DATABASES_ERROR: 'Um erro inesperado ocorreu. Por favor tente novamente.',
       SAVE: 'Gravando ambiente: ${p1}',
       SAVE_OK: 'Ambiente salvo com sucesso!',
-      SAVE_ERROR: 'Um erro inesperado ocorreu ao salvar o ambiente ${p1}. Por favor tente novamente.',
+      SAVE_ERROR: 'Erro - Um erro inesperado ocorreu ao salvar o ambiente ${p1}. Por favor tente novamente.',
       SAVE_ERROR_SAME_NAME: 'Erro - O ambiente \'${p1}\' não pôde ser salvo, pois já existe um ambiente cadastrado com este nome.',
       DELETE: 'Apagando ambiente: ${p1}',
       DELETE_OK: 'Ambiente apagado com sucesso!',
       DELETE_ERROR: 'Um erro inesperado ocorreu ao apagar o ambiente ${p1}. Por favor tente novamente.',
       VALIDATE: 'Validando informações do ambiente...',
       PASSWORD_ENCRYPT: 'Criptografando senha...',
+      LOADING_LICENSES: 'Solicitando licenças disponíveis ao servidor...',
+      LOADING_LICENSES_OK: 'Licenças recebidas.',
+      LOADING_LICENSES_ERROR: 'Erro - Um erro inesperado ocorreu. Por favor tente novamente.',
+      LOADING_LICENSES_WARNING: 'Aviso - Comunicação com o servidor central não pode ser testado sem o Electron.'
     },
     TABLE: {
-      CONTRACT_TOKEN: 'Código de contratação',
-      CONTRACT_TYPE: 'Modalidade de contratação',
-      CUSTOMER_CODE: 'Código T do cliente',
       ERP: 'ERP',
       MODULE: 'Módulo',
-      SOURCE: 'Origem dos dados',
       USERNAME: 'Usuário',
       ENVIRONMENT: 'Domínio',
       PASSWORD: 'Senha',
@@ -196,8 +202,6 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       NAME: 'Nome desta configuração'
     },
     TOOLTIPS: {
-      CONTRACT_TYPE: 'Tipo de contratação adquirida pelo cliente.',
-      CUSTOMER_CODE: 'Código do cliente TOTVS que adquiriu o GoodData. Caso não conheça este código, entre em contato com seu representante comercial (ESN).',
       ENVIRONMENT: 'Nome do dominio da plataforma GoodData.',
       USERNAME: 'Nome do usuario da plataforma GoodData. Este usuario já deve ter uma conta no GoodData, e ser um administrador do ambiente.',
       PASSWORD: 'Senha do usuário.',

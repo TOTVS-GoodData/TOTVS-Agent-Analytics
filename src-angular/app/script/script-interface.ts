@@ -1,7 +1,7 @@
 import { Version } from '../query/query-interface';
 
 /* Interface de rotinas do Agent */
-export class Script {
+export class ScriptClient {
   id: string;
   scheduleId: string;
   name: string;
@@ -15,17 +15,5 @@ export class Script {
     this.name = '';
     this.script = '';
     this.version = new Version(version);
-  }
-  
-  public getMajorVersion(): number {
-    return this.version.major;
-  }
-  
-  public getMinorVersion(): number {
-    return this.version.minor;
-  }
-  
-  public getPatchVersion(): number {
-    return this.version.patch;
   }
 }

@@ -14,7 +14,7 @@ import {
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
-import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities/constants-angular';
+import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities/angular-constants';
 
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from 'ngx-electronyzer';
@@ -31,7 +31,7 @@ import { CNST_DATABASE_TYPES, CNST_DATABASE_OTHER } from '../database/database-c
 
 /* Serviço de rotinas do Agent */
 import { ScriptService } from './script-service';
-import { Script } from './script-interface';
+import { ScriptClient } from './script-interface';
 import { CNST_QUERY_VERSION_STANDARD } from '../query/query-constants';
 
 /* Serviço de agendamentos do Agent */
@@ -60,7 +60,7 @@ export class ScriptComponent implements OnInit {
   protected lbl_title: string = null;
   
   //Rotina selecionada p/ remoção
-  protected scriptToDelete: Script = null;
+  protected scriptToDelete: ScriptClient = null;
   
   //Listagem de todos os agendamentos cadastrados, e suas rotinas
   protected schedulesScriptTotal: ScheduleScript[] = [];
@@ -99,7 +99,7 @@ export class ScriptComponent implements OnInit {
   protected lbl_addScriptTitle: string = null;
   
   //Objeto de rotina do formulário (Modal)
-  protected script = new Script(CNST_QUERY_VERSION_STANDARD);
+  protected script = new ScriptClient(CNST_QUERY_VERSION_STANDARD);
   
   //Variável de suporte, usada para detectar alterações em uma rotina já cadastrada
   public bkpScript: string = null;
@@ -138,8 +138,8 @@ export class ScriptComponent implements OnInit {
     this.setTableRowActions = [
       {
         label: this._translateService.CNST_TRANSLATIONS['BUTTONS.EDIT'],
-        visible: (s: Script) => s.canDecrypt,
-        action: (script: Script) => {
+        visible: (s: ScriptClient) => s.canDecrypt,
+        action: (script: ScriptClient) => {
           this.lbl_addScriptTitle = this._translateService.CNST_TRANSLATIONS['SCRIPTS.EDIT_SCRIPT'];
           this.script = script;
           this.bkpScript = script.script;
@@ -148,7 +148,7 @@ export class ScriptComponent implements OnInit {
       },{
         label: this._translateService.CNST_TRANSLATIONS['BUTTONS.DELETE'],
         visible: true,
-        action: (script: Script) => {
+        action: (script: ScriptClient) => {
           this.scriptToDelete = script;
           this.modal_deleteScript.open();
         }
@@ -210,24 +210,24 @@ export class ScriptComponent implements OnInit {
       ,this._scriptService.getScripts(true)
       ,this._workspaceService.getWorkspaces(false)
       ,this._databaseService.getDatabases(false)
-    ]).subscribe((results: [Schedule[], Script[], Workspace[], Database[]]) => {
+    ]).subscribe((results: [Schedule[], ScriptClient[], Workspace[], Database[]]) => {
       
       //Combinação dos agendamentos com suas rotinas
       this.schedulesScriptTotal = results[0].map((s: any) => {
         s.schedule = s;
-        s.scripts = results[1].filter((script: Script) => (s.id === script.scheduleId));
+        s.scripts = results[1].filter((script: ScriptClient) => (s.id === script.scheduleId));
         
         //Descriptografia das rotinas (caso permitido)
-        s.scripts.map((script: Script) => {
+        s.scripts.map((script: ScriptClient) => {
           if ((this._electronService.isElectronApp) && (script.canDecrypt)) {
             script.script = this._electronService.ipcRenderer.sendSync('decrypt', script.script);
           }
         });
         
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
-        s.erp = w.erp;
-        s.contractType = w.contractType;
-        s.module = w.module;
+        s.erp = w.license.source;
+        //s.contractType = w.contractType;
+        s.module = w.license.module;
         
         //Definição do tipo do banco de dados do agendamento
         s.databaseType = (() => {
@@ -250,7 +250,7 @@ export class ScriptComponent implements OnInit {
       this.listSchedule = results[0].filter((s: Schedule) => {
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
         let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
-        return ((db != undefined) && (w.contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA));
+        return (db != undefined);// && (w.contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA));
       }).map((s: Schedule) => {
         return { label: s.name, value: s.id };
       });
@@ -281,7 +281,7 @@ export class ScriptComponent implements OnInit {
     let validate: boolean = true;
     
     //Objeto de suporte para validação dos campos
-    let script = new Script(CNST_QUERY_VERSION_STANDARD);
+    let script = new ScriptClient(CNST_QUERY_VERSION_STANDARD);
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.VALIDATE']);
     this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.VALIDATE'] };
@@ -328,7 +328,7 @@ export class ScriptComponent implements OnInit {
   /* Modal de cadastro de rotinas no Agent (OPEN) */
   protected newScript_OPEN(): void {
     this.lbl_addScriptTitle = this._translateService.CNST_TRANSLATIONS['SCRIPTS.NEW_SCRIPT'];
-    this.script = new Script(CNST_QUERY_VERSION_STANDARD);
+    this.script = new ScriptClient(CNST_QUERY_VERSION_STANDARD);
     this.script.canDecrypt = true;
     this.modal_addScript.open();
   }

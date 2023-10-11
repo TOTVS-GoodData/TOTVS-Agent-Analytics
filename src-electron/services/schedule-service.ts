@@ -33,18 +33,18 @@ import { Schedule } from '../../src-angular/app/schedule/schedule-interface';
 
 /* Serviço de consultas do Agent */
 import { QueryService } from './query-service';
-import { Query } from '../../src-angular/app/query/query-interface';
+import { QueryClient } from '../../src-angular/app/query/query-interface';
 
 /* Serviço de rotinas do Agent */
 import { ScriptService } from './script-service';
-import { Script } from '../../src-angular/app/script/script-interface';
+import { ScriptClient } from '../../src-angular/app/script/script-interface';
 
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './configuration-service';
 import { Configuration } from '../../src-angular/app/configuration/configuration-interface';
 
 /* Interface de comunicação com o Java */
-import { JavaInputBuffer } from '../../src-angular/app/utilities/interface-java';
+import { JavaInputBuffer } from '../../src-angular/app/utilities/java-interface';
 
 /* Componente de geração de Id's únicos para os registros */
 import uuid from 'uuid-v4';
@@ -187,12 +187,12 @@ export class ScheduleService {
       _dbd.schedules.splice(index, 1);
       
       //Remoção das consultas cadastradas no agendamento
-      _dbd.queries = _dbd.queries.filter((q: Query) => {
+      _dbd.queries = _dbd.queries.filter((q: QueryClient) => {
         return (q.scheduleId != sc.id);
       });
       
       //Remoção das rotinas cadastradas no agendamento
-      _dbd.scripts = _dbd.scripts.filter((s: Script) => {
+      _dbd.scripts = _dbd.scripts.filter((s: ScriptClient) => {
         return (s.scheduleId != sc.id);
       });
       
@@ -214,7 +214,7 @@ export class ScheduleService {
       QueryService.getQueriesBySchedule(s, false),
       ScriptService.getScriptsBySchedule(s, false),
       ConfigurationService.getConfiguration(false)
-    ]).pipe(switchMap(((results: [Workspace[], Database[], Query[], Script[], Configuration]) => {
+    ]).pipe(switchMap(((results: [Workspace[], Database[], QueryClient[], ScriptClient[], Configuration]) => {
       
       //Consulta das traduções
       let translations: any = TranslationService.getTranslations([
@@ -232,14 +232,14 @@ export class ScheduleService {
       let db: Database = results[1].find((db: Database) => (db.id === w.databaseIdRef));
       
       //Define todas as consultas do agendamento, e descriptografa as mesmas
-      let q: Query[] = results[2];
-      q.map((q: Query) => {
+      let q: QueryClient[] = results[2];
+      q.map((q: QueryClient) => {
         q.query = Functions.decrypt(q.query);
       });
       
       //Define todas as rotinas do agendamento, e descriptografa as mesmas
-      let scr: Script[] = results[3];
-      scr.map((s: Script) => {
+      let scr: ScriptClient[] = results[3];
+      scr.map((s: ScriptClient) => {
         s.script = Functions.decrypt(s.script);
       });
       

@@ -27,7 +27,7 @@ import {
 } from './constants-electron';
 
 /* Interface de consultas do Agent */
-import { Query } from '../src-angular/app/query/query-interface';
+import { QueryClient } from '../src-angular/app/query/query-interface';
 
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './services/configuration-service';
@@ -107,7 +107,7 @@ export class Execute {
       
       //Configuração da JVM, e da classe do Java a ser executada
       let child: any = childProcess.spawn(
-        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'java.exe')),
+        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'java')),
         [
           '-Duser.language=' + language,
           '-Duser.country=' + country,
@@ -317,7 +317,7 @@ export class Execute {
   public static exportQuery(inputBuffer: string): Observable<any> {
     
     //Armazena todas as consultas geradas pelo Java
-    let exportQuerybuffer: Array<Query> = [];
+    let exportQuerybuffer: Array<QueryClient> = [];
     
     //Solicita a criação de um processo do Java para exportação de consultas
     //(HOF - Higher Order Function)
@@ -327,7 +327,7 @@ export class Execute {
       CNST_JAVA_CLASS_EXPORTQUERY,
       inputBuffer,
       null,
-      (obj: Query) => {
+      (obj: QueryClient) => {
         try {
           exportQuerybuffer.push(obj);
         } catch(ex: any) {

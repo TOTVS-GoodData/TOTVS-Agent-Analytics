@@ -8,9 +8,12 @@ import { CNST_APPLICATION_ROOTDIR } from '../app';
 export const CNST_AUTOUPDATE_CHECK_INTERVAL: number = 3;
 
 /* Hostname / Porta do Agent-Server da TOTVS */
-export const CNST_SERVER_PORT: number = 2000;
-export const CNST_SERVER_HOSTNAME: string = 'localhost';
 export const CNST_SERVER_SOURCE: string = 'SERVER';
+export const CNST_SERVER_PORT: number = 2000;
+export const CNST_SERVER_HOSTNAME: any = {
+  DEVELOPMENT: 'localhost',
+  PRODUCTION: 'localhost'
+};
 
 /* Caminho completo do diretório de recursos visuais do Agent (ícones) */
 export const CNST_ICONS_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'icons');

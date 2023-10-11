@@ -2,11 +2,15 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { Router, Navigation } from '@angular/router';
 
+/* Componentes visuais da biblioteca Portinari.UI */
+import { PoSelectOption } from '@po-ui/ng-components';
+
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from 'ngx-electronyzer';
 
-/* Componentes visuais da biblioteca Portinari.UI */
-import { PoSelectOption } from '@po-ui/ng-components';
+/* Serviço de comunicação com o Agent-Server */
+import { ServerService } from '../services/server/server-service';
+import { License, AvailableLicenses } from '../services/server/server-interface';
 
 /* Serviço de modal customizado do Agent (sem Portinari.UI) */
 import { ModalService } from '../modal/modal.service';
@@ -40,14 +44,14 @@ import { Database } from '../database/database-interface';
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
-import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities/constants-angular';
+import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities/angular-constants';
 
 /* Serviço de tradução do Agent */
 import { TranslationService } from '../services/translation/translation-service';
 import { TranslationInput } from '../services/translation/translation-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, map, switchMap, catchError, of } from 'rxjs';
+import { Observable, map, switchMap, catchError, of, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-workspace-add',
@@ -67,6 +71,13 @@ export class WorkspaceAddComponent {
   //Ambientes a ser configurado
   protected workspace: Workspace = new Workspace();
   
+  //Variávels de suporte, usadas para armazenar o ERP / Módulo selecionado pelo usuário
+  protected workspaceSource: string = '';
+  protected workspaceModule: string = '';
+  
+  //Licenças recebidas pelo Agent-Server, para esta instalação do Agent
+  protected licenses: License[] = [];
+  
   //Banco de dados atualmente selecionado
   protected database: Database = new Database();
   
@@ -80,17 +91,11 @@ export class WorkspaceAddComponent {
   //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
   
-  //Listagem das modalidades de contratação disponíveis
-  protected _CNST_MODALIDADE_CONTRATACAO: any = [];
-  
   //Listagem dos ERPs disponíveis
-  protected _CNST_ERP: any = [];
+  protected _CNST_ERP: Array<PoSelectOption> = [];
   
   //Listagem dos módulos dos ERPs disponíveis
-  protected _CNST_MODULO: any = [];
-  
-  //Listagem das origens de dados disponíveis
-  protected _CNST_ORIGEM: any = [];
+  protected _CNST_MODULO: Array<PoSelectOption> = [];
   
   //Listagem dos ambientes de GoodData disponíveis
   protected listWorkspaces: Array<PoSelectOption> = [];
@@ -110,11 +115,8 @@ export class WorkspaceAddComponent {
   
   /******* Formulário *******/
   //Títulos dos campos de ambientes
-  protected lbl_contractType: string = null;
-  protected lbl_customerCode: string = null;
   protected lbl_erp: string = null;
   protected lbl_module: string = null;
-  protected lbl_source: string = null;
   protected lbl_GDEnvironment: string = null;
   protected lbl_GDUsername: string = null;
   protected lbl_GDPassword: string = null;
@@ -138,8 +140,6 @@ export class WorkspaceAddComponent {
   protected lbl_dbDriverPath: string = null;
   
   //Balões de ajuda
-  protected ttp_contractType: string = null;
-  protected ttp_customerCode: string = null;
   protected ttp_GDEnvironment: string = null;
   protected ttp_GDUsername: string = null;
   protected ttp_GDPassword: string = null;
@@ -149,6 +149,7 @@ export class WorkspaceAddComponent {
   protected ttp_GDProcessGraph: string = null;
   
   constructor(
+    private _serverService: ServerService,
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
     private _electronService: ElectronService,
@@ -160,131 +161,150 @@ export class WorkspaceAddComponent {
     private _utilities: Utilities,
     private _router: Router
   ) {
-    //Definição do domínio de upload dos dados para o GoodData (padrão)
-    this.workspace.GDEnvironment = CNST_DOMAIN;
     
-    //Tradução das modalidades de contratação do GoodData
-    this._CNST_MODALIDADE_CONTRATACAO = CNST_MODALIDADE_CONTRATACAO;
-    this._CNST_MODALIDADE_CONTRATACAO.find((contractType: any) => (contractType.value == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA)).label = this._translateService.CNST_TRANSLATIONS['CONTRACT_TYPES.PLATFORM'];
-    this._CNST_MODALIDADE_CONTRATACAO.find((contractType: any) => (contractType.value == CNST_MODALIDADE_CONTRATACAO_DEMO)).label = this._translateService.CNST_TRANSLATIONS['CONTRACT_TYPES.DEMO'];
-    
-    //Tradução das origens dos dados
-    this._CNST_ORIGEM = CNST_ORIGEM;
-    this._CNST_ORIGEM.find((source: any) => (source.value == CNST_ORIGEM_LOCAL)).label = this._translateService.CNST_TRANSLATIONS['SOURCES.LOCALLY'];
-    this._CNST_ORIGEM.find((source: any) => (source.value == CNST_ORIGEM_CLOUD_OUTROS)).label = this._translateService.CNST_TRANSLATIONS['SOURCES.CLOUD_OTHERS'];
-    
-    //Tradução / ordenação dos ERPs disponíveis
-    this._CNST_ERP = CNST_ERP.map((v: any) => {
-      return { label: v.ERP, value: v.ERP };
-    }).sort((v1: any, v2: any) => {
-      let order: number = null;
-      
-      if (v1.label < v2.label) order = -1;
-      else if (v1.label > v2.label) order =  1;
-      else order = 0;
-      
-      return order;
-    });
-    this._CNST_ERP.find((erp: any) => (erp.label == CNST_ERP_OTHER)).label = this._translateService.CNST_TRANSLATIONS['ANGULAR.OTHER'];
-    
-    //Tradução dos botões
-    this.lbl_edit = this._translateService.CNST_TRANSLATIONS['BUTTONS.EDIT'];
-    this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
-    this.lbl_save = this._translateService.CNST_TRANSLATIONS['BUTTONS.SAVE'];
-    this.lbl_testConnection = this._translateService.CNST_TRANSLATIONS['BUTTONS.TEST_CONNECTION'];
-    this.lbl_loadWorkspaces = this._translateService.CNST_TRANSLATIONS['BUTTONS.LOAD_WORKSPACES'];
-    
-    //Tradução dos campos de formulário (Ambiente)
-    this.lbl_contractType = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.CONTRACT_TYPE'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_customerCode = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.CUSTOMER_CODE'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_erp = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ERP'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_module = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.MODULE'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_source = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.SOURCE'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_GDUsername = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.USERNAME'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_GDEnvironment = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ENVIRONMENT'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_GDPassword = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PASSWORD'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_GDWorkspaceId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.WORKSPACE'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_GDWorkspaceUploadURL = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.UPLOAD_URL'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_GDProcessId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PROCESS'];
-    this.lbl_GDProcessGraph = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.GRAPH'];
-    this.lbl_databaseId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.DATABASE'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_name = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.NAME'] + CNST_MANDATORY_FORM_FIELD;
-    
-    //Tradução dos campos de formulário (Banco de Dados)
-    this.lbl_dbUsername = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.USERNAME'];
-    this.lbl_dbType = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.TYPE'];
-    this.lbl_dbPassword = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.PASSWORD'];
-    this.lbl_dbDriverClass = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.DRIVER_CLASS'];
-    this.lbl_dbDriverPath = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.DRIVER_PATH'];
-    
-    //Tradução dos balões de ajuda dos campos
-    this.ttp_contractType = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.CONTRACT_TYPE'];
-    this.ttp_customerCode = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.CUSTOMER_CODE'];
-    this.ttp_GDEnvironment = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.ENVIRONMENT'];
-    this.ttp_GDUsername = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.USERNAME'];
-    this.ttp_GDPassword = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.PASSWORD'];
-    this.ttp_GDWorkspaceId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.WORKSPACE'];
-    this.ttp_GDWorkspaceUploadURL = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.UPLOAD_URL'];
-    this.ttp_GDProcessId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.PROCESS'];
-    this.ttp_GDProcessGraph = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.GRAPH'];
-    
-    //Definição dos campos obrigatórios do formulário
-    this.CNST_FIELD_NAMES = [
-      { key: 'contractType', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.CONTRACT_TYPE'] },
-      { key: 'contractCode', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.CUSTOMER_CODE'] },
-      { key: 'erp', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ERP'] },
-      { key: 'module', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.MODULE'] },
-      { key: 'source', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.SOURCE'] },
-      { key: 'GDUsername', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.USERNAME'] },
-      { key: 'GDEnvironment', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ENVIRONMENT'] },
-      { key: 'GDPassword', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PASSWORD'] },
-      { key: 'GDWorkspaceId', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.WORKSPACE'] },
-      { key: 'GDWorkspaceUploadURL', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.UPLOAD_URL'] },
-      { key: 'GDProcessId', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PROCESS'] },
-      { key: 'GDProcessGraph', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.GRAPH'] },
-      { key: 'databaseIdRef', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.DATABASE'] },
-      { key: 'name', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.NAME'] }
-    ];
-    
-    //Atualiza a listagem de bancos de dados disponíveis no Agent
-    this.getDatabases().subscribe();
-    
-    //Realiza a leitura do ambiente a ser editado (se houver)
-    let nav: Navigation = this._router.getCurrentNavigation();
-    if ((nav != undefined) && (nav.extras.state)) {
-      this.workspace.id = nav.extras.state['id'];
+    //Solicita ao servidor as licenças cadastradas para esta instalação do Agent
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_LICENSES'] };
+    forkJoin(
+      this._serverService.getAvailableLicenses(true),
+      this.getDatabases()
+    ).subscribe((results: [AvailableLicenses, void]) => {
+      if (results[0] != null) {
         
-      //Dispara antecipadamente o evento de alteração do ERP do formulário
-      this.onChangeERP(nav.extras.state['erp']);
-      
-      //Dispara antecipadamente o evento de alteração do banco de dados do formuláro
-      this.onChangeDatabase(nav.extras.state['databaseIdRef']);
-      
-      //Método disparado para atualiza a listagem de ambientes de GoodData disponíveis para o usuário cadastrado
-      this.getWorkspaces(
-        nav.extras.state['GDUsername'],
-        nav.extras.state['GDPassword'],
-        nav.extras.state['GDEnvironment'],
-        false
-      ).subscribe((res: boolean) => {
-        this.workspace.GDWorkspaceId = nav.extras.state['GDWorkspaceId'];
-        this.onChangeWorkspace().subscribe((res: boolean) => {
-          this.workspace.GDProcessId = nav.extras.state['GDProcessId'];
-          this.onChangeProcess();
+        //Armazena as licenças disponíveis para esta instalação do Agent
+        this.licenses = results[0].licenses;
+        
+        //Definição do domínio de upload dos dados para o GoodData (padrão)
+        this.workspace.GDEnvironment = CNST_DOMAIN;
+        
+        //Tradução dos botões
+        this.lbl_edit = this._translateService.CNST_TRANSLATIONS['BUTTONS.EDIT'];
+        this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
+        this.lbl_save = this._translateService.CNST_TRANSLATIONS['BUTTONS.SAVE'];
+        this.lbl_testConnection = this._translateService.CNST_TRANSLATIONS['BUTTONS.TEST_CONNECTION'];
+        this.lbl_loadWorkspaces = this._translateService.CNST_TRANSLATIONS['BUTTONS.LOAD_WORKSPACES'];
+        
+        //Tradução dos campos de formulário (Ambiente)
+        this.lbl_erp = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ERP'] + CNST_MANDATORY_FORM_FIELD;
+        this.lbl_module = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.MODULE'] + CNST_MANDATORY_FORM_FIELD;
+        this.lbl_GDUsername = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.USERNAME'] + CNST_MANDATORY_FORM_FIELD;
+        this.lbl_GDEnvironment = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ENVIRONMENT'] + CNST_MANDATORY_FORM_FIELD;
+        this.lbl_GDPassword = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PASSWORD'] + CNST_MANDATORY_FORM_FIELD;
+        this.lbl_GDWorkspaceId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.WORKSPACE'] + CNST_MANDATORY_FORM_FIELD;
+        this.lbl_GDWorkspaceUploadURL = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.UPLOAD_URL'] + CNST_MANDATORY_FORM_FIELD;
+        this.lbl_GDProcessId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PROCESS'];
+        this.lbl_GDProcessGraph = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.GRAPH'];
+        this.lbl_databaseId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.DATABASE'] + CNST_MANDATORY_FORM_FIELD;
+        this.lbl_name = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.NAME'] + CNST_MANDATORY_FORM_FIELD;
+        
+        //Tradução dos campos de formulário (Banco de Dados)
+        this.lbl_dbUsername = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.USERNAME'];
+        this.lbl_dbType = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.TYPE'];
+        this.lbl_dbPassword = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.PASSWORD'];
+        this.lbl_dbDriverClass = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.DRIVER_CLASS'];
+        this.lbl_dbDriverPath = this._translateService.CNST_TRANSLATIONS['DATABASES.TABLE.DRIVER_PATH'];
+        
+        //Tradução dos balões de ajuda dos campos
+        this.ttp_GDEnvironment = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.ENVIRONMENT'];
+        this.ttp_GDUsername = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.USERNAME'];
+        this.ttp_GDPassword = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.PASSWORD'];
+        this.ttp_GDWorkspaceId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.WORKSPACE'];
+        this.ttp_GDWorkspaceUploadURL = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.UPLOAD_URL'];
+        this.ttp_GDProcessId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.PROCESS'];
+        this.ttp_GDProcessGraph = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.GRAPH'];
+        
+        //Definição dos campos obrigatórios do formulário
+        this.CNST_FIELD_NAMES = [
+          { key: 'workspaceSource', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ERP'] },
+          { key: 'workspaceModule', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.MODULE'] },
+          { key: 'GDUsername', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.USERNAME'] },
+          { key: 'GDEnvironment', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ENVIRONMENT'] },
+          { key: 'GDPassword', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PASSWORD'] },
+          { key: 'GDWorkspaceId', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.WORKSPACE'] },
+          { key: 'GDWorkspaceUploadURL', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.UPLOAD_URL'] },
+          { key: 'GDProcessId', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PROCESS'] },
+          { key: 'GDProcessGraph', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.GRAPH'] },
+          { key: 'databaseIdRef', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.DATABASE'] },
+          { key: 'name', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.NAME'] }
+        ];
+        
+        //Definição dos ERPs disponíveis para seleção
+        let erps: Set<string> = new Set();
+        this._CNST_ERP = results[0].licenses.filter((l: License) => {
+          let check: boolean = erps.has(l.source);
+          erps.add(l.source);
+          return !check;
+        }).map((l: License) => {
+          return { label: l.source, value: l.source };
+        }).sort((v1: any, v2: any) => {
+          let order: number = null;
           
-          //Copia todos os valores do ambiente a ser editado, para o objeto de ambiente do formulário
-          Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
-            this.workspace[p] = nav.extras.state[p];
-          });
+          if (v1.label < v2.label) order = -1;
+          else if (v1.label > v2.label) order =  1;
+          else order = 0;
+          
+          return order;
         });
-      });
-    }
-    
-    //Verifica se é um novo cadastro, ou uma atualização do ambiente
-    if (this.workspace.id == null) this.lbl_title = this._translateService.CNST_TRANSLATIONS['WORKSPACES.NEW_WORKSPACE'];
-    else {
-      this.lbl_title = this._translateService.CNST_TRANSLATIONS['WORKSPACES.EDIT_WORKSPACE'];
-    }
+        
+        //Realiza a tradução da opção "Outro" dos ERPs
+        let outros: any = this._CNST_ERP.find((erp: any) => (erp.value == CNST_ERP_OTHER));
+        if (outros) outros.label = this._translateService.CNST_TRANSLATIONS['ANGULAR.OTHER'];
+        
+        //Seleção automática do ERP (Caso só exista uma única opção)
+        if (this._CNST_ERP.length == 1) {
+          this.workspaceSource = this._CNST_ERP[0].value + '';
+          this.onChangeERP(this.workspaceSource);
+        }
+        
+        //Realiza a leitura do ambiente a ser editado (se houver)
+        let nav: Navigation = this._router.getCurrentNavigation();
+        if ((nav != undefined) && (nav.extras.state)) {
+          if (nav.extras.state.id != undefined) {
+            this.workspace.id = nav.extras.state['id'];
+            
+            //Dispara antecipadamente o evento de alteração do banco de dados do formuláro
+            this.onChangeDatabase(nav.extras.state['databaseIdRef']);
+            
+            //Dispara antecipadamente o evento de configuração dos módulos disponíveis no Agent
+            this.onChangeERP(nav.extras.state['license'].source);
+            
+            //Configura as variáveis de suporte da licença
+            this.workspaceSource = nav.extras.state['license'].source
+            this.workspaceModule = nav.extras.state['license'].module
+            
+            //Método disparado para atualiza a listagem de ambientes de GoodData disponíveis para o usuário cadastrado
+            this.getWorkspaces(
+              nav.extras.state['GDUsername'],
+              nav.extras.state['GDPassword'],
+              nav.extras.state['GDEnvironment'],
+              false
+            ).subscribe((res: boolean) => {
+              this.workspace.GDWorkspaceId = nav.extras.state['GDWorkspaceId'];
+              this.onChangeWorkspace().subscribe((res: boolean) => {
+                this.workspace.GDProcessId = nav.extras.state['GDProcessId'];
+                this.onChangeProcess();
+                
+                //Copia todos os valores do ambiente a ser editado, para o objeto de ambiente do formulário
+                Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
+                  this.workspace[p] = nav.extras.state[p];
+                });
+              });
+            });
+          }
+        }
+        
+        //Verifica se é um novo cadastro, ou uma atualização do ambiente
+        if (this.workspace.id == null) this.lbl_title = this._translateService.CNST_TRANSLATIONS['WORKSPACES.NEW_WORKSPACE'];
+        else {
+          this.lbl_title = this._translateService.CNST_TRANSLATIONS['WORKSPACES.EDIT_WORKSPACE'];
+        }
+      } else {
+        this.po_lo_text = { value: null };
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LICENSE_ERROR']);
+      }
+    }, (err: any) => {
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LICENSE_ERROR']);
+      this.po_lo_text = { value: null };
+    });
   }
   
   /* Método usado para ler o comando de "Enter" no campo de senha do usuário */
@@ -334,7 +354,7 @@ export class WorkspaceAddComponent {
     if ((this._electronService.isElectronApp) && (this.workspace.id != null)) {
       password = this._electronService.ipcRenderer.sendSync('decrypt', password);
     }
-    console.log(password);
+    
     //Efetua o login no GoodData
     return this._loginService.doLogin(
       username,
@@ -416,36 +436,14 @@ export class WorkspaceAddComponent {
     }));
   }
   
-  /*
-    Método executado ao alterar a modalidade de contratação do GoodData
-    Caso a modalidade selecionada não seja "Plataforma", remove a opção "Outro" do formulário.
-  */
-  protected onChangeContract(contractType: string): void {
-    this._CNST_ERP = CNST_ERP.map((v: any) => {
-      return { label: v.ERP, value: v.ERP };
-    }).sort((v1: any, v2: any) => {
-      let order: number = null;
-      
-      if (v1.label < v2.label) order = -1;
-      else if (v1.label > v2.label) order =  1;
-      else order = 0;
-      
-      return order;
-    });
-    this._CNST_ERP.find((erp: any) => (erp.label == CNST_ERP_OTHER)).label = this._translateService.CNST_TRANSLATIONS['ANGULAR.OTHER'];
-    
-    if (contractType != CNST_MODALIDADE_CONTRATACAO_PLATAFORMA) this._CNST_ERP = this._CNST_ERP.filter((erp: any) => (erp.value != CNST_ERP_OTHER));
-    
-    //Atualiza as opções de ERP's disponíveis
-    this.workspace.erp = '';
-    this.workspace.module = '';
-    }
-  
   /* Método executado ao trocar o ERP do ambiente */
   protected onChangeERP(e: string): void {
     
     //Define a listagem de todos os módulos disponíveis para o ERP selecionado
-    this._CNST_MODULO = CNST_ERP.find((v: any) => v.ERP === e).Modulos.sort((m1: any, m2: any) => {
+    this._CNST_MODULO = this.licenses.filter((l: License) => l.source === e)
+    .map((l: License) => {
+      return { label: l.module, value: l.module };
+    }).sort((m1: any, m2: any) => {
       let order: number = null;
       
       if (m1.label < m2.label) order = -1;
@@ -459,14 +457,11 @@ export class WorkspaceAddComponent {
     let outros: any = this._CNST_MODULO.find((module: any) => (module.value == CNST_ERP_OTHER));
     if (outros) outros.label = this._translateService.CNST_TRANSLATIONS['ANGULAR.OTHER'];
     
-    //Remove a opção "Outro" para os contratos que não são do tipo "Plataforma"
-    if (this.workspace.contractType != CNST_MODALIDADE_CONTRATACAO_PLATAFORMA) this._CNST_MODULO = this._CNST_MODULO.filter((module: any) => (module.value != CNST_ERP_OTHER));
-    
     //Define o valor padrão do campo de módulo
     if (this._CNST_MODULO.length == 1) {
-      this.workspace.module = this._CNST_MODULO[0].value;
+      this.workspaceModule = this._CNST_MODULO[0].value + '';
     } else {
-      this.workspace.module = '';
+      this.workspaceModule = '';
     }
   }
   
@@ -548,6 +543,10 @@ export class WorkspaceAddComponent {
       if ((this.workspace[p] == '') && (p != 'id')) return p;
     }).filter((p: string) => { return p != null; });
     
+    //Verifica se os campos de suporte da licença foi preenchido
+    if (this.workspaceSource == '') propertiesNotDefined.push('workspaceSource');
+    if (this.workspaceModule == '') propertiesNotDefined.push('workspaceModule');
+    
     // Validação dos campos de formulário
     if (propertiesNotDefined.length > 0) {
       validate = false;
@@ -601,6 +600,9 @@ export class WorkspaceAddComponent {
     //Realiza a validação dos dados preenchidos pelo usuário
     return this.validWorkspace().pipe(switchMap((validate: boolean) => {
       if (validate) {
+        
+        //Vincula a licença selecionada neste ambiente
+        this.workspace.license = this.licenses.find((l: License) => ((l.source == this.workspaceSource) && (l.module == this.workspaceModule)));
         
         //Consulta das traduções
         return this._translateService.getTranslations([

@@ -25,7 +25,7 @@ import { ScheduleService } from './schedule-service';
 import { Schedule } from '../../src-angular/app/schedule/schedule-interface';
 
 /* Interface de rotinas do Agent */
-import { Script } from '../../src-angular/app/script/script-interface';
+import { ScriptClient } from '../../src-angular/app/script/script-interface';
 import { Version } from '../../src-angular/app/query/query-interface';
 import { CNST_QUERY_VERSION_STANDARD } from '../../src-angular/app/query/query-constants';
 
@@ -41,7 +41,7 @@ export class ScriptService {
   /*    ROTINAS      */
   /*******************/
   /* Método de consulta das rotinas salvas do Agent */
-  public static getScripts(showLogs: boolean): Observable<Script[]> {
+  public static getScripts(showLogs: boolean): Observable<ScriptClient[]> {
     
     //Escrita de logs (caso solicitado)
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING'], null, null, null);
@@ -56,7 +56,7 @@ export class ScriptService {
   }
   
   /* Método de consulta das rotinas pertencentes a um agendamento do Agent */
-  public static getScriptsBySchedule(sc: Schedule, showLogs: boolean): Observable<Script[]> {
+  public static getScriptsBySchedule(sc: Schedule, showLogs: boolean): Observable<ScriptClient[]> {
     
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
@@ -68,7 +68,7 @@ export class ScriptService {
     
     //Leitura do banco de dados atual do Agent, e retorno das rotinas válidas
     return Files.readApplicationData().pipe(map((_dbd: DatabaseData) => {
-      return _dbd.scripts.filter((script: Script) => {
+      return _dbd.scripts.filter((script: ScriptClient) => {
         return (script.scheduleId === sc.id)
       });
     }), catchError((err: any) => {
@@ -78,10 +78,10 @@ export class ScriptService {
   }
   
   /* Método de gravação das rotinas do Agent */
-  public static saveScript(s: Script): Observable<boolean> {
+  public static saveScript(s: ScriptClient): Observable<boolean> {
     
     //Objeto que detecta se já existe uma rotina cadastrada com o mesmo nome da que será gravada
-    let script_name: Script = null;
+    let script_name: ScriptClient = null;
     
     //Define se a rotina a ser cadastrada já possui um Id registrado, ou não
     let newId: boolean = (s.id == null);
@@ -102,7 +102,7 @@ export class ScriptService {
       if (newId) s.id = uuid();
       
       //Impede o cadastro de uma rotina com o mesmo nome
-      script_name = _dbd.scripts.filter((script: Script) => (script.id != s.id)).find((script: Script) => (script.name == s.name));
+      script_name = _dbd.scripts.filter((script: ScriptClient) => (script.id != s.id)).find((script: ScriptClient) => (script.name == s.name));
       if (script_name != undefined) {
         Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
         return of(false);
@@ -112,7 +112,7 @@ export class ScriptService {
         if (newId) {
           _dbd.scripts.push(s);
         } else {
-          let index = _dbd.scripts.findIndex((script: Script) => { return script.id === s.id; });
+          let index = _dbd.scripts.findIndex((script: ScriptClient) => { return script.id === s.id; });
           _dbd.scripts[index] = s;
         }
       }
@@ -126,7 +126,7 @@ export class ScriptService {
   }
   
   /* Método de remoção das rotinas do Agent */
-  public static deleteScript(s: Script): Observable<boolean> {
+  public static deleteScript(s: ScriptClient): Observable<boolean> {
     
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
@@ -138,7 +138,7 @@ export class ScriptService {
     
     //Leitura do banco de dados atual do Agent, e remoção da rotina cadastrada
     return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
-      let index = _dbd.scripts.findIndex((script: Script) => { return script.id === s.id; });
+      let index = _dbd.scripts.findIndex((script: ScriptClient) => { return script.id === s.id; });
       _dbd.scripts.splice(index, 1);
       
       return Files.writeApplicationData(_dbd);
@@ -152,7 +152,7 @@ export class ScriptService {
   public static updateAllScripts(): Observable<boolean> {
     
     //Variável de suporte, que armazena a versão atualizada disponível de cada rotina do Agent
-    let updatedScripts: Script[] = [];
+    let updatedScripts: ScriptClient[] = [];
     
     //Variável de suporte, que armazena todas as requisições de gravação das rotinas
     let obs_scripts: Observable<boolean>[] = [];
@@ -164,7 +164,7 @@ export class ScriptService {
       ScheduleService.getSchedules(false),
       WorkspaceService.getWorkspaces(false),
       DatabaseService.getDatabases(false)
-    ]).pipe(switchMap((results: [Script[], Schedule[], Workspace[], Database[]]) => {
+    ]).pipe(switchMap((results: [ScriptClient[], Schedule[], Workspace[], Database[]]) => {
       
       /*
         Itera por todas as rotinas cadastradas pelo usuário,
@@ -173,7 +173,7 @@ export class ScriptService {
         Rotinas customizadas, ou criadas pelo usuário são ignoradas.
         Apenas a rotina mais recente para cada versão Major/Minor é retornada.
       */
-      updatedScripts = results[0].map((script: Script) => {
+      updatedScripts = results[0].map((script: ScriptClient) => {
         
         //Extrai o ERP e o banco de dados de cada consulta cadastrada
         let s: Schedule = results[1].find((s: Schedule) => (script.scheduleId == s.id));
@@ -181,7 +181,7 @@ export class ScriptService {
         let db: Database = results[3].find((db: Database) => (w.databaseIdRef == db.id));
         
         //Filtra apenas as consultas padrões, e que não foram customizadas pelo usuário
-        let isStandardScript: boolean = ((CNST_ERP.find((erp: any) => (erp.ERP == w.erp)).Scripts[db.brand].find((s_erp: any) => {
+        let isStandardScript: boolean = ((CNST_ERP.find((erp: any) => (erp.ERP == w.license.source)).Scripts[db.brand].find((s_erp: any) => {
           let version: Version = new Version(s_erp.version);
           return (
                (s_erp.name == script.name)
@@ -196,7 +196,7 @@ export class ScriptService {
         if (isStandardScript) {
           
           //Retorna todas as atualizações válidas da consulta padrão, e ordena a partir da mais recente
-          let updates: any[] = CNST_ERP.find((erp: any) => (erp.ERP == w.erp)).Scripts[db.brand].filter((s_erp: any) => {
+          let updates: any[] = CNST_ERP.find((erp: any) => (erp.ERP == w.license.source)).Scripts[db.brand].filter((s_erp: any) => {
             let version: Version = new Version(s_erp.version);
             return (
                  (s_erp.name == script.name)
@@ -241,11 +241,11 @@ export class ScriptService {
           
           return undefined;
         }
-      }).filter((script: Script) => (script != undefined));
+      }).filter((script: ScriptClient) => (script != undefined));
       
       //Prepara as requisições de atualização a serem disparadas
       if (updatedScripts.length > 0) {
-        obs_scripts = updatedScripts.map((script: Script) => {
+        obs_scripts = updatedScripts.map((script: ScriptClient) => {
           return this.saveScript(script).pipe(map((res: boolean) => {
             return res;
           }));

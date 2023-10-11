@@ -23,11 +23,11 @@ import { Database } from '../database/database-interface';
 
 /* Serviço de consultas do Agent */
 import { QueryService } from '../query/query-service';
-import { Query } from '../query/query-interface';
+import { QueryClient } from '../query/query-interface';
 
 /* Serviço de rotinas do Agent */
 import { ScriptService } from '../script/script-service';
-import { Script } from '../script/script-interface';
+import { ScriptClient } from '../script/script-interface';
 
 /* Serviço de rotinas do Agent */
 import { ConfigurationService } from '../configuration/configuration-service';

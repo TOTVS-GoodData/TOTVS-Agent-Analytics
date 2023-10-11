@@ -21,10 +21,22 @@ export class Version {
   public getVersion(): string {
     return this.major + '.' + this.minor + '.' + this.patch;
   }
+  
+  public getMajorVersion(): number {
+    return this.major;
+  }
+  
+  public getMinorVersion(): number {
+    return this.minor;
+  }
+  
+  public getPatchVersion(): number {
+    return this.patch;
+  }
 }
 
 /* Interface de consultas do Agent */
-export class Query {
+export class QueryClient {
   id: string;
   scheduleId: string;
   name: string;
@@ -41,17 +53,5 @@ export class Query {
     this.executionMode = '';
     this.query = '';
     this.version = new Version(version);
-  }
-  
-  public getMajorVersion(): number {
-    return this.version.major;
-  }
-  
-  public getMinorVersion(): number {
-    return this.version.minor;
-  }
-  
-  public getPatchVersion(): number {
-    return this.version.patch;
   }
 }

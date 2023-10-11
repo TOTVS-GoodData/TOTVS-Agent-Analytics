@@ -14,7 +14,7 @@ import {
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
-import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities/constants-angular';
+import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities/angular-constants';
 
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from 'ngx-electronyzer';
@@ -31,7 +31,7 @@ import { CNST_DATABASE_TYPES, CNST_DATABASE_OTHER } from '../database/database-c
 
 /* Serviço de consultas do Agent */
 import { QueryService } from './query-service';
-import { Query } from './query-interface';
+import { QueryClient } from './query-interface';
 import { CNST_QUERY_VERSION_STANDARD } from './query-constants';
 
 /* Serviço de agendamentos do Agent */
@@ -60,7 +60,7 @@ export class QueryComponent implements OnInit {
   protected lbl_title: string = null;
   
   //Consulta selecionada p/ remoção
-  protected queryToDelete: Query = null;
+  protected queryToDelete: QueryClient = null;
   
   //Listagem de todos os agendamentos cadastrados, e suas consultas
   protected schedulesQueryTotal: ScheduleQuery[] = [];
@@ -102,7 +102,7 @@ export class QueryComponent implements OnInit {
   protected lbl_addQueryTitle: string = null;
   
   //Objeto de consulta do formulário (Modal)
-  protected query = new Query(CNST_QUERY_VERSION_STANDARD);
+  protected query: QueryClient = new QueryClient(CNST_QUERY_VERSION_STANDARD);
   
   //Remoção de consultas
   @ViewChild('modal_deleteQuery') modal_deleteQuery: PoModalComponent;
@@ -145,8 +145,8 @@ export class QueryComponent implements OnInit {
     this.setTableRowActions = [
       {
         label: this._translateService.CNST_TRANSLATIONS['BUTTONS.EDIT'],
-        visible: (q: Query) => q.canDecrypt,
-        action: (query: Query) => {
+        visible: (q: QueryClient) => q.canDecrypt,
+        action: (query: QueryClient) => {
           this.lbl_addQueryTitle = this._translateService.CNST_TRANSLATIONS['QUERIES.EDIT_QUERY'];
           this.query = query;
           this.modal_addQuery.open();
@@ -154,7 +154,7 @@ export class QueryComponent implements OnInit {
       },{
         label: this._translateService.CNST_TRANSLATIONS['BUTTONS.DELETE'],
         visible: true ,
-        action: (query: Query) => {
+        action: (query: QueryClient) => {
           this.queryToDelete = query;
           this.modal_deleteQuery.open();
         }
@@ -220,15 +220,15 @@ export class QueryComponent implements OnInit {
       ,this._queryService.getQueries(true)
       ,this._workspaceService.getWorkspaces(false)
       ,this._databaseService.getDatabases(false)
-    ]).subscribe((results: [Schedule[], Query[], Workspace[], Database[]]) => {
+    ]).subscribe((results: [Schedule[], QueryClient[], Workspace[], Database[]]) => {
       
       //Combinação dos agendamentos com suas consultas
       this.schedulesQueryTotal = results[0].map((s: any) => {
         s.schedule = s;
-        s.queries = results[1].filter((q: Query) => (q.scheduleId === s.id));
+        s.queries = results[1].filter((q: QueryClient) => (q.scheduleId === s.id));
         
         //Descriptografia das consultas (caso permitido)
-        s.queries.map((q: Query) => {
+        s.queries.map((q: QueryClient) => {
           q.executionModeName = this.CNST_QUERY_EXECUTION_MODES.find((exec: any) => exec.value == q.executionMode).label;
           if ((this._electronService.isElectronApp) && (q.canDecrypt)) {
             q.query = this._electronService.ipcRenderer.sendSync('decrypt', q.query);
@@ -236,9 +236,9 @@ export class QueryComponent implements OnInit {
         });
         
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
-        s.erp = w.erp;
-        s.contractType = w.contractType;
-        s.module = w.module;
+        s.erp = w.license.source;
+        //s.contractType = w.contractType;
+        s.module = w.license.module;
         
         //Definição do tipo do banco de dados do agendamento
         s.databaseType = (() => {
@@ -261,7 +261,7 @@ export class QueryComponent implements OnInit {
       this.listSchedule = results[0].filter((s: Schedule) => {
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
         let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
-        return ((db != undefined) && (w.contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA));
+        return (db != undefined);// && (w.contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA));
       }).map((s: Schedule) => {
         return { label: s.name, value: s.id };
       });
@@ -292,7 +292,7 @@ export class QueryComponent implements OnInit {
     let validate: boolean = true;
     
     //Objeto de suporte para validação dos campos
-    let query: Query = new Query(CNST_QUERY_VERSION_STANDARD);
+    let query: QueryClient = new QueryClient(CNST_QUERY_VERSION_STANDARD);
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.VALIDATE']);
     this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.VALIDATE'] };
@@ -339,7 +339,7 @@ export class QueryComponent implements OnInit {
   /* Modal de cadastro de consultas no Agent (OPEN) */
   protected newQuery_OPEN(): void {
     this.lbl_addQueryTitle = this._translateService.CNST_TRANSLATIONS['QUERIES.NEW_QUERY'];
-    this.query = new Query(CNST_QUERY_VERSION_STANDARD);
+    this.query = new QueryClient(CNST_QUERY_VERSION_STANDARD);
     this.query.canDecrypt = true;
     this.modal_addQuery.open();
   }

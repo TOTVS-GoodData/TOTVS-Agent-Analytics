@@ -106,8 +106,8 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     "es-ES": 'Spanish'
   },
   CONTRACT_TYPES: {
-    PLATFORM: 'GoodData platform',
-    DEMO: 'Demonstration'
+    PLATFORM: 'GoodData Platform',
+    FAST: 'FAST Analytics'
   },
   SOURCES: {
     LOCALLY: 'Locally',
@@ -152,9 +152,6 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     EDIT_WORKSPACE: 'Edit Workspace',
     DELETE_CONFIRMATION: 'Are you sure you want to delete this workspace?',
     NO_DATA: 'No workspaces were found',
-    CHECK_CONTRACT_PRODUCTS_TITLE: 'GoodData\'s contract verification',
-    CHECK_CONTRACT_PRODUCTS_DESCRIPTION_1: 'Enter GoodData\'s contract code.',
-    CHECK_CONTRACT_PRODUCTS_DESCRIPTION_2: 'If you don\'t know this code, please reach out to "suporte.gd@totvs.com.br".',
     SECTIONS: {
       1: '1 / 4 - Commercial information',
       2: '2 / 4 - GoodData\'s platform settings',
@@ -176,15 +173,15 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       DELETE_OK: 'Workspace successfully deleted!',
       DELETE_ERROR: 'Error - An unexpected error has happened while deleting workspace ${p1}. Please try again.',
       VALIDATE: 'Validating workspace...',
-      PASSWORD_ENCRYPT: 'Encrypting password...'
+      PASSWORD_ENCRYPT: 'Encrypting password...',
+      LOADING_LICENSES: 'Requesting available licenses from server...',
+      LOADING_LICENSES_OK: 'Licenses received.',
+      LOADING_LICENSES_ERROR: 'Error - An unexpected error has happened. Please try again.',
+      LOADING_LICENSES_WARNING: 'Warning - Server communication cannot be tested without Electron.'
     },
     TABLE: {
-      CONTRACT_TOKEN: 'Contract\'s code',
-      CONTRACT_TYPE: 'Contract Type',
-      CUSTOMER_CODE: 'Customer\'s TOTVS code',
       ERP: 'ERP',
       MODULE: 'Module',
-      SOURCE: 'Data source',
       USERNAME: 'Username',
       ENVIRONMENT: 'Domain',
       PASSWORD: 'Password',
@@ -196,8 +193,6 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       NAME: 'Configuration\'s name'
     },
     TOOLTIPS: {
-      CONTRACT_TYPE: 'Contract type, brought by the customer.',
-      CUSTOMER_CODE: 'TOTVS\'s customer code. If you don\'t know this code, please reach out to your TOTVS\'s sales representative (ESN).',
       ENVIRONMENT: 'GoodData\'s platform domain name.',
       USERNAME: 'GoodData\'s platform username. This user must already have an account, and admin rights to the workspace.',
       PASSWORD: 'Username\'s password.',

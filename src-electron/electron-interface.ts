@@ -12,10 +12,10 @@ import { Database } from '../src-angular/app/database/database-interface';
 import { Schedule } from '../src-angular/app/schedule/schedule-interface';
 
 /* Interface de consultas do Agent */
-import { Query } from '../src-angular/app/query/query-interface';
+import { QueryClient } from '../src-angular/app/query/query-interface';
 
 /* Interface de rotinas do Agent */
-import { Script } from '../src-angular/app/script/script-interface';
+import { ScriptClient } from '../src-angular/app/script/script-interface';
 
 /* Interface de cofiguração do Agent */
 import { Configuration } from '../src-angular/app/configuration/configuration-interface';
@@ -25,8 +25,8 @@ export class DatabaseData {
   workspaces: Workspace[];
   databases: Database[];
   schedules: Schedule[];
-  queries: Query[];
-  scripts: Script[];
+  queries: QueryClient[];
+  scripts: ScriptClient[];
   configuration: Configuration;
   
   constructor() {

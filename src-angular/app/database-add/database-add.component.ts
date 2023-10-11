@@ -40,7 +40,7 @@ import {
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
-import { CNST_MANDATORY_FORM_FIELD } from '../utilities/constants-angular';
+import { CNST_MANDATORY_FORM_FIELD } from '../utilities/angular-constants';
 
 /* Serviço de tradução do Agent */
 import { TranslationService } from '../services/translation/translation-service';

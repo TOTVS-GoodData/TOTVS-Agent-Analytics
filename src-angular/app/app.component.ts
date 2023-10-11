@@ -233,7 +233,7 @@ export class AppComponent {
   protected registerAgent_YES(): void {
     if (this._electronService.isElectronApp) {
       this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT'] };
-      let registerAgent: boolean = this._electronService.ipcRenderer.sendSync('requestSerialNumber', this.registerAgent);
+      let registerAgent: boolean = this._electronService.ipcRenderer.sendSync('requestSerialNumber', [this.registerAgent]);
       if (registerAgent) {
         this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
           this.setMenuTranslations(conf.serialNumber);

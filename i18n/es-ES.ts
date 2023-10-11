@@ -107,7 +107,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
   },
   CONTRACT_TYPES: {
     PLATFORM: 'Plataforma GoodData',
-    DEMO: 'Demonstración'
+    FAST: 'FAST Analytics'
   },
   SOURCES: {
     LOCALLY: 'Local',
@@ -152,9 +152,6 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     EDIT_WORKSPACE: 'Cambiar Ambiente',
     DELETE_CONFIRMATION: '¿Estás seguro que quieres borrar este ambiente?',
     NO_DATA: 'Ningún ambiente fue encontrado',
-    CHECK_CONTRACT_PRODUCTS_TITLE: 'Verificación contractual del GoodData',
-    CHECK_CONTRACT_PRODUCTS_DESCRIPTION_1: 'Ingrese el codigo de contratación del GoodData.',
-    CHECK_CONTRACT_PRODUCTS_DESCRIPTION_2: 'Si no lo conoces, por favor entre en contacto con "suporte.gd@totvs.com.br".',
     MESSAGES: {
       LOADING: 'Cargando ambientes...',
       LOADING_OK: 'Ambientes cargados.',
@@ -170,7 +167,11 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       DELETE_OK: 'Ambiente borrado con éxito!',
       DELETE_ERROR: 'Error - Un error inesperado ocurrió mientras borro del ambiente ${p1}. Por favor intenta otra vez.',
       VALIDATE: 'Validando informaciones del ambiente...',
-      PASSWORD_ENCRYPT: 'Encriptando contraseña...'
+      PASSWORD_ENCRYPT: 'Encriptando contraseña...',
+      LOADING_LICENSES: 'Solicitando licencias disponilbes al servidor...',
+      LOADING_LICENSES_OK: 'Licencias recibidas.',
+      LOADING_LICENSES_ERROR: 'Error - Un error inesperado ocurrió. Por favor intenta otra vez.',
+      LOADING_LICENSES_WARNING: 'Atención - Comunicación con el servidor no puede ser probada sin el Electron.'
     },
     SECTIONS: {
       1: '1 / 4 - Informaciones comerciales',
@@ -179,12 +180,8 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       4: '4 / 4 - Configuraciones finales'
     },
     TABLE: {
-      CONTRACT_TOKEN: 'Codigo de contratación',
-      CONTRACT_TYPE: 'Tipo de Contratación',
-      CUSTOMER_CODE: 'Codigo T del cliente',
       ERP: 'ERP',
       MODULE: 'Modulo',
-      SOURCE: 'Origen de los datos',
       USERNAME: 'Usuario',
       ENVIRONMENT: 'Dominio',
       PASSWORD: 'Contraseña',
@@ -196,8 +193,6 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       NAME: 'Nombre de la configuración'
     },
     TOOLTIPS: {
-      CONTRACT_TYPE: 'Tipo de contratación adquirida por el cliente.',
-      CUSTOMER_CODE: 'Código del cliente TOTVS que ha adquirido el GoodData. Si no conoces ese codigo, intenta hablar con su ejecutivo comercial (ESN).',
       ENVIRONMENT: 'Nombre del dominio de la plataforma GoodData.',
       USERNAME: 'Nombre del usuario de la plataforma GoodData. Este usuario ya debe tener una cuenta en GoodData, y ser un administrador del ambiente.',
       PASSWORD: 'Contraseña del usuario.',

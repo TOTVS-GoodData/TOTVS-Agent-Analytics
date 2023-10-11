@@ -66,7 +66,11 @@ export class ConfigurationService {
       
       //Reinicialização do servidor do Agent, e gravação da nova configuração
       return ServerService.startServer(conf.clientPort).pipe(switchMap((b: boolean) => {
-        return Files.writeApplicationData(_dbd);
+        return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
+          return ServerService.updateCommunicationPort(['' + conf.clientPort]).pipe(map((b: boolean) => {
+            return b;
+          }));
+        }));
       }));
     }), catchError((err: any) => {
       Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR'], null, null, err);

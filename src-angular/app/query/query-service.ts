@@ -14,7 +14,7 @@ import { TranslationService } from '../services/translation/translation-service'
 import { TranslationInput } from '../services/translation/translation-interface';
 
 /* Interface de comunicação com o Java */
-import { JavaInputBuffer } from '../utilities/interface-java';
+import { JavaInputBuffer } from '../utilities/java-interface';
 
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from '../workspace/workspace-service';
@@ -29,7 +29,7 @@ import { Database } from '../database/database-interface';
 import { Schedule, ScheduleQuery } from '../schedule/schedule-interface';
 
 //Interface de consultas do Agent
-import { Query, Version } from './query-interface';
+import { QueryClient, Version } from './query-interface';
 import { CNST_QUERY_VERSION_STANDARD } from './query-constants';
 
 /* Serviço de configuração do Agent */
@@ -70,7 +70,7 @@ export class QueryService {
   }
   
   /* Método de consulta das consultas salvas do Agent */
-  public getQueries(showLogs: boolean): Observable<Query[]> {
+  public getQueries(showLogs: boolean): Observable<QueryClient[]> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
@@ -81,8 +81,8 @@ export class QueryService {
       if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING']);
       
       //Consulta da API de testes do Angular
-      return this._http.get<Query[]>(this._utilities.getLocalhostURL() + '/queries').pipe(
-      map((queries: Query[]) => {
+      return this._http.get<QueryClient[]>(this._utilities.getLocalhostURL() + '/queries').pipe(
+      map((queries: QueryClient[]) => {
         
         //Escrita de logs (caso solicitado)
         if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_OK']);
@@ -96,7 +96,7 @@ export class QueryService {
   }
   
   /* Método de consulta das consultas salvas específicas de um agendamento do Agent */
-  public getQueriesBySchedule(sc: Schedule): Observable<Query[]> {
+  public getQueriesBySchedule(sc: Schedule): Observable<QueryClient[]> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
@@ -110,8 +110,8 @@ export class QueryService {
         this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.SCHEDULE_LOADING']);
         
         //Consulta da API de testes do Angular
-        return this._http.get<Query[]>(this._utilities.getLocalhostURL() + '/queries?scheduleId=' + sc.id).pipe(
-        map((queries: Query[]) => {
+        return this._http.get<QueryClient[]>(this._utilities.getLocalhostURL() + '/queries?scheduleId=' + sc.id).pipe(
+        map((queries: QueryClient[]) => {
           this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SCHEDULE_LOADING_OK']);
           return queries;
         }), catchError((err: any) => {
@@ -123,10 +123,10 @@ export class QueryService {
   }
   
   /* Método de gravação das consultas do Agent */
-  public saveQuery(q: Query): Observable<boolean> {
+  public saveQuery(q: QueryClient): Observable<boolean> {
     
     //Objeto que detecta se já existe uma consulta cadastrada com o mesmo nome da que será gravada
-    let query_name: Query = null;
+    let query_name: QueryClient = null;
     
     //Define se a consulta a ser cadastrada já possui um Id registrado, ou não
     let newId: boolean = (q.id == null);
@@ -144,14 +144,14 @@ export class QueryService {
           new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME', [q.name])
         ]),
         this.getQueries(false))
-      .pipe(switchMap((results: [TranslationInput[], Query[]]) => {
+      .pipe(switchMap((results: [TranslationInput[], QueryClient[]]) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['QUERIES.MESSAGES.SAVE']);
         
         //Validação do campo de Id do banco de dados. Caso não preenchido, é gerado um novo Id
         if (newId) q.id = uuid();
         
         //Impede o cadastro de uma consulta com o mesmo nome
-        query_name = results[1].filter((query: Query) => (query.id != q.id)).find((query: Query) => (query.name == q.name));
+        query_name = results[1].filter((query: QueryClient) => (query.id != q.id)).find((query: QueryClient) => (query.name == q.name));
         if (query_name != undefined) {
           this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME']);
           return of(false);
@@ -186,7 +186,7 @@ export class QueryService {
   }
   
   /* Método de remoção das consultas do Agent */
-  public deleteQuery(q: Query): Observable<boolean> {
+  public deleteQuery(q: QueryClient): Observable<boolean> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
@@ -216,20 +216,20 @@ export class QueryService {
   /* Método de exportação das consultas padrões do Agent */
   public exportQuery(sc: ScheduleQuery): Observable<boolean> {
     //Variável de suporte, que armazena todas as consultas padrões do Agent
-    let queries: Query[] = [];
+    let queries: QueryClient[] = [];
     
     //Variável de suporte, que armazena os nomes de todas as consultas atualmente cadastradas no agendamento selecionado
-    let query_names: string[] = sc.queries.map((q: Query) => q.name);
+    let query_names: string[] = sc.queries.map((q: QueryClient) => q.name);
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT']);
     
     //Realiza a exportação das consultas padrões do repositório do Agent
     //Caso não encontre nada, procura na tabela I01 do Protheus (caso aplicável)
-    return this.exportQueryFromRepository(sc).pipe(switchMap((queries: Query[]) => {
+    return this.exportQueryFromRepository(sc).pipe(switchMap((queries: QueryClient[]) => {
       if (queries.length > 0) {
         
         //Impede a sobreescrita de uma consulta que já tenha sido exportada anteriormente
-        queries = queries.filter((q: Query) => (query_names.includes(q.name) ? false : true));
+        queries = queries.filter((q: QueryClient) => (query_names.includes(q.name) ? false : true));
         
         return this.saveAllQueries(sc, queries).pipe(map((res: boolean) => {
           return res;
@@ -237,10 +237,10 @@ export class QueryService {
       } else {
         
         return this.exportQueryFromI01(sc, (CNST_MODALIDADE_CONTRATACAO.find((v: any) => (v.value == sc.contractType)).canDecrypt))
-        .pipe(switchMap((queries: Query[]) => {
+        .pipe(switchMap((queries: QueryClient[]) => {
           
           //Impede a sobreescrita de uma consulta que já tenha sido exportada anteriormente
-          queries = queries.filter((q: Query) => (query_names.includes(q.name) ? false : true));
+          queries = queries.filter((q: QueryClient) => (query_names.includes(q.name) ? false : true));
           
           return this.saveAllQueries(sc, queries).pipe(map((res: boolean) => {
             return res;
@@ -254,7 +254,7 @@ export class QueryService {
   }
   
   /* Método de gravação de múltiplas consultas simultaneamente */
-  private saveAllQueries(sc: ScheduleQuery, queries: Query[]): Observable<boolean> {
+  private saveAllQueries(sc: ScheduleQuery, queries: QueryClient[]): Observable<boolean> {
     
     //Variável de suporte, que armazena todas as requisições de gravação das consultas
     let obs_queries: Observable<boolean>[] = [];
@@ -299,7 +299,7 @@ export class QueryService {
   }
   
   /* Método de consulta das queries padrões do repositório do Agent */
-  public exportQueryFromRepository(sc: ScheduleQuery): Observable<Query[]> {
+  public exportQueryFromRepository(sc: ScheduleQuery): Observable<QueryClient[]> {
     
     //Consulta das traduções
     return this._translateService.getTranslations([
@@ -313,8 +313,8 @@ export class QueryService {
         .filter((q: any) => (q.Modulos.includes(sc.module) || (q.Modulos.length == 0)));
       
       //Converte para a interface de Query do Agent
-      let queries: Query[] = obj_queries.map((obj: any) => {
-        let q: Query = new Query(obj.version);
+      let queries: QueryClient[] = obj_queries.map((obj: any) => {
+        let q: QueryClient = new QueryClient(obj.version);
         q.id = obj.id;
         q.scheduleId = obj.scheduleId;
         q.name = obj.name;
@@ -326,26 +326,26 @@ export class QueryService {
       });
       
       //Filtra apenas as consultas mais recentes, pelo seu número de versão
-      let queries_filtered: Query[] = [];
-      queries.map((q: Query) => {
-        let query: Query = queries_filtered.find((q1: Query) => (q1.name == q.name));
-        let index: number = queries_filtered.findIndex((q1: Query) => (q1.name == q.name));
+      let queries_filtered: QueryClient[] = [];
+      queries.map((q: QueryClient) => {
+        let query: QueryClient = queries_filtered.find((q1: QueryClient) => (q1.name == q.name));
+        let index: number = queries_filtered.findIndex((q1: QueryClient) => (q1.name == q.name));
         if (query == null) {
           queries_filtered.push(q);
         } else if (
           (
-               (q.getMajorVersion() >  query.getMajorVersion())
+               (q.version.getMajorVersion() >  query.version.getMajorVersion())
           )
           ||
           (
-               (q.getMajorVersion() == query.getMajorVersion())
-            && (q.getMinorVersion() >  query.getMinorVersion())
+               (q.version.getMajorVersion() == query.version.getMajorVersion())
+            && (q.version.getMinorVersion() >  query.version.getMinorVersion())
           )
           ||
           (
-               (q.getMajorVersion() == query.getMajorVersion())
-            && (q.getMinorVersion() == query.getMinorVersion())
-            && (q.getPatchVersion() >  query.getPatchVersion())
+               (q.version.getMajorVersion() == query.version.getMajorVersion())
+            && (q.version.getMinorVersion() == query.version.getMinorVersion())
+            && (q.version.getPatchVersion() >  query.version.getPatchVersion())
           )
         ) {
           queries_filtered[index] = q;
@@ -363,10 +363,10 @@ export class QueryService {
   }
   
   /* Método de consulta das queries padrões da tabela I01 do Protheus */
-  public exportQueryFromI01(sc: ScheduleQuery, decrypt: boolean): Observable<Query[]> {
+  public exportQueryFromI01(sc: ScheduleQuery, decrypt: boolean): Observable<QueryClient[]> {
     
     //Consultas exportadas da tabela I01 do Protheus
-    let queries: Query[] = [];
+    let queries: QueryClient[] = [];
     
     //Consulta das traduções
     return this._translateService.getTranslations([
@@ -388,7 +388,7 @@ export class QueryService {
           let exportDatabase: Database = results[1].find((db: Database) => (db.id === exportWorkspace.databaseIdRef));
           
           //Verifica se o ambiente do agendamento possui ERP Protheus
-          if (exportWorkspace.erp == CNST_ERP_PROTHEUS) {
+          if (exportWorkspace.license.source == CNST_ERP_PROTHEUS) {
             exportDatabase.password = this._electronService.ipcRenderer.sendSync('decrypt', exportDatabase.password);
             
             //Preparação do buffer de entrada para o Java
@@ -409,7 +409,7 @@ export class QueryService {
               if (res.err) {console.log(res.err);
                 throw res.err;
               } else {
-                queries = res.message.map((q: Query) => {
+                queries = res.message.map((q: QueryClient) => {
                   q.scheduleId = sc.schedule.id;
                   q.canDecrypt = decrypt;
                   q.version = new Version(CNST_QUERY_VERSION_STANDARD);

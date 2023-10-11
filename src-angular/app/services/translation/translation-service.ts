@@ -158,7 +158,7 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('CONFIGURATION.TOOLTIPS.AUTOUPDATE', []),
       new TranslationInput('CONFIGURATION.TOOLTIPS.CLIENT_PORT', ['' + CNST_PORT_MINIMUM, '' + CNST_PORT_MAXIMUM]),
       new TranslationInput('CONTRACT_TYPES.PLATFORM', []),
-      new TranslationInput('CONTRACT_TYPES.DEMO', []),
+      new TranslationInput('CONTRACT_TYPES.FAST', []),
       new TranslationInput('DATABASES.TITLE', []),
       new TranslationInput('DATABASES.NEW_DATABASE', []),
       new TranslationInput('DATABASES.EDIT_DATABASE', []),
@@ -346,19 +346,12 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('WORKSPACES.NO_DATA', []),
       new TranslationInput('WORKSPACES.NEW_WORKSPACE', []),
       new TranslationInput('WORKSPACES.EDIT_WORKSPACE', []),
-      new TranslationInput('WORKSPACES.CHECK_CONTRACT_PRODUCTS_TITLE', []),
-      new TranslationInput('WORKSPACES.CHECK_CONTRACT_PRODUCTS_DESCRIPTION_1', []),
-      new TranslationInput('WORKSPACES.CHECK_CONTRACT_PRODUCTS_DESCRIPTION_2', []),
       new TranslationInput('WORKSPACES.SECTIONS.1', []),
       new TranslationInput('WORKSPACES.SECTIONS.2', []),
       new TranslationInput('WORKSPACES.SECTIONS.3', []),
       new TranslationInput('WORKSPACES.SECTIONS.4', []),
-      new TranslationInput('WORKSPACES.TABLE.CUSTOMER_CODE', []),
-      new TranslationInput('WORKSPACES.TABLE.CONTRACT_TOKEN', []),
-      new TranslationInput('WORKSPACES.TABLE.CONTRACT_TYPE', []),
       new TranslationInput('WORKSPACES.TABLE.ERP', []),
       new TranslationInput('WORKSPACES.TABLE.MODULE', []),
-      new TranslationInput('WORKSPACES.TABLE.SOURCE', []),
       new TranslationInput('WORKSPACES.TABLE.USERNAME', []),
       new TranslationInput('WORKSPACES.TABLE.ENVIRONMENT', []),
       new TranslationInput('WORKSPACES.TABLE.PASSWORD', []),
@@ -368,8 +361,6 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('WORKSPACES.TABLE.GRAPH', []),
       new TranslationInput('WORKSPACES.TABLE.DATABASE', []),
       new TranslationInput('WORKSPACES.TABLE.NAME', []),
-      new TranslationInput('WORKSPACES.TOOLTIPS.CONTRACT_TYPE', []),
-      new TranslationInput('WORKSPACES.TOOLTIPS.CUSTOMER_CODE', []),
       new TranslationInput('WORKSPACES.TOOLTIPS.ENVIRONMENT', []),
       new TranslationInput('WORKSPACES.TOOLTIPS.USERNAME', []),
       new TranslationInput('WORKSPACES.TOOLTIPS.PASSWORD', []),
@@ -385,7 +376,9 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('WORKSPACES.MESSAGES.SAVE_OK', []),
       new TranslationInput('WORKSPACES.MESSAGES.DELETE_OK', []),
       new TranslationInput('WORKSPACES.MESSAGES.VALIDATE', []),
-      new TranslationInput('WORKSPACES.MESSAGES.PASSWORD_ENCRYPT', [])
+      new TranslationInput('WORKSPACES.MESSAGES.PASSWORD_ENCRYPT', []),
+      new TranslationInput('WORKSPACES.MESSAGES.LOADING_LICENSES_ERROR', []),
+      new TranslationInput('WORKSPACES.MESSAGES.LOADING_LICENSES_WARNING', [])
     ]).pipe(map((translations: any) => {
       this.CNST_TRANSLATIONS = translations;
       return true;

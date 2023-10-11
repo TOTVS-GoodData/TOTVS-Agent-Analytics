@@ -8,7 +8,7 @@ import { ElectronService } from 'ngx-electronyzer';
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
-import * as _constants from '../utilities/constants-angular';
+import * as _constants from '../utilities/angular-constants';
 
 /* Serviço de tradução do Agent */
 import { TranslationService } from '../services/translation/translation-service';
@@ -26,7 +26,7 @@ import { Database } from '../database/database-interface';
 import { Schedule, ScheduleScript } from '../schedule/schedule-interface';
 
 //Interface de rotinas do Agent
-import { Script } from './script-interface';
+import { ScriptClient } from './script-interface';
 import { CNST_QUERY_VERSION_STANDARD } from '../query/query-constants';
 
 /* Componentes rxjs para controle de Promise / Observable */
@@ -62,7 +62,7 @@ export class ScriptService {
   }
   
   /* Método de consulta das consultas salvas do Agent */
-  public getScripts(showLogs: boolean): Observable<Script[]> {
+  public getScripts(showLogs: boolean): Observable<ScriptClient[]> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
@@ -73,8 +73,8 @@ export class ScriptService {
       if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING']);
       
       //Consulta da API de testes do Angular
-      return this._http.get<Script[]>(this._utilities.getLocalhostURL() + '/scripts').pipe(
-      map((scripts: Script[]) => {
+      return this._http.get<ScriptClient[]>(this._utilities.getLocalhostURL() + '/scripts').pipe(
+      map((scripts: ScriptClient[]) => {
         
         //Escrita de logs (caso solicitado)
         if (showLogs) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_OK']);
@@ -88,7 +88,7 @@ export class ScriptService {
   }
   
   /* Método de consulta das rotinas salvas específicas de um agendamento do Agent */
-  public getScriptsBySchedule(sc: Schedule): Observable<Script[]> {
+  public getScriptsBySchedule(sc: Schedule): Observable<ScriptClient[]> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
@@ -102,8 +102,8 @@ export class ScriptService {
         this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['SCRIPTS.MESSAGES.SCHEDULE_LOADING']);
         
         //Consulta da API de testes do Angular
-        return this._http.get<Script[]>(this._utilities.getLocalhostURL() + '/scripts?scheduleId=' + sc.id).pipe(
-        map((scripts: Script[]) => {
+        return this._http.get<ScriptClient[]>(this._utilities.getLocalhostURL() + '/scripts?scheduleId=' + sc.id).pipe(
+        map((scripts: ScriptClient[]) => {
           this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SCHEDULE_LOADING_OK']);
           return scripts;
         }), catchError((err: any) => {
@@ -115,10 +115,10 @@ export class ScriptService {
   }
   
   /* Método de gravação das consultas do Agent */
-  public saveScript(s: Script): Observable<boolean> {
+  public saveScript(s: ScriptClient): Observable<boolean> {
     
     //Objeto que detecta se já existe uma consulta cadastrada com o mesmo nome da que será gravada
-    let script_name: Script = null;
+    let script_name: ScriptClient = null;
     
     //Define se a consulta a ser cadastrada já possui um Id registrado, ou não
     let newId: boolean = (s.id == null);
@@ -136,14 +136,14 @@ export class ScriptService {
           new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [s.name])
         ]),
         this.getScripts(false))
-      .pipe(switchMap((results: [TranslationInput[], Script[]]) => {
+      .pipe(switchMap((results: [TranslationInput[], ScriptClient[]]) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['SCRIPTS.MESSAGES.SAVE']);
         
         //Validação do campo de Id do banco de dados. Caso não preenchido, é gerado um novo Id
         if (newId) s.id = uuid();
         
         //Impede o cadastro de uma consulta com o mesmo nome
-        script_name = results[1].filter((script: Script) => (script.id != s.id)).find((script: Script) => (script.name == s.name));
+        script_name = results[1].filter((script: ScriptClient) => (script.id != s.id)).find((script: ScriptClient) => (script.name == s.name));
         if (script_name != undefined) {
           this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME']);
           return of(false);
@@ -175,7 +175,7 @@ export class ScriptService {
   }
   
   /* Método de remoção das consultas do Agent */
-  public deleteScript(s: Script): Observable<boolean> {
+  public deleteScript(s: ScriptClient): Observable<boolean> {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
@@ -206,10 +206,10 @@ export class ScriptService {
   public exportScript(ss: ScheduleScript): Observable<boolean> {
     
     //Variável de suporte, que armazena todas as rotinas padrões do Agent
-    let scripts: Script[] = [];
+    let scripts: ScriptClient[] = [];
     
     //Variável de suporte, que armazena os nomes de todas as rotinas atualmente cadastradas no agendamento selecionado
-    let script_names: string[] = ss.scripts.map((s: Script) => s.name);
+    let script_names: string[] = ss.scripts.map((s: ScriptClient) => s.name);
     
     //Variável de suporte, que armazena todas as requisições de gravação das rotinas
     let obs_scripts: Observable<boolean>[] = [];
@@ -230,13 +230,13 @@ export class ScriptService {
       if (scripts.length > 0) {
         
         //Impede a sobreescrita de uma rotina que já tenha sido exportada anteriormente
-        scripts = scripts.filter((s: Script) => (script_names.includes(s.name) ? false : true));
+        scripts = scripts.filter((s: ScriptClient) => (script_names.includes(s.name) ? false : true));
         
         //Verifica se ainda existem rotinas a serem salvas
         if (scripts.length > 0) {
           //Prepara as requisições a serem disparadas
           obs_scripts = scripts.map((script: any) => {
-            let s: Script = new Script(CNST_QUERY_VERSION_STANDARD);
+            let s: ScriptClient = new ScriptClient(CNST_QUERY_VERSION_STANDARD);
             s.scheduleId = ss.schedule.id;
             s.name = script.name;
             s.canDecrypt = CNST_MODALIDADE_CONTRATACAO.find((v: any) => (v.value == ss.contractType)).canDecrypt;
@@ -267,14 +267,14 @@ export class ScriptService {
   }
   
   /* Método de consulta das rotinas padrões do repositório do Agent */
-  public exportScriptFromRepository(ss: ScheduleScript): Script[] {
+  public exportScriptFromRepository(ss: ScheduleScript): ScriptClient[] {
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.EXPORT_STANDARD']);
-    let obj_scripts: Script[] = CNST_ERP.find((erp: any) => erp.ERP == ss.erp).Scripts[ss.databaseType]
+    let obj_scripts: ScriptClient[] = CNST_ERP.find((erp: any) => erp.ERP == ss.erp).Scripts[ss.databaseType]
       .filter((s: any) => (s.Modulos.includes(ss.module) || (s.Modulos.length == 0)));
     
     //Converte para a interface de Query do Agent
-    let scripts: Script[] = obj_scripts.map((obj: any) => {
-      let s: Script = new Script(obj.version);
+    let scripts: ScriptClient[] = obj_scripts.map((obj: any) => {
+      let s: ScriptClient = new ScriptClient(obj.version);
       s.id = obj.id;
       s.scheduleId = obj.scheduleId;
       s.name = obj.name;

@@ -1,12 +1,11 @@
+/* Interface de licenças do Agent */
+import { License } from '../services/server/server-interface';
+
 /* Interface de ambientes do Agent */
 export class Workspace {
   id: string;
   name: string;
-  contractType: string;
-  contractCode: string;
-  erp: string;
-  module: string;
-  source: string;
+  license: License;
   GDEnvironment: string;
   GDUsername: string;
   GDPassword: string;
@@ -20,11 +19,6 @@ export class Workspace {
   
   constructor() {
     this.id = null;
-    this.contractType = '';
-    this.contractCode = '';
-    this.erp = '';
-    this.module = '';
-    this.source = '';
     this.GDEnvironment = '';
     this.GDUsername = '';
     this.GDPassword = '';

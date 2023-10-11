@@ -12,6 +12,14 @@ import { Files } from './src-electron/files';
 
 /* Serviço de comunicação com o Agent-Server */
 import { ServerService } from './src-electron/services/server-service';
+import {
+  License,
+  AvailableLicenses,
+  QueryCommunication,
+  ScriptCommunication,
+  ETLParameterCommunication,
+  SQLParameterCommunication
+} from './src-angular/app/services/server/server-interface';
 
 /* Serviço de tradução do Electron */
 import { TranslationService } from './src-electron/services/translation-service';
@@ -49,11 +57,11 @@ import { Schedule } from './src-angular/app/schedule/schedule-interface';
 
 /* Serviço de consultas do Agent */
 import { QueryService } from './src-electron/services/query-service';
-import { Query } from './src-angular/app/query/query-interface';
+import { QueryClient } from './src-angular/app/query/query-interface';
 
 /* Serviço de rotinas do Agent */
 import { ScriptService } from './src-electron/services/script-service';
-import { Script } from './src-angular/app/script/script-interface';
+import { ScriptClient } from './src-angular/app/script/script-interface';
 
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './src-electron/services/configuration-service';
@@ -391,7 +399,7 @@ export default class Main {
     /*****************************/
     //Consulta das queries
     ipcMain.on('getQueries', (event: IpcMainEvent, showLogs: boolean) => {
-      QueryService.getQueries(showLogs).subscribe((q: Query[]) => {
+      QueryService.getQueries(showLogs).subscribe((q: QueryClient[]) => {
         if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_OK'], null, null, null);
         event.returnValue = q;
         return q;
@@ -400,7 +408,7 @@ export default class Main {
     
     //Consulta das queries pertencentes à um agendamento
     ipcMain.on('getQueriesBySchedule', (event: IpcMainEvent, sc: Schedule, showLogs: boolean) => {
-      QueryService.getQueriesBySchedule(sc, showLogs).subscribe((q: Query[]) => {
+      QueryService.getQueriesBySchedule(sc, showLogs).subscribe((q: QueryClient[]) => {
         if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null);
         event.returnValue = q;
         return q;
@@ -408,7 +416,7 @@ export default class Main {
     });
     
     //Gravação da consulta
-    ipcMain.on('saveQuery', (event: IpcMainEvent, q: Query) => {
+    ipcMain.on('saveQuery', (event: IpcMainEvent, q: QueryClient) => {
       QueryService.saveQuery(q).subscribe((b: boolean) => {
         if (b) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SAVE_OK'], null, null, null);
         
@@ -418,7 +426,7 @@ export default class Main {
     });
     
     //Remoção da consulta
-    ipcMain.on('deleteQuery', (event: IpcMainEvent, q: Query) => {
+    ipcMain.on('deleteQuery', (event: IpcMainEvent, q: QueryClient) => {
       QueryService.deleteQuery(q).subscribe((b: boolean) => {
         if (b) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_OK'], null, null, null);
         event.returnValue = b;
@@ -439,7 +447,7 @@ export default class Main {
     /*****************************/
     //Consulta das rotinas
     ipcMain.on('getScripts', (event: IpcMainEvent, showLogs: boolean) => {
-      ScriptService.getScripts(showLogs).subscribe((s: Script[]) => {
+      ScriptService.getScripts(showLogs).subscribe((s: ScriptClient[]) => {
         if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_OK'], null, null, null);
         event.returnValue = s;
         return s;
@@ -448,7 +456,7 @@ export default class Main {
     
     //Consulta das rotinas pertencentes à um agendamento
     ipcMain.on('getScriptsBySchedule', (event: IpcMainEvent, sc: Schedule, showLogs: boolean) => {
-      ScriptService.getScriptsBySchedule(sc, showLogs).subscribe((s: Script[]) => {
+      ScriptService.getScriptsBySchedule(sc, showLogs).subscribe((s: ScriptClient[]) => {
         if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null);
         event.returnValue = s;
         return s;
@@ -456,7 +464,7 @@ export default class Main {
     });
     
     //Gravação da rotina
-    ipcMain.on('saveScript', (event: IpcMainEvent, s: Script) => {
+    ipcMain.on('saveScript', (event: IpcMainEvent, s: ScriptClient) => {
       ScriptService.saveScript(s).subscribe((b: boolean) => {
         if (b) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SAVE_OK'], null, null, null);
         event.returnValue = b;
@@ -465,7 +473,7 @@ export default class Main {
     });
     
     //Remoção da rotina
-    ipcMain.on('deleteScript', (event: IpcMainEvent, s: Script) => {
+    ipcMain.on('deleteScript', (event: IpcMainEvent, s: ScriptClient) => {
       ScriptService.deleteScript(s).subscribe((b: boolean) => {
         if (b) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE_OK'], null, null, null);
         event.returnValue = b;
@@ -541,8 +549,49 @@ export default class Main {
     /*****************************/
     /** Comunicação c/ Servidor **/
     /*****************************/
+    //Ativação da instalação do Agent
     ipcMain.on('requestSerialNumber', (event: IpcMainEvent, args: string[]) => {
       ServerService.requestSerialNumber(args).subscribe((res: boolean) => {
+        event.returnValue = res;
+        return res;
+      });
+    });
+    
+    //Consulta das licenças disponíveis para esta instalação do Agent
+    ipcMain.on('getAvailableLicenses', (event: IpcMainEvent, showLogs: boolean) => {
+      ServerService.getAvailableLicenses(showLogs).subscribe((res: AvailableLicenses) => {
+        event.returnValue = res;
+        return res;
+      });
+    });
+    
+    //Consulta dos parâmetros de ETL padrões para determinada licença vinculada à este Agent
+    ipcMain.on('getLatestQueries', (event: IpcMainEvent, license: License, database: string) => {
+      ServerService.getLatestQueries(license, database).subscribe((res: QueryCommunication) => {
+        event.returnValue = res;
+        return res;
+      });
+    });
+    
+    //Consulta dos parâmetros de ETL padrões para determinada licença vinculada à este Agent
+    ipcMain.on('getLatestScripts', (event: IpcMainEvent, license: License, database: string) => {
+      ServerService.getLatestScripts(license, database).subscribe((res: ScriptCommunication) => {
+        event.returnValue = res;
+        return res;
+      });
+    });
+    
+    //Consulta dos parâmetros de ETL padrões para determinada licença vinculada à este Agent
+    ipcMain.on('getLatestETLParameters', (event: IpcMainEvent, license: License) => {
+      ServerService.getLatestETLParameters(license).subscribe((res: ETLParameterCommunication) => {
+        event.returnValue = res;
+        return res;
+      });
+    });
+    
+    //Consulta dos parâmetros de SQL padrões para determinada licença vinculada à este Agent
+    ipcMain.on('getLatestSQLParameters', (event: IpcMainEvent, license: License, database: string) => {
+      ServerService.getLatestSQLParameters(license, database).subscribe((res: SQLParameterCommunication) => {
         event.returnValue = res;
         return res;
       });
