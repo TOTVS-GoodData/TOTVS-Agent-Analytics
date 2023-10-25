@@ -27,4 +27,22 @@ export class Workspace {
     this.databaseIdRef = '';
     this.name = '';
   }
+  
+  /* Método de conversão do ambiente (JSON => Objeto) */
+  public toObject(data: Workspace): Workspace {
+    this.id = data.id;
+    this.name = data.name;
+    this.license = data.license;
+    this.GDEnvironment = data.GDEnvironment;
+    this.GDUsername = data.GDUsername;
+    this.GDPassword = data.GDPassword;
+    this.GDWorkspaceId = data.GDWorkspaceId;
+    this.GDWorkspaceUploadURL = data.GDWorkspaceUploadURL;
+    this.GDProcessId = data.GDProcessId;
+    this.GDProcessGraph = data.GDProcessGraph;
+    this.databaseIdRef = data.databaseIdRef;
+    this.pathMyProperties = data.pathMyProperties;
+    
+    return this;
+  }
 }

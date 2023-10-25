@@ -1,57 +1,55 @@
-/* Interface de versionamento de consultas */
-export class Version {
-  major: number;
-  minor: number;
-  patch: number;
-  
-  constructor(version: string) {
-    let numbers: Array<string> = version.split('.');
-    
-    this.major = parseInt(numbers[0]);
-    this.minor = parseInt(numbers[1]);
-    this.patch = parseInt(numbers[2]);
-  }
-  
-  public jsonToObject(v: Version): void {
-    this.major = v.major;
-    this.minor = v.minor;
-    this.patch = v.patch;    
-  }
-  
-  public getVersion(): string {
-    return this.major + '.' + this.minor + '.' + this.patch;
-  }
-  
-  public getMajorVersion(): number {
-    return this.major;
-  }
-  
-  public getMinorVersion(): number {
-    return this.minor;
-  }
-  
-  public getPatchVersion(): number {
-    return this.patch;
-  }
-}
+/* Interface de versionamento do Agent */
+import { Version } from '../utilities/version-interface';
+
+/* Interface de consultas do Agent-Server */
+import { QueryServer } from '../services/server/server-interface';
 
 /* Interface de consultas do Agent */
 export class QueryClient {
   id: string;
   scheduleId: string;
   name: string;
-  query: string;
+  command: string;
   executionMode: string;
   executionModeName?: string;
-  canDecrypt: boolean;
   version: Version;
+  TOTVS: boolean;
   
   constructor(version: string) {
     this.id = null;
     this.scheduleId = '';
     this.name = '';
     this.executionMode = '';
-    this.query = '';
+    this.command = '';
     this.version = new Version(version);
+    this.TOTVS = false;
+  }
+  
+  /* Método de conversão da consulta (JSON => Objeto) */
+  public toObject(data: QueryClient): QueryClient {
+    this.id = data.id;
+    this.scheduleId = data.scheduleId;
+    this.name = data.name;
+    this.command = data.command;
+    this.executionMode = data.executionMode;
+    this.version = new Version(data.version.major + '.' + data.version.minor + '.' + data.version.patch);
+    this.TOTVS = data.TOTVS;
+    
+    return this;
+  }
+  
+  /* Método de conversão da consulta, para transferência ao Agent-Server */
+  public toServer(id: string, licenseId: string, brand: string): QueryServer {
+    let q: QueryServer = new QueryServer();
+    
+    q.id = id;
+    q.licenseId = licenseId;
+    q.name = this.name;
+    q.command = null;
+    q.executionMode = this.executionMode;
+    q.brand = brand;
+    q.version = this.version;
+    
+    return q;
   }
 }

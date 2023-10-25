@@ -8,7 +8,6 @@ import { ElectronService } from 'ngx-electronyzer';
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
-import * as _constants from '../utilities/angular-constants';
 
 /* Serviço de tradução do Agent */
 import { TranslationService } from '../services/translation/translation-service';
@@ -16,18 +15,16 @@ import { TranslationInput } from '../services/translation/translation-interface'
 
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from '../workspace/workspace-service';
-import { CNST_ERP, CNST_MODALIDADE_CONTRATACAO } from '../workspace/workspace-constants';
 
 /* Serviço de banco de dados do Agent */
 import { DatabaseService } from '../database/database-service';
 import { Database } from '../database/database-interface';
 
-//Interfaces de agendamentos do Agent
+/* Interfaces de agendamentos do Agent */
 import { Schedule, ScheduleScript } from '../schedule/schedule-interface';
 
-//Interface de rotinas do Agent
+/* Interface de rotinas do Agent */
 import { ScriptClient } from './script-interface';
-import { CNST_QUERY_VERSION_STANDARD } from '../query/query-constants';
 
 /* Componentes rxjs para controle de Promise / Observable */
 import { Observable, of, catchError, map, switchMap, forkJoin } from 'rxjs';
@@ -115,61 +112,84 @@ export class ScriptService {
   }
   
   /* Método de gravação das consultas do Agent */
-  public saveScript(s: ScriptClient): Observable<boolean> {
+  public saveScript(s: ScriptClient[]): Observable<number> {
     
     //Objeto que detecta se já existe uma consulta cadastrada com o mesmo nome da que será gravada
     let script_name: ScriptClient = null;
     
     //Define se a consulta a ser cadastrada já possui um Id registrado, ou não
-    let newId: boolean = (s.id == null);
+    let newId: boolean = false;
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
       return of(this._electronService.ipcRenderer.sendSync('saveScript', s));
     } else {
       
-      //Consulta das traduções
-      return forkJoin(
-        this._translateService.getTranslations([
-          new TranslationInput('SCRIPTS.MESSAGES.SAVE', [s.name]),
-          new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [s.name]),
-          new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [s.name])
-        ]),
-        this.getScripts(false))
-      .pipe(switchMap((results: [TranslationInput[], ScriptClient[]]) => {
-        this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['SCRIPTS.MESSAGES.SAVE']);
-        
-        //Validação do campo de Id do banco de dados. Caso não preenchido, é gerado um novo Id
-        if (newId) s.id = uuid();
-        
-        //Impede o cadastro de uma consulta com o mesmo nome
-        script_name = results[1].filter((script: ScriptClient) => (script.id != s.id)).find((script: ScriptClient) => (script.name == s.name));
-        if (script_name != undefined) {
-          this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME']);
-          return of(false);
-        } else {
+      //Itera por todas as consultas que devem ser gravadas
+      let obs_scripts: any[] = s.map((ss: ScriptClient) => {
+        return new Observable<boolean>((subscriber: any) => {
           
-          //Gravação pela API de testes do Angular
-          if (newId) {
-            return this._http.post(this._utilities.getLocalhostURL() + '/scripts', s).pipe(
-            map(() => {
-              this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SAVE_OK']);
-              return true;
-            }), catchError((err: any) => {
-              this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
-              throw err;
-            }));
-          } else {
-            return this._http.put(this._utilities.getLocalhostURL() + '/scripts/' + s.id, s).pipe(
-            map(() => {
-              this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['SCRIPTS.MESSAGES.SAVE_OK']);
-              return true;
-            }), catchError((err: any) => {
-              this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
-              throw err;
-            }));
-          }
-        }
+          //Consulta das traduções
+          return forkJoin(
+            this._translateService.getTranslations([
+              new TranslationInput('SCRIPTS.MESSAGES.SAVE', [ss.name]),
+              new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [ss.name]),
+              new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [ss.name])
+            ]),
+            this.getScripts(false))
+          .subscribe((results: [TranslationInput[], ScriptClient[]]) => {
+            this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['SCRIPTS.MESSAGES.SAVE']);
+            
+            //Validação do campo de Id do banco de dados. Caso não preenchido, é gerado um novo Id
+            newId = (ss.id == null);
+            if (newId) ss.id = uuid();
+            
+            //Impede o cadastro de uma consulta com o mesmo nome
+            script_name = results[1].filter((script: ScriptClient) => (script.id != ss.id)).find((script: ScriptClient) => ((script.name == ss.name) && (script.scheduleId == ss.scheduleId)));
+            if (script_name != undefined) {
+              this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME']);
+              subscriber.next(false);
+              subscriber.complete();
+            } else {
+              
+              //Gravação pela API de testes do Angular
+              if (newId) {
+                return this._http.post(this._utilities.getLocalhostURL() + '/scripts', ss).subscribe(() => {
+                  this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SAVE_OK']);
+                  subscriber.next(true);
+                  subscriber.complete();
+                }, catchError((err: any) => {
+                  this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
+                  throw err;
+                }));
+              } else {
+                return this._http.put(this._utilities.getLocalhostURL() + '/scripts/' + ss.id, ss).subscribe(() => {
+                  this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['SCRIPTS.MESSAGES.SAVE_OK']);
+                  subscriber.next(true);
+                  subscriber.complete();
+                }, catchError((err: any) => {
+                  this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
+                  throw err;
+                }));
+              }
+            }
+          });
+        });
+      });
+      
+      /*
+        Executa cada um dos observáveis, para cada rotina a ser salva. 
+        Contabiliza o número total de erros dos observáveis, e retorna o mesmo.
+        Caso todos os observáveis falhem, retorna -1.
+      */
+      return forkJoin(obs_scripts).pipe(map((res: any) => {
+        let errors: number = 0;
+        res.map((res2: boolean) => {
+          if (!res2) errors = errors + 1;
+        });
+        
+        if (errors == obs_scripts.length) errors = -1;
+        return errors;
       }));
     }
   }
@@ -200,93 +220,5 @@ export class ScriptService {
         }));
       }));
     }
-  }
-  
-  /* Método de exportação das rotinas padrões do Agent */
-  public exportScript(ss: ScheduleScript): Observable<boolean> {
-    
-    //Variável de suporte, que armazena todas as rotinas padrões do Agent
-    let scripts: ScriptClient[] = [];
-    
-    //Variável de suporte, que armazena os nomes de todas as rotinas atualmente cadastradas no agendamento selecionado
-    let script_names: string[] = ss.scripts.map((s: ScriptClient) => s.name);
-    
-    //Variável de suporte, que armazena todas as requisições de gravação das rotinas
-    let obs_scripts: Observable<boolean>[] = [];
-    
-    this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.EXPORT']);
-    
-    //Realiza a exportação das rotinas padrões do repositório do Agent
-    return this._translateService.getTranslations([
-      new TranslationInput('SCRIPTS.MESSAGES.EXPORT_SAVE', [ss.schedule.name]),
-      new TranslationInput('SCRIPTS.MESSAGES.EXPORT_SAVE_ERROR', [ss.schedule.name]),
-      new TranslationInput('SCRIPTS.MESSAGES.EXPORT_WARNING', [ss.schedule.name])
-    ]).pipe(switchMap((translations: any) => {
-      
-      //Consulta todas as rotinas padrões existentes para este agendamento
-      scripts = this.exportScriptFromRepository(ss);
-      
-      //Verifica se existem rotinas a serem salvas
-      if (scripts.length > 0) {
-        
-        //Impede a sobreescrita de uma rotina que já tenha sido exportada anteriormente
-        scripts = scripts.filter((s: ScriptClient) => (script_names.includes(s.name) ? false : true));
-        
-        //Verifica se ainda existem rotinas a serem salvas
-        if (scripts.length > 0) {
-          //Prepara as requisições a serem disparadas
-          obs_scripts = scripts.map((script: any) => {
-            let s: ScriptClient = new ScriptClient(CNST_QUERY_VERSION_STANDARD);
-            s.scheduleId = ss.schedule.id;
-            s.name = script.name;
-            s.canDecrypt = CNST_MODALIDADE_CONTRATACAO.find((v: any) => (v.value == ss.contractType)).canDecrypt;
-            s.script = script.script;
-            return this.saveScript(s).pipe(map((res: boolean) => {
-              return res;
-            }));
-          });
-          
-          //Dispara todas as gravações de rotinas, simultaneamente
-          this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['SCRIPTS.MESSAGES.EXPORT_SAVE']);
-          return forkJoin(obs_scripts).pipe(
-          map(() => {
-            this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.EXPORT_OK'], null);
-            return true;
-          }), catchError((err: any) => {
-            this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.EXPORT_SAVE_ERROR']);
-            throw err;
-          }));
-        } else {
-          this._utilities.createNotification(CNST_LOGLEVEL.WARN, translations['SCRIPTS.MESSAGES.EXPORT_WARNING'], null);
-          return of(true);
-        }
-      } else {
-        return of(false);
-      }
-    }));
-  }
-  
-  /* Método de consulta das rotinas padrões do repositório do Agent */
-  public exportScriptFromRepository(ss: ScheduleScript): ScriptClient[] {
-    this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.EXPORT_STANDARD']);
-    let obj_scripts: ScriptClient[] = CNST_ERP.find((erp: any) => erp.ERP == ss.erp).Scripts[ss.databaseType]
-      .filter((s: any) => (s.Modulos.includes(ss.module) || (s.Modulos.length == 0)));
-    
-    //Converte para a interface de Query do Agent
-    let scripts: ScriptClient[] = obj_scripts.map((obj: any) => {
-      let s: ScriptClient = new ScriptClient(obj.version);
-      s.id = obj.id;
-      s.scheduleId = obj.scheduleId;
-      s.name = obj.name;
-      s.script = obj.script;
-      s.canDecrypt = obj.canDecrypt;
-      
-      return s;
-    });
-    
-    if (scripts.length > 0) this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.EXPORT_STANDARD_OK']);
-    else this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.EXPORT_STANDARD_WARNING']);
-    
-    return scripts;
   }
 }

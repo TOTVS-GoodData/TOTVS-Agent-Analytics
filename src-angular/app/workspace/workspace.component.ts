@@ -141,7 +141,7 @@ export class WorkspaceComponent implements OnInit {
     //Consulta dos ambientes / banco de dados cadastrados no Agent
     forkJoin([
       this._workspaceService.getWorkspaces(true),
-      this._databaseService.getDatabases(true)
+      this._databaseService.getDatabases(false)
     ]).subscribe((results: [Workspace[], Database[]]) => {
       
       //Procura o cadastro do banco de dados vinculado a cada ambiente

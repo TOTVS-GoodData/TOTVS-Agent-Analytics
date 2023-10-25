@@ -9,6 +9,9 @@ import { ElectronService } from 'ngx-electronyzer';
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
 
+/* Interface de configuração do Agent */
+import { Configuration } from './configuration-interface';
+
 /* Serviço de tradução do Agent */
 import { TranslationService } from '../services/translation/translation-service';
 import { TranslationInput } from '../services/translation/translation-interface';
@@ -17,11 +20,7 @@ import { TranslationInput } from '../services/translation/translation-interface'
 import { MenuService } from '../services/menu-service';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, of, catchError } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
-
-//Interface de configuração do Agent
-import { Configuration } from './configuration-interface';
+import { Observable, map, switchMap, of, catchError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -75,16 +74,24 @@ export class ConfigurationService {
   }
   
   /* Método de gravação das configurações do Agent */
-  public saveConfiguration(conf: Configuration): Observable<boolean> {
+  public saveConfiguration(conf: Configuration): Observable<number> {
     
+    //Vai entender essa maluquice do compilador, sei la
+    return this._translateService.getTranslations([
+      new TranslationInput('SERVICES.SERVER.MESSAGES.LOADING_LICENSES', [])
+    ]).pipe(switchMap((translations: any) => {
+      
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('saveConfiguration', conf)).pipe(switchMap((b: boolean) => {
-        return this._translateService.use(conf.locale).pipe(map((b: boolean) => {
-          this._menuService.updateMenu();
-          return b;
-        }));
-      }));
+      return this._electronService.ipcRenderer.invoke('saveConfiguration', conf).then((b: number) => {
+        if (b == 1) {
+          this._translateService.use(conf.locale).subscribe((b: boolean) => {
+            this._menuService.updateMenu();
+          });
+          return 1;
+        }
+        else return b;
+      });
     } else {
       
       //Consulta da API de testes do Angular
@@ -96,12 +103,13 @@ export class ConfigurationService {
           this._menuService.updateMenu();
           this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK']);
           this._utilities.debugMode = conf.debug;
-          return b;
+          return 1;
         }));
       }), catchError((err: any) => {
         this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR'], err);
         throw err;
       }));
     }
+  }));
   }
 }

@@ -63,6 +63,10 @@ export class AppComponent {
   protected lbl_registerAgentTitle: string = null;
   protected lbl_registerAgentDescription1: string = null;
   protected lbl_registerAgentDescription2: string = null;
+  protected lbl_registerAgentDescription3: string = null;
+  protected lbl_registerAgentDescription4: string = null;
+  protected lbl_registerAgentDescription5: string = null;
+  protected lbl_registerAgentDescription6: string = null;
   protected lbl_registerAgentField: string = null;
   protected registerAgent: string = null;
   
@@ -175,6 +179,10 @@ export class AppComponent {
     this.lbl_registerAgentTitle = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_TITLE'];
     this.lbl_registerAgentDescription1 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_1'];
     this.lbl_registerAgentDescription2 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_2'];
+    this.lbl_registerAgentDescription3 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_3'];
+    this.lbl_registerAgentDescription4 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_4'];
+    this.lbl_registerAgentDescription5 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_5'];
+    this.lbl_registerAgentDescription6 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_6'];
     this.lbl_registerAgentField = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_FIELD'];
     
     //Tradução do modal de atualização
@@ -233,18 +241,23 @@ export class AppComponent {
   protected registerAgent_YES(): void {
     if (this._electronService.isElectronApp) {
       this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT'] };
-      let registerAgent: boolean = this._electronService.ipcRenderer.sendSync('requestSerialNumber', [this.registerAgent]);
-      if (registerAgent) {
-        this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
-          this.setMenuTranslations(conf.serialNumber);
-          this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_OK'], null);
+      this.modal_registerAgent.close();
+      this._electronService.ipcRenderer.invoke('requestSerialNumber', [this.registerAgent]).then((registerAgent: number) => {
+        if (registerAgent == 1) {
+          this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
+            this.setMenuTranslations(conf.serialNumber);
+            this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_OK'], null);
+            this.po_lo_text = { value: null };
+          });
+        } else {
+          if (registerAgent == -1) this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_INVALID'], null);
+          else if (registerAgent == -2) this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_COMMUNICATION'], null);
+          else this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR'], null);
+          
+          this.modal_registerAgent.open();
           this.po_lo_text = { value: null };
-          this.modal_registerAgent.close();
-        });
-      } else {
-        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_ERROR'], null);
-        this.po_lo_text = { value: null };
-      }
+        }
+      });
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_WARNING'], null);
     }

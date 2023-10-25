@@ -10,6 +10,7 @@
       [p-label]="lbl_add"
       p-icon="po-icon po-icon-plus"
       (p-click)="newScript_OPEN()"
+      [p-disabled]="!isPlatform"
       p-kind="primary"/>
   </div>
   
@@ -95,7 +96,7 @@
         class="po-textarea po-sm-12 po-md-12 po-lg-12 po-xl-12 script-text removeBorder padding-0 textarea"
         name="po_scriptQuery"
         [p-label]="lbl_scriptQuery"
-        [(ngModel)]="script.script"
+        [(ngModel)]="script.command"
         p-rows="10">
       </po-textarea>
       

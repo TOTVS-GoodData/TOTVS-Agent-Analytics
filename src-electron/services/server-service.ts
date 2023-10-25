@@ -15,11 +15,18 @@ import net from 'net';
 import {
   ServerCommunication,
   SocketCommunication
-} from '../server-interface';
+} from '../../src-angular/app/services/server/server-interface';
 
 /* Serviços do Electron */
 import { Files } from '../files';
 import { Functions } from '../functions';
+import { Execute } from '../execute';
+
+/* Interface de comunicação com o Java */
+import { JavaInputBuffer } from '../../src-angular/app/utilities/java-interface';
+
+/* Interface de versionamento do Agent */
+import { Version } from '../../src-angular/app/utilities/version-interface';
 
 /* Interfaces do Electron */
 import { DatabaseData } from '../electron-interface';
@@ -38,15 +45,47 @@ import {
   QueryCommunication,
   ScriptCommunication,
   ETLParameterCommunication,
-  SQLParameterCommunication
+  SQLParameterCommunication,
+  QueryServer,
+  ScriptServer,
+  ETLParameterServer,
+  SQLParameterServer,
+  DataUpdate
 } from '../../src-angular/app/services/server/server-interface';
+
+/* Constante que define o ERP "Protheus" */
+import { CNST_ERP_PROTHEUS } from '../../src-angular/app/workspace/workspace-constants';
+
+/* Serviço de ambientes do Agent */
+import { WorkspaceService } from './workspace-service';
+import { Workspace } from '../../src-angular/app/workspace/workspace-interface';
+
+/* Interface de bancos de dados do Agent */
+import { DatabaseService } from './database-service';
+import { Database } from '../../src-angular/app/database/database-interface';
+
+/* Serviço de agendametos do Agent */
+import { ScheduleService } from './schedule-service';
+import {
+  Schedule,
+  ETLParameterClient,
+  SQLParameterClient
+} from '../../src-angular/app/schedule/schedule-interface';
+
+/* Serviço de rotinas do Agent */
+import { ScriptService } from './script-service';
+import { ScriptClient } from '../../src-angular/app/script/script-interface';
+
+/* Serviço de consultas do Agent */
+import { QueryService } from './query-service';
+import { QueryClient } from '../../src-angular/app/query/query-interface';
 
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './configuration-service';
 import { Configuration } from '../../src-angular/app/configuration/configuration-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, of, map, switchMap } from 'rxjs';
+import { Observable, of, map, lastValueFrom, switchMap, forkJoin, catchError } from 'rxjs';
 
 export class ServerService {
   
@@ -180,6 +219,7 @@ export class ServerService {
         source: configuration.serialNumber,
         destination: CNST_SERVER_SOURCE,
         word: word,
+        errorCode: null,
         args: args
       };
       
@@ -226,6 +266,9 @@ export class ServerService {
       //Resposta final desta instância de conexão ao servidor
       let response: any = null;
       
+      //Detecta se ocorreu algum erro na inicialização do servidor
+      let hasErrors: boolean = false;
+      
       //Consulta das traduções
       let translations: any = TranslationService.getTranslations([
         new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND', [word]),
@@ -262,9 +305,15 @@ export class ServerService {
         });
 	    });
       
+      client.on('error', (err: any) => {
+        hasErrors = true;
+        subscriber.next(null);
+        subscriber.complete();
+      });
+      
       //Evento disparado ao encerrar a conexão com o Agent-Server
       client.on('close', () => {
-	      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null);
+        if (!hasErrors) Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null);
         subscriber.next(response);
         subscriber.complete();
       });
@@ -272,7 +321,7 @@ export class ServerService {
   }
   
   /* Método de solicitação do SerialNumber do Agent */
-  public static requestSerialNumber(args: string[]): Observable<boolean> {
+  public static requestSerialNumber(args: string[]): Observable<number> {
     
     //Prepara o envio da porta de comunicação para o Agent-Server
     return ConfigurationService.getConfiguration(false).pipe(switchMap((configuration: Configuration) => {
@@ -294,23 +343,38 @@ export class ServerService {
             'requestSerialNumber',
             (response: ServerCommunication) => {
               return ConfigurationService.getConfiguration(false).pipe(switchMap((configuration: Configuration) => {
-                Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SERIAL_NUMBER'], null, null, null);
                 
-                //Realiza a gravação do serialNumber desta instância do Agent
-                configuration.serialNumber = response.args[0];
-                return ConfigurationService.saveConfiguration(configuration).pipe(map((b: boolean) => {
+                if (response.args[0] != null) {
                   
-                  //Remove o código de ativação temporário do Agent
-                  ServerService.temporarySerialNumber = null;
+                  Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SERIAL_NUMBER'], null, null, null);
                   
-                  Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SERIAL_NUMBER_OK'], null, null, null);
-                  return b;
-                }, (err: any) => {
-                  Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SERIAL_NUMBER_ERROR'], null, null, null);
-                }));
+                  //Realiza a gravação do serialNumber desta instância do Agent
+                  configuration.serialNumber = response.args[0];
+                  return ConfigurationService.saveConfiguration(configuration).pipe(map((b: number) => {
+                    
+                    //Remove o código de ativação temporário do Agent
+                    ServerService.temporarySerialNumber = null;
+                    
+                    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SERIAL_NUMBER_OK'], null, null, null);
+                    if (b == 1) return 1;
+                    else return 0;
+                  }, (err: any) => {
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SERIAL_NUMBER_ERROR'], null, null, null);
+                  }));
+                } else {
+                  switch (response.errorCode) {
+                    case (-1):
+                      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SERIAL_NUMBER_ERROR_INVALID'], null, null, null);
+                      break;
+                    case (-2):
+                      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SERIAL_NUMBER_ERROR_COMMUNICATION'], null, null, null);
+                      break;
+                  }
+                  return of(response.errorCode);
+                }
               }));
             }
-          ).pipe(map((b: boolean) => {
+          ).pipe(map((b: number) => {
             return b;
           }));
         }));
@@ -333,7 +397,8 @@ export class ServerService {
           return of(response.args[0]);
         }
       ).pipe(map((b: boolean) => {
-        return b;
+        if (b != null) return b;
+        else return false;
       }));
     }));
   }
@@ -354,15 +419,19 @@ export class ServerService {
         }
       ).pipe(map((res: AvailableLicenses) => {
         return res;
+      }), catchError((err: any) => {
+        console.log('DEU ERRO');
+        let x: AvailableLicenses = new AvailableLicenses('a', 'b', []);
+        return of(x);
       }));
     }));
   }
   
   /* Método de solicitação das últimas consultas disponíveis para esta licença do Agent */
-  public static getLatestQueries(license: License, database: string): Observable<QueryCommunication> {
+  public static saveLatestQueries(license: License, database: Database, scheduleId: string): Observable<boolean> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('getLatestQueries', [license, database]).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('getLatestQueries', [license, database.brand]).pipe(switchMap((buffer: string) => {
       
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
@@ -370,19 +439,77 @@ export class ServerService {
         buffer,
         'getLatestQueries',
         (response: ServerCommunication) => {
-          return of(response.args[0]);
+          let queries: QueryCommunication = Object.assign(new QueryCommunication(), response.args[0]);
+          let queriesToSave: QueryClient[] = queries.Queries.map((q: QueryClient) => {
+            q.scheduleId = scheduleId;
+            return q;
+          });
+          
+          /*
+            Realiza a gravação das consultas padrões.
+            Caso não tenha recebido nenhuma consulta do Agent-Server, é enviado o comando "false", para solicitar a leitura da I01 (se for Protheus).
+          */
+          if (queriesToSave.length == 0) {
+            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT_NO_DATA'], null, null, null);
+            if (license.source == CNST_ERP_PROTHEUS) {
+              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT_I01'], null, null, null);
+              return ConfigurationService.getConfiguration(false).pipe(switchMap((conf: Configuration) => {
+                Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT_I01_PREPARE'], null, null, null);
+                database.password = Functions.decrypt(database.password);
+                
+                //Preparação do buffer de entrada para o Java
+                let javaInput: JavaInputBuffer = {
+                  workspace: null,
+                  database: database,
+                  schedule: null,
+                  queries: null,
+                  scripts: null,
+                  configuration: conf
+                }
+                
+                //Criptografia do pacote a ser enviado
+                let params = Functions.encrypt(JSON.stringify(javaInput));
+                
+                //Envio da requisição para o Electron, e processamento da resposta
+                return Execute.exportQuery(params).pipe(switchMap((res: any) => {
+                  if (res.err) {
+                    throw res.err;
+                  } else {
+                    queriesToSave = res.message.map((q: QueryClient) => {
+                      q.scheduleId = scheduleId;
+                      q.TOTVS = true;
+                      q.version = new Version(null);
+                      q.command = Functions.encrypt(q.command);
+                      return q;
+                    });
+                    
+                    return QueryService.saveQuery(queriesToSave).pipe(map((res: number) => {
+                      return res;
+                    }));
+                  }
+                }));
+              }));
+            } else {
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT_NO_DATA_ERROR'], null, null, null);
+              return of(-2);
+            }
+          } else {
+            return QueryService.saveQuery(queriesToSave).pipe(map((res: number) => {
+              return res;
+            }));
+          }
         }
-      ).pipe(map((res: QueryCommunication) => {
+      ).pipe(map((res: boolean) => {
         return res;
       }));
     }));
   }
   
   /* Método de solicitação das últimas rotinas disponíveis para esta licença do Agent */
-  public static getLatestScripts(license: License, database: string): Observable<ScriptCommunication> {
+  public static saveLatestScripts(license: License, brand: string, scheduleId: string): Observable<boolean> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('getLatestScripts', [license, database]).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('getLatestScripts', [license, brand]).pipe(switchMap((buffer: string) => {
       
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
@@ -390,9 +517,27 @@ export class ServerService {
         buffer,
         'getLatestScripts',
         (response: ServerCommunication) => {
-          return of(response.args[0]);
+          let scripts: ScriptCommunication = Object.assign(new ScriptCommunication(), response.args[0]);
+          let scriptsToSave: ScriptClient[] = scripts.Scripts.map((s: ScriptClient) => {
+            s.scheduleId = scheduleId;
+            return s;
+          });
+          
+          /*
+            Realiza a gravação das rotinas padrões.
+            Caso não tenha recebido nenhuma rotina do Agent-Server, é enviado o comando "false", para solicitar a leitura da I01 (se for Protheus).
+          */
+          if (scriptsToSave.length == 0) {
+            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.EXPORT_NO_DATA'], null, null, null);
+            Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT_NO_DATA_ERROR'], null, null, null);
+            return of(-2);
+          } else {
+            return ScriptService.saveScript(scriptsToSave).pipe(map((res: number) => {
+              return res;
+            }));
+          }
         }
-      ).pipe(map((res: ScriptCommunication) => {
+      ).pipe(map((res: boolean) => {
         return res;
       }));
     }));
@@ -408,7 +553,7 @@ export class ServerService {
       //(HOF - Higher Order Function)
       return ServerService.sendCommandToServer(
         buffer,
-        'getETLParameters',
+        'getLatestETLParameters',
         (response: ServerCommunication) => {
           return of(response.args[0]);
         }
@@ -428,12 +573,158 @@ export class ServerService {
       //(HOF - Higher Order Function)
       return ServerService.sendCommandToServer(
         buffer,
-        'getSQLParameters',
+        'getLatestSQLParameters',
         (response: ServerCommunication) => {
           return of(response.args[0]);
         }
       ).pipe(map((res: SQLParameterCommunication) => {
         return res;
+      }));
+    }));
+  }
+  
+  /*
+    Método de atualização de todos os objetos do Agent-Server
+    
+    Consultas
+    Rotinas
+    Parâmetros de ETL
+    Parâmetros de SQL
+  */
+  public static getUpdatesFromServer(): Observable<boolean> {
+    
+    //Conjuntos usados para deduplicar os dados que devem ser solicitadas ao Agent-Server
+    let querySets: Set<any> = new Set();
+    let scriptSets: Set<any> = new Set();
+    let ETLParameterSets: Set<any> = new Set();
+    let SQLParameterSets: Set<any> = new Set();
+    
+    //Objetos a serem processados pelo Agent-Server
+    let queryUpdates: QueryServer[] = [];
+    let scriptUpdates: ScriptServer[] = [];
+    let ETLParameterUpdates: ETLParameterServer[] = [];
+    let SQLParameterUpdates: SQLParameterServer[] = [];
+    
+    //Consulta das informações necessárias
+    return forkJoin([
+      ScheduleService.getSchedules(false),
+      WorkspaceService.getWorkspaces(false),
+      DatabaseService.getDatabases(false),
+      QueryService.getQueries(false),
+      ScriptService.getScripts(false)
+    ]).pipe(switchMap((results: [Schedule[], Workspace[], Database[], QueryClient[], ScriptClient[]]) => {
+      
+      /*
+        Remove todas as consultas que são não padrões do comando de atualização
+        Busca as informações de licença / banco de dados de cada consulta
+      */
+      queryUpdates = results[3].filter((q: QueryClient) => (q.TOTVS))
+      .map((q: QueryClient) => {
+        let schedule: Schedule = results[0].find((sch: Schedule) => (sch.id == q.scheduleId));
+        let workspace: Workspace = results[1].find((wrk: Workspace) => (schedule.workspaceId = wrk.id));
+        let database: Database = results[2].find((dat: Database) => (workspace.databaseIdRef == dat.id));
+        
+        //Retorna a consulta a ser analisada pelo Agent-Server
+        return q.toServer(q.id, workspace.license.id, database.brand);
+      });
+      
+      /*
+        Remove todas as rotinas que são não padrões do comando de atualização
+        Busca as informações de licença / banco de dados de cada rotina
+      */
+      scriptUpdates = results[4].filter((s: ScriptClient) => (s.TOTVS))
+      .map((s: ScriptClient) => {
+        let schedule: Schedule = results[0].find((sch: Schedule) => (sch.id == s.scheduleId));
+        let workspace: Workspace = results[1].find((wrk: Workspace) => (schedule.workspaceId = wrk.id));
+        let database: Database = results[2].find((dat: Database) => (workspace.databaseIdRef == dat.id));
+        
+        //Retorna a consulta a ser analisada pelo Agent-Server
+        return s.toServer(s.id, workspace.license.id, database.brand);
+      });
+      
+      //Remove todos os parâmetros de ETL que são não padrões do comando de atualização
+      results[0].map((s: Schedule) => {
+        let scheduleParameters: ETLParameterServer[] = s.ETLParameters.filter((param: ETLParameterClient) => (param.TOTVS))
+        
+        //Busca as informações de licença / banco de dados de cada parâmetro de ETL
+        .map((param: ETLParameterClient) => {
+          let workspace: Workspace = results[1].find((wrk: Workspace) => (s.workspaceId = wrk.id));
+          let database: Database = results[2].find((dat: Database) => (workspace.databaseIdRef == dat.id));
+          
+          //Retorna a consulta a ser analisada pelo Agent-Server
+          return param.toServer(workspace.license.id);
+        });
+        
+        ETLParameterUpdates = ETLParameterUpdates.concat(scheduleParameters);
+      });
+      
+      //Remove todos os parâmetros de SQL que são não padrões do comando de atualização
+      results[0].map((s: Schedule) => {
+        let scheduleParameters: SQLParameterServer[] = s.SQLParameters.filter((param: SQLParameterClient) => (param.TOTVS))
+        
+        //Busca as informações de licença / banco de dados de cada parâmetro de SQL
+        .map((param: SQLParameterClient) => {
+          let workspace: Workspace = results[1].find((wrk: Workspace) => (s.workspaceId = wrk.id));
+          let database: Database = results[2].find((dat: Database) => (workspace.databaseIdRef == dat.id));
+          
+          //Retorna a consulta a ser analisada pelo Agent-Server
+          return param.toServer(workspace.license.id, database.brand);
+        });
+        
+        SQLParameterUpdates = SQLParameterUpdates.concat(scheduleParameters);
+      });
+      
+      let data: DataUpdate = new DataUpdate(
+        ETLParameterUpdates,
+        SQLParameterUpdates,
+        queryUpdates,
+        scriptUpdates
+      );
+      
+      //Prepara a palavra de comando a ser enviada, com criptografia
+      return ServerService.prepareCommandWord('getUpdates', [data]).pipe(switchMap((buffer: string) => {
+        
+        //Envia o comando para o servidor da TOTVS, e processa a resposta
+        //(HOF - Higher Order Function)
+        return ServerService.sendCommandToServer(
+          buffer,
+          'getUpdates',
+          (response: ServerCommunication) => {
+            return of(response.args[0]);
+          }
+        ).pipe(switchMap((res: DataUpdate) => {
+          let queriesToSave: QueryClient[] = results[3].map((query: QueryClient) => {
+            let updated: QueryServer = new QueryServer().toObject(res.Queries.find((q: QueryServer) => (query.id == q.id)));
+            if (updated.version.getPatchVersion() > query.version.getPatchVersion()) {
+              query.command = updated.command;
+              query.version = updated.version;
+              query.executionMode = updated.executionMode;
+              
+              return query;
+            } else {
+              return null;
+            }
+          }).filter((q: QueryClient) => (q != null));
+          
+          let scriptsToSave: ScriptClient[] = results[4].map((script: ScriptClient) => {
+            let updated: ScriptServer = new ScriptServer().toObject(res.Scripts.find((s: ScriptServer) => (script.id == s.id)));
+            if (updated.version.getPatchVersion() > script.version.getPatchVersion()) {
+              script.command = updated.command;
+              script.version = updated.version;
+              
+              return script;
+            } else {
+              return null;
+            }
+          }).filter((s: ScriptClient) => (s != null));
+          
+          return forkJoin([
+            QueryService.saveQuery(queriesToSave),
+            ScriptService.saveScript(scriptsToSave)
+          ]).pipe(map((res: [number, number]) => {
+            return true;
+          }));
+        }));
       }));
     }));
   }

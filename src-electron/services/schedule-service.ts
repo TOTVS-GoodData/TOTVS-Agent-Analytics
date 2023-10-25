@@ -29,7 +29,11 @@ import { DatabaseService } from './database-service';
 import { Database } from '../../src-angular/app/database/database-interface';
 
 /* Interface de agendamentos do Agent */
-import { Schedule } from '../../src-angular/app/schedule/schedule-interface';
+import {
+  Schedule,
+  ETLParameterClient,
+  SQLParameterClient
+} from '../../src-angular/app/schedule/schedule-interface';
 
 /* Serviço de consultas do Agent */
 import { QueryService } from './query-service';
@@ -146,6 +150,18 @@ export class ScheduleService {
       //Validação do campo de Id do agendamento. Caso não preenchido, é gerado um novo Id
       if (newId) sc.id = uuid();
       
+      //Validação do campo de Id dos parâmetros de ETL. Caso não preenchido, é gerado um novo Id
+      sc.ETLParameters = sc.ETLParameters.map((param: ETLParameterClient) => {
+        if (param.id == null) param.id = uuid();
+        return param;
+      });
+      
+      //Validação do campo de Id dos parâmetros de SQL. Caso não preenchido, é gerado um novo Id
+      sc.SQLParameters = sc.SQLParameters.map((param: SQLParameterClient) => {
+        if (param.id == null) param.id = uuid();
+        return param;
+      });
+        
       //Impede o cadastro de um agendamento com o mesmo nome
       schedule_name = _dbd.schedules.filter((schedule: Schedule) => (schedule.id != sc.id)).find((schedule: Schedule) => (schedule.name == sc.name));
       if (schedule_name != undefined) {
@@ -234,13 +250,13 @@ export class ScheduleService {
       //Define todas as consultas do agendamento, e descriptografa as mesmas
       let q: QueryClient[] = results[2];
       q.map((q: QueryClient) => {
-        q.query = Functions.decrypt(q.query);
+        q.command = Functions.decrypt(q.command);
       });
       
       //Define todas as rotinas do agendamento, e descriptografa as mesmas
       let scr: ScriptClient[] = results[3];
       scr.map((s: ScriptClient) => {
-        s.script = Functions.decrypt(s.script);
+        s.command = Functions.decrypt(s.command);
       });
       
       let conf: Configuration = results[4];

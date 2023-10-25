@@ -379,19 +379,20 @@ export default class Main {
     });
     
     //Gravação da nova configuração do Agent
-    ipcMain.on('saveConfiguration', (event: IpcMainEvent, conf: Configuration) => {
-      ConfigurationService.saveConfiguration(conf).subscribe((b: boolean) => {
+    ipcMain.handle('saveConfiguration', (event: IpcMainEvent, conf: Configuration) => {
+      return lastValueFrom(ConfigurationService.saveConfiguration(conf).pipe(map((b: number) => {
+        if (b == 1) {
+          //Atualiza o menu do sistema operacional, pois o usuário pode ter alterado o idioma do Agent
+          Main.updateTrayMenu();
+          
+          //Reinicia a consulta de atualizações do Agent, pois a mesma pode ter sido desligada
+          Main.autoUpdaterCheck(conf.autoUpdate);
+          
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK'], null, null, null);
+        }
         
-        //Atualiza o menu do sistema operacional, pois o usuário pode ter alterado o idioma do Agent
-        Main.updateTrayMenu();
-        
-        //Reinicia a consulta de atualizações do Agent, pois a mesma pode ter sido desligada
-        Main.autoUpdaterCheck(conf.autoUpdate);
-        
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK'], null, null, null);
-        event.returnValue = b;
         return b;
-      });
+      })));
     });
     
     /*****************************/
@@ -416,12 +417,10 @@ export default class Main {
     });
     
     //Gravação da consulta
-    ipcMain.on('saveQuery', (event: IpcMainEvent, q: QueryClient) => {
-      QueryService.saveQuery(q).subscribe((b: boolean) => {
-        if (b) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SAVE_OK'], null, null, null);
-        
-        event.returnValue = b;
-        return b;
+    ipcMain.on('saveQuery', (event: IpcMainEvent, q: QueryClient[]) => {
+      QueryService.saveQuery(q).subscribe((res: number) => {
+        event.returnValue = res;
+        return res;
       });
     });
     
@@ -464,11 +463,10 @@ export default class Main {
     });
     
     //Gravação da rotina
-    ipcMain.on('saveScript', (event: IpcMainEvent, s: ScriptClient) => {
-      ScriptService.saveScript(s).subscribe((b: boolean) => {
-        if (b) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SAVE_OK'], null, null, null);
-        event.returnValue = b;
-        return b;
+    ipcMain.on('saveScript', (event: IpcMainEvent, s: ScriptClient[]) => {
+      ScriptService.saveScript(s).subscribe((res: number) => {
+        event.returnValue = res;
+        return res;
       });
     });
     
@@ -550,51 +548,45 @@ export default class Main {
     /** Comunicação c/ Servidor **/
     /*****************************/
     //Ativação da instalação do Agent
-    ipcMain.on('requestSerialNumber', (event: IpcMainEvent, args: string[]) => {
-      ServerService.requestSerialNumber(args).subscribe((res: boolean) => {
-        event.returnValue = res;
+    ipcMain.handle('requestSerialNumber', (event: IpcMainEvent, args: string[]) => {
+      return lastValueFrom(ServerService.requestSerialNumber(args).pipe(map((res: number) => {
         return res;
-      });
+      })));
     });
     
     //Consulta das licenças disponíveis para esta instalação do Agent
-    ipcMain.on('getAvailableLicenses', (event: IpcMainEvent, showLogs: boolean) => {
-      ServerService.getAvailableLicenses(showLogs).subscribe((res: AvailableLicenses) => {
-        event.returnValue = res;
+    ipcMain.handle('getAvailableLicenses', (event: IpcMainEvent, showLogs: boolean) => {
+      return lastValueFrom(ServerService.getAvailableLicenses(showLogs).pipe(map((res: AvailableLicenses) => {
         return res;
-      });
+      })));
+    });
+    
+    //Gravação das consultas padrões para determinada licença vinculada à este Agent
+    ipcMain.handle('saveLatestQueries', (event: IpcMainEvent, license: License, database: Database, scheduleId: string) => {
+      return lastValueFrom(ServerService.saveLatestQueries(license, database, scheduleId).pipe(map((res: boolean) => {
+        return res;
+      })));
+    });
+    
+    //Gravação das rotinas padrões para determinada licença vinculada à este Agent
+    ipcMain.handle('saveLatestScripts', (event: IpcMainEvent, license: License, brand: string, scheduleId: string) => {
+      return lastValueFrom(ServerService.saveLatestScripts(license, brand, scheduleId).pipe(map((res: boolean) => {
+        return res;
+      })));
     });
     
     //Consulta dos parâmetros de ETL padrões para determinada licença vinculada à este Agent
-    ipcMain.on('getLatestQueries', (event: IpcMainEvent, license: License, database: string) => {
-      ServerService.getLatestQueries(license, database).subscribe((res: QueryCommunication) => {
-        event.returnValue = res;
+    ipcMain.handle('getLatestETLParameters', (event: IpcMainEvent, license: License) => {
+      return lastValueFrom(ServerService.getLatestETLParameters(license).pipe(map((res: ETLParameterCommunication) => {
         return res;
-      });
-    });
-    
-    //Consulta dos parâmetros de ETL padrões para determinada licença vinculada à este Agent
-    ipcMain.on('getLatestScripts', (event: IpcMainEvent, license: License, database: string) => {
-      ServerService.getLatestScripts(license, database).subscribe((res: ScriptCommunication) => {
-        event.returnValue = res;
-        return res;
-      });
-    });
-    
-    //Consulta dos parâmetros de ETL padrões para determinada licença vinculada à este Agent
-    ipcMain.on('getLatestETLParameters', (event: IpcMainEvent, license: License) => {
-      ServerService.getLatestETLParameters(license).subscribe((res: ETLParameterCommunication) => {
-        event.returnValue = res;
-        return res;
-      });
+      })));
     });
     
     //Consulta dos parâmetros de SQL padrões para determinada licença vinculada à este Agent
-    ipcMain.on('getLatestSQLParameters', (event: IpcMainEvent, license: License, database: string) => {
-      ServerService.getLatestSQLParameters(license, database).subscribe((res: SQLParameterCommunication) => {
-        event.returnValue = res;
+    ipcMain.handle('getLatestSQLParameters', (event: IpcMainEvent, license: License, brand: string) => {
+      return lastValueFrom(ServerService.getLatestSQLParameters(license, brand).pipe(map((res: SQLParameterCommunication) => {
         return res;
-      });
+      })));
     });
   }
   
@@ -808,11 +800,9 @@ export default class Main {
       Main.updateTrayMenu();
       
       //Atualização das consultas / rotinas padrões do FAST (Caso necessário).
-      QueryService.updateAllQueries().pipe(switchMap((b: boolean) => {
-        return ScriptService.updateAllScripts().pipe(map((b: boolean) => {
-          return b;
-        }));
-      })).subscribe();
+      ServerService.getUpdatesFromServer().subscribe((b: boolean) => {
+        
+      });
       
       //Configuração da interface do Agent (Angular)
       Main.createWindowObject();

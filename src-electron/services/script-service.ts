@@ -14,7 +14,6 @@ import { DatabaseData } from '../electron-interface';
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from './workspace-service';
 import { Workspace } from '../../src-angular/app/workspace/workspace-interface';
-import { CNST_ERP } from '../../src-angular/app/workspace/workspace-constants';
 
 /* Serviço de bancos de dados do Agent */
 import { DatabaseService } from './database-service';
@@ -26,8 +25,9 @@ import { Schedule } from '../../src-angular/app/schedule/schedule-interface';
 
 /* Interface de rotinas do Agent */
 import { ScriptClient } from '../../src-angular/app/script/script-interface';
-import { Version } from '../../src-angular/app/query/query-interface';
-import { CNST_QUERY_VERSION_STANDARD } from '../../src-angular/app/query/query-constants';
+
+/* Interface de versionamento do Agent */
+import { Version } from '../../src-angular/app/utilities/version-interface';
 
 /* Componente de geração de Id's únicos para os registros */
 import uuid from 'uuid-v4';
@@ -78,50 +78,86 @@ export class ScriptService {
   }
   
   /* Método de gravação das rotinas do Agent */
-  public static saveScript(s: ScriptClient): Observable<boolean> {
+  public static saveScript(s: ScriptClient[]): Observable<number> {
     
     //Objeto que detecta se já existe uma rotina cadastrada com o mesmo nome da que será gravada
     let script_name: ScriptClient = null;
     
     //Define se a rotina a ser cadastrada já possui um Id registrado, ou não
-    let newId: boolean = (s.id == null);
+    let newId: boolean = false;
     
-    //Consulta das traduções
-    let translations: any = TranslationService.getTranslations([
-      new TranslationInput('SCRIPTS.MESSAGES.SAVE', [s.name]),
-      new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [s.name]),
-      new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [s.name])
-    ]);
-    
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE'], null, null, null);
+    //Contabiliza o total de erros gerados ao tentar salvar todas as consultas
+    let errors: number = 0;
     
     //Leitura do banco de dados atual do Agent
     return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
       
-      //Validação do campo de Id da consulta. Caso não preenchido, é gerado um novo Id
-      if (newId) s.id = uuid();
-      
-      //Impede o cadastro de uma rotina com o mesmo nome
-      script_name = _dbd.scripts.filter((script: ScriptClient) => (script.id != s.id)).find((script: ScriptClient) => (script.name == s.name));
-      if (script_name != undefined) {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
-        return of(false);
-      } else {
+      //Itera por todas as rotinas que devem ser gravadas
+      let validate: any = s.map((ss: ScriptClient) => {
         
-        //Inclusão da rotina no banco do Agent
-        if (newId) {
-          _dbd.scripts.push(s);
+        //Consulta das traduções
+        let translations: any = TranslationService.getTranslations([
+          new TranslationInput('SCRIPTS.MESSAGES.SAVE', [ss.name]),
+          new TranslationInput('SCRIPTS.MESSAGES.SAVE_OK', [ss.name]),
+          new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [ss.name]),
+          new TranslationInput('SCRIPTS.MESSAGES.SAVE_WARNING_ALREADY_EXISTS', [ss.name])
+        ]);
+        
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE'], null, null, null);
+        
+        //Validação do campo de Id da consulta. Caso não preenchido, é gerado um novo Id
+        newId = (ss.id == null);
+        if (newId) ss.id = uuid();
+        
+        //Impede o cadastro de uma rotina com o mesmo nome
+        script_name = _dbd.scripts.filter((script: ScriptClient) => (script.id != ss.id)).find((script: ScriptClient) => ((script.name == ss.name) && (script.scheduleId == ss.scheduleId)));
+        if (script_name != undefined) {
+          if (!script_name.TOTVS) {
+            errors = errors + 1;
+            return { script: ss, level: CNST_LOGLEVEL.ERROR, message: translations['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME'] };
+          } else {
+            return { script: ss, level: CNST_LOGLEVEL.WARN, message: translations['SCRIPTS.MESSAGES.SAVE_WARNING_ALREADY_EXISTS'] };
+          }
         } else {
-          let index = _dbd.scripts.findIndex((script: ScriptClient) => { return script.id === s.id; });
-          _dbd.scripts[index] = s;
+          
+          //Inclusão da rotina no banco do Agent
+          if (newId) {
+            _dbd.scripts.push(ss);
+          } else {
+            let index = _dbd.scripts.findIndex((script: ScriptClient) => { return script.id === ss.id; });
+            _dbd.scripts[index] = ss;
+          }
+          
+          return { script: ss, level: CNST_LOGLEVEL.DEBUG, message: translations['SCRIPTS.MESSAGES.SAVE_OK'] };
         }
-      }
+      });
       
       //Gravação da rotina no banco do Agent
-      return Files.writeApplicationData(_dbd);
+      return Files.writeApplicationData(_dbd).pipe(map((res: boolean) => {
+        if (res) {
+          
+          validate.map((obj: any) => {
+            Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+          });
+          
+          return errors;
+        } else {
+          validate.map((obj: any) => {
+            
+            //Consulta das traduções
+            let translations: any = TranslationService.getTranslations([
+              new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [obj.script.name]),
+            ]);
+            
+            if (obj.level != CNST_LOGLEVEL.ERROR) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], null, null, null);
+            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+          });
+          
+          return -1;
+        }
+      }));
     }), catchError((err: any) => {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], null, null, err);
-        throw err;
+      throw err;
     }));
   }
   
@@ -150,7 +186,8 @@ export class ScriptService {
   
   /* Método de atualização das rotinas padrões */
   public static updateAllScripts(): Observable<boolean> {
-    
+    return of(true);
+    /*
     //Variável de suporte, que armazena a versão atualizada disponível de cada rotina do Agent
     let updatedScripts: ScriptClient[] = [];
     
@@ -172,7 +209,7 @@ export class ScriptService {
         
         Rotinas customizadas, ou criadas pelo usuário são ignoradas.
         Apenas a rotina mais recente para cada versão Major/Minor é retornada.
-      */
+      
       updatedScripts = results[0].map((script: ScriptClient) => {
         
         //Extrai o ERP e o banco de dados de cada consulta cadastrada
@@ -185,7 +222,7 @@ export class ScriptService {
           let version: Version = new Version(s_erp.version);
           return (
                (s_erp.name == script.name)
-            && (s_erp.script == script.script)
+            && (s_erp.script == script.command)
             && (version.major == script.version.major)
             && (version.minor == script.version.minor)
             && (version.patch == script.version.patch)
@@ -215,7 +252,7 @@ export class ScriptService {
           if (updates[0] != undefined) {
             
             //Conversão de JSON -> Objeto (Para uso dos métodos da interface "Version")
-            let v1 = new Version(CNST_QUERY_VERSION_STANDARD);
+            let v1 = new Version(null);
             let v2 = new Version(updates[0].version);
             v1.jsonToObject(script.version);
             
@@ -226,7 +263,7 @@ export class ScriptService {
             
             Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SCRIPT_UPDATER_AVAILABLE'], null, null, null);
             script.version = v2;
-            script.script = updates[0].script;
+            script.command = updates[0].script;
             return script;
           } else {
             return undefined;
@@ -246,6 +283,9 @@ export class ScriptService {
       //Prepara as requisições de atualização a serem disparadas
       if (updatedScripts.length > 0) {
         obs_scripts = updatedScripts.map((script: ScriptClient) => {
+          
+          return of(true);
+          /*
           return this.saveScript(script).pipe(map((res: boolean) => {
             return res;
           }));
@@ -263,6 +303,6 @@ export class ScriptService {
         Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SCRIPT_UPDATER_NO_UPDATES'], null, null, null);
         return of(true);
       }
-    }));
+    }));*/
   }
 }

@@ -10,6 +10,7 @@
       [p-label]="lbl_add"
       p-icon="po-icon po-icon-plus"
       (p-click)="newQuery_OPEN()"
+      [p-disabled]="!isPlatform"
       p-kind="primary" />
   </div>
   
@@ -21,7 +22,7 @@
   <div class="po-row">
     
     <!-- Listagem de todos os agendamentos que não possuem exportação de consulta dispońivel -->
-    <po-list-view p-property-title="name" *ngIf="schedulesQuery.length > 0" [p-items]="this.schedulesQuery" [p-literals]="setLiterals">
+    <po-list-view p-property-title="schedule.name" *ngIf="schedulesQuery.length > 0" [p-items]="this.schedulesQuery" [p-literals]="setLiterals">
       <ng-template p-list-view-content-template let-item>
         <div class="po-row">
           
@@ -106,7 +107,7 @@
         class="po-textarea po-sm-12 po-md-12 po-lg-12 po-xl-12 query-text removeBorder padding-0 textarea"
         name="po_queryQuery"
         [p-label]="lbl_queryQuery"
-        [(ngModel)]="query.query"
+        [(ngModel)]="query.command"
         p-rows="10">
       </po-textarea>
       

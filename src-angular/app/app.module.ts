@@ -13,7 +13,8 @@ import {
   PoNotificationModule,
   PoTableModule,
   PoModule,
-  PoModalModule
+  PoModalModule,
+  PoLinkModule
 } from '@po-ui/ng-components';
 
 /* Módulos da página Workspace */
@@ -70,6 +71,7 @@ import { AppRoutingModule } from './app-routing.module';
     PoTableModule,
     PoModule,
     PoModalModule,
+    PoLinkModule,
     WorkspaceModule,
     WorkspaceAddModule,
     DataBaseModule,

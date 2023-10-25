@@ -1,5 +1,8 @@
 <div class="po-wrapper">
   
+  <!-- Componente de animação de carregamento do Portinari.UI -->
+  <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
+  
   <!-- Menu principal do Agent -->
   <po-menu [p-menus]="menus">
     <ng-template p-menu-header-template>
@@ -38,12 +41,33 @@
   <po-modal #modal_registerAgent
     [p-title]="lbl_registerAgentTitle">
     <form #registerAgentForm="ngForm">
-      <div class="po-row">
-        <span class="subtitle">{{ lbl_registerAgentDescription1 }}</span>
-      </div>
+      
+      <!-- Mensagens sobre a ativação do Agent -->
       <div class="po-row padding-bottom">
+        <span class="subtitle">{{ lbl_registerAgentDescription1 }}</span>
         <span class="subtitle">{{ lbl_registerAgentDescription2 }}</span>
       </div>
+      
+      <!-- Agrupadores p/ abertura de chamado -->
+      <div class="po-row padding-bottom">
+        <ul class="padding-list subtitle">
+          <li>{{ lbl_registerAgentDescription3 }}</li>
+          <li>{{ lbl_registerAgentDescription4 }}</li>
+          <li>{{ lbl_registerAgentDescription5 }}</li>
+        </ul>
+      </div>
+      
+      <!-- Link p/ abertura de chamado -->
+      <div class="po-row padding-bottom">
+         <span class="subtitle">{{ lbl_registerAgentDescription6 }}&nbsp;</span>
+        <po-link
+          p-label="https://centraldeatendimento.totvs.com/hc/pt-br/requests/new?ticket_form_id=368847"
+          [p-open-new-tab]="true"
+          p-url="https://centraldeatendimento.totvs.com/hc/pt-br/requests/new?ticket_form_id=368847"
+        />
+      </div>
+      
+      <!-- Código de ativação do Agent -->
       <div class="po-row">
         <po-input
           name="po_registerAgent"

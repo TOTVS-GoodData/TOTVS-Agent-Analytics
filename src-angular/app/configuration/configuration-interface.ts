@@ -1,4 +1,7 @@
+/* Constante de fuso horário padrão do Agent */
 import { CNST_TIMEZONES_DEFAULT } from '../services/timezones';
+
+/* Constante de porta de entrada padrão do Agent */
 import { CNST_DEFAULT_CLIENT_PORT } from './configuration-constants';
 
 /* Interface de configuração do Agent */
@@ -27,10 +30,12 @@ export class Configuration {
     this.serialNumber = null;
   }
   
+  /* Método que retorna o idioma configurado no Agent (Ex: pt) */
   public getLocaleLanguage(): string {
     return this.locale.substring(0, 2);
   }
   
+  /* Método que retorna o país configurado no Agent (Ex: BR) */
   public getLocaleCountry(): string {
     return this.locale.substring(3, 5);
   }

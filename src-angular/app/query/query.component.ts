@@ -1,5 +1,6 @@
 /* Componentes padrões do Angular */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 
 /* Componentes visuais da biblioteca Portinari.UI */
 import {
@@ -19,6 +20,14 @@ import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from 'ngx-electronyzer';
 
+/* Serviço de comunicação com o Agent-Server */
+import { ServerService } from '../services/server/server-service';
+import {
+  License,
+  AvailableLicenses,
+  QueryCommunication
+} from '../services/server/server-interface';
+
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from '../workspace/workspace-service';
 import { Workspace } from '../workspace/workspace-interface';
@@ -32,7 +41,6 @@ import { CNST_DATABASE_TYPES, CNST_DATABASE_OTHER } from '../database/database-c
 /* Serviço de consultas do Agent */
 import { QueryService } from './query-service';
 import { QueryClient } from './query-interface';
-import { CNST_QUERY_VERSION_STANDARD } from './query-constants';
 
 /* Serviço de agendamentos do Agent */
 import { ScheduleService } from '../schedule/schedule-service';
@@ -43,14 +51,14 @@ import { TranslationService } from '../services/translation/translation-service'
 import { TranslationInput } from '../services/translation/translation-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { forkJoin } from 'rxjs';
+import { Observable, map, catchError, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-query',
   templateUrl: './query.component.html',
   styleUrls: ['./query.component.css']
 })
-export class QueryComponent implements OnInit {
+export class QueryComponent {
   
   /**************************/
   /***     VARIÁVEIS      ***/
@@ -70,6 +78,15 @@ export class QueryComponent implements OnInit {
   
   //Listagem de todos os agendamentos cadastrados, e suas consultas (com permissão p/ exportação)
   protected schedulesQueryExport: ScheduleQuery[] = [];
+  
+  //Define se a consulta a ser configurada é de um ambiente de modalidade "Plataforma"
+  protected isPlatform: boolean = false;
+  
+  //Listagem de todos os ambientes disponíveis no Agent
+  private workspaces: Array<Workspace> = [];
+  
+  //Listagem de todos os bancos de dados disponíveis no Agent
+  private databases: Array<Database> = [];
   
   //Listagem de todos os agendamentos válidos para receberem novas consultas
   protected listSchedule: Array<PoSelectOption> = null;
@@ -102,7 +119,10 @@ export class QueryComponent implements OnInit {
   protected lbl_addQueryTitle: string = null;
   
   //Objeto de consulta do formulário (Modal)
-  protected query: QueryClient = new QueryClient(CNST_QUERY_VERSION_STANDARD);
+  protected query: QueryClient = new QueryClient(null);
+  
+  //Variável de suporte, usada para detectar alterações em uma rotina já cadastrada
+  protected oldCommand: string = null;
   
   //Remoção de consultas
   @ViewChild('modal_deleteQuery') modal_deleteQuery: PoModalComponent;
@@ -127,14 +147,17 @@ export class QueryComponent implements OnInit {
   /*** MÉTODOS DO MÓDULO  ***/
   /**************************/
   constructor(
+    private _serverService: ServerService,
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
     private _queryService: QueryService,
     private _scheduleService: ScheduleService,
     private _electronService: ElectronService,
     private _translateService: TranslationService,
-    private _utilities: Utilities
+    private _utilities: Utilities,
+    private _router: Router
   ) {
+    
     //Tradução dos modos de execução das consutlas (completa / mensal)
     this.CNST_QUERY_EXECUTION_MODES = [
       { label: this._translateService.CNST_TRANSLATIONS['QUERIES.EXECUTION_MODES.COMPLETE'], value: 'C' },
@@ -145,15 +168,16 @@ export class QueryComponent implements OnInit {
     this.setTableRowActions = [
       {
         label: this._translateService.CNST_TRANSLATIONS['BUTTONS.EDIT'],
-        visible: (q: QueryClient) => q.canDecrypt,
+        visible: (q: QueryClient) => ((this.isPlatform) || (!q.TOTVS)),
         action: (query: QueryClient) => {
           this.lbl_addQueryTitle = this._translateService.CNST_TRANSLATIONS['QUERIES.EDIT_QUERY'];
+          this.oldCommand = this.query.command;
           this.query = query;
           this.modal_addQuery.open();
         }
       },{
         label: this._translateService.CNST_TRANSLATIONS['BUTTONS.DELETE'],
-        visible: true ,
+        visible: true,
         action: (query: QueryClient) => {
           this.queryToDelete = query;
           this.modal_deleteQuery.open();
@@ -163,14 +187,14 @@ export class QueryComponent implements OnInit {
     
     //Tradução do botão de exportar consultas dos agendamentos
     this.setListViewActions = [
-      { label: this._translateService.CNST_TRANSLATIONS['QUERIES.IMPORT_QUERIES'], action: this.exportQuery.bind(this), visible: true }
+      { label: this._translateService.CNST_TRANSLATIONS['QUERIES.IMPORT_QUERIES'], action: this.importQuery.bind(this), visible: true }
     ];
     
     //Tradução das colunas da tabela de consultas dos agendamentos
     this.setColumns = [
       { property: "name", label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.QUERY_NAME'], type: 'string', width: '20%', sortable: true },
       { property: "executionModeName", label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODE'], type: 'string', width: '20%', sortable: true },
-      { property: "query", label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'], type: 'string', width: '60%', sortable: false }
+      { property: "command", label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'], type: 'string', width: '60%', sortable: false }
     ];
     
     //Tradução das mensagens padrões do componente de listagem do Portinari.UI
@@ -203,45 +227,76 @@ export class QueryComponent implements OnInit {
       { key: 'executionMode', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODE'] },
       { key: 'query', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'] }
     ];
+    
+    //Solicita ao Agent-Server as licenças cadastradas para esta instalação do Agent, e consulta o cadastro de ambientes disponíveis no Agent
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES'] };
+    forkJoin([
+      this._workspaceService.getWorkspaces(false),
+      this._databaseService.getDatabases(false),
+      this._serverService.getAvailableLicenses(true)
+    ]).subscribe((results: [Workspace[], Database[], AvailableLicenses]) => {
+      
+      //Redireciona o usuário para a página de origem, caso ocorra uma falha na comunicação com o Agent-Server
+      if (results[2] == null) {
+        this.connectionLostToServer();
+      } else {
+        this.workspaces = results[0];
+        this.databases = results[1];
+        
+        //Habilita a edição dos campos disponíveis apenas para a contratação da Plataforma GoodData
+        this.isPlatform = (results[2].contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA);
+        
+        //Realiza a leitura das consultas cadastradas no Agent
+        this.loadQueries().subscribe((res: boolean) => {
+        });
+      }
+    }, (err: any) => {
+      this.po_lo_text = { value: null };
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES_ERROR'], err);
+    });
   }
   
-  /* Método de inicialização dos dados das consultas do Agent */
-  public ngOnInit(): void {
-    this.loadQueries();
+  /* Método que redireciona o usuário para a página inicial do Agent, caso ocorra falha na comunicação com o Agent-Server */
+  private connectionLostToServer(): void {
+    this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERVER_ERROR']);
+    this.po_lo_text = { value: null };
+    this._router.navigate(['/']);
   }
   
   /* Método de carregamento das consultas cadastradas no Agent */
-  private loadQueries(): void {
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING'] };
+  private loadQueries(): Observable<boolean> {
     
     //Consulta das informações
-    forkJoin([
-       this._scheduleService.getSchedules(false)
-      ,this._queryService.getQueries(true)
-      ,this._workspaceService.getWorkspaces(false)
-      ,this._databaseService.getDatabases(false)
-    ]).subscribe((results: [Schedule[], QueryClient[], Workspace[], Database[]]) => {
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING'] };
+    return forkJoin([
+      this._scheduleService.getSchedules(false),
+      this._queryService.getQueries(true),
+      this._workspaceService.getWorkspaces(false),
+      this._databaseService.getDatabases(false)
+    ]).pipe(map((results: [Schedule[], QueryClient[], Workspace[], Database[]]) => {
       
       //Combinação dos agendamentos com suas consultas
-      this.schedulesQueryTotal = results[0].map((s: any) => {
-        s.schedule = s;
-        s.queries = results[1].filter((q: QueryClient) => (q.scheduleId === s.id));
+      this.schedulesQueryTotal = results[0].map((s: Schedule) => {
+        let sc: ScheduleQuery = new ScheduleQuery();
+        sc.name = s.name;
+        sc.schedule = s;
+        sc.queries = results[1].filter((q: QueryClient) => (q.scheduleId === s.id));
         
         //Descriptografia das consultas (caso permitido)
-        s.queries.map((q: QueryClient) => {
+        sc.queries = sc.queries.map((q: QueryClient) => {
           q.executionModeName = this.CNST_QUERY_EXECUTION_MODES.find((exec: any) => exec.value == q.executionMode).label;
-          if ((this._electronService.isElectronApp) && (q.canDecrypt)) {
-            q.query = this._electronService.ipcRenderer.sendSync('decrypt', q.query);
+          if ((this._electronService.isElectronApp) && ((!q.TOTVS) || this.isPlatform)) {
+            q.command = this._electronService.ipcRenderer.sendSync('decrypt', q.command);
           }
+          return q;
         });
         
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
-        s.erp = w.license.source;
-        //s.contractType = w.contractType;
-        s.module = w.license.module;
+        sc.erp = w.license.source;
+        sc.module = w.license.module;
         
         //Definição do tipo do banco de dados do agendamento
-        s.databaseType = (() => {
+        sc.databaseType = (() => {
           let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
           if (db == undefined) return CNST_NO_OPTION_SELECTED;
           else {
@@ -250,7 +305,7 @@ export class QueryComponent implements OnInit {
             else return db_type.brand;
           }
         })();
-        return s;
+        return sc;
       });
       
       //Definição dos arrays de agendamentos com / sem permissão de exportação de consultas
@@ -261,26 +316,54 @@ export class QueryComponent implements OnInit {
       this.listSchedule = results[0].filter((s: Schedule) => {
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
         let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
-        return (db != undefined);// && (w.contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA));
+        return (db != undefined);
       }).map((s: Schedule) => {
         return { label: s.name, value: s.id };
       });
       
       this.po_lo_text = { value: null };
-    }, (err: any) => {
-      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_ERROR'], err);
-      this.po_lo_text = { value: null };
-    });
+      return true;
+    }));
   }
   
   /* Método de exportação das consultas padrões do Agent */
-  protected exportQuery(sc: ScheduleQuery): void {
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT'] };
-    this._queryService.exportQuery(sc).subscribe((res: boolean) => {
-      if (res) this.loadQueries();
-      this.po_lo_text = { value: null };
+  protected importQuery(sc: ScheduleQuery): void {
+    
+    //Extrai a licença do ambiente atualmente selecionado
+    let workspace: Workspace = this.workspaces.find((workspace: Workspace) => (workspace.id == sc.schedule.workspaceId));
+    let database: Database = this.databases.find((db: Database) => (db.id == workspace.databaseIdRef));
+    let license: License = workspace.license;
+    
+    //Solicita as consultas mais recentes para o Agent-Server
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_MESSAGE'] };
+    forkJoin([
+      this._translateService.getTranslations([
+        new TranslationInput('QUERIES.MESSAGES.IMPORT_ERROR', [sc.schedule.name])
+      ]),
+      this._serverService.saveLatestQueries(license, database, sc.schedule.id)
+    ]).subscribe((results: [TranslationInput[], number]) => {
+      if (results[1] == null) {
+        this.connectionLostToServer();
+      } else if (results[1] == 0) {
+        this.loadQueries().subscribe((res: boolean) => {
+          this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_OK'], null);
+          this.po_lo_text = { value: null };
+        }, (err: any) => {
+          this._utilities.createNotification(CNST_LOGLEVEL.ERROR, results[0]['QUERIES.MESSAGES.IMPORT_ERROR'], err);
+          this.po_lo_text = { value: null };
+        });
+      } else if (results[1] == -1) {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, results[0]['QUERIES.MESSAGES.IMPORT_ERROR']);
+        this.po_lo_text = { value: null };
+      } else if (results[1] == -2) {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_ERROR']);
+        this.po_lo_text = { value: null };
+      } else {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_WARNING_FAILURES']);
+        this.po_lo_text = { value: null };
+      }
     }, (err: any) => {
-      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.EXPORT_ERROR'], err);
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES_ERROR'], err);
       this.po_lo_text = { value: null };
     });
   }
@@ -292,14 +375,14 @@ export class QueryComponent implements OnInit {
     let validate: boolean = true;
     
     //Objeto de suporte para validação dos campos
-    let query: QueryClient = new QueryClient(CNST_QUERY_VERSION_STANDARD);
+    let query: QueryClient = new QueryClient(null);
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.VALIDATE']);
     this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.VALIDATE'] };
     
     //Verifica se todos os campos da interface de consultas foram preenchidos
     let propertiesNotDefined = Object.getOwnPropertyNames.call(Object, query).map((p: string) => {
-      if ((this.query[p] == '') && (p != 'id')) return p;
+      if ((this.query[p] == '') && (p != 'id') && (p != 'TOTVS')) return p;
     }).filter((p: string) => { return p != null; });
     
     // Validação dos campos de formulário
@@ -316,7 +399,7 @@ export class QueryComponent implements OnInit {
     //Verifica se a tipagem esperada de todos os campos da interface estão corretas
     } else {
       propertiesNotDefined = Object.getOwnPropertyNames.call(Object, query).map((p: string) => {
-        if ((typeof this.query[p] != typeof query[p]) && (p != 'id')) return p;
+        if ((typeof this.query[p] != typeof query[p]) && (p != 'id') && (p != 'TOTVS')) return p;
       }).filter((p: string) => { return p != null; });
       if (propertiesNotDefined.length > 0) {
         validate = false;
@@ -339,8 +422,8 @@ export class QueryComponent implements OnInit {
   /* Modal de cadastro de consultas no Agent (OPEN) */
   protected newQuery_OPEN(): void {
     this.lbl_addQueryTitle = this._translateService.CNST_TRANSLATIONS['QUERIES.NEW_QUERY'];
-    this.query = new QueryClient(CNST_QUERY_VERSION_STANDARD);
-    this.query.canDecrypt = true;
+    this.query = new QueryClient(null);
+    this.oldCommand = null;
     this.modal_addQuery.open();
   }
   
@@ -352,7 +435,6 @@ export class QueryComponent implements OnInit {
   /* Modal de edição de consultas no Agent (SIM) */
   protected newQuery_YES(): void {
     if (this.validateQuery()) {
-      this.modal_addQuery.close();
       
       //Consulta das traduções
       this._translateService.getTranslations([
@@ -367,18 +449,26 @@ export class QueryComponent implements OnInit {
         if (this._electronService.isElectronApp) {
           this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.ENCRYPT']);
           this.po_lo_text = { value: translations['QUERIES.MESSAGES.ENCRYPT'] };
-          this.query.query = this._electronService.ipcRenderer.sendSync('encrypt', this.query.query);
+          this.query.command = this._electronService.ipcRenderer.sendSync('encrypt', this.query.command);
         }
         
+        //Detecção de customizações das consultas padrões
+        if (this.oldCommand != this.query.command) this.query.TOTVS = false;
+        
         //Gravação da nova consulta no Agent
-        this._queryService.saveQuery(this.query).subscribe((res: boolean) => {
-          if (res) {
-            this.loadQueries();
-            this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SAVE_OK']);
+        this._queryService.saveQuery([this.query]).subscribe((res: number) => {
+          if (res == 0) {
+            this.modal_addQuery.close();
+            this.loadQueries().subscribe((res: boolean) => {
+              this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SAVE_OK']);
+            }, (err: any) => {
+              this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_ERROR'], err);
+              this.po_lo_text = { value: null };
+            });
           } else {
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME']);
+            this.po_lo_text = { value: null };
           }
-          this.po_lo_text = { value: null };
         }, (err: any) => {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR'], err);
           this.po_lo_text = { value: null };
@@ -402,10 +492,13 @@ export class QueryComponent implements OnInit {
     this._queryService.deleteQuery(this.queryToDelete).subscribe((b: boolean) => {
       
       //Recarga das consultas disponíveis atualmente
-      this.loadQueries();
-      
-      this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_OK']);
-      this.po_lo_text = { value: null };
+      this.loadQueries().subscribe((res: boolean) => {
+        this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_OK']);
+        this.po_lo_text = { value: null };
+      }, (err: any) => {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_ERROR'], err);
+        this.po_lo_text = { value: null };
+      });
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_ERROR'], err);
       this.po_lo_text = { value: null };

@@ -224,17 +224,26 @@ export class ConfigurationComponent implements OnInit {
     if (this.validConfiguration()) {
       this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'] };
       
-      //Grava a nova configuração do Agent
-      this._configurationService.saveConfiguration(this.configuration).subscribe((b: boolean) => {
+      this._translateService.getTranslations([
+        new TranslationInput('CONFIGURATION.MESSAGES.SAVE_ERROR_PORT', [this.configuration.clientPort + ''])
+      ]).subscribe((translations: any) => {
         
-        this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK']);
-        this.po_lo_text = { value: null };
-        
-        //Recarrega a página de configuração do Agent
-        this.reloadConfiguration();
-      }, (err: any) => {
-        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR']);
-        this.po_lo_text = { value: null };
+        //Grava a nova configuração do Agent
+        this._configurationService.saveConfiguration(this.configuration).subscribe((b: number) => {
+          switch (b) {
+            case (1): this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK']); break;
+            case (-1): this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['CONFIGURATION.MESSAGES.SAVE_ERROR_PORT']); break;
+            case (-2): this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_CONFIG']); break;
+            case (-3): this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_SERVER']); break;
+          }
+          
+          //Recarrega a página de configuração do Agent
+          this.reloadConfiguration();
+          this.po_lo_text = { value: null };
+        }, (err: any) => {
+          this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR']);
+          this.po_lo_text = { value: null };
+        });
       });
     }
   }

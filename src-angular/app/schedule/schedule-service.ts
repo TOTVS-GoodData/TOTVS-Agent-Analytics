@@ -21,6 +21,13 @@ import { Workspace } from '../workspace/workspace-interface';
 import { DatabaseService } from '../database/database-service';
 import { Database } from '../database/database-interface';
 
+/* Interfaces de agendamentos do Agent */
+import {
+  Schedule,
+  ETLParameterClient,
+  SQLParameterClient
+} from './schedule-interface';
+
 /* Serviço de consultas do Agent */
 import { QueryService } from '../query/query-service';
 import { QueryClient } from '../query/query-interface';
@@ -35,9 +42,6 @@ import { Configuration } from '../configuration/configuration-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
 import { Observable, of, catchError, map, switchMap, forkJoin } from 'rxjs';
-
-/* Interface de agendamento do Agent */
-import { Schedule } from './schedule-interface';
 
 /* Componente de geração de Id's únicos para os registros */
 import uuid from 'uuid-v4';
@@ -135,6 +139,18 @@ export class ScheduleService {
       
         //Validação do campo de Id do agendamento. Caso não preenchido, é gerado um novo Id
         if (newId) s.id = uuid();
+        
+        //Validação do campo de Id dos parâmetros de ETL. Caso não preenchido, é gerado um novo Id
+        s.ETLParameters = s.ETLParameters.map((param: ETLParameterClient) => {
+          if (param.id == null) param.id = uuid();
+          return param;
+        });
+        
+        //Validação do campo de Id dos parâmetros de SQL. Caso não preenchido, é gerado um novo Id
+        s.SQLParameters = s.SQLParameters.map((param: SQLParameterClient) => {
+          if (param.id == null) param.id = uuid();
+          return param;
+        });
         
         //Impede o cadastro de um agendamento com o mesmo nome
         schedule_name = results[1].filter((schedule: Schedule) => (schedule.id != s.id)).find((schedule: Schedule) => (schedule.name == s.name));

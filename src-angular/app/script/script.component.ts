@@ -1,5 +1,6 @@
 /* Componentes padrões do Angular */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 
 /* Componentes visuais da biblioteca Portinari.UI */
 import {
@@ -19,10 +20,18 @@ import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from 'ngx-electronyzer';
 
+/* Serviço de comunicação com o Agent-Server */
+import { ServerService } from '../services/server/server-service';
+import {
+  License,
+  AvailableLicenses,
+  ScriptCommunication
+} from '../services/server/server-interface';
+
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from '../workspace/workspace-service';
 import { Workspace } from '../workspace/workspace-interface';
-import { CNST_ERP, CNST_ERP_PROTHEUS, CNST_MODALIDADE_CONTRATACAO_PLATAFORMA } from '../workspace/workspace-constants';
+import { CNST_ERP_PROTHEUS, CNST_MODALIDADE_CONTRATACAO_PLATAFORMA } from '../workspace/workspace-constants';
 
 /* Serviço de banco de dados do Agent */
 import { DatabaseService } from '../database/database-service';
@@ -32,7 +41,6 @@ import { CNST_DATABASE_TYPES, CNST_DATABASE_OTHER } from '../database/database-c
 /* Serviço de rotinas do Agent */
 import { ScriptService } from './script-service';
 import { ScriptClient } from './script-interface';
-import { CNST_QUERY_VERSION_STANDARD } from '../query/query-constants';
 
 /* Serviço de agendamentos do Agent */
 import { ScheduleService } from '../schedule/schedule-service';
@@ -43,14 +51,14 @@ import { TranslationService } from '../services/translation/translation-service'
 import { TranslationInput } from '../services/translation/translation-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { forkJoin } from 'rxjs';
+import { Observable, map, catchError, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-script',
   templateUrl: './script.component.html',
   styleUrls: ['./script.component.css']
 })
-export class ScriptComponent implements OnInit {
+export class ScriptComponent {
   
   /**************************/
   /***     VARIÁVEIS      ***/
@@ -70,6 +78,12 @@ export class ScriptComponent implements OnInit {
   
   //Listagem de todos os agendamentos cadastrados, e suas rotinas (com permissão p/ exportação)
   protected schedulesScriptExport: ScheduleScript[] = [];
+  
+  //Define se a rotina a ser configurada é de um ambiente de modalidade "Plataforma"
+  protected isPlatform: boolean = false;
+  
+  //Listagem de todos os ambientes disponíveis no Agent
+  private workspaces: Array<Workspace> = [];
   
   //Listagem de todos os agendamentos válidos para receberem novas rotinas
   protected listSchedule: Array<PoSelectOption> = null;
@@ -99,10 +113,10 @@ export class ScriptComponent implements OnInit {
   protected lbl_addScriptTitle: string = null;
   
   //Objeto de rotina do formulário (Modal)
-  protected script = new ScriptClient(CNST_QUERY_VERSION_STANDARD);
+  protected script = new ScriptClient(null);
   
   //Variável de suporte, usada para detectar alterações em uma rotina já cadastrada
-  public bkpScript: string = null;
+  protected oldCommand: string = null;
   
   //Remoção de rotinas
   @ViewChild('modal_deleteScript') modal_deleteScript: PoModalComponent;
@@ -125,24 +139,26 @@ export class ScriptComponent implements OnInit {
   /*** MÉTODOS DO MÓDULO  ***/
   /**************************/
   constructor(
+    private _serverService: ServerService,
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
     private _scriptService: ScriptService,
     private _scheduleService: ScheduleService,
     private _electronService: ElectronService,
     private _translateService: TranslationService,
-    private _utilities: Utilities
+    private _utilities: Utilities,
+    private _router: Router
   ) {
     
     //Tradução das ações de apagar / editar uma consulta de um agendamento
     this.setTableRowActions = [
       {
         label: this._translateService.CNST_TRANSLATIONS['BUTTONS.EDIT'],
-        visible: (s: ScriptClient) => s.canDecrypt,
+        visible: (s: ScriptClient) => ((this.isPlatform) || (!s.TOTVS)),
         action: (script: ScriptClient) => {
           this.lbl_addScriptTitle = this._translateService.CNST_TRANSLATIONS['SCRIPTS.EDIT_SCRIPT'];
           this.script = script;
-          this.bkpScript = script.script;
+          this.oldCommand = this.script.command;
           this.modal_addScript.open();
         }
       },{
@@ -157,20 +173,20 @@ export class ScriptComponent implements OnInit {
     
     //Tradução do botão de exportar consultas dos agendamentos
     this.setListViewActions = [
-      { label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.IMPORT_SCRIPTS'], action: this.exportScript.bind(this), visible: true }
+      { label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.IMPORT_SCRIPTS'], action: this.importScript.bind(this), visible: true }
     ];
     
     //Tradução das colunas da tabela de consultas dos agendamentos
     this.setColumns = [
       { label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SCRIPT_NAME'], property: 'name', type: 'string', width: '20%', sortable: true },
-      { label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SQL'], property: 'script', type: 'string', width: '80%', sortable: false }
+      { label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SQL'], property: 'command', type: 'string', width: '80%', sortable: false }
     ];
     
     //Tradução das mensagens padrões do componente de listagem do Portinari.UI
     this.setLiterals = {
       noData: this._translateService.CNST_TRANSLATIONS['SCRIPTS.NO_DATA']
     };
-      
+    
     //Tradução dos botões
     this.lbl_add = this._translateService.CNST_TRANSLATIONS['BUTTONS.ADD'];
     this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
@@ -186,51 +202,81 @@ export class ScriptComponent implements OnInit {
     
     //Tradução dos balões de ajuda dos campos
     this.ttp_scriptName = this._translateService.CNST_TRANSLATIONS['SCRIPTS.TOOLTIPS.SCRIPT_NAME'];
-      
+    
     //Definição dos campos obrigatórios do formulário
     this.CNST_FIELD_NAMES = [
       { key: 'scheduleId', value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SCHEDULE_NAME'] },
       { key: 'name', value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SCRIPT_NAME'] },
       { key: 'script', value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SQL'] }
     ];
+    
+    //Solicita ao Agent-Server as licenças cadastradas para esta instalação do Agent, e consulta o cadastro de ambientes disponíveis no Agent
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES'] };
+    forkJoin([
+      this._workspaceService.getWorkspaces(false),
+      this._serverService.getAvailableLicenses(true)
+    ]).subscribe((results: [Workspace[], AvailableLicenses]) => {
+      
+      //Redireciona o usuário para a página de origem, caso ocorra uma falha na comunicação com o Agent-Server
+      if (results[1] == null) {
+        this.connectionLostToServer();
+      } else {
+        this.workspaces = results[0];
+        
+        //Habilita a edição dos campos disponíveis apenas para a contratação da Plataforma GoodData
+        this.isPlatform = (results[1].contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA);
+        
+        //Realiza a leitura das consultas cadastradas no Agent
+        this.loadScripts().subscribe((res: boolean) => {
+        });
+        
+        this.po_lo_text = { value: null };
+      }
+    }, (err: any) => {
+      this.po_lo_text = { value: null };
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES_ERROR'], err);
+    });
   }
   
-  /* Método de inicialização dos dados das consultas do Agent */
-  public ngOnInit(): void {
-    this.loadScripts();
+  /* Método que redireciona o usuário para a página inicial do Agent, caso ocorra falha na comunicação com o Agent-Server */
+  private connectionLostToServer(): void {
+    this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERVER_ERROR']);
+    this.po_lo_text = { value: null };
+    this._router.navigate(['/']);
   }
   
   /* Método de carregamento das rotinas cadastradas no Agent */
-  private loadScripts(): void {
+  private loadScripts(): Observable<boolean> {
     this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING'] };
     
     //Consulta das informações
-    forkJoin([
+    return forkJoin([
        this._scheduleService.getSchedules(false)
       ,this._scriptService.getScripts(true)
       ,this._workspaceService.getWorkspaces(false)
       ,this._databaseService.getDatabases(false)
-    ]).subscribe((results: [Schedule[], ScriptClient[], Workspace[], Database[]]) => {
+    ]).pipe(map((results: [Schedule[], ScriptClient[], Workspace[], Database[]]) => {
       
       //Combinação dos agendamentos com suas rotinas
-      this.schedulesScriptTotal = results[0].map((s: any) => {
-        s.schedule = s;
-        s.scripts = results[1].filter((script: ScriptClient) => (s.id === script.scheduleId));
+      this.schedulesScriptTotal = results[0].map((s: Schedule) => {
+        let ss: ScheduleScript = new ScheduleScript();
+        ss.name = s.name
+        ss.schedule = s;
+        ss.scripts = results[1].filter((script: ScriptClient) => (s.id === script.scheduleId));
         
         //Descriptografia das rotinas (caso permitido)
-        s.scripts.map((script: ScriptClient) => {
-          if ((this._electronService.isElectronApp) && (script.canDecrypt)) {
-            script.script = this._electronService.ipcRenderer.sendSync('decrypt', script.script);
+        ss.scripts.map((s: ScriptClient) => {
+          if ((this._electronService.isElectronApp) && ((!s.TOTVS) || this.isPlatform)) {
+            s.command = this._electronService.ipcRenderer.sendSync('decrypt', s.command);
           }
         });
         
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
-        s.erp = w.license.source;
-        //s.contractType = w.contractType;
-        s.module = w.license.module;
+        ss.erp = w.license.source;
+        ss.module = w.license.module;
         
         //Definição do tipo do banco de dados do agendamento
-        s.databaseType = (() => {
+        ss.databaseType = (() => {
           let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
           if (db == undefined) return CNST_NO_OPTION_SELECTED;
           else {
@@ -239,7 +285,7 @@ export class ScriptComponent implements OnInit {
             else return db_type.brand;
           }
         })();
-        return s;
+        return ss;
       });
       
       //Definição dos arrays de agendamentos com / sem permissão de exportação de rotinas
@@ -250,26 +296,53 @@ export class ScriptComponent implements OnInit {
       this.listSchedule = results[0].filter((s: Schedule) => {
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
         let db: Database = results[3].find((db: Database) => (db.id == w.databaseIdRef));
-        return (db != undefined);// && (w.contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA));
+        return (db != undefined);
       }).map((s: Schedule) => {
         return { label: s.name, value: s.id };
       });
       
       this.po_lo_text = { value: null };
-    }, (err: any) => {
-      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_ERROR'], err);
-      this.po_lo_text = { value: null };
-    });
+      return true;
+    }));
   }
   
   /* Método de exportação das rotinas padrões do Agent */
-  protected exportScript(ss: ScheduleScript): void {
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.EXPORT'] };
-    this._scriptService.exportScript(ss).subscribe((res: boolean) => {
-      if (res) this.loadScripts();
-      this.po_lo_text = { value: null };
+  protected importScript(ss: ScheduleScript): void {
+    
+    //Extrai a licença do ambiente atualmente selecionado
+    let workspace: Workspace = this.workspaces.find((workspace: Workspace) => (workspace.id == ss.schedule.workspaceId));
+    let license: License = workspace.license;
+    
+    //Solicita as rotinas mais recentes para o Agent-Server
+    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_MESSAGE'] };
+    forkJoin([
+      this._translateService.getTranslations([
+        new TranslationInput('SCRIPTS.MESSAGES.IMPORT_ERROR', [ss.schedule.name])
+      ]),
+      this._serverService.saveLatestScripts(license, ss.databaseType, ss.schedule.id)
+    ]).subscribe((results: [TranslationInput[], number]) => {
+      if (results[1] == null) {
+        this.connectionLostToServer();
+      } else if (results[1] == 0) {
+        this.loadScripts().subscribe((res: boolean) => {
+          this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_OK'], null);
+          this.po_lo_text = { value: null };
+        }, (err: any) => {
+          this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_ERROR'], err);
+          this.po_lo_text = { value: null };
+        });
+      } else if (results[1] == -1) {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.IMPORT_ERROR']);
+        this.po_lo_text = { value: null };
+      } else if (results[1] == -2) {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_ERROR']);
+        this.po_lo_text = { value: null };
+      } else {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_WARNING_FAILURES']);
+        this.po_lo_text = { value: null };
+      }
     }, (err: any) => {
-      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.EXPORT_ERROR'], err);
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_ERROR'], err);
       this.po_lo_text = { value: null };
     });
   }
@@ -281,14 +354,14 @@ export class ScriptComponent implements OnInit {
     let validate: boolean = true;
     
     //Objeto de suporte para validação dos campos
-    let script = new ScriptClient(CNST_QUERY_VERSION_STANDARD);
+    let script = new ScriptClient(null);
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.VALIDATE']);
     this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.VALIDATE'] };
     
     //Verifica se todos os campos da interface de rotinas foram preenchidos
     let propertiesNotDefined = Object.getOwnPropertyNames.call(Object, script).map((p: string) => {
-      if ((this.script[p] == '') && (p != 'id')) return p;
+      if ((this.script[p] == '') && (p != 'id') && (p != 'TOTVS')) return p;
     }).filter((p: string) => { return p != null; });
     
     // Validação dos campos de formulário
@@ -305,7 +378,7 @@ export class ScriptComponent implements OnInit {
     //Verifica se a tipagem esperada de todos os campos da interface estão corretas
     } else {
       propertiesNotDefined = Object.getOwnPropertyNames.call(Object, script).map((p: string) => {
-        if ((typeof this.script[p] != typeof script[p]) && (p != 'id')) return p;
+        if ((typeof this.script[p] != typeof script[p]) && (p != 'id') && (p != 'TOTVS')) return p;
       }).filter((p: string) => { return p != null; });
       if (propertiesNotDefined.length > 0) {
         validate = false;
@@ -328,21 +401,19 @@ export class ScriptComponent implements OnInit {
   /* Modal de cadastro de rotinas no Agent (OPEN) */
   protected newScript_OPEN(): void {
     this.lbl_addScriptTitle = this._translateService.CNST_TRANSLATIONS['SCRIPTS.NEW_SCRIPT'];
-    this.script = new ScriptClient(CNST_QUERY_VERSION_STANDARD);
-    this.script.canDecrypt = true;
+    this.script = new ScriptClient(null);
+    this.oldCommand = null;
     this.modal_addScript.open();
   }
   
   /* Modal de edição de rotinas no Agent (NAO) */
   protected newScript_NO(): void {
-    this.bkpScript = null;
     this.modal_addScript.close();
   }
   
   /* Modal de edição de rotinas no Agent (SIM) */
   protected newScript_YES(): void {
     if (this.validateScript()) {
-      this.modal_addScript.close();
       
       //Consulta das traduções
       this._translateService.getTranslations([
@@ -355,22 +426,27 @@ export class ScriptComponent implements OnInit {
         
         //Criptografia da rotina escrita, caso o Electron esteja disponível
         if (this._electronService.isElectronApp) {
-          if (this.script.script != this.bkpScript) {
             this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['SCRIPTS.MESSAGES.ENCRYPT']);
             this.po_lo_text = { value: translations['SCRIPTS.MESSAGES.ENCRYPT'] };
-            this.script.script = this._electronService.ipcRenderer.sendSync('encrypt', this.script.script);
-          }
         }
         
+        //Detecção de customizações das rotinas padrões
+        if (this.oldCommand != this.script.command) this.script.TOTVS = false;
+        
         //Gravação da nova rotina no Agent
-        this._scriptService.saveScript(this.script).subscribe((res: boolean) => {
-          if (res) {
-            this.loadScripts();
-            this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SAVE_OK']);
+        this._scriptService.saveScript([this.script]).subscribe((res: number) => {
+          if (res == 0) {
+            this.modal_addScript.close();
+            this.loadScripts().subscribe((res: boolean) => {
+              this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SAVE_OK']);
+            }, (err: any) => {
+              this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_ERROR'], err);
+              this.po_lo_text = { value: null };
+            });
           } else {
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME']);
+            this.po_lo_text = { value: null };
           }
-          this.po_lo_text = { value: null };
         }, (err: any) => {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
           this.po_lo_text = { value: null };
@@ -394,10 +470,13 @@ export class ScriptComponent implements OnInit {
     this._scriptService.deleteScript(this.scriptToDelete).subscribe((b: boolean) => {
       
       //Recarga das rotinas disponíveis atualmente
-      this.loadScripts();
-      
-      this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE_OK']);
-      this.po_lo_text = { value: null };
+      this.loadScripts().subscribe((res: boolean) => {
+        this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE_OK']);
+        this.po_lo_text = { value: null };
+      }, (err: any) => {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE_ERROR'], err);
+        this.po_lo_text = { value: null };
+      });
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE_ERROR'], err);
       this.po_lo_text = { value: null };

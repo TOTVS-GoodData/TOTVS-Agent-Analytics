@@ -18,7 +18,7 @@ import { Configuration } from '../../src-angular/app/configuration/configuration
 import { ServerService } from './server-service';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, switchMap, map, catchError } from 'rxjs';
+import { Observable, switchMap, map, catchError, of } from 'rxjs';
 
 export class ConfigurationService {
   
@@ -54,23 +54,53 @@ export class ConfigurationService {
   }
   
   /* Método de gravação da configuração do Agent */
-  public static saveConfiguration(conf: Configuration): Observable<boolean> {
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'], null, null, null);
+  public static saveConfiguration(conf: Configuration): Observable<number> {
+    
+    //Consulta das traduções
+    let translations: any = TranslationService.getTranslations([
+      new TranslationInput('CONFIGURATION.MESSAGES.SAVE_ERROR_PORT', ['' + conf.clientPort])
+    ]);
     
     //Leitura da configuração atual do Agent
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'], null, null, null);
     return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+      let oldData: DatabaseData = { ..._dbd };
       _dbd.configuration = conf;
-      
-      //Atualiza o idioma utilizado pelo Agent (caso tenha sido alterado)
-      TranslationService.use(conf.locale);
       
       //Reinicialização do servidor do Agent, e gravação da nova configuração
       return ServerService.startServer(conf.clientPort).pipe(switchMap((b: boolean) => {
-        return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
-          return ServerService.updateCommunicationPort(['' + conf.clientPort]).pipe(map((b: boolean) => {
-            return b;
-          }));
+        if (b) return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
+          if (conf.serialNumber != null) {
+            if (b) return ServerService.updateCommunicationPort(['' + conf.clientPort]).pipe(switchMap((b: boolean) => {
+              if (b) {
+                //Atualiza o idioma utilizado pelo Agent (caso tenha sido alterado)
+                TranslationService.use(conf.locale);
+                return of(1);
+              } else {
+                Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_SERVER'], null, null, null);
+                return ServerService.startServer(oldData.configuration.clientPort).pipe(switchMap((b: boolean) => {
+                  return Files.writeApplicationData(oldData).pipe(map((b: boolean) => {
+                    return -3;
+                  }));
+                }));
+              }
+            }));
+            else {
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_CONFIG'], null, null, null);
+              return ServerService.startServer(oldData.configuration.clientPort).pipe(map((b: boolean) => {
+                return -2;
+              }));
+            }
+          } else {
+            return of(1);
+          }
         }));
+        else {
+          Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.SAVE_ERROR_PORT'], null, null, null);
+          return ServerService.startServer(oldData.configuration.clientPort).pipe(map((b: boolean) => {
+            return -1;
+          }));
+        }
       }));
     }), catchError((err: any) => {
       Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR'], null, null, err);

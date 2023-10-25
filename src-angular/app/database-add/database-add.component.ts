@@ -349,7 +349,7 @@ export class DataBaseAddComponent {
           
           //Grava o novo banco de dados do Agent, e retorna à página anterior, caso bem sucedido
           this.po_lo_text = { value: translations['DATABASES.MESSAGES.SAVE'] };
-          this._databaseService.saveDatabase({...this.database}).subscribe((b: boolean) => {
+          this._databaseService.saveDatabase(this.database).subscribe((b: boolean) => {
             if (b) {
               this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.SAVE_OK']);
               this.goBack(this.database);
@@ -488,7 +488,7 @@ export class DataBaseAddComponent {
       this.po_lo_text = { value: translations['DATABASES.MESSAGES.LOGIN'] };
       
       //Disparo da requisição de teste ao serviço de banco de dados
-      return this._databaseService.testConnection({ ...this.database }).pipe(map((test: boolean) => {
+      return this._databaseService.testConnection(this.database).pipe(map((test: boolean) => {
         this.po_lo_text = { value: null };
         return test;
       }));

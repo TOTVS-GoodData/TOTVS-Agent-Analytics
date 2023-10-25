@@ -14,7 +14,6 @@ import { DatabaseData } from '../electron-interface';
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from './workspace-service';
 import { Workspace } from '../../src-angular/app/workspace/workspace-interface';
-import { CNST_ERP } from '../../src-angular/app/workspace/workspace-constants';
 
 /* Serviço de bancos de dados do Agent */
 import { DatabaseService } from './database-service';
@@ -25,8 +24,10 @@ import { ScheduleService } from './schedule-service';
 import { Schedule } from '../../src-angular/app/schedule/schedule-interface';
 
 /* Interface de consultas do Agent */
-import { QueryClient, Version } from '../../src-angular/app/query/query-interface';
-import { CNST_QUERY_VERSION_STANDARD } from '../../src-angular/app/query/query-constants';
+import { QueryClient } from '../../src-angular/app/query/query-interface';
+
+/* Interface de versionamento do Agent */
+import { Version } from '../../src-angular/app/utilities/version-interface';
 
 /* Componente de geração de Id's únicos para os registros */
 import uuid from 'uuid-v4';
@@ -75,53 +76,88 @@ export class QueryService {
   }
   
   /* Método de gravação das consultas do Agent */
-  public static saveQuery(q: QueryClient): Observable<boolean> {
+  public static saveQuery(q: QueryClient[]): Observable<number> {
     
     //Objeto que detecta se já existe uma consulta cadastrada com o mesmo nome da que será gravada
     let query_name: QueryClient = null;
     
     //Define se o banco de dados a ser cadastrado já possui um Id registrado, ou não
-    let newId: boolean = (q.id == null);
+    let newId: boolean = false;
     
-    //Consulta das traduções
-    let translations: any = TranslationService.getTranslations([
-      new TranslationInput('QUERIES.MESSAGES.SAVE', [q.name]),
-      new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [q.name]),
-      new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME', [q.name])
-    ]);
-    
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE'], null, null, null);
+    //Contabiliza o total de erros gerados ao tentar salvar todas as consultas
+    let errors: number = 0;
     
     //Leitura do banco de dados atual do Agent
     return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
       
-      //Validação do campo de Id da consulta. Caso não preenchido, é gerado um novo Id
-      if (newId) q.id = uuid();
-      
-      //Impede o cadastro de uma consulta com o mesmo nome
-      query_name = _dbd.queries.filter((query: QueryClient) => (query.id != q.id)).find((query: QueryClient) => (query.name == q.name));
-      if (query_name != undefined) {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
-        return of(false);
-      } else {
+      //Itera por todas as consultas que devem ser gravadas
+      let validate: any = q.map((qq: QueryClient) => {
         
-        //Remoção do campo de suporte
-        delete q.executionModeName;
+        //Consulta das traduções
+        let translations: any = TranslationService.getTranslations([
+          new TranslationInput('QUERIES.MESSAGES.SAVE', [qq.name]),
+          new TranslationInput('QUERIES.MESSAGES.SAVE_OK', [qq.name]),
+          new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME', [qq.name]),
+          new TranslationInput('QUERIES.MESSAGES.SAVE_WARNING_ALREADY_EXISTS', [qq.name])
+        ]);
         
-        //Inclusão da consulta no banco do Agent
-        if (newId) {
-          _dbd.queries.push(q);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE'], null, null, null);
+        
+        //Validação do campo de Id da consulta. Caso não preenchido, é gerado um novo Id
+        newId = (qq.id == null);
+        if (newId) qq.id = uuid();
+        
+        //Verifica se já existe uma consulta cadastrada com o mesmo nome
+        query_name = _dbd.queries.filter((query: QueryClient) => (query.id != qq.id)).find((query: QueryClient) => ((query.name == qq.name) && (query.scheduleId == qq.scheduleId)));
+        if (query_name != undefined) {
+          if (!query_name.TOTVS) {
+            errors = errors + 1;
+            return { query: qq, level: CNST_LOGLEVEL.ERROR, message: translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME'] };
+          } else {
+            return { query: qq, level: CNST_LOGLEVEL.WARN, message: translations['QUERIES.MESSAGES.SAVE_WARNING_ALREADY_EXISTS'] };
+          }
         } else {
-          let index = _dbd.queries.findIndex((query: QueryClient) => { return query.id === q.id; });
-          _dbd.queries[index] = q;
+          
+          //Remoção do campo de suporte
+          delete qq.executionModeName;
+          
+          //Inclusão da consulta no banco do Agent
+          if (newId) {
+            _dbd.queries.push(qq);
+          } else {
+            let index = _dbd.queries.findIndex((query: QueryClient) => { return query.id === qq.id; });
+            _dbd.queries[index] = qq;
+          }
+          return { query: qq, level: CNST_LOGLEVEL.DEBUG, message: translations['QUERIES.MESSAGES.SAVE_OK'] };
         }
-      }
+      });
       
       //Gravação da consulta no banco do Agent
-      return Files.writeApplicationData(_dbd);
+      return Files.writeApplicationData(_dbd).pipe(map((res: boolean) => {
+        if (res) {
+          
+          validate.map((obj: any) => {
+            Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+          });
+          
+          return errors;
+        } else {
+          validate.map((obj: any) => {
+            
+            //Consulta das traduções
+            let translations: any = TranslationService.getTranslations([
+              new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [obj.query.name]),
+            ]);
+            
+            if (obj.level != CNST_LOGLEVEL.ERROR) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE_ERROR'], null, null, null);
+            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+          });
+          
+          return -1;
+        }
+      }));
     }), catchError((err: any) => {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE_ERROR'], null, null, err);
-        throw err;
+      throw err;
     }));
   }
   
@@ -150,7 +186,8 @@ export class QueryService {
   
   /* Método de atualização das consultas padrões */
   public static updateAllQueries(): Observable<boolean> {
-    
+    return of(true);
+    /*
     //Variável de suporte, que armazena a versão atualizada disponível de cada consulta do Agent
     let updatedQueries: QueryClient[] = [];
     
@@ -172,7 +209,7 @@ export class QueryService {
         
         Consultas customizadas, ou criadas pelo usuário são ignoradas.
         Apenas a consulta mais recente para cada versão Major/Minor é retornada.
-      */
+      
       updatedQueries = results[0].map((q: QueryClient) => {
         
         //Extrai o ERP e o banco de dados de cada consulta cadastrada
@@ -185,7 +222,7 @@ export class QueryService {
           let version: Version = new Version(q_erp.version);
           return (
                (q_erp.name == q.name)
-            && (q_erp.query == q.query)
+            && (q_erp.query == q.command)
             && (version.major == q.version.major)
             && (version.minor == q.version.minor)
             && (version.patch == q.version.patch)
@@ -215,7 +252,7 @@ export class QueryService {
           if (updates[0] != undefined) {
             
             //Conversão de JSON -> Objeto (Para uso dos métodos da interface "Version")
-            let v1 = new Version(CNST_QUERY_VERSION_STANDARD);
+            let v1 = new Version(null);
             let v2 = new Version(updates[0].version);
             v1.jsonToObject(q.version);
             
@@ -226,7 +263,7 @@ export class QueryService {
             
             Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.QUERY_UPDATER_AVAILABLE'], null, null, null);
             q.version = v2;
-            q.query = updates[0].query;
+            q.command = updates[0].query;
             return q;
           } else {
             return undefined;
@@ -246,9 +283,10 @@ export class QueryService {
       //Prepara as requisições de atualização a serem disparadas
       if (updatedQueries.length > 0) {
         obs_queries = updatedQueries.map((q: QueryClient) => {
-          return this.saveQuery(q).pipe(map((res: boolean) => {
-            return res;
-          }));
+          return of(true);
+//        return this.saveQuery(q).pipe(map((res: boolean) => {
+  //          return res;
+    //      }));
         });
         
         //Dispara todas as gravações de consultas, simultaneamente
@@ -263,6 +301,6 @@ export class QueryService {
         Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.QUERY_UPDATER_NO_UPDATES'], null, null, null);
         return of(true);
       }
-    }));
+    }));*/
   }
 }

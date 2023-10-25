@@ -11,6 +11,21 @@ import * as winston from 'winston';
 import { TranslationService } from './services/translation-service';
 import { TranslationInput } from '../src-angular/app/services/translation/translation-interface';
 
+/* Interface de ambientes do Agent */
+import { Workspace } from '../src-angular/app/workspace/workspace-interface';
+
+/* Interface de bancos de dados do Agent */
+import { Database } from '../src-angular/app/database/database-interface';
+
+/* Interface de agendamentos do Agent */
+import { Schedule } from '../src-angular/app/schedule/schedule-interface';
+
+/* Interface de consultas do Agent */
+import { QueryClient } from '../src-angular/app/query/query-interface';
+
+/* Interface de rotinas do Agent */
+import { ScriptClient } from '../src-angular/app/script/script-interface';
+
 /* Componentes de utilitários do Agent */
 import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../src-angular/app/utilities/utilities-constants';
 import {
@@ -235,7 +250,29 @@ export class Files {
   
   /* Método de leitura do banco do Agent */
   public static readApplicationData(): Observable<DatabaseData> {
-    return from(fs.readJson(Files.filepath));
+    return from(fs.readJson(Files.filepath)).pipe(map((data: DatabaseData) => {
+      data.workspaces = data.workspaces.map((parameter: Workspace) => {
+        return new Workspace().toObject(parameter);
+      });
+      
+      data.databases = data.databases.map((parameter: Database) => {
+        return new Database().toObject(parameter);
+      });
+      
+      data.schedules = data.schedules.map((parameter: Schedule) => {
+        return new Schedule().toObject(parameter);
+      });
+      
+      data.queries = data.queries.map((parameter: QueryClient) => {
+        return new QueryClient(null).toObject(parameter);
+      });
+      
+      data.scripts = data.scripts.map((parameter: ScriptClient) => {
+        return new ScriptClient(null).toObject(parameter);
+      });
+      
+      return data;
+    }));
   }
   
   /* Método de escrita do banco do Agent */
