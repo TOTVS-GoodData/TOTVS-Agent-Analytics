@@ -1,6 +1,30 @@
 /* You can add global styles to this file, and also import other style files */
 :root {
   --background: #FFFFFF;
+  --color-action-pressed: #FFFFFF;
+}
+
+.po-menu {
+  background: #363636;
+  border: none;
+}
+
+.po-menu-header {
+  background-color: #363636;
+}
+
+.po-menu-item {
+  --color: #b4e2fd;
+  --color-hover: #b4e2fd;
+  --background-color-hover: #2e2e2e;
+  --background-color-pressed: #2e2e2e;
+}
+
+.po-menu-item-selected {
+  --color-hover: #FFFFFF;
+  --background-color-hover: var(--color-menu-background-color-item-selected);
+  --background-color-pressed: var(--color-menu-background-color-item-selected);
+  --color-menu-background-color-item-selected: #262626;
 }
 
 /* Rodapé dos modais do Agent (Formatação dos botões) */

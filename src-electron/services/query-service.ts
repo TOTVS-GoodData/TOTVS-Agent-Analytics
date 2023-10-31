@@ -75,17 +75,24 @@ export class QueryService {
     }));
   }
   
-  /* Método de gravação das consultas do Agent */
+  /*
+    Método de gravação das consultas do Agent
+    
+    Este método recebe múltiplas consultas a serem gravadas ao mesmo tempo, e retorna um número,
+    indicando o total de erros encontrados ao salvar as consultas.
+    Retorna 0 caso nenhum erro tenha sido encontrado.
+    Retorna -1 caso ocorra um erro geral na gravação das consultas (como permissão de gravação)
+  */
   public static saveQuery(q: QueryClient[]): Observable<number> {
     
     //Objeto que detecta se já existe uma consulta cadastrada com o mesmo nome da que será gravada
     let query_name: QueryClient = null;
     
-    //Define se o banco de dados a ser cadastrado já possui um Id registrado, ou não
+    //Define se a consulta a ser cadastrada já possui um Id registrado, ou não
     let newId: boolean = false;
     
     //Contabiliza o total de erros gerados ao tentar salvar todas as consultas
-    let errors: number = 0;
+    let errors: number = (q.length == 0 ? null : 0);
     
     //Leitura do banco de dados atual do Agent
     return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
@@ -107,9 +114,11 @@ export class QueryService {
         newId = (qq.id == null);
         if (newId) qq.id = uuid();
         
-        //Verifica se já existe uma consulta cadastrada com o mesmo nome
+        //Verifica se já existe uma consulta cadastrada com o mesmo nome, no mesmo agendamento
         query_name = _dbd.queries.filter((query: QueryClient) => (query.id != qq.id)).find((query: QueryClient) => ((query.name == qq.name) && (query.scheduleId == qq.scheduleId)));
         if (query_name != undefined) {
+          
+          //Caso a consulta seja padrão (Recebida pelo Agent-Server), a mesma é ignorada. Caso contraŕio, é gerado um erro.
           if (!query_name.TOTVS) {
             errors = errors + 1;
             return { query: qq, level: CNST_LOGLEVEL.ERROR, message: translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME'] };
@@ -118,7 +127,7 @@ export class QueryService {
           }
         } else {
           
-          //Remoção do campo de suporte
+          //Remoção dos campos de suporte
           delete qq.executionModeName;
           
           //Inclusão da consulta no banco do Agent
@@ -132,15 +141,18 @@ export class QueryService {
         }
       });
       
-      //Gravação da consulta no banco do Agent
+      //Gravação de todas as consultas no banco do Agent
       return Files.writeApplicationData(_dbd).pipe(map((res: boolean) => {
+        
+        //Caso a gravação funcione, é gerado o log de sucesso / erro / avisos para todas as consultas consideradas
         if (res) {
-          
           validate.map((obj: any) => {
             Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
           });
           
           return errors;
+        
+        //Caso contrário, é gerada uma mensagem de erro para cada consulta a ser gravada
         } else {
           validate.map((obj: any) => {
             

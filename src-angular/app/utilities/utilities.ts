@@ -10,7 +10,7 @@ import {
 } from '@po-ui/ng-components';
 
 /* Serviço de comunicação com o Electron */
-import { ElectronService } from 'ngx-electronyzer';
+import { ElectronService } from '../core/services';
 
 /* Serviço de sessão do Agent */
 import { SessionService } from '../services/session-service';

@@ -6,7 +6,7 @@ import { Router, Navigation } from '@angular/router';
 import { PoSelectOption } from '@po-ui/ng-components';
 
 /* Serviço de comunicação com o Electron */
-import { ElectronService } from 'ngx-electronyzer';
+import { ElectronService } from '../core/services';
 
 /* Serviço de comunicação com o Agent-Server */
 import { ServerService } from '../services/server/server-service';

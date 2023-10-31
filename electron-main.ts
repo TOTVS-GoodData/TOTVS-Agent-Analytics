@@ -10,6 +10,9 @@ import { Execute } from './src-electron/execute';
 import { Functions } from './src-electron/functions';
 import { Files } from './src-electron/files';
 
+/* Serviço de criptografia do Agent */
+import { EncryptionService } from './src-electron/encryption/encryption-service';
+
 /* Serviço de comunicação com o Agent-Server */
 import { ServerService } from './src-electron/services/server-service';
 import {
@@ -34,7 +37,7 @@ import {
   CNST_ICON_WINDOWS,
   CNST_ICON_LINUX,
   CNST_TMP_PATH,
-} from './src-electron/constants-electron';
+} from './src-electron/electron-constants';
 
 /* Dependência de comunicação com o Registro do Windows */
 import Winreg from 'winreg';
@@ -78,8 +81,6 @@ export default class Main {
   /********* Gerais *********/
   //Interface do Agent
   private static mainWindow: Electron.BrowserWindow = null;
-  
-  private static client: any = null;
   
   //Referência da aplicação como um todo, passada ao inicializar o Electron
   static application: Electron.App = null;
@@ -336,11 +337,9 @@ export default class Main {
     });
     
     //Gravação dos agendamentos
-    ipcMain.on('saveSchedule', (event: IpcMainEvent, s: Schedule) => {
-      ScheduleService.saveSchedule(s).subscribe((b: boolean) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.SAVE_OK'], null, null, null);
-        event.returnValue = b;
-        return b;
+    ipcMain.on('saveSchedule', (event: IpcMainEvent, s: Schedule[]) => {
+      ScheduleService.saveSchedule(s).subscribe((res: number) => {
+        return res;
       });
     });
     
@@ -484,12 +483,12 @@ export default class Main {
     /*****************************/
     //Criptografia de um texto
     ipcMain.on('encrypt', (event: IpcMainEvent, text: string) => {
-      event.returnValue = Functions.encrypt(text);
+      event.returnValue = EncryptionService.encrypt(text);
     });
     
     //Descriptografia de um texto
     ipcMain.on('decrypt', (event: IpcMainEvent, text: string) => {
-      event.returnValue = Functions.decrypt(text);
+      event.returnValue = EncryptionService.decrypt(text);
     });
     
     /*****************************/
@@ -540,10 +539,6 @@ export default class Main {
       Main.terminateApplication();
     });
     
-    ipcMain.on('sendDataToServer', (event: IpcMainEvent) => {
-      Main.client.write('Hello, server! Love, Client.');
-    });
-    
     /*****************************/
     /** Comunicação c/ Servidor **/
     /*****************************/
@@ -588,6 +583,12 @@ export default class Main {
         return res;
       })));
     });
+  }
+  
+  /* Método de envio de mensagens ao usuário */
+  private static electronMessage(level: any, message: string): boolean {
+    if (Main.mainWindow != null) Main.mainWindow.webContents.send('electronMessage', level, message);
+    return true;
   }
   
   /*********************************/
@@ -699,6 +700,9 @@ export default class Main {
     TranslationService.init();
     TranslationService.updateStandardTranslations();
     
+    //Inicialização do serviço de criptografia
+    EncryptionService.init();
+    
     //Solicita a trava de única instância do Agent. Caso não consiga, este Agent é encerrado
     //Este processo é utilizado para bloquear a abertura de 2 Agents ao mesmo tempo
     //Main.application.requestSingleInstanceLock();
@@ -711,6 +715,7 @@ export default class Main {
       console.log(translations['ELECTRON.THREAD_ERROR']);
       Main.application.quit();
     } else {
+      
       //Inicialização do arquivo de banco do Agent (Leitura das configurações existentes)
       Files.initApplicationData(_app.getLocale());
       
@@ -737,33 +742,6 @@ export default class Main {
           Main.renderWindow();
         }
       });
-      
-      //Configuração do temporizador de execuções automática do Agent, a cada segundo
-      if (Main.triggerSchedules) {
-        let thisDay: number = 0;
-        setInterval(() => {
-          let date: Date = new Date();
-          
-          if (date.getSeconds() == 0) {
-            ScheduleService.getSchedulesToExecute().subscribe((schedules: Schedule[]) => {
-              schedules.map(async (s: Schedule) => {
-                await ScheduleService.executeAndUpdateSchedule(s).subscribe((b: boolean) => {
-                  return b;
-                });
-              });
-            });
-          }
-          
-          //Reinicialização dos arquivos de log, a cada dia (meia noite)
-          if (date.getDate() != thisDay) {
-            ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
-              Files.deleteOldLogs();
-              Files.initApplicationData(conf.locale);
-              thisDay = date.getDate();
-            });
-          }
-        }, 1000);
-      }
     }
   }
   
@@ -799,16 +777,59 @@ export default class Main {
       //Configuração do menu minimizado do Agent (Tray)
       Main.updateTrayMenu();
       
-      //Atualização das consultas / rotinas padrões do FAST (Caso necessário).
-      ServerService.getUpdatesFromServer().subscribe((b: boolean) => {
-        
-      });
-      
       //Configuração da interface do Agent (Angular)
       Main.createWindowObject();
       
       //Renderização da interface do Agent (Caso habilitado)
       Main.renderWindow();
+      
+      //Configuração do temporizador de execuções automática do Agent, a cada segundo
+      let thisDay: number = 0;
+      let i: number = 0;
+      setInterval(() => {
+        let date: Date = new Date();
+        
+        //Atualização das consultas / rotinas padrões do FAST, a cada 24h de execução do Agent
+        if ((configuration.serialNumber != null) && (i == 86400)) {
+          i = 0;
+          ServerService.getUpdatesFromServer().subscribe((b: number) => {
+            switch (b) {
+              case (0):
+                Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_OK'], null, null, null);
+                break;
+              case (null):
+                Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_NOT_FOUND'], null, null, null);
+                break;
+              default:
+                Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR'], null, null, null);
+                Main.electronMessage(CNST_LOGLEVEL.ERROR, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR']);
+                break;
+              }
+          });
+        }
+        
+        //Disparo dos agendamentos automaticamente, a cada minuto
+        if ((configuration.serialNumber != null) && (date.getSeconds() == 0)) {
+          ScheduleService.getSchedulesToExecute().subscribe((schedules: Schedule[]) => {
+            schedules.map(async (s: Schedule) => {
+              await ScheduleService.executeAndUpdateSchedule(s).subscribe((b: boolean) => {
+                return b;
+              });
+            });
+          });
+        }
+        
+        //Reinicialização dos arquivos de log, a cada dia (meia noite)
+        if ((configuration.serialNumber != null) && (date.getDate() != thisDay)) {
+          ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
+            Files.deleteOldLogs();
+            Files.initApplicationData(conf.locale);
+            thisDay = date.getDate();
+          });
+        }
+        
+        i = i + 1;
+      }, 1000);
     });
   }
   

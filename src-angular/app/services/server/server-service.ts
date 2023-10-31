@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 
 /* Serviço de comunicação com o Electron */
-import { ElectronService } from 'ngx-electronyzer';
+import { ElectronService } from '../../core/services';
 
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../../utilities/utilities';

@@ -4,7 +4,7 @@ import { app, BrowserWindow } from 'electron';
 /* Dependência do Node, para consulta de diretórios */
 import * as path from 'path';
 
-//Define o diretório de instalação do Agent
+//Define o diretório de instalação do Agent, se o mesmo está executando em modo de produção (exe)
 let rootFolder: string = null;
 let isProduction: boolean = null;
 if (app.isPackaged) {
@@ -15,7 +15,7 @@ if (app.isPackaged) {
   isProduction = false;
 }
 
-//Exporta o diretório de instalação para uso do Electron
+//Exporta o diretório de instalação do Electron, e o modo de execução
 export const CNST_APPLICATION_ROOTDIR: string = rootFolder;
 export const CNST_APPLICATION_PRODUCTION: boolean = isProduction;
 

@@ -3,7 +3,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Router, Navigation } from '@angular/router';
 
 /* Serviço de comunicação com o Electron */
-import { ElectronService } from 'ngx-electronyzer';
+import { ElectronService } from '../core/services';
 
 /* Porta mínima / máxima aceitável pelo Agent */
 import {

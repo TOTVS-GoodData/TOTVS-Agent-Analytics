@@ -4,6 +4,9 @@ import { Files } from '../files';
 /* Serviço de execução do Java pelo Agent */
 import { Execute } from '../execute';
 
+/* Serviço de criptografia do Agent */
+import { EncryptionService } from '../encryption/encryption-service';
+
 /* Serviço de tradução do Electron */
 import { TranslationService } from './translation-service';
 import { TranslationInput } from '../../src-angular/app/services/translation/translation-interface';
@@ -15,7 +18,7 @@ import {
   CNST_LOGS_PATH,
   CNST_LOGS_FILENAME,
   CNST_LOGS_EXTENSION
-} from '../constants-electron';
+} from '../electron-constants';
 
 /* Interface do banco de dados do Agent */
 import { DatabaseData } from '../electron-interface';
@@ -126,62 +129,103 @@ export class ScheduleService {
     }));
   }
   
-  /* Método de gravação dos agendamentos do Agent */
-  public static saveSchedule(sc: Schedule): Observable<boolean> {
+  /*
+    Método de gravação dos agendamentos do Agent
+    
+    Este método recebe múltiplos agendamentos a serem gravadas ao mesmo tempo, e retorna um número,
+    indicando o total de erros encontrados ao salvar os agendamentos.
+    Retorna 0 caso nenhum erro tenha sido encontrado.
+    Retorna -1 caso ocorra um erro geral na gravação dos agendamentos (como permissão de gravação)
+  */
+  public static saveSchedule(sc: Schedule[]): Observable<number> {
     
     //Objeto que detecta se já existe um agendamento cadastrado com o mesmo nome do que será gravado
     let schedule_name: Schedule = null;
     
     //Define se o agendamento a ser cadastrado já possui um Id registrado, ou não
-    let newId: boolean = (sc.id == null);
+    let newId: boolean = false;
     
-    //Consulta das traduções
-    let translations: any = TranslationService.getTranslations([
-      new TranslationInput('SCHEDULES.MESSAGES.SAVE', [sc.name]),
-      new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR', [sc.name]),
-      new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME', [sc.name])
-    ]);
-    
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE'], null, null, null);
+    //Contabiliza o total de erros gerados ao tentar salvar todas as consultas
+    let errors: number = (sc.length == 0 ? null : 0);
     
     //Leitura do banco de dados atual do Agent
     return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
       
-      //Validação do campo de Id do agendamento. Caso não preenchido, é gerado um novo Id
-      if (newId) sc.id = uuid();
+      //Itera por todos os agendamentos que devem ser gravados
+      let validate: any = sc.map((sc2: Schedule) => {
       
-      //Validação do campo de Id dos parâmetros de ETL. Caso não preenchido, é gerado um novo Id
-      sc.ETLParameters = sc.ETLParameters.map((param: ETLParameterClient) => {
-        if (param.id == null) param.id = uuid();
-        return param;
-      });
-      
-      //Validação do campo de Id dos parâmetros de SQL. Caso não preenchido, é gerado um novo Id
-      sc.SQLParameters = sc.SQLParameters.map((param: SQLParameterClient) => {
-        if (param.id == null) param.id = uuid();
-        return param;
-      });
+        //Consulta das traduções
+        let translations: any = TranslationService.getTranslations([
+          new TranslationInput('SCHEDULES.MESSAGES.SAVE', [sc2.name]),
+          new TranslationInput('SCHEDULES.MESSAGES.SAVE_OK', [sc2.name]),
+          new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR', [sc2.name]),
+          new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME', [sc2.name])
+        ]);
         
-      //Impede o cadastro de um agendamento com o mesmo nome
-      schedule_name = _dbd.schedules.filter((schedule: Schedule) => (schedule.id != sc.id)).find((schedule: Schedule) => (schedule.name == sc.name));
-      if (schedule_name != undefined) {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
-        return of(false);
-      } else {
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE'], null, null, null);
         
-        //Inclusão do agendamento no banco do Agent
-        if (newId) {
-          _dbd.schedules.push(sc);
+        //Validação do campo de Id do agendamento. Caso não preenchido, é gerado um novo Id
+        newId = (sc2.id == null);
+        if (newId) sc2.id = uuid();
+        
+        //Validação do campo de Id dos parâmetros de ETL. Caso não preenchido, é gerado um novo Id
+        sc2.ETLParameters = sc2.ETLParameters.map((param: ETLParameterClient) => {
+          if (param.id == null) param.id = uuid();
+          return param;
+        });
+        
+        //Validação do campo de Id dos parâmetros de SQL. Caso não preenchido, é gerado um novo Id
+        sc2.SQLParameters = sc2.SQLParameters.map((param: SQLParameterClient) => {
+          if (param.id == null) param.id = uuid();
+          return param;
+        });
+        
+        //Impede o cadastro de um agendamento com o mesmo nome
+        schedule_name = _dbd.schedules.filter((schedule: Schedule) => (schedule.id != sc2.id)).find((schedule: Schedule) => (schedule.name == sc2.name));
+        if (schedule_name != undefined) {
+          errors = errors + 1;
+          return { schedule: sc2, level: CNST_LOGLEVEL.ERROR, message: translations['SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME'] };
         } else {
-          let index = _dbd.schedules.findIndex((schedule: Schedule) => { return schedule.id === sc.id; });
-          _dbd.schedules[index] = sc;
+          
+          //Inclusão do agendamento no banco do Agent
+          if (newId) {
+            _dbd.schedules.push(sc2);
+          } else {
+            let index = _dbd.schedules.findIndex((schedule: Schedule) => { return schedule.id === sc2.id; });
+            _dbd.schedules[index] = sc2;
+          }
+          return { schedule: sc2, level: CNST_LOGLEVEL.DEBUG, message: translations['SCHEDULES.MESSAGES.SAVE_OK'] };
         }
-      }
+      });
       
       //Gravação do agendamento no banco do Agent
-      return Files.writeApplicationData(_dbd);
+      return Files.writeApplicationData(_dbd).pipe(map((res: boolean) => {
+        
+        //Caso a gravação funcione, é gerado o log de sucesso / erro / avisos para todos os agendamentos considerados
+        if (res) {
+          validate.map((obj: any) => {
+            Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+          });
+          
+          return errors;
+        
+        //Caso contrário, é gerada uma mensagem de erro para cada agendamento a ser gravado
+        } else {
+          validate.map((obj: any) => {
+            
+            //Consulta das traduções
+            let translations: any = TranslationService.getTranslations([
+              new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR', [obj.schedule.name]),
+            ]);
+            
+            if (obj.level != CNST_LOGLEVEL.ERROR) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE_ERROR'], null, null, null);
+            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+          });
+          
+          return -1;
+        }
+      }));
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE_ERROR'], null, null, err);
       throw err;
     }));
   }
@@ -250,23 +294,23 @@ export class ScheduleService {
       //Define todas as consultas do agendamento, e descriptografa as mesmas
       let q: QueryClient[] = results[2];
       q.map((q: QueryClient) => {
-        q.command = Functions.decrypt(q.command);
+        q.command = EncryptionService.decrypt(q.command);
       });
       
       //Define todas as rotinas do agendamento, e descriptografa as mesmas
       let scr: ScriptClient[] = results[3];
       scr.map((s: ScriptClient) => {
-        s.command = Functions.decrypt(s.command);
+        s.command = EncryptionService.decrypt(s.command);
       });
       
       let conf: Configuration = results[4];
       conf.logPath = CNST_LOGS_PATH;
       
       //Descriptografia da senha do banco de dados no Agent, para posterior envio para o Java (caso exista)
-      if (db) db.password = Functions.decrypt(db.password);
+      if (db) db.password = EncryptionService.decrypt(db.password);
       
       //Descriptografia da senha do usuário do GoodData, para posterior envio para o Java
-      w.GDPassword = Functions.decrypt(w.GDPassword);
+      w.GDPassword = EncryptionService.decrypt(w.GDPassword);
       
       //Preparação do buffer de entrada para o Java
       let javaInput: JavaInputBuffer = {
@@ -279,7 +323,7 @@ export class ScheduleService {
       }
       
       //Criptografia do pacote a ser enviado
-      let params = Functions.encrypt(JSON.stringify(javaInput));
+      let params = EncryptionService.encrypt(JSON.stringify(javaInput));
       
       //Solicita a execução do pacote criptografado ao Java, e atualiza os dados do agendamento imediatamente
       return Execute.runAgent(params, s.id).pipe(switchMap((b: boolean) => {
@@ -287,10 +331,9 @@ export class ScheduleService {
         //Atualiza a data de última execução do agendamento, e grava o mesmo no banco de dados do Agent
         s.lastExecution = new Date();
         s.lastExecutionString = new Date(s.lastExecution).toLocaleString(conf.locale, {timeZone: conf.timezone});
-
         Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_EXECUTIONDATE'], null, null, null);
-        return ScheduleService.saveSchedule(s).pipe(map((b: boolean) => {
-          return b;
+        return ScheduleService.saveSchedule([s]).pipe(map((res: number) => {
+          return (res == 0);
         }), catchError((err: any) => {
           Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_ERROR'], null, null, err);
           throw err;

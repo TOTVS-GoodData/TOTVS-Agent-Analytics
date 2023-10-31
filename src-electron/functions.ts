@@ -1,32 +1,7 @@
-/* Algoritmo de criptografia de mensagens */
-import rc4 from 'arc4';
-
 export class Functions {
-  
-  /**************************/
-  /***     VARIÁVEIS      ***/
-  /**************************/
-  /********* Gerais *********/
-  //Inicialização do algoritmo de criptografia
-  private static cipher: rc4.Cipher = rc4('arc4', 'rasgolkiebploisl');
-  
-  //Codificação de entrada / saída do texto criptografado
-  private static CNST_FILE_ENCODING_INPUT: string = 'UTF-8';
-  private static CNST_FILE_ENCODING_OUTPUT: string = 'HEX';
-  
   /**************************/
   /*** MÉTODOS DO MÓDULO  ***/
   /**************************/
-  /* Método de criptografia de um texto */
-  public static encrypt(text: string): string {
-    return Functions.cipher.encodeString(text, Functions.CNST_FILE_ENCODING_INPUT, Functions.CNST_FILE_ENCODING_OUTPUT);
-  }
-  
-  /* Método de descriptografia de um texto */
-  public static decrypt(text: string): string {
-    return Functions.cipher.decodeString(text, Functions.CNST_FILE_ENCODING_OUTPUT, Functions.CNST_FILE_ENCODING_INPUT);
-  }
-  
   /* Método que formata um objeto de data do Javascript para a mesma máscara utilizada pela função de log do Agent */
   public static formatDate(date: Date): string {
     let year: any = date.getFullYear();

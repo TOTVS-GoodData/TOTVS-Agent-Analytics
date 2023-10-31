@@ -4,6 +4,9 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
+/* Componentes do Electron */
+import { CoreModule } from './core/core.module';
+
 /* Componentes do Angular para comunicação http */
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
@@ -65,6 +68,7 @@ import { AppRoutingModule } from './app-routing.module';
     BrowserModule,
     FormsModule,
     CommonModule,
+    CoreModule,
     HttpClientModule,
     PoMenuModule,
     PoNotificationModule,

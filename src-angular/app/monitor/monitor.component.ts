@@ -14,7 +14,7 @@ import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
 
 /* Serviço de comunicação com o Electron */
-import { ElectronService } from 'ngx-electronyzer';
+import { ElectronService } from '../core/services';
 
 /* Serviço de monitoramento do Agent */
 import { MonitorService } from './monitor-service';

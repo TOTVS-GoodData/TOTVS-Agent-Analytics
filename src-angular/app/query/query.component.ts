@@ -18,7 +18,7 @@ import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
 import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities/angular-constants';
 
 /* Serviço de comunicação com o Electron */
-import { ElectronService } from 'ngx-electronyzer';
+import { ElectronService } from '../core/services';
 
 /* Serviço de comunicação com o Agent-Server */
 import { ServerService } from '../services/server/server-service';

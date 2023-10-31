@@ -2,12 +2,16 @@
 .menu-title {
   font-size: 17px;
   align-items: center;
+  justify-content: center;
   margin-left: 0px;
   width: 100%;
   max-width: 100%;
   padding: 0.5em 0.5em 0.5em 0.5em;
   text-align: center;
-  color: #FFFFFF;
+  background-color: #363636;
+  --background-color-hover: #363636;
+  --color: #FFFFFF;
+  --color-hover: #FFFFFF;
 }
 
 .padding-list {

@@ -46,8 +46,9 @@
           <po-switch class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12"
             name="po_debugMode"
             [(ngModel)]="configuration.debug"
-            [p-label-off]="lbl_debugModeOff"
-            [p-label-on]="lbl_debugModeOn"
+            [p-label]="lbl_debugMode"
+            [p-label-on]="lbl_activated_1"
+            [p-label-off]="lbl_deactivated_1"
             [p-label-position]="poDebugModeLabelPosition"
             [p-tooltip]="ttp_debugMode">
           </po-switch>
@@ -56,8 +57,9 @@
           <po-switch class="subtitle po-sm-12 po-md-12 po-lg-12 po-xl-12"
             name="po_autoUpdate"
             [(ngModel)]="configuration.autoUpdate"
-            [p-label-off]="lbl_autoUpdateOff"
-            [p-label-on]="lbl_autoUpdateOn"
+            [p-label]="lbl_autoUpdate"
+            [p-label-on]="lbl_activated_2"
+            [p-label-off]="lbl_deactivated_2"
             [p-label-position]="poDebugModeLabelPosition"
             [p-tooltip]="ttp_autoUpdate">
           </po-switch>

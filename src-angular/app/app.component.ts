@@ -13,7 +13,7 @@ import { Utilities } from './utilities/utilities';
 import { CNST_LOGLEVEL } from './utilities/utilities-constants';
 
 /* Serviço de comunicação com o Electron */
-import { ElectronService } from 'ngx-electronyzer';
+import { ElectronService } from './core/services';
 
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './configuration/configuration-service';
@@ -89,6 +89,9 @@ export class AppComponent {
     //Configurações padrões do Agent
     this.programName = CNST_PROGRAM_NAME.SIMPLE;
     this._translateService.init().subscribe();
+    
+    //Configuração do canal de mensagens do Electron
+    this.messageFromElectron();
     
     //Carrega as configurações atuais do Agent, caso existam
     this._configurationService.getConfiguration(true).subscribe((conf: Configuration) => {
@@ -190,6 +193,15 @@ export class AppComponent {
     this.lbl_updateAgentDescription = this._translateService.CNST_TRANSLATIONS['ELECTRON.UPDATE_READY_DESCRIPTION'];
     this.lbl_updateNow = this._translateService.CNST_TRANSLATIONS['BUTTONS.UPDATE_NOW'];
     this.lbl_updateLater = this._translateService.CNST_TRANSLATIONS['BUTTONS.UPDATE_LATER'];
+  }
+  
+  /* Método para mostrar mensagens ao usuário, utilizado pelo Electron */
+  protected messageFromElectron(): void {
+    if (this._electronService.isElectronApp) {
+      this._electronService.ipcRenderer.on('electronMessage', (event: any, level: any, message: string) => {
+        this._utilities.createNotification(CNST_LOGLEVEL.WARN, message);
+      });
+    }
   }
   
   /* Método usado para ler o comando de "Enter" no campo de registro da instalação do Agent */

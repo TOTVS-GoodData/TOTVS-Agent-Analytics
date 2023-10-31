@@ -3,7 +3,7 @@ Programa oficial da TOTVS para envio de dados para a plataforma GoodData.
 
 Suporta sistemas Windows / Linux / MacOS.
 
-Desenvolvido em Portinari.15 / Angular.15 / Electron.22
+Desenvolvido em NodeJS 18.17.1 / Portinari.16.4.1 / Angular.16.2.11 / Electron.27.0.0
 
 ## Instalação
 Executar o seguinte comando:
@@ -81,7 +81,26 @@ Além disso, o comando ```build-electron-w``` permite que qualquer alteração n
 
 Caso o código fonte do Angular seja alterado, é necessário recompilar a build inteira, conforme os comandos mencionados acima.
 
-Por fim, neste ambiente de desenvolvimento, é possível testar qualquer funcionalidade da aplicação (executar o java, agendamento automático, etc), com exceção apenas à atualização automática dos Agents.
+### Comunicação com o Agent-Server
+
+Ao ativar o Electron, é necessário subir uma build do Agent-Server, também com o Electron ativado, para testar as outras funcionalidades do sistema.
+
+Caso o Agent-Server não esteja ativado, as interfaces do Agent irão retornar um erro de comunicação com o servidor, impossibilitando sua utilização.
+
+Para definir o ip / porta do Agent-Server, alterar seguintes constantes do arquivo ```/src-electron/electron-constants```:
+
+```powershell
+  export const CNST_SERVER_SOURCE: string = 'SERVER';
+  export const CNST_SERVER_PORT: number = 2000;
+  export const CNST_SERVER_HOSTNAME: any = {
+    DEVELOPMENT: 'localhost',
+    PRODUCTION: 'localhost'
+  };
+```
+
+Vale lembrar que a porta definida deve estar devidamente configurada no menu de "Configuração" do Agent-Server também.
+
+Após ativar o Agent-Server localmente, é possível testar qualquer funcionalidade da aplicação (executar o java, agendamento automático, etc), com exceção apenas à atualização automática dos Agents.
 
 ## Geração de Instaladores - Windows (.exe) / Linux (.deb) / MacOS ()
 Executar um dos comandos abaixo, de acordo com o SO de destino:

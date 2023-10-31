@@ -14,7 +14,7 @@ import { CNST_DEFAULT_LANGUAGE } from '../services/translation/translation-const
 import { CNST_TIMEZONES } from '../services/timezones';
 
 /* Serviço de comunicação com o Electron */
-import { ElectronService } from 'ngx-electronyzer';
+import { ElectronService } from '../core/services';
 
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './configuration-service';
@@ -93,10 +93,12 @@ export class ConfigurationComponent implements OnInit {
   protected lbl_javaXmx: string = null;
   protected lbl_javaTmpDir: string = null;
   protected lbl_javaJREDir: string = null;
-  protected lbl_debugModeOn: string = null;
-  protected lbl_debugModeOff: string = null;
-  protected lbl_autoUpdateOn: string = null;
-  protected lbl_autoUpdateOff: string = null;
+  protected lbl_debugMode: string = null;
+  protected lbl_autoUpdate: string = null;
+  protected lbl_activated_1: string = null;
+  protected lbl_activated_2: string = null;
+  protected lbl_deactivated_1: string = null;
+  protected lbl_deactivated_2: string = null;
   protected lbl_save: string = null;
   protected lbl_locale: string = null;
   protected lbl_timezone: string = null;
@@ -148,10 +150,12 @@ export class ConfigurationComponent implements OnInit {
       
       //Tradução dos títulos
       this.lbl_title = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TITLE'];
-      this.lbl_debugModeOn = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.DEBUGMODE_ON'];
-      this.lbl_debugModeOff = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.DEBUGMODE_OFF'];
-      this.lbl_autoUpdateOn = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.AUTOUPDATE_ON'];
-      this.lbl_autoUpdateOff = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.AUTOUPDATE_OFF'];
+      this.lbl_debugMode = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.DEBUGMODE'];
+      this.lbl_autoUpdate = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.AUTOUPDATE'];
+      this.lbl_activated_1 = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.ACTIVATED_1'];
+      this.lbl_activated_2 = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.ACTIVATED_2'];
+      this.lbl_deactivated_1 = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.DEACTIVATED_1'];
+      this.lbl_deactivated_2 = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.DEACTIVATED_2'];
       
       //Tradução dos campos de formulário
       this.lbl_logfilesToKeep = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.LOGFILES_TO_KEEP'] + CNST_MANDATORY_FORM_FIELD;

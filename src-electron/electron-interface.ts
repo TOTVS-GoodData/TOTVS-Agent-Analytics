@@ -1,6 +1,6 @@
 /* Componentes de utilitários do Agent */
 import { CNST_DEFAULT_LANGUAGE } from '../src-angular/app/services/translation/translation-constants';
-import { CNST_TMP_PATH } from './constants-electron';
+import { CNST_TMP_PATH } from './electron-constants';
 
 /* Interface de ambientes do Agent */
 import { Workspace } from '../src-angular/app/workspace/workspace-interface';
@@ -39,20 +39,7 @@ export class DatabaseData {
   }
 }
 
-export class UpdaterProgress {
-  total: number;
-  delta: number;
-  transferred: number;
-  percent: number;
-  bytesPerSecond: number;
-}
-
-export class UpdaterFiles {
-  url: string;
-  sha512: string;
-  size: string;
-}
-
+/* Interface de atualização do Agent (geral) */
 export class Updater {
   tag: string;
   version: string;
@@ -62,4 +49,20 @@ export class Updater {
   releaseDate: Date;
   releaseName: string;
   releaseNotes: string;
+}
+
+/* Interface de atualização do Agent (arquivos de atualização baixados) */
+export class UpdaterFiles {
+  url: string;
+  sha512: string;
+  size: string;
+}
+
+/* Interface de atualização do Agent (progresso da atualização) */
+export class UpdaterProgress {
+  total: number;
+  delta: number;
+  transferred: number;
+  percent: number;
+  bytesPerSecond: number;
 }

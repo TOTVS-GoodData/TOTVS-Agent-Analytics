@@ -77,7 +77,14 @@ export class ScriptService {
     }));
   }
   
-  /* Método de gravação das rotinas do Agent */
+  /*
+    Método de gravação das rotinas do Agent
+    
+    Este método recebe múltiplas rotinas a serem gravadas ao mesmo tempo, e retorna um número,
+    indicando o total de erros encontrados ao salvar as rotinas.
+    Retorna 0 caso nenhum erro tenha sido encontrado.
+    Retorna -1 caso ocorra um erro geral na gravação das rotinas (como permissão de gravação)
+  */
   public static saveScript(s: ScriptClient[]): Observable<number> {
     
     //Objeto que detecta se já existe uma rotina cadastrada com o mesmo nome da que será gravada
@@ -87,7 +94,7 @@ export class ScriptService {
     let newId: boolean = false;
     
     //Contabiliza o total de erros gerados ao tentar salvar todas as consultas
-    let errors: number = 0;
+    let errors: number = (s.length == 0 ? null : 0);
     
     //Leitura do banco de dados atual do Agent
     return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
@@ -109,9 +116,11 @@ export class ScriptService {
         newId = (ss.id == null);
         if (newId) ss.id = uuid();
         
-        //Impede o cadastro de uma rotina com o mesmo nome
+        //Impede o cadastro de uma rotina com o mesmo nome, no mesmo agendamento
         script_name = _dbd.scripts.filter((script: ScriptClient) => (script.id != ss.id)).find((script: ScriptClient) => ((script.name == ss.name) && (script.scheduleId == ss.scheduleId)));
         if (script_name != undefined) {
+          
+          //Caso a rotina seja padrão (Recebida pelo Agent-Server), a mesma é ignorada. Caso contraŕio, é gerado um erro.
           if (!script_name.TOTVS) {
             errors = errors + 1;
             return { script: ss, level: CNST_LOGLEVEL.ERROR, message: translations['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME'] };
@@ -134,13 +143,16 @@ export class ScriptService {
       
       //Gravação da rotina no banco do Agent
       return Files.writeApplicationData(_dbd).pipe(map((res: boolean) => {
+        
+        //Caso a gravação funcione, é gerado o log de sucesso / erro / avisos para todas as rotinas consideradas
         if (res) {
-          
           validate.map((obj: any) => {
             Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
           });
           
           return errors;
+        
+        //Caso contrário, é gerada uma mensagem de erro para cada rotina a ser gravada
         } else {
           validate.map((obj: any) => {
             
@@ -182,127 +194,5 @@ export class ScriptService {
         Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.ERROR'], null, null, err);
         throw err;
     }));
-  }
-  
-  /* Método de atualização das rotinas padrões */
-  public static updateAllScripts(): Observable<boolean> {
-    return of(true);
-    /*
-    //Variável de suporte, que armazena a versão atualizada disponível de cada rotina do Agent
-    let updatedScripts: ScriptClient[] = [];
-    
-    //Variável de suporte, que armazena todas as requisições de gravação das rotinas
-    let obs_scripts: Observable<boolean>[] = [];
-    
-    //Consulta das informações cadastradas no Agent
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SCRIPT_UPDATER'], null, null, null);
-    return forkJoin([
-      ScriptService.getScripts(false),
-      ScheduleService.getSchedules(false),
-      WorkspaceService.getWorkspaces(false),
-      DatabaseService.getDatabases(false)
-    ]).pipe(switchMap((results: [ScriptClient[], Schedule[], Workspace[], Database[]]) => {
-      
-      /*
-        Itera por todas as rotinas cadastradas pelo usuário,
-        procurando uma versão mais atualizada de cada.
-        
-        Rotinas customizadas, ou criadas pelo usuário são ignoradas.
-        Apenas a rotina mais recente para cada versão Major/Minor é retornada.
-      
-      updatedScripts = results[0].map((script: ScriptClient) => {
-        
-        //Extrai o ERP e o banco de dados de cada consulta cadastrada
-        let s: Schedule = results[1].find((s: Schedule) => (script.scheduleId == s.id));
-        let w: Workspace = results[2].find((w: Workspace) => (s.workspaceId == w.id));
-        let db: Database = results[3].find((db: Database) => (w.databaseIdRef == db.id));
-        
-        //Filtra apenas as consultas padrões, e que não foram customizadas pelo usuário
-        let isStandardScript: boolean = ((CNST_ERP.find((erp: any) => (erp.ERP == w.license.source)).Scripts[db.brand].find((s_erp: any) => {
-          let version: Version = new Version(s_erp.version);
-          return (
-               (s_erp.name == script.name)
-            && (s_erp.script == script.command)
-            && (version.major == script.version.major)
-            && (version.minor == script.version.minor)
-            && (version.patch == script.version.patch)
-          );
-        })) != undefined);
-        
-        //Caso a rotina seja válida, procura por atualizações da mesma
-        if (isStandardScript) {
-          
-          //Retorna todas as atualizações válidas da consulta padrão, e ordena a partir da mais recente
-          let updates: any[] = CNST_ERP.find((erp: any) => (erp.ERP == w.license.source)).Scripts[db.brand].filter((s_erp: any) => {
-            let version: Version = new Version(s_erp.version);
-            return (
-                 (s_erp.name == script.name)
-              && (version.major == script.version.major)
-              && (version.minor == script.version.minor)
-              && (version.patch > script.version.patch)
-            );
-          }).sort((a: any, b: any) => {
-            let aVersion: Version = new Version(a.version);
-            let bVersion: Version = new Version(b.version);
-            
-            return (bVersion.patch - aVersion.patch);
-          });
-          
-          //Retorna apenas a rotina mais recente (Se houver)
-          if (updates[0] != undefined) {
-            
-            //Conversão de JSON -> Objeto (Para uso dos métodos da interface "Version")
-            let v1 = new Version(null);
-            let v2 = new Version(updates[0].version);
-            v1.jsonToObject(script.version);
-            
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SCRIPT_UPDATER_AVAILABLE', [script.name, v1.getVersion(), v2.getVersion()])
-            ]);
-            
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SCRIPT_UPDATER_AVAILABLE'], null, null, null);
-            script.version = v2;
-            script.command = updates[0].script;
-            return script;
-          } else {
-            return undefined;
-          }
-        } else {
-          
-          //Consulta das traduções
-          let translations: any = TranslationService.getTranslations([
-            new TranslationInput('ELECTRON.SCRIPT_UPDATER_NOT_STANDARD', [script.name])
-          ]);
-          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SCRIPT_UPDATER_NOT_STANDARD'], null, null, null);
-          
-          return undefined;
-        }
-      }).filter((script: ScriptClient) => (script != undefined));
-      
-      //Prepara as requisições de atualização a serem disparadas
-      if (updatedScripts.length > 0) {
-        obs_scripts = updatedScripts.map((script: ScriptClient) => {
-          
-          return of(true);
-          /*
-          return this.saveScript(script).pipe(map((res: boolean) => {
-            return res;
-          }));
-        });
-        
-        //Dispara todas as gravações de consultas, simultaneamente
-        return forkJoin(obs_scripts).pipe(map(() => {
-          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SCRIPT_UPDATER_OK'], null, null, null);
-          return true;
-        }), catchError((err: any) => {
-          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SCRIPT_UPDATER_ERROR'], null, null, null);
-          throw err;
-        }));
-      } else {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SCRIPT_UPDATER_NO_UPDATES'], null, null, null);
-        return of(true);
-      }
-    }));*/
   }
 }

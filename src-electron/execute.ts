@@ -24,7 +24,7 @@ import {
   CNST_JAR_PATH_FAST,
   CNST_COMMAND_FILE,
   CNST_OS_LINEBREAK,
-} from './constants-electron';
+} from './electron-constants';
 
 /* Interface de consultas do Agent */
 import { QueryClient } from '../src-angular/app/query/query-interface';
@@ -97,7 +97,7 @@ export class Execute {
       //Cria o arquivo de comando do Java
       let commandPath: string = path.join(conf.javaTmpDir, CNST_COMMAND_FILE);
       fs.writeFile(commandPath, inputBuffer);
-      
+      console.log(inputBuffer);
       //Define o idioma/país atualmente utilizado pelo Agent para configuração da JVM do Java (Locale)
       let language: string = conf.getLocaleLanguage();
       let country: string = conf.getLocaleCountry();

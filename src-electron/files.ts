@@ -38,7 +38,7 @@ import {
   CNST_LOGS_EXTENSION,
   CNST_LOGS_SPACING,
   CNST_OS_LINEBREAK
-} from './constants-electron';
+} from './electron-constants';
 
 /* Interface do banco de dados do Agent */
 import { DatabaseData } from './electron-interface';

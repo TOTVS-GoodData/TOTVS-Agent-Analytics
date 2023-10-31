@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import * as globals from '../constants-electron';
+import * as globals from '../electron-constants';
 
 
 import { CNST_TRANSLATIONS, CNST_DEFAULT_LANGUAGE } from '../../src-angular/app/services/translation/translation-constants';
@@ -122,7 +122,6 @@ export class TranslationService {
       new TranslationInput('QUERIES.MESSAGES.LOADING', []),
       new TranslationInput('QUERIES.MESSAGES.LOADING_OK', []),
       new TranslationInput('QUERIES.MESSAGES.LOADING_ERROR', []),
-      new TranslationInput('QUERIES.MESSAGES.SAVE_OK', []),
       new TranslationInput('QUERIES.MESSAGES.DELETE_OK', []),
       new TranslationInput('QUERIES.MESSAGES.SCHEDULE_LOADING_OK', []),
       new TranslationInput('QUERIES.MESSAGES.SCHEDULE_LOADING_ERROR', []),
@@ -133,26 +132,29 @@ export class TranslationService {
       new TranslationInput('SCHEDULES.MESSAGES.LOADING', []),
       new TranslationInput('SCHEDULES.MESSAGES.LOADING_OK', []),
       new TranslationInput('SCHEDULES.MESSAGES.LOADING_ERROR', []),
-      new TranslationInput('SCHEDULES.MESSAGES.SAVE_OK', []),
       new TranslationInput('SCHEDULES.MESSAGES.DELETE_OK', []),
       new TranslationInput('SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING_OK', []),
       new TranslationInput('SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING_ERROR', []),
       new TranslationInput('SCRIPTS.MESSAGES.LOADING', []),
       new TranslationInput('SCRIPTS.MESSAGES.LOADING_OK', []),
       new TranslationInput('SCRIPTS.MESSAGES.LOADING_ERROR', []),
-      new TranslationInput('SCRIPTS.MESSAGES.SAVE_OK', []),
       new TranslationInput('SCRIPTS.MESSAGES.DELETE_OK', []),
       new TranslationInput('SCRIPTS.MESSAGES.SCHEDULE_LOADING_OK', []),
       new TranslationInput('SCRIPTS.MESSAGES.SCHEDULE_LOADING_ERROR', []),
-      new TranslationInput('SCRIPTS.MESSAGES.EXPORT_NO_DATA', []),
-      new TranslationInput('SCRIPTS.MESSAGES.EXPORT_NO_DATA_ERROR', []),
-      new TranslationInput('SCRIPTS.MESSAGES.EXPORT_I01', []),
-      new TranslationInput('SCRIPTS.MESSAGES.EXPORT_I01_PREPARE', []),
+      new TranslationInput('SCRIPTS.MESSAGES.IMPORT_NO_DATA', []),
+      new TranslationInput('SCRIPTS.MESSAGES.IMPORT_NO_DATA_ERROR', []),
+      new TranslationInput('SCRIPTS.MESSAGES.IMPORT_I01', []),
+      new TranslationInput('SCRIPTS.MESSAGES.IMPORT_I01_PREPARE', []),
+      new TranslationInput('SERVICES.SERVER.MESSAGES.SERVER_ERROR', []),
       new TranslationInput('SERVICES.SERVER.MESSAGES.SERIAL_NUMBER', []),
       new TranslationInput('SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_OK', []),
       new TranslationInput('SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR', []),
       new TranslationInput('SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_INVALID', []),
       new TranslationInput('SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_COMMUNICATION', []),
+      new TranslationInput('SERVICES.SERVER.MESSAGES.UPDATES', []),
+      new TranslationInput('SERVICES.SERVER.MESSAGES.UPDATES_OK', []),
+      new TranslationInput('SERVICES.SERVER.MESSAGES.UPDATES_NOT_FOUND', []),
+      new TranslationInput('SERVICES.SERVER.MESSAGES.UPDATES_ERROR', []),
       new TranslationInput('WORKSPACES.MESSAGES.LOADING_OK', []),
       new TranslationInput('WORKSPACES.MESSAGES.LOADING_DATABASES_OK', []),
       new TranslationInput('WORKSPACES.MESSAGES.SAVE_OK', []),
