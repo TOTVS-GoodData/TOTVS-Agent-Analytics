@@ -616,7 +616,7 @@ export class WorkspaceAddComponent {
           
           //Grava o novo ambiente do Agent, e retorna à página anterior, caso bem sucedido
           this.po_lo_text = { value: translations['WORKSPACES.MESSAGES.SAVE'] };
-          return this._workspaceService.saveWorkspace(this.workspace).pipe(map((res: boolean) => {
+          return this._workspaceService.saveWorkspace(Object.assign(new Workspace(), this.workspace)).pipe(map((res: boolean) => {
             if (res) {
               this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.SAVE_OK']);
               this.goBack();

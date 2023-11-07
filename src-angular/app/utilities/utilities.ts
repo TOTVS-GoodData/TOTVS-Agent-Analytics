@@ -15,9 +15,6 @@ import { ElectronService } from '../core/services';
 /* Serviço de sessão do Agent */
 import { SessionService } from '../services/session-service';
 
-/* Interface de configuração do Agent */
-import { Configuration } from '../configuration/configuration-interface';
-
 /* Constantes de utilitários do Agent */
 import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL, CNST_LOCALHOST_PORT } from './utilities-constants';
 

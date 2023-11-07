@@ -1,5 +1,6 @@
 /* Constantes de versionamento do Agent */
 export const CNST_VERSION_STANDARD: string = '0.0.0';
+export const CNST_VERSION_REGEX_PATTERN: string = '^[0-9]{1,2}[.][0-9]{1,2}[.][0-9]{1,2}$';
 
 /* Interface de versionamento de consultas */
 export class Version {
@@ -14,10 +15,17 @@ export class Version {
   
   public setVersion(v: string) {
     let numbers: Array<string> = v.split('.');
-    
-    this.major = parseInt(numbers[0]);
-    this.minor = parseInt(numbers[1]);
-    this.patch = parseInt(numbers[2]);
+    if (
+         (numbers.length != 3) 
+      || (isNaN(Number(numbers[0])))
+      || (isNaN(Number(numbers[1])))
+      || (isNaN(Number(numbers[2])))
+    ) throw new Error();
+    else {
+      this.major = parseInt(numbers[0]);
+      this.minor = parseInt(numbers[1]);
+      this.patch = parseInt(numbers[2]);
+    }
   }
   
   public getVersion(): string {

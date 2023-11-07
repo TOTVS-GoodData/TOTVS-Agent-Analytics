@@ -13,6 +13,17 @@ import { ETLParameterClient } from '../../schedule/schedule-interface';
 /* Interface de parâmetros de SQL do Agent */
 import { SQLParameterClient } from '../../schedule/schedule-interface';
 
+/* Interface de suporte, para preparação da palavra de resposta do Agent */
+export class responseObj {
+  response: any[];
+  errorCode: number;
+  
+  constructor(response: any[], errorCode: number) {
+    this.response = response;
+    this.errorCode = errorCode;
+  }
+}
+
 /* Interface de comunicação com o Agent-Server */
 export class ServerCommunication {
   source: string;

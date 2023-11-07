@@ -53,11 +53,11 @@ import { Configuration } from '../../src-angular/app/configuration/configuration
 /* Interface de comunicação com o Java */
 import { JavaInputBuffer } from '../../src-angular/app/utilities/java-interface';
 
-/* Componente de geração de Id's únicos para os registros */
-import uuid from 'uuid-v4';
-
 /* Componentes rxjs para controle de Promise / Observable */
 import { Observable, switchMap, map, of, catchError, forkJoin } from 'rxjs';
+
+/* Componente de geração de Id's únicos para os registros */
+import uuid from 'uuid-v4';
 
 export class ScheduleService {
   

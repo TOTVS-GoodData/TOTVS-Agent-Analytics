@@ -1,4 +1,12 @@
-/* Nome padrão para pacotes destinados ao Agent-Server */
+/* Dependência Node.js p/ comunicação via Socket */
+import net from 'net';
+
+/* Serviços do Electron */
+import { Files } from '../files';
+import { Functions } from '../functions';
+import { Execute } from '../execute';
+
+/* Constantes do Agent-Server */
 import {
   CNST_SERVER_SOURCE,
   CNST_SERVER_PORT,
@@ -8,19 +16,30 @@ import {
 /* Constante que define o modo de execução do Agent (Desenv / Prod) */
 import { CNST_APPLICATION_PRODUCTION } from '../../app';
 
-/* Dependência Node.js p/ comunicação via Socket */
-import net from 'net';
+/* Componentes de utilitários do Agent */
+import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../../src-angular/app/utilities/utilities-constants';
 
-/* Interface de comunicação com o Agent-Server */
+/* Serviço de tradução do Electron */
+import { TranslationService } from '../../src-electron/services/translation-service';
+import { TranslationInput } from '../../src-angular/app/services/translation/translation-interface';
+
+/* Interfaces de comunicação com o Agent-Server */
 import {
   ServerCommunication,
-  SocketCommunication
+  SocketCommunication,
+  License,
+  AvailableLicenses,
+  QueryCommunication,
+  ScriptCommunication,
+  ETLParameterCommunication,
+  SQLParameterCommunication,
+  QueryServer,
+  ScriptServer,
+  ETLParameterServer,
+  SQLParameterServer,
+  DataUpdate,
+  responseObj
 } from '../../src-angular/app/services/server/server-interface';
-
-/* Serviços do Electron */
-import { Files } from '../files';
-import { Functions } from '../functions';
-import { Execute } from '../execute';
 
 /* Serviço de criptografia do Agent */
 import { EncryptionService } from '../encryption/encryption-service';
@@ -33,28 +52,6 @@ import { Version } from '../../src-angular/app/utilities/version-interface';
 
 /* Interfaces do Electron */
 import { DatabaseData } from '../electron-interface';
-
-/* Serviço de tradução do Electron */
-import { TranslationService } from '../../src-electron/services/translation-service';
-import { TranslationInput } from '../../src-angular/app/services/translation/translation-interface';
-
-/* Componentes de utilitários do Agent */
-import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../../src-angular/app/utilities/utilities-constants';
-
-/* Interfaces de comunicação com o Agent-Server */
-import {
-  License,
-  AvailableLicenses,
-  QueryCommunication,
-  ScriptCommunication,
-  ETLParameterCommunication,
-  SQLParameterCommunication,
-  QueryServer,
-  ScriptServer,
-  ETLParameterServer,
-  SQLParameterServer,
-  DataUpdate
-} from '../../src-angular/app/services/server/server-interface';
 
 /* Constante que define o ERP "Protheus" */
 import { CNST_ERP_PROTHEUS } from '../../src-angular/app/workspace/workspace-constants';
@@ -108,16 +105,12 @@ export class ServerService {
   /**************************/
   /*** MÉTODOS DO SERVIÇO ***/
   /**************************/
-  /* Método de desligamento do Agent-Server */
+  /* Método de desligamento do serviço de servidor do Agent */
   private static shutdownServer(): void {
-    
-    //Término da conexão de todos os sockets existentes
     ServerService.sockets.map((s: SocketCommunication) => {
       s.socket.end();
     });
     ServerService.sockets = [];
-    
-    //Desligamento do servidor
     ServerService.server.close();
   }
   
@@ -143,7 +136,7 @@ export class ServerService {
       socket.on('data', (buffer: string) => {
         
         //Realiza a validação da palavra (criptografia, destino do pacote, etc). Ignora palavras inválidas.
-        ServerService.validateCommandWord(buffer).subscribe((command: ServerCommunication) => {
+        ServerService.validateCommandWord(buffer).pipe(switchMap((command: ServerCommunication) => {
           if (command != null) {
             
             //Caso seja uma conexão válida, adiciona a mesma ao conjunto atual
@@ -163,33 +156,25 @@ export class ServerService {
               
               //Envio da configuração atual deste Agent (workspaces, databases, etc), para o Agent-Server
               case 'requestAgentData':
-                Files.readApplicationData().subscribe((db: DatabaseData) => {
-                  ServerService.prepareCommandWord(
-                    'requestAgentData',
-                    [db]
-                  ).subscribe((buffer: string) => {
-                    socket.write(buffer);
-                  });
-                });
+                return ServerService.requestAgentData(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'requestAgentData', res);
+                }));
                 break;
-                
+              
               //Comando de ping deste serviço
               case 'ping':
-                ServerService.prepareCommandWord(
-                  'ping',
-                  ['pong']
-                ).subscribe((buffer: string) => {
-                  socket.write(buffer);
-                });
+                return ServerService.ping(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'ping', res);
+                }));
                 break;
             }
           }
-        });
+        })).subscribe();
       });
       
       //Configuração do evento disparado ao terminar a conexão com o Agent-Server
       socket.on('close', () => {
-        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null);
       });
     });
     
@@ -207,7 +192,7 @@ export class ServerService {
       });
       
       //Tratamento de erro na inicialização do servidor local
-      ServerService.server.once('error', (err: any) => {
+      ServerService.server.once('error', (err: any) => {console.log('c');
         Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.ERROR'], null, null, null);
         subscriber.next(false);
         subscriber.complete();
@@ -216,7 +201,7 @@ export class ServerService {
   }
   
   /* Método de preparação da palavra de comando, para envio ao Agent-Server */
-  private static prepareCommandWord(word: string, args: any[]): Observable<string> {
+  private static prepareCommandWord(word: string, errorCode: number, args: any[]): Observable<string> {
     
     //Consulta da configuração atual do Agent
     return ConfigurationService.getConfiguration(false).pipe(map((configuration: Configuration) => {
@@ -226,7 +211,7 @@ export class ServerService {
         source: configuration.serialNumber,
         destination: CNST_SERVER_SOURCE,
         word: word,
-        errorCode: null,
+        errorCode: errorCode,
         args: args
       };
       
@@ -240,18 +225,41 @@ export class ServerService {
     //Consulta da configuração atual do Agent
     return ConfigurationService.getConfiguration(false).pipe(map((configuration: Configuration) => {
       
-      //Descriptografa o comando recebido, e converte-o para o objeto de comunicação
-      let command: ServerCommunication = JSON.parse(EncryptionService.decrypt(obj.toString()));
-      
-      //Verifica se o pacote recebido é destinado para esta instância do Agent
-      if (
-           ((command.destination == configuration.serialNumber) && (ServerService.temporarySerialNumber == null))
-        || ((command.destination == ServerService.temporarySerialNumber) && (ServerService.temporarySerialNumber != null))
-      ) {
-        return command;
-      } else {
+      try {
+        //Descriptografa o comando recebido, e converte-o para o objeto de comunicação
+        let command: ServerCommunication = JSON.parse(EncryptionService.decrypt(obj.toString()));
+        
+        //Verifica se o pacote recebido é destinado para esta instância do Agent
+        if (
+             ((command.destination == configuration.serialNumber) && (ServerService.temporarySerialNumber == null))
+          || ((command.destination == ServerService.temporarySerialNumber) && (ServerService.temporarySerialNumber != null))
+        ) {
+          return command;
+        } else {
+          return null;
+        }
+      } catch {
         return null;
       }
+    }));
+  }
+  
+  /****************************************/
+  /***    Envio de mensagens (OUTPUT)   ***/
+  /****************************************/
+  /* Método de resposta de uma palavra recebida pelo Agent-Server */
+  private static sendResponseToServer(socket: any, word: string, res: responseObj): Observable<boolean> {
+    
+    //Prepara o comando a ser enviado ao socket
+    return ServerService.prepareCommandWord(
+      word,
+      res.errorCode,
+      res.response
+    ).pipe(map((buffer: string) => {
+      
+      //Envia a resposta para o socket
+      socket.write(buffer);
+      return true;
     }));
   }
   
@@ -271,6 +279,9 @@ export class ServerService {
       
       //Socket de comunicação com o Agent-Server
       let socket: any = new net.Socket();
+      
+      //Buffer de recebimento de dados (concatenado p/ comunicações acima do limite do socket)
+      let longBuffer: string = null;
       
       //Resposta final desta instância de conexão ao servidor
       let response: any = null;
@@ -295,10 +306,13 @@ export class ServerService {
       });
       
       //Configura o evento disparado ao receber a resposta da palavra de comando, pelo Agent-Server
-      socket.on('data', (buffer: string) => {
+      socket.on('data', (buffer: any) => {
+        
+        //Adiciona o pacote recebido ao buffer concatenado
+        longBuffer = (longBuffer == null ? buffer : longBuffer + buffer);
         
         //Realiza a validação da palavra (criptografia, destino do pacote, etc). Ignora palavras inválidas.
-        ServerService.validateCommandWord(buffer).subscribe((command: ServerCommunication) => {
+        ServerService.validateCommandWord(longBuffer).subscribe((command: ServerCommunication) => {
           if ((command != null) && (command.word == word)) {
             Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND_RESPONSE'], null, null, null);
             
@@ -341,7 +355,7 @@ export class ServerService {
         ServerService.temporarySerialNumber = args[0];
         
         //Prepara a palavra de comando a ser enviada, com criptografia
-        return ServerService.prepareCommandWord('requestSerialNumber', args).pipe(switchMap((buffer: string) => {
+        return ServerService.prepareCommandWord('requestSerialNumber', null, args).pipe(switchMap((buffer: string) => {
           
           //Envia o comando para o servidor da TOTVS, e processa a resposta pela função de callback
           //(HOF - Higher Order Function)
@@ -352,7 +366,7 @@ export class ServerService {
               
               //Verifica se o Agent-Server enviou um SerialNumber para esta instância do Agent
               if (response.args[0] != null) {
-                return ConfigurationService.getConfiguration(false).pipe(switchMap((configuration: Configuration) => {
+                return ConfigurationService.getConfiguration(false).pipe(switchMap((configuration: Configuration) => {console.log('aaaa');
                   Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER'], null, null, null);
                   
                   //Realiza a gravação do serialNumber desta instância do Agent
@@ -396,7 +410,7 @@ export class ServerService {
   public static updateCommunicationPort(args: string[]): Observable<boolean> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('updateCommunicationPort', args).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('updateCommunicationPort', null, args).pipe(switchMap((buffer: string) => {
       
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
@@ -417,7 +431,7 @@ export class ServerService {
   public static getAvailableLicenses(showLogs: boolean): Observable<AvailableLicenses> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('getAvailableLicenses', []).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('getAvailableLicenses', null, []).pipe(switchMap((buffer: string) => {
       
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
@@ -437,7 +451,7 @@ export class ServerService {
   public static getLatestETLParameters(license: License): Observable<ETLParameterCommunication> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('getLatestETLParameters', [license]).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('getLatestETLParameters', null, [license]).pipe(switchMap((buffer: string) => {
       
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
@@ -457,7 +471,7 @@ export class ServerService {
   public static getLatestSQLParameters(license: License, database: string): Observable<SQLParameterCommunication> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('getLatestSQLParameters', [license, database]).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('getLatestSQLParameters', null, [license, database]).pipe(switchMap((buffer: string) => {
       
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
@@ -474,10 +488,10 @@ export class ServerService {
   }
   
   /* Método de solicitação das últimas consultas disponíveis para esta licença do Agent */
-  public static saveLatestQueries(license: License, database: Database, scheduleId: string): Observable<boolean> {
+  public static saveLatestQueries(license: License, database: Database, scheduleId: string): Observable<number> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('getLatestQueries', [license, database.brand]).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('getLatestQueries', null, [license, database.brand]).pipe(switchMap((buffer: string) => {
       
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
@@ -498,7 +512,7 @@ export class ServerService {
           //Gravação de todas as consultas recebidas pelo Agent-Server
           if (queriesToSave.length > 0) {
             return QueryService.saveQuery(queriesToSave).pipe(map((res: number) => {
-              return (res == 0 ? true : false);
+              return res;
             }));
           } else {
             Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA'], null, null, null);
@@ -542,7 +556,7 @@ export class ServerService {
                     
                     //Gravação de todas as consultas padrões recebidas da tabela I01 do Protheus
                     return QueryService.saveQuery(queriesToSave).pipe(map((res: number) => {
-                      return (res == 0 ? true : false);
+                      return res;
                     }));
                   }
                 }));
@@ -551,21 +565,21 @@ export class ServerService {
             //Caso a origem dos dados não seja do Protheus, é gerada uma mensagem de erro
             } else {
               Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_ERROR'], null, null, null);
-              return of(false);
+              return of(-2);
             }
           }
         }
-      ).pipe(map((res: boolean) => {
+      ).pipe(map((res: number) => {
         return res;
       }));
     }));
   }
   
   /* Método de solicitação das últimas rotinas disponíveis para esta licença do Agent */
-  public static saveLatestScripts(license: License, brand: string, scheduleId: string): Observable<boolean> {
+  public static saveLatestScripts(license: License, brand: string, scheduleId: string): Observable<number> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('getLatestScripts', [license, brand]).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('getLatestScripts', null, [license, brand]).pipe(switchMap((buffer: string) => {
       
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
@@ -589,15 +603,15 @@ export class ServerService {
           */
           if (scriptsToSave.length > 0) {
             return ScriptService.saveScript(scriptsToSave).pipe(map((res: number) => {
-              return (res == 0 ? true : false);
+              return res;
             }));
           } else {
             Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA'], null, null, null);
             Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_ERROR'], null, null, null);
-            return of(false);
+            return of(-2);
           }
         }
-      ).pipe(map((res: boolean) => {
+      ).pipe(map((res: number) => {
         return res;
       }));
     }));
@@ -699,7 +713,7 @@ export class ServerService {
       );
       
       //Prepara a palavra de comando a ser enviada, com criptografia
-      return ServerService.prepareCommandWord('getUpdates', [data]).pipe(switchMap((buffer: string) => {
+      return ServerService.prepareCommandWord('getUpdates', null, [data]).pipe(switchMap((buffer: string) => {
         
         //Envia o comando para o servidor da TOTVS, e processa a resposta
         //(HOF - Higher Order Function)
@@ -809,5 +823,20 @@ export class ServerService {
         }));
       }));
     }));
+  }
+  
+  /****************************************/
+  /*** Recebimento de mensagens (INPUT) ***/
+  /****************************************/
+  /* Método de envio das configurações atuais deste Agent, para o Agent-Server */
+  private static requestAgentData(command: ServerCommunication): Observable<responseObj> {
+    return Files.readApplicationData().pipe(map((db: DatabaseData) => {
+      return new responseObj([db], null);
+    }));
+  }
+  
+  /* Método de teste de comunicação do Agent, com o Agent-Server */
+  private static ping(command: ServerCommunication): Observable<responseObj> {
+    return of(new responseObj(['pong'], null));
   }
 }

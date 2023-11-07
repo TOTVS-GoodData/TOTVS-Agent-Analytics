@@ -1,8 +1,4 @@
-import * as path from 'path';
-import * as fs from 'fs-extra';
-import * as globals from '../electron-constants';
-
-
+/* Interface de tradução do Agent */
 import { CNST_TRANSLATIONS, CNST_DEFAULT_LANGUAGE } from '../../src-angular/app/services/translation/translation-constants';
 import { TranslationInput } from '../../src-angular/app/services/translation/translation-interface';
 

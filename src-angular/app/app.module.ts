@@ -20,29 +20,29 @@ import {
   PoLinkModule
 } from '@po-ui/ng-components';
 
-/* Módulos da página Workspace */
+/* Módulos da página de ambientes */
 import { WorkspaceModule } from './workspace/workspace.module';
 import { WorkspaceAddModule } from './workspace-add/workspace-add.module';
 import { WorkspaceService } from './workspace/workspace-service';
 
-/* Módulos da página Database */
+/* Módulos da página de bancos de dados */
 import { DataBaseModule } from './database/database.module';
 import { DataBaseAddModule } from './database-add/database-add.module';
 
-/* Módulos da página Schedule */
+/* Módulos da página de agendamentos */
 import { ScheduleModule } from './schedule/schedule.module';
 import { ScheduleAddModule } from './schedule-add/schedule-add.module';
 
-/* Módulos da página Query */
+/* Módulos da página de consultas */
 import { QueryModule } from './query/query.module';
 
-/* Módulos da página Script */
+/* Módulos da página de rotinas */
 import { ScriptModule } from './script/script.module';
 
-/* Módulos da página Monitor */
+/* Módulos da página de monitoramento */
 import { MonitorModule } from './monitor/monitor.module';
 
-/* Módulos da página Configuration */
+/* Módulos da página de configuração */
 import { ConfigurationModule } from './configuration/configuration.module';
 
 /* Serviço de comunicação com o menu principal do Agent (para atualizar a tradução do Menu) */

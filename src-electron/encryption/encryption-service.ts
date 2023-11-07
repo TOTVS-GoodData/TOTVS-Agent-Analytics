@@ -32,15 +32,13 @@ export class EncryptionService {
   private static CNST_KEY_PUBLIC_AGENT: string = null;
   private static CNST_KEY_PRIVATE_AGENT: string = null;
   private static CNST_KEY_PUBLIC_SERVER: string = null;
-  //private static CNST_KEY_AGENT: Buffer = crypto.randomBytes(32);
-  private static CNST_KEY_AGENT: Buffer = Buffer.from('nwuaŕoapkpsdnhwofaimgaodpsanwiu');
-  private static CNST_KEY_AGENT_2: Buffer = Buffer.from('nwuanhoapkpsdnhwofaimgaodpsanwiu');
+  private static CNST_KEY_AGENT: Buffer =   Buffer.from('nwuaŕoapkpsdnhwofaimgaodpsanwiu');
+  
   //Algoritmo de criptografia
   private static CNST_ALGORITHM: string = 'aes-256-cbc';
   
   //Vetor de inicialização
-  //private static IV: Buffer = crypto.randomBytes(16);
-  private static IV: Buffer = Buffer.from('opknbvoinsuiygat');
+  private static IV: Buffer =   Buffer.from('opknbvoinsuiygat');
   
   private static cipher: any = crypto.createCipheriv(EncryptionService.CNST_ALGORITHM, EncryptionService.CNST_KEY_AGENT, EncryptionService.IV);
   private static decipher: any = crypto.createDecipheriv(EncryptionService.CNST_ALGORITHM, EncryptionService.CNST_KEY_AGENT, EncryptionService.IV);
@@ -86,7 +84,9 @@ export class EncryptionService {
   
   /* Método de criptografia de um texto */
   public static encrypt(text: string): string {
-    let cipher: any = crypto.createCipheriv(EncryptionService.CNST_ALGORITHM, EncryptionService.CNST_KEY_AGENT_2, EncryptionService.IV);
+    let cipher: any = crypto.createCipheriv(EncryptionService.CNST_ALGORITHM, EncryptionService.CNST_KEY_AGENT, EncryptionService.IV);
+    cipher.setAutoPadding(true);
+    
     let encrypted: string = cipher.update(text, EncryptionService.CNST_FILE_ENCODING_INPUT, EncryptionService.CNST_FILE_ENCODING_OUTPUT);
     encrypted += cipher.final(EncryptionService.CNST_FILE_ENCODING_OUTPUT);
     return encrypted;
@@ -95,6 +95,8 @@ export class EncryptionService {
   /* Método de descriptografia de um texto */
   public static decrypt(text: string): string {
     let decipher: any = crypto.createDecipheriv(EncryptionService.CNST_ALGORITHM, EncryptionService.CNST_KEY_AGENT, EncryptionService.IV);
+    decipher.setAutoPadding(true);
+    
     let decrypted: string = decipher.update(text, EncryptionService.CNST_FILE_ENCODING_OUTPUT, EncryptionService.CNST_FILE_ENCODING_INPUT);
     decrypted += decipher.final(EncryptionService.CNST_FILE_ENCODING_INPUT);
     return decrypted;

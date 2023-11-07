@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 /* Componentes visuais da biblioteca Portinari.UI */
-import { 
+import {
   PoFieldModule,
   PoPageModule,
   PoLoadingModule,

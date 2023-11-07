@@ -117,11 +117,11 @@ export class ConfigurationComponent implements OnInit {
   /*** MÉTODOS DO MÓDULO  ***/
   /**************************/
   constructor(
-    private _utilities: Utilities,
     private _electronService: ElectronService,
     private _configurationService: ConfigurationService,
     private _translateService: TranslationService,
     private _customTranslationLoader: CustomTranslationLoader,
+    private _utilities: Utilities,
     private _router: Router
   ) {}
   
@@ -130,7 +130,7 @@ export class ConfigurationComponent implements OnInit {
     
     /*
       Definição dos fusos horários disponíveis
-    
+      
       Isso tem que rodar só 1x, no init do Angular,
       porque o PO.UI é louco.
     */

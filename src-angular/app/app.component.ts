@@ -94,7 +94,7 @@ export class AppComponent {
     this.messageFromElectron();
     
     //Carrega as configurações atuais do Agent, caso existam
-    this._configurationService.getConfiguration(true).subscribe((conf: Configuration) => {
+    this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
       this._translateService.use(conf.locale).subscribe((b: boolean) => {
         if (this._electronService.isElectronApp) {
           

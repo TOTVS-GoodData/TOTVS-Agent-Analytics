@@ -14,7 +14,7 @@ import { DatabaseData } from '../electron-interface';
 /* Interface de configuração do Agent */
 import { Configuration } from '../../src-angular/app/configuration/configuration-interface';
 
-/* Interface de configuração do Agent */
+/* Interface do servidor do Agent */
 import { ServerService } from './server-service';
 
 /* Componentes rxjs para controle de Promise / Observable */
@@ -31,7 +31,7 @@ export class ConfigurationService {
     //Escrita de logs (caso solicitado)
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING'], null, null, null);
     
-    //Leitura do banco de dados atual do Agent, e retorno da configuraçãO atual do Agent
+    //Leitura do banco de dados atual do Agent, e retorno da configuraçãO atual
     return Files.readApplicationData().pipe(map((db: DatabaseData) => {
       let conf: Configuration = new Configuration(
         db.configuration.logfilesToKeep,
@@ -46,6 +46,7 @@ export class ConfigurationService {
       conf.clientPort = db.configuration.clientPort;
       conf.serialNumber = db.configuration.serialNumber;
       conf.javaJREDir = db.configuration.javaJREDir;
+      
       return conf;
     }), catchError((err: any) => {
       Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_ERROR'], null, null, err);

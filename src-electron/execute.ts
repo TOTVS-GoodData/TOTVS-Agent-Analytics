@@ -97,7 +97,7 @@ export class Execute {
       //Cria o arquivo de comando do Java
       let commandPath: string = path.join(conf.javaTmpDir, CNST_COMMAND_FILE);
       fs.writeFile(commandPath, inputBuffer);
-      console.log(inputBuffer);
+      
       //Define o idioma/país atualmente utilizado pelo Agent para configuração da JVM do Java (Locale)
       let language: string = conf.getLocaleLanguage();
       let country: string = conf.getLocaleCountry();

@@ -14,11 +14,11 @@ import { DatabaseData } from '../electron-interface';
 /* Interface de bancos de dados do Agent */
 import { Database } from '../../src-angular/app/database/database-interface';
 
-/* Componente de geração de Id's únicos para os registros */
-import uuid from 'uuid-v4';
-
 /* Componentes rxjs para controle de Promise / Observable */
 import { Observable, from, switchMap, map, of, catchError, forkJoin } from 'rxjs';
+
+/* Componente de geração de Id's únicos para os registros */
+import uuid from 'uuid-v4';
 
 export class DatabaseService {
   

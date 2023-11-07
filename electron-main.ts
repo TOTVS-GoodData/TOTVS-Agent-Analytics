@@ -5,6 +5,9 @@ import { autoUpdater } from 'electron-updater';
 /* Dependência de inicialização automática do Agent */
 import AutoLaunch from 'auto-launch';
 
+/* Constante que define o modo de execução do Agent (Desenv / Prod) */
+import { CNST_APPLICATION_PRODUCTION } from './app';
+
 /* Serviços do Electron */
 import { Execute } from './src-electron/execute';
 import { Functions } from './src-electron/functions';
@@ -244,12 +247,6 @@ export default class Main {
   /* Método que define os eventos de comunicação com o Angular (Interface) */
   private static setIpcListeners(): void {
     
-    //Consulta do número de versão atual do Agent
-    ipcMain.on('getAgentVersion', (event: IpcMainEvent) => {
-      event.returnValue = autoUpdater.currentVersion;
-      return autoUpdater.currentVersion;
-    });
-    
     /*****************************/
     /********* Ambientes *********/
     /*****************************/
@@ -339,6 +336,7 @@ export default class Main {
     //Gravação dos agendamentos
     ipcMain.on('saveSchedule', (event: IpcMainEvent, s: Schedule[]) => {
       ScheduleService.saveSchedule(s).subscribe((res: number) => {
+        event.returnValue = res;
         return res;
       });
     });
@@ -381,6 +379,7 @@ export default class Main {
     ipcMain.handle('saveConfiguration', (event: IpcMainEvent, conf: Configuration) => {
       return lastValueFrom(ConfigurationService.saveConfiguration(conf).pipe(map((b: number) => {
         if (b == 1) {
+          
           //Atualiza o menu do sistema operacional, pois o usuário pode ter alterado o idioma do Agent
           Main.updateTrayMenu();
           
@@ -519,6 +518,12 @@ export default class Main {
       event.returnValue = Files.writeToLog(loglevel, system, message, null, null, err);
     });
     
+    //Consulta do número de versão atual do Agent
+    ipcMain.on('getAgentVersion', (event: IpcMainEvent) => {
+      event.returnValue = autoUpdater.currentVersion;
+      return autoUpdater.currentVersion;
+    });
+    
     //Consulta dos arquivos de logs atualmente existentes
     ipcMain.on('readLogs', (event: IpcMainEvent) => {
       event.returnValue = Files.readLogs();
@@ -558,14 +563,14 @@ export default class Main {
     
     //Gravação das consultas padrões para determinada licença vinculada à este Agent
     ipcMain.handle('saveLatestQueries', (event: IpcMainEvent, license: License, database: Database, scheduleId: string) => {
-      return lastValueFrom(ServerService.saveLatestQueries(license, database, scheduleId).pipe(map((res: boolean) => {
+      return lastValueFrom(ServerService.saveLatestQueries(license, database, scheduleId).pipe(map((res: number) => {
         return res;
       })));
     });
     
     //Gravação das rotinas padrões para determinada licença vinculada à este Agent
     ipcMain.handle('saveLatestScripts', (event: IpcMainEvent, license: License, brand: string, scheduleId: string) => {
-      return lastValueFrom(ServerService.saveLatestScripts(license, brand, scheduleId).pipe(map((res: boolean) => {
+      return lastValueFrom(ServerService.saveLatestScripts(license, brand, scheduleId).pipe(map((res: number) => {
         return res;
       })));
     });
@@ -705,19 +710,20 @@ export default class Main {
     
     //Solicita a trava de única instância do Agent. Caso não consiga, este Agent é encerrado
     //Este processo é utilizado para bloquear a abertura de 2 Agents ao mesmo tempo
-    //Main.application.requestSingleInstanceLock();
-    if (false) {
-    //if (!Main.application.hasSingleInstanceLock()) {
-      let translations: any = TranslationService.getTranslations([
-        new TranslationInput('ELECTRON.THREAD_ERROR', [CNST_PROGRAM_NAME.DEFAULT])
-      ]);
-      
-      console.log(translations['ELECTRON.THREAD_ERROR']);
-      Main.application.quit();
+    //
+    if (CNST_APPLICATION_PRODUCTION) {
+      Main.application.requestSingleInstanceLock();
+      if (!Main.application.hasSingleInstanceLock()) {
+        let translations: any = TranslationService.getTranslations([
+          new TranslationInput('ELECTRON.THREAD_ERROR', [CNST_PROGRAM_NAME.DEFAULT])
+        ]);
+        
+        console.log(translations['ELECTRON.THREAD_ERROR']);
+        Main.application.quit();
+      }
     } else {
-      
       //Inicialização do arquivo de banco do Agent (Leitura das configurações existentes)
-      Files.initApplicationData(_app.getLocale());
+      Files.initApplicationData(true, _app.getLocale());
       
       //Leitura dos parâmetros de linha de comando
       Main.hidden = (Main.application.commandLine.hasSwitch('hidden') ? true : false);
@@ -750,11 +756,10 @@ export default class Main {
     
     //Consulta da configuração atual do Agent
     ConfigurationService.getConfiguration(true).subscribe((configuration: Configuration) => {
+      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_START'], null, null, null);
       
       //Define a linguagem padrão a ser utilizada no Agent
       TranslationService.use((configuration.locale));
-      
-      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_START'], null, null, null);
       
       //Atualização do registro do Windows p/ atualização automática (false)
       if (process.platform == 'win32') Main.setWindowsAutoUpdateRegistry(0);
@@ -765,8 +770,10 @@ export default class Main {
       //Disparo da atualização automática do Agent (Caso habilitado)
       Main.autoUpdaterCheck(configuration.autoUpdate);
       
-      //Inicialização do servidor local do Agent, para receber comandos do servidor da TOTVS
-      if (configuration.serialNumber != null) ServerService.startServer(configuration.clientPort).subscribe();
+      //Inicialização do servidor de comunicação do Agent, para receber comandos do Agent-Server
+      ServerService.startServer(configuration.clientPort).subscribe((b: boolean) => {
+        return b;
+      });
       
       //Configuração da comunicação c/ Angular (IPC)
       Main.setIpcListeners();
@@ -782,6 +789,8 @@ export default class Main {
       
       //Renderização da interface do Agent (Caso habilitado)
       Main.renderWindow();
+      
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK'], null, null, null);
       
       //Configuração do temporizador de execuções automática do Agent, a cada segundo
       let thisDay: number = 0;
@@ -823,7 +832,7 @@ export default class Main {
         if ((configuration.serialNumber != null) && (date.getDate() != thisDay)) {
           ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
             Files.deleteOldLogs();
-            Files.initApplicationData(conf.locale);
+            Files.initApplicationData(false, conf.locale);
             thisDay = date.getDate();
           });
         }

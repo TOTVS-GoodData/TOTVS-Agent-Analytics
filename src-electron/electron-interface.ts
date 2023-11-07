@@ -20,7 +20,7 @@ import { ScriptClient } from '../src-angular/app/script/script-interface';
 /* Interface de cofiguração do Agent */
 import { Configuration } from '../src-angular/app/configuration/configuration-interface';
 
-/* Interface de comunicação com o Java */
+/* Interface do banco de dados do Agent */
 export class DatabaseData {
   workspaces: Workspace[];
   databases: Database[];

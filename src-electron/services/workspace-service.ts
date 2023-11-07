@@ -17,11 +17,11 @@ import { Workspace } from '../../src-angular/app/workspace/workspace-interface';
 /* Interface de bancos de dados do Agent */
 import { Database } from '../../src-angular/app/database/database-interface';
 
-/* Componente de geração de Id's únicos para os registros */
-import uuid from 'uuid-v4';
-
 /* Componentes rxjs para controle de Promise / Observable */
 import { Observable, switchMap, map, of, catchError } from 'rxjs';
+
+/* Componente de geração de Id's únicos para os registros */
+import uuid from 'uuid-v4';
 
 export class WorkspaceService {
   

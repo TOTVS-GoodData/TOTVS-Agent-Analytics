@@ -172,7 +172,7 @@ export class QueryComponent {
         action: (query: QueryClient) => {
           this.lbl_addQueryTitle = this._translateService.CNST_TRANSLATIONS['QUERIES.EDIT_QUERY'];
           this.oldCommand = this.query.command;
-          this.query = query;
+          this.query = Object.assign(new QueryClient(null), query);
           this.modal_addQuery.open();
         }
       },{
@@ -225,7 +225,7 @@ export class QueryComponent {
       { key: 'scheduleId', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SCHEDULE_NAME'] },
       { key: 'name', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.QUERY_NAME'] },
       { key: 'executionMode', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODE'] },
-      { key: 'query', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'] }
+      { key: 'command', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'] }
     ];
     
     //Solicita ao Agent-Server as licenças cadastradas para esta instalação do Agent, e consulta o cadastro de ambientes disponíveis no Agent
@@ -359,8 +359,12 @@ export class QueryComponent {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_ERROR']);
         this.po_lo_text = { value: null };
       } else {
-        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_WARNING_FAILURES']);
-        this.po_lo_text = { value: null };
+        this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_WARNING_FAILURES']);
+        this.loadQueries().subscribe((res: boolean) => {
+          this.po_lo_text = { value: null };
+        }, (err: any) => {
+          this.po_lo_text = { value: null };
+        });
       }
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES_ERROR'], err);
@@ -456,7 +460,7 @@ export class QueryComponent {
         if (this.oldCommand != this.query.command) this.query.TOTVS = false;
         
         //Gravação da nova consulta no Agent
-        this._queryService.saveQuery([this.query]).subscribe((res: number) => {
+        this._queryService.saveQuery([Object.assign(new QueryClient(null), this.query)]).subscribe((res: number) => {
           if (res == 0) {
             this.modal_addQuery.close();
             this.loadQueries().subscribe((res: boolean) => {
@@ -466,10 +470,12 @@ export class QueryComponent {
               this.po_lo_text = { value: null };
             });
           } else {
+            if (this._electronService.isElectronApp) this.query.command = this._electronService.ipcRenderer.sendSync('decrypt', this.query.command);
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME']);
             this.po_lo_text = { value: null };
           }
         }, (err: any) => {
+          if (this._electronService.isElectronApp) this.query.command = this._electronService.ipcRenderer.sendSync('decrypt', this.query.command);
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR'], err);
           this.po_lo_text = { value: null };
         });

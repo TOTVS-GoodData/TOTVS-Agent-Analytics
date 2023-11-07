@@ -113,7 +113,7 @@ export class ScheduleService {
   }
   
   /* Método de gravação dos agendamentos do Agent */
-  public saveSchedule(s: Schedule): Observable<boolean> {
+  public saveSchedule(s: Schedule): Observable<number> {
     
     //Objeto que detecta se já existe um agendamento cadastrado com o mesmo nome do que será gravado
     let schedule_name: Schedule = null;
@@ -123,7 +123,7 @@ export class ScheduleService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('saveSchedule', s));
+      return of(this._electronService.ipcRenderer.sendSync('saveSchedule', [s]));
     } else {
       
       //Consulta das traduções, e dos agendamentos cadastrados atualmente
@@ -156,7 +156,7 @@ export class ScheduleService {
         schedule_name = results[1].filter((schedule: Schedule) => (schedule.id != s.id)).find((schedule: Schedule) => (schedule.name == s.name));
         if (schedule_name != undefined) {
           this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME']);
-          return of(false);
+          return of(0);
         } else {
           
           //Gravação pela API de testes do Angular
@@ -164,7 +164,7 @@ export class ScheduleService {
             return this._http.post(this._utilities.getLocalhostURL() + '/schedules', s).pipe(
             map(() => {
               this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.SAVE_OK']);
-              return true;
+              return 0;
             }), catchError((err: any) => {
               this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCHEDULES.MESSAGES.SAVE_ERROR'], err);
               throw err;
@@ -173,7 +173,7 @@ export class ScheduleService {
             return this._http.put(this._utilities.getLocalhostURL() + '/schedules/' + s.id, s).pipe(
             map(() => {
               this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.SAVE_OK']);
-              return true;
+              return 0;
             }), catchError((err: any) => {
               this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, results[0]['SCHEDULES.MESSAGES.SAVE_ERROR'], err);
               throw err;

@@ -157,7 +157,7 @@ export class ScriptComponent {
         visible: (s: ScriptClient) => ((this.isPlatform) || (!s.TOTVS)),
         action: (script: ScriptClient) => {
           this.lbl_addScriptTitle = this._translateService.CNST_TRANSLATIONS['SCRIPTS.EDIT_SCRIPT'];
-          this.script = script;
+          this.script = Object.assign(new ScriptClient(null), script);
           this.oldCommand = this.script.command;
           this.modal_addScript.open();
         }
@@ -207,7 +207,7 @@ export class ScriptComponent {
     this.CNST_FIELD_NAMES = [
       { key: 'scheduleId', value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SCHEDULE_NAME'] },
       { key: 'name', value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SCRIPT_NAME'] },
-      { key: 'script', value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SQL'] }
+      { key: 'command', value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SQL'] }
     ];
     
     //Solicita ao Agent-Server as licenças cadastradas para esta instalação do Agent, e consulta o cadastro de ambientes disponíveis no Agent
@@ -320,7 +320,7 @@ export class ScriptComponent {
         new TranslationInput('SCRIPTS.MESSAGES.IMPORT_ERROR', [ss.schedule.name])
       ]),
       this._serverService.saveLatestScripts(license, ss.databaseType, ss.schedule.id)
-    ]).subscribe((results: [TranslationInput[], number]) => {
+    ]).subscribe((results: [TranslationInput[], number]) => {console.log(results[1]);
       if (results[1] == null) {
         this.connectionLostToServer();
       } else if (results[1] == 0) {
@@ -338,8 +338,12 @@ export class ScriptComponent {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_ERROR']);
         this.po_lo_text = { value: null };
       } else {
-        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_WARNING_FAILURES']);
-        this.po_lo_text = { value: null };
+        this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_WARNING_FAILURES']);
+        this.loadScripts().subscribe((res: boolean) => {
+          this.po_lo_text = { value: null };
+        }, (err: any) => {
+          this.po_lo_text = { value: null };
+        });
       }
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_ERROR'], err);
@@ -426,15 +430,16 @@ export class ScriptComponent {
         
         //Criptografia da rotina escrita, caso o Electron esteja disponível
         if (this._electronService.isElectronApp) {
-            this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['SCRIPTS.MESSAGES.ENCRYPT']);
-            this.po_lo_text = { value: translations['SCRIPTS.MESSAGES.ENCRYPT'] };
+          this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['SCRIPTS.MESSAGES.ENCRYPT']);
+          this.po_lo_text = { value: translations['SCRIPTS.MESSAGES.ENCRYPT'] };
+          this.script.command = this._electronService.ipcRenderer.sendSync('encrypt', this.script.command);
         }
         
         //Detecção de customizações das rotinas padrões
         if (this.oldCommand != this.script.command) this.script.TOTVS = false;
         
         //Gravação da nova rotina no Agent
-        this._scriptService.saveScript([this.script]).subscribe((res: number) => {
+        this._scriptService.saveScript([Object.assign(new ScriptClient(null), this.script)]).subscribe((res: number) => {
           if (res == 0) {
             this.modal_addScript.close();
             this.loadScripts().subscribe((res: boolean) => {
@@ -444,10 +449,12 @@ export class ScriptComponent {
               this.po_lo_text = { value: null };
             });
           } else {
+            if (this._electronService.isElectronApp) this.script.command = this._electronService.ipcRenderer.sendSync('decrypt', this.script.command);
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME']);
             this.po_lo_text = { value: null };
           }
         }, (err: any) => {
+          if (this._electronService.isElectronApp) this.script.command = this._electronService.ipcRenderer.sendSync('decrypt', this.script.command);
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
           this.po_lo_text = { value: null };
         });

@@ -84,13 +84,12 @@ export class Files {
   public static deleteOldLogs() {
     
     //Leitura da configuração atual do Agent
-    ConfigurationService.getConfiguration(true).subscribe((conf: Configuration) => {
+    ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
       
       //Define a data mais antiga a ser mantida dos arquivos de log
       let maxDate: Date = new Date();
       maxDate.setDate(new Date().getDate() - conf.logfilesToKeep);
       
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK'], null, null, null);
       Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DELETE_OLD_LOGS'], null, null, null);
       
       //Realiza a leitura do nome de todos os arquivos presentes no diretório de log do Agent
@@ -175,7 +174,7 @@ export class Files {
     Método de inicialização do banco de dados do Agent, e seus arquivos de log.
     Caso não exista banco, é criado um com as configurações iniciais padrões.
   */
-  public static initApplicationData(language: string): void {
+  public static initApplicationData(showLogs: boolean, language: string): void {
     
     //Inicializa o canal de log p/ mensagens de debug / info
     Files.loggerJSON = winston.createLogger({
@@ -217,16 +216,16 @@ export class Files {
     //Verifica se existe um banco de testes/desenv. no diretório de dados do Agent
     if (fs.existsSync(CNST_DATABASE_NAME_DEV)) {
       Files.filepath = CNST_DATABASE_NAME_DEV;
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_DEVELOPMENT'], null, null, null);
+      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_DEVELOPMENT'], null, null, null);
       
     //Caso não exista, procura por um banco de produção no mesmo diretório
     } else if (fs.existsSync(CNST_DATABASE_NAME)) {
       Files.filepath = CNST_DATABASE_NAME;
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_PRODUCTION'], null, null, null);
+      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_PRODUCTION'], null, null, null);
       
     //Caso também não exista, é criado um novo arquivo de banco, de produção, 
     } else {
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE'], null, null, null);
+      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE'], null, null, null);
       fs.createFileSync(CNST_DATABASE_NAME);
       
       fs.writeJsonSync(
@@ -239,7 +238,7 @@ export class Files {
       );
       
       Files.filepath = CNST_DATABASE_NAME;
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE_OK'], null, null, null);
+      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE_OK'], null, null, null);
     }
     
     //Cria o diretório de arquivos temporários do Agent (Caso ainda não exista)

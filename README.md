@@ -1,4 +1,4 @@
-# TOTVS-FastAnalytics-Agent
+# TOTVS-Agent-Analytics
 Programa oficial da TOTVS para envio de dados para a plataforma GoodData.
 
 Suporta sistemas Windows / Linux / MacOS.
@@ -32,7 +32,7 @@ regKey = new Winreg({
 });
 ```
 
-Esta alteração é necessária pois esta dependência "auto-launch" não foi configurada para instalar pacotes do Windows de maneira global na máquina.
+Esta alteração é necessária pois esta dependência ```auto-launch``` não foi configurada para instalar pacotes do Windows de maneira global na máquina.
 
 Após a instalação das dependências do projeto e realizado o ajuste acima, executar o seguinte comando para subir a aplicação:
 
@@ -87,7 +87,7 @@ Ao ativar o Electron, é necessário subir uma build do Agent-Server, também co
 
 Caso o Agent-Server não esteja ativado, as interfaces do Agent irão retornar um erro de comunicação com o servidor, impossibilitando sua utilização.
 
-Para definir o ip / porta do Agent-Server, alterar seguintes constantes do arquivo ```/src-electron/electron-constants```:
+Para definir o IP / Porta do Agent-Server, deve-se alterar seguintes constantes do arquivo ```/src-electron/electron-constants```:
 
 ```powershell
   export const CNST_SERVER_SOURCE: string = 'SERVER';
@@ -98,11 +98,13 @@ Para definir o ip / porta do Agent-Server, alterar seguintes constantes do arqui
   };
 ```
 
-Vale lembrar que a porta definida deve estar devidamente configurada no menu de "Configuração" do Agent-Server também.
+Vale lembrar que a porta definida acima deve estar devidamente configurada no menu de "Configuração" do Agent-Server **(e não do Agent)**.
 
 Após ativar o Agent-Server localmente, é possível testar qualquer funcionalidade da aplicação (executar o java, agendamento automático, etc), com exceção apenas à atualização automática dos Agents.
 
-## Geração de Instaladores - Windows (.exe) / Linux (.deb) / MacOS ()
+**IMPORTANTE: A geração de uma nova build do Agent, com IP / Porta diferentes, obriga a geração de uma nova build do próprio Agent-Server também, e sua atualização.**
+
+## Geração de Instaladores - Windows (.exe) / Linux (.deb) / MacOS (?)
 Executar um dos comandos abaixo, de acordo com o SO de destino:
 ```powershell
    npm run release-windows-32
@@ -172,4 +174,4 @@ Também é possível verificar a certificação do arquivo de instalação clica
 
 Caso o arquivo não possua esta opção "Assinaturas Digitais", ele não foi assinado corretamente.
 
-Finalmente, a instalação do Agent nos clientes, de forma certificada, remove a necessidade de rodá-lo como Administrador, e evita conflitos de segurança com o Windows.
+Finalmente, a instalação do Agent nos clientes, de forma certificada, remove a necessidade de rodá-lo como Administrador, e evita conflitos de segurança com o SO.

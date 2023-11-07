@@ -349,15 +349,17 @@ export class DataBaseAddComponent {
           
           //Grava o novo banco de dados do Agent, e retorna à página anterior, caso bem sucedido
           this.po_lo_text = { value: translations['DATABASES.MESSAGES.SAVE'] };
-          this._databaseService.saveDatabase(this.database).subscribe((b: boolean) => {
+          this._databaseService.saveDatabase(Object.assign(new Database(), this.database)).subscribe((b: boolean) => {
             if (b) {
               this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.SAVE_OK']);
               this.goBack(this.database);
             } else {
+              if (this._electronService.isElectronApp) this.database.password = this._electronService.ipcRenderer.sendSync('decrypt', this.database.password);
               this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME']);
             }
             this.po_lo_text = { value: null };
           }, (err: any) => {
+            if (this._electronService.isElectronApp) this.database.password = this._electronService.ipcRenderer.sendSync('decrypt', this.database.password);
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.SAVE_ERROR'], err);
             this.po_lo_text = { value: null };
           });

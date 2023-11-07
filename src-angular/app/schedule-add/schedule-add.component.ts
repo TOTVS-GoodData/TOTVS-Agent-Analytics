@@ -309,8 +309,8 @@ export class ScheduleAddComponent {
         });
         
         //Grava o novo agendamento do Agent, e retorna à página anterior, caso bem sucedido
-        this._scheduleService.saveSchedule(this.schedule).subscribe((res: boolean) => {
-          if (res) {
+        this._scheduleService.saveSchedule(Object.assign(new Schedule(), this.schedule)).subscribe((res: number) => {
+          if (res == 0) {
             this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.SAVE_OK']);
             this._router.navigate(['/schedule']);
           } else {

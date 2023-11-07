@@ -29,11 +29,11 @@ import { QueryClient } from '../../src-angular/app/query/query-interface';
 /* Interface de versionamento do Agent */
 import { Version } from '../../src-angular/app/utilities/version-interface';
 
-/* Componente de geração de Id's únicos para os registros */
-import uuid from 'uuid-v4';
-
 /* Componentes rxjs para controle de Promise / Observable */
 import { Observable, switchMap, map, of, catchError, forkJoin } from 'rxjs';
+
+/* Componente de geração de Id's únicos para os registros */
+import uuid from 'uuid-v4';
 
 export class QueryService {
   

@@ -81,35 +81,34 @@ export class ConfigurationService {
       new TranslationInput('SERVICES.SERVER.MESSAGES.LOADING_LICENSES', [])
     ]).pipe(switchMap((translations: any) => {
       
-    //Redirecionamento da requisição p/ Electron (caso disponível)
-    if (this._electronService.isElectronApp) {
-      return this._electronService.ipcRenderer.invoke('saveConfiguration', conf).then((b: number) => {
-        if (b == 1) {
-          this._translateService.use(conf.locale).subscribe((b: boolean) => {
+      //Redirecionamento da requisição p/ Electron (caso disponível)
+      if (this._electronService.isElectronApp) {
+        return this._electronService.ipcRenderer.invoke('saveConfiguration', conf).then((b: number) => {
+          if (b == 1) {
+            this._translateService.use(conf.locale).subscribe((b: boolean) => {
+              this._menuService.updateMenu();
+            });
+            return 1;
+          } else return b;
+        });
+      } else {
+        
+        //Consulta da API de testes do Angular
+        this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE']);
+        return this._http.put(this._utilities.getLocalhostURL() + '/configuration', conf).pipe(
+        switchMap(() => {
+          this._translateService.use(conf.locale);
+          return this._translateService.updateStandardTranslations().pipe(map((b: boolean) => {
             this._menuService.updateMenu();
-          });
-          return 1;
-        }
-        else return b;
-      });
-    } else {
-      
-      //Consulta da API de testes do Angular
-      this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE']);
-      return this._http.put(this._utilities.getLocalhostURL() + '/configuration', conf).pipe(
-      switchMap(() => {
-        this._translateService.use(conf.locale);
-        return this._translateService.updateStandardTranslations().pipe(map((b: boolean) => {
-          this._menuService.updateMenu();
-          this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK']);
-          this._utilities.debugMode = conf.debug;
-          return 1;
+            this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK']);
+            this._utilities.debugMode = conf.debug;
+            return 1;
+          }));
+        }), catchError((err: any) => {
+          this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR'], err);
+          throw err;
         }));
-      }), catchError((err: any) => {
-        this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR'], err);
-        throw err;
-      }));
-    }
-  }));
+      }
+    }));
   }
 }

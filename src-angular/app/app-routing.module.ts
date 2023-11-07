@@ -2,28 +2,28 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-/* Módulos da página Workspace */
+/* Módulos da página de ambientes */
 import { WorkspaceComponent } from './workspace/workspace.component';
 import { WorkspaceAddComponent } from './workspace-add/workspace-add.component';
 
-/* Módulos da página Database */
+/* Módulos da página de bancos de dados */
 import { DataBaseComponent } from './database/database.component';
 import { DataBaseAddComponent } from './database-add/database-add.component';
 
-/* Módulos da página Schedule */
+/* Módulos da página de agendamentos */
 import { ScheduleComponent } from './schedule/schedule.component';
 import { ScheduleAddComponent } from './schedule-add/schedule-add.component';
 
-/* Módulos da página Query */
+/* Módulos da página de consultas */
 import { QueryComponent } from './query/query.component';
 
-/* Módulos da página Script */
+/* Módulos da página de rotinas */
 import { ScriptComponent } from './script/script.component';
 
-/* Módulos da página Monitor */
+/* Módulos da página de monitoramento */
 import { MonitorComponent } from './monitor/monitor.component';
 
-/* Módulos da página Configuration */
+/* Módulos da página de configuração */
 import { ConfigurationComponent } from './configuration/configuration.component';
 
 /* Rotas de redirecionamento disponíveis no Agent */
