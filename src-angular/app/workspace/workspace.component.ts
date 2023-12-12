@@ -13,6 +13,9 @@ import {
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from './workspace-service';
 import { Workspace } from './workspace-interface';
@@ -57,6 +60,9 @@ export class WorkspaceComponent implements OnInit {
   //Token do contrato do cliente, usado para validação com o Agent-Server
   protected contractToken: string = null;
   
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
+  
   /****** Portinari.UI ******/
   //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
@@ -86,6 +92,7 @@ export class WorkspaceComponent implements OnInit {
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
     private _translateService: TranslationService,
+    private _mirrorService: MirrorService,
     private _utilities: Utilities,
     private _router: Router
   ) {
@@ -123,6 +130,9 @@ export class WorkspaceComponent implements OnInit {
     this.lbl_contractToken = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.CONTRACT_TOKEN'];
     this.lbl_contractType = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.CONTRACT_TYPE'];
     
+    //Configuração da mensagem de acesso remoto (MirrorMode)
+    this.mirrorMode = this._mirrorService.getMirrorMode();
+    
     //Tradução dos botões
     this.lbl_add = this._translateService.CNST_TRANSLATIONS['BUTTONS.ADD'];
     this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
@@ -136,7 +146,7 @@ export class WorkspaceComponent implements OnInit {
   
   /* Método de consulta dos ambientes configurados no Agent */
   private loadWorkspaces(): void {
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING'] };
     
     //Consulta dos ambientes / banco de dados cadastrados no Agent
     forkJoin([
@@ -158,10 +168,10 @@ export class WorkspaceComponent implements OnInit {
         else w.databaseName = this._translateService.CNST_TRANSLATIONS['ANGULAR.NONE'];
         return w;
       });
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_ERROR']);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     });
   }
   
@@ -188,18 +198,18 @@ export class WorkspaceComponent implements OnInit {
       new TranslationInput('WORKSPACES.MESSAGES.DELETE', [this.workspaceToDelete.name]),
       new TranslationInput('WORKSPACES.MESSAGES.DELETE_ERROR', [this.workspaceToDelete.name])
     ]).pipe(switchMap((translations: any) => {
-      this.po_lo_text = { value: translations['WORKSPACES.MESSAGES.DELETE'] };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: translations['WORKSPACES.MESSAGES.DELETE'] };
       
       //Remoção do ambiente configurado no Agent
       return this._workspaceService.deleteWorkspace(this.workspaceToDelete)
       .pipe(map((b: boolean) => {
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.DELETE_OK']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         this.workspaceToDelete = null;
         this.loadWorkspaces();
       }), catchError((err: any) => {
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, translations['WORKSPACES.MESSAGES.DELETE_ERROR']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         this.workspaceToDelete = null;
         throw err;
       }));

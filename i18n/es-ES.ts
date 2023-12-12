@@ -67,6 +67,15 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       }
     }
   },
+  MIRROR_MODE: {
+    TITLE: 'MODO ESPEJO ACTIVADO - Todos los cambios en este Agent van a ser replicados hasta el Agent remoto [${p1}]',
+    ONLINE: 'Aviso - Acceso remoto activado por el servidor central del TOTVS. Ese Agent esta bloqueado ahora hasta la finalización del acceso.',
+    OFFLINE: 'Acceso remoto finalizado. El Agent esta listo para utilización.',
+    RUNNING: 'Acceso remoto em ejecución',
+    SERVER_SYNC: 'Solicitando sincronización con la instancia remota del Agent [${p1}]...',
+    SERVER_SYNC_OK: 'Sincronización hecha con éxito. Todas las actualizaciones fueron aplicadas en el Agent remoto.',
+    SERVER_SYNC_ERROR: 'Error - La sincronización del Agent [${p1}] ha fallado. La instancia espejo no pudiste cambiar ninguna configuración del Agent remoto.'
+  },
   ANGULAR: {
     SYSTEM_EXIT: '¿Seguro que quieres cerrar el Agent?',
     SYSTEM_FINISH_USER: '=== Desligamento del sistema solicitado por el usuario (menu de salida) ===',
@@ -474,6 +483,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     APPLICATION: 'Aplicación',
     JAVA: 'Java',
     VERSION: 'Versión',
+    INSTANCE: 'Nombre de la instancia',
     DEBUGMODE: 'Modo de depuración',
     AUTOUPDATE: 'Actualizacion automatica',
     ACTIVATED_1: 'Activado',
@@ -499,6 +509,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       SAVE_ERROR_PORT: 'Error - La inicialización del servidor en la puerta \'${p1}\' ha fallado. Volviendo cambios...'
     },
     TOOLTIPS: {
+      INSTANCE: 'Nombre de la instancia del Agent, definido automaticamente por TOTVS. Este nombre es utilizado para ayudar el servicio del equipo de soporte del TOTVS.',
       DEBUGMODE: 'Muestra mensajes adicionales de debug en las ejecuciones del Agent.',
       LOGFILES: 'Numero máximo de archivos de log mantenenidos por el Agent, en su directorio de log. Agent automáticamente va a borrar los archivos antíguos.',
       JAVA_XMX: 'Alocación máxima de memoria RAM (MB - Megabytes) que el Agent puede utilizar mientras ejecuta los horarios. Si la alocación no es suficiente para cargar los datos, Agent va cerrar el proceso con una mensaje de error. Valor minimo: ${p1}MB',

@@ -113,7 +113,7 @@ export class Execute {
           '-Duser.country=' + country,
           '-Xmx'+ conf.javaXmx + 'm',
           '-Djava.io.tmpdir=' + conf.javaTmpDir,
-          '-classpath', CNST_JAR_PATH_FAST, jClass, commandPath
+          '-classpath', CNST_JAR_PATH_FAST(), jClass, commandPath
         ]
       );
       

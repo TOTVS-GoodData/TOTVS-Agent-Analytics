@@ -2,11 +2,15 @@
 import { CNST_TIMEZONES_DEFAULT } from '../services/timezones';
 
 /* Constante de porta de entrada padrão do Agent */
-import { CNST_DEFAULT_CLIENT_PORT } from './configuration-constants';
+import {
+  CNST_DEFAULT_CLIENT_PORT,
+  CNST_DEFAULT_INSTANCE_NAME
+} from './configuration-constants';
 
 /* Interface de configuração do Agent */
 export class Configuration {
   logfilesToKeep: number;
+  instanceName: string;
   debug: boolean;
   javaXmx: number;
   javaTmpDir: string;
@@ -20,6 +24,7 @@ export class Configuration {
   
   constructor(logfilesToKeep: number, debug: boolean, javaXmx: number, javaTmpDir: string, locale: string, autoUpdate: boolean) {
     this.logfilesToKeep = logfilesToKeep;
+    this.instanceName = CNST_DEFAULT_INSTANCE_NAME;
     this.debug = debug;
     this.javaXmx = javaXmx;
     this.javaTmpDir = javaTmpDir;

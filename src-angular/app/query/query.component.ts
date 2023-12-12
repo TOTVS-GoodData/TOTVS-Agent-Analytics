@@ -20,6 +20,9 @@ import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Serviço de comunicação com o Agent-Server */
 import { ServerService } from '../services/server/server-service';
 import {
@@ -97,6 +100,9 @@ export class QueryComponent {
   //Variável de suporte, que mostra os modos de execução disponíveis das consultas (Completa / Mensal)
   protected CNST_QUERY_EXECUTION_MODES: Array<PoSelectOption> = [];
   
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
+  
   /****** Portinari.UI ******/
   //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
@@ -153,6 +159,7 @@ export class QueryComponent {
     private _queryService: QueryService,
     private _scheduleService: ScheduleService,
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _translateService: TranslationService,
     private _utilities: Utilities,
     private _router: Router
@@ -220,6 +227,9 @@ export class QueryComponent {
     this.ttp_queryName = this._translateService.CNST_TRANSLATIONS['QUERIES.TOOLTIPS.QUERY_NAME'];
     this.ttp_executionMode = this._translateService.CNST_TRANSLATIONS['QUERIES.TOOLTIPS.MODE'];
     
+    //Configuração da mensagem de acesso remoto (MirrorMode)
+    this.mirrorMode = this._mirrorService.getMirrorMode();
+    
     //Definição dos campos obrigatórios do formulário
     this.CNST_FIELD_NAMES = [
       { key: 'scheduleId', value: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SCHEDULE_NAME'] },
@@ -229,7 +239,7 @@ export class QueryComponent {
     ];
     
     //Solicita ao Agent-Server as licenças cadastradas para esta instalação do Agent, e consulta o cadastro de ambientes disponíveis no Agent
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES'] };
     forkJoin([
       this._workspaceService.getWorkspaces(false),
       this._databaseService.getDatabases(false),
@@ -251,7 +261,7 @@ export class QueryComponent {
         });
       }
     }, (err: any) => {
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES_ERROR'], err);
     });
   }
@@ -259,7 +269,7 @@ export class QueryComponent {
   /* Método que redireciona o usuário para a página inicial do Agent, caso ocorra falha na comunicação com o Agent-Server */
   private connectionLostToServer(): void {
     this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERVER_ERROR']);
-    this.po_lo_text = { value: null };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     this._router.navigate(['/']);
   }
   
@@ -267,7 +277,7 @@ export class QueryComponent {
   private loadQueries(): Observable<boolean> {
     
     //Consulta das informações
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING'] };
     return forkJoin([
       this._scheduleService.getSchedules(false),
       this._queryService.getQueries(true),
@@ -286,7 +296,7 @@ export class QueryComponent {
         sc.queries = sc.queries.map((q: QueryClient) => {
           q.executionModeName = this.CNST_QUERY_EXECUTION_MODES.find((exec: any) => exec.value == q.executionMode).label;
           if ((this._electronService.isElectronApp) && ((!q.TOTVS) || this.isPlatform)) {
-            q.command = this._electronService.ipcRenderer.sendSync('decrypt', q.command);
+            q.command = this._electronService.ipcRenderer.sendSync('AC_decrypt', q.command);
           }
           return q;
         });
@@ -321,7 +331,7 @@ export class QueryComponent {
         return { label: s.name, value: s.id };
       });
       
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       return true;
     }));
   }
@@ -335,7 +345,7 @@ export class QueryComponent {
     let license: License = workspace.license;
     
     //Solicita as consultas mais recentes para o Agent-Server
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_MESSAGE'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_MESSAGE'] };
     forkJoin([
       this._translateService.getTranslations([
         new TranslationInput('QUERIES.MESSAGES.IMPORT_ERROR', [sc.schedule.name])
@@ -347,28 +357,28 @@ export class QueryComponent {
       } else if (results[1] == 0) {
         this.loadQueries().subscribe((res: boolean) => {
           this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_OK'], null);
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }, (err: any) => {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, results[0]['QUERIES.MESSAGES.IMPORT_ERROR'], err);
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         });
       } else if (results[1] == -1) {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, results[0]['QUERIES.MESSAGES.IMPORT_ERROR']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       } else if (results[1] == -2) {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_ERROR']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       } else {
         this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_WARNING_FAILURES']);
         this.loadQueries().subscribe((res: boolean) => {
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }, (err: any) => {
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         });
       }
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES_ERROR'], err);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     });
   }
   
@@ -382,7 +392,7 @@ export class QueryComponent {
     let query: QueryClient = new QueryClient(null);
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.VALIDATE']);
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.VALIDATE'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.VALIDATE'] };
     
     //Verifica se todos os campos da interface de consultas foram preenchidos
     let propertiesNotDefined = Object.getOwnPropertyNames.call(Object, query).map((p: string) => {
@@ -392,7 +402,7 @@ export class QueryComponent {
     // Validação dos campos de formulário
     if (propertiesNotDefined.length > 0) {
       validate = false;
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
       this._translateService.getTranslations([
         new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName])
@@ -407,7 +417,7 @@ export class QueryComponent {
       }).filter((p: string) => { return p != null; });
       if (propertiesNotDefined.length > 0) {
         validate = false;
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
         this._translateService.getTranslations([
           new TranslationInput('FORM_ERRORS.FIELD_TYPING_WRONG', [fieldName])
@@ -447,13 +457,13 @@ export class QueryComponent {
         new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [this.query.name]),
         new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME', [this.query.name])
       ]).subscribe((translations: any) => {
-        this.po_lo_text = { value: translations['QUERIES.MESSAGES.SAVE'] };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: translations['QUERIES.MESSAGES.SAVE'] };
         
         //Criptografia da consulta escrita, caso o Electron esteja disponível
         if (this._electronService.isElectronApp) {
           this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['QUERIES.MESSAGES.ENCRYPT']);
-          this.po_lo_text = { value: translations['QUERIES.MESSAGES.ENCRYPT'] };
-          this.query.command = this._electronService.ipcRenderer.sendSync('encrypt', this.query.command);
+          if (this.mirrorMode != 1) this.po_lo_text = { value: translations['QUERIES.MESSAGES.ENCRYPT'] };
+          this.query.command = this._electronService.ipcRenderer.sendSync('AC_encrypt', this.query.command);
         }
         
         //Detecção de customizações das consultas padrões
@@ -467,17 +477,17 @@ export class QueryComponent {
               this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SAVE_OK']);
             }, (err: any) => {
               this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_ERROR'], err);
-              this.po_lo_text = { value: null };
+              if (this.mirrorMode != 1) this.po_lo_text = { value: null };
             });
           } else {
-            if (this._electronService.isElectronApp) this.query.command = this._electronService.ipcRenderer.sendSync('decrypt', this.query.command);
+            if (this._electronService.isElectronApp) this.query.command = this._electronService.ipcRenderer.sendSync('AC_decrypt', this.query.command);
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR_SAME_NAME']);
-            this.po_lo_text = { value: null };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           }
         }, (err: any) => {
-          if (this._electronService.isElectronApp) this.query.command = this._electronService.ipcRenderer.sendSync('decrypt', this.query.command);
+          if (this._electronService.isElectronApp) this.query.command = this._electronService.ipcRenderer.sendSync('AC_decrypt', this.query.command);
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['QUERIES.MESSAGES.SAVE_ERROR'], err);
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         });
       });
     }
@@ -492,7 +502,7 @@ export class QueryComponent {
   /* Modal de remoção de consultas no Agent (SIM) */
   protected deleteQuery_YES(): void {
     this.modal_deleteQuery.close();
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE'] };
     
     //Remoção da consulta configurada no Agent
     this._queryService.deleteQuery(this.queryToDelete).subscribe((b: boolean) => {
@@ -500,14 +510,14 @@ export class QueryComponent {
       //Recarga das consultas disponíveis atualmente
       this.loadQueries().subscribe((res: boolean) => {
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_OK']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       }, (err: any) => {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_ERROR'], err);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       });
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_ERROR'], err);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     });
   }
 }

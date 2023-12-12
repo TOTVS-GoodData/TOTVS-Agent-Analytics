@@ -63,7 +63,7 @@ export class ScriptService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getScripts', showLogs));
+      return of(this._electronService.ipcRenderer.sendSync('AC_getScripts', showLogs));
     } else {
       
       //Escrita de logs (caso solicitado)
@@ -89,7 +89,7 @@ export class ScriptService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getScriptsBySchedule', sc));
+      return of(this._electronService.ipcRenderer.sendSync('AC_getScriptsBySchedule', sc));
     } else {
       
       //Consulta das traduções
@@ -122,7 +122,7 @@ export class ScriptService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('saveScript', s));
+      return of(this._electronService.ipcRenderer.sendSync('AC_saveScript', s));
     } else {
       
       //Itera por todas as consultas que devem ser gravadas
@@ -199,7 +199,7 @@ export class ScriptService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('deleteScript', s));
+      return of(this._electronService.ipcRenderer.sendSync('AC_deleteScript', s));
     } else {
       
       //Consulta das traduções

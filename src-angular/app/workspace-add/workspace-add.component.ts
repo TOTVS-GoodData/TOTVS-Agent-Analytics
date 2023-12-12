@@ -8,6 +8,9 @@ import { PoSelectOption } from '@po-ui/ng-components';
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Serviço de comunicação com o Agent-Server */
 import { ServerService } from '../services/server/server-service';
 import { License, AvailableLicenses } from '../services/server/server-interface';
@@ -81,6 +84,9 @@ export class WorkspaceAddComponent {
   //Variável de suporte, para verificaar se a opção "Nenhum" foi selecionada
   protected _CNST_NO_OPTION_SELECTED: string = CNST_NO_OPTION_SELECTED;
   
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
+  
   /****** Portinari.UI ******/
   //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
@@ -147,6 +153,7 @@ export class WorkspaceAddComponent {
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _translateService: TranslationService,
     private _modalService: ModalService,
     private _sessionService: SessionService,
@@ -200,6 +207,9 @@ export class WorkspaceAddComponent {
     this.ttp_GDProcessId = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.PROCESS'];
     this.ttp_GDProcessGraph = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TOOLTIPS.GRAPH'];
     
+    //Configuração da mensagem de acesso remoto (MirrorMode)
+    this.mirrorMode = this._mirrorService.getMirrorMode();
+    
     //Definição dos campos obrigatórios do formulário
     this.CNST_FIELD_NAMES = [
       { key: 'workspaceSource', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ERP'] },
@@ -216,7 +226,7 @@ export class WorkspaceAddComponent {
     ];
     
     //Solicita ao servidor as licenças cadastradas para esta instalação do Agent
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES'] };
     forkJoin(
       this._serverService.getAvailableLicenses(true),
       this.getDatabases()
@@ -225,7 +235,7 @@ export class WorkspaceAddComponent {
       //Redireciona o usuário para a página de origem, caso ocorra uma falha na comunicação com o Agent-Server
       if (results[0] == null) {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERVER_ERROR']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         this._router.navigate(['/workspace']);
       } else {
         
@@ -294,12 +304,12 @@ export class WorkspaceAddComponent {
             });
           });
         } else {
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }
       }
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES_ERROR']);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     });
   }
   
@@ -336,7 +346,7 @@ export class WorkspaceAddComponent {
         value: CNST_NO_OPTION_SELECTED
       });
     }), catchError((err: any) => {
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_ERROR']);
       throw err;
     }));
@@ -344,11 +354,11 @@ export class WorkspaceAddComponent {
   
   /* Método que realiza o login do usuário no GoodData, e atualiza as opções de ambientes / ETL disponíveis no Agent */
   protected getWorkspaces(username: string, password: string, environment: string, rememberMe: boolean): Observable<boolean> {
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING'] };
     
     //Solicita a descriptografia da senha do usuário, para fazer o login no GoodData (Apenas disponível c/ Electron)
     if ((this._electronService.isElectronApp) && (this.workspace.id != null)) {
-      password = this._electronService.ipcRenderer.sendSync('decrypt', password);
+      password = this._electronService.ipcRenderer.sendSync('AC_decrypt', password);
     }
     
     //Efetua o login no GoodData
@@ -372,7 +382,7 @@ export class WorkspaceAddComponent {
         
         (HOF - Higher Order Function)
       */
-      this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES'] };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES'] };
       return this._goodDataService.init(
         this._sessionService.USER_ID,
         this.workspace.GDWorkspaceId
@@ -418,16 +428,16 @@ export class WorkspaceAddComponent {
         }
         
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES_OK']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         return true;
       }), catchError((err: any) => {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_WORKSPACES_ERROR'], err);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         throw err;
       }));
     }), catchError((err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_ERROR'], err.error.message);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       throw err;
     }));
   }
@@ -463,7 +473,7 @@ export class WorkspaceAddComponent {
   
   /* Método executado ao trocar o ambiente do GoodData */
   protected onChangeWorkspace(): Observable<boolean> {
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES'] };
     
     //Atualiza o ambiente atualmente selecionado no serviço de comunicação com o GoodData
     return this._goodDataService.setCurrentProject(
@@ -483,11 +493,11 @@ export class WorkspaceAddComponent {
       //Atualiza a URL de upload ods arquivos do GoodData, para o valor padrão
       this.workspace.GDWorkspaceUploadURL = CNST_UPLOAD_URL_PATH + this.workspace.GDWorkspaceId + CNST_UPLOAD_URL_SUBPATH;
       
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       return true;
     }), catchError((err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.GOODDATA.MESSAGES.LOADING_PROCESSES_ERROR'], err);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       throw err;
     }));
   }
@@ -532,7 +542,7 @@ export class WorkspaceAddComponent {
     let password: string = null;
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.VALIDATE']);
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.VALIDATE'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.VALIDATE'] };
     
     //Verifica se todos os campos da interface de ambientes foram preenchidos
     let propertiesNotDefined: string[] = Object.getOwnPropertyNames.call(Object, workspace).map((p: string) => {
@@ -546,7 +556,7 @@ export class WorkspaceAddComponent {
     // Validação dos campos de formulário
     if (propertiesNotDefined.length > 0) {
       validate = false;
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
       this._translateService.getTranslations([
         new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName]),
@@ -566,7 +576,7 @@ export class WorkspaceAddComponent {
       }).filter((p: string) => { return p != null; });
       if (propertiesNotDefined.length > 0) {
         validate = false;
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
         this._translateService.getTranslations([
           new TranslationInput('FORM_ERRORS.FIELD_TYPING_WRONG', [fieldName])
@@ -581,7 +591,7 @@ export class WorkspaceAddComponent {
       
       //Descriptografia da senha de usuário do GoodData (Apenas dispnível c/ Electron)
       if ((this._electronService.isElectronApp) && (this.workspace.id != null)) {
-        password = this._electronService.ipcRenderer.sendSync('decrypt', this.workspace.GDPassword);
+        password = this._electronService.ipcRenderer.sendSync('AC_decrypt', this.workspace.GDPassword);
       } else {
         password = this.workspace.GDPassword;
       }
@@ -610,12 +620,12 @@ export class WorkspaceAddComponent {
           //Realiza a criptografia da senha do usuário do GoodData, caso o Electron esteja disponível
           if ((this._electronService.isElectronApp) && (this.workspace.id == null)) {
             this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.PASSWORD_ENCRYPT']);
-            this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.PASSWORD_ENCRYPT'] };
-            this.workspace.GDPassword = this._electronService.ipcRenderer.sendSync('encrypt', this.workspace.GDPassword);
+            if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.PASSWORD_ENCRYPT'] };
+            this.workspace.GDPassword = this._electronService.ipcRenderer.sendSync('AC_encrypt', this.workspace.GDPassword);
           }
           
           //Grava o novo ambiente do Agent, e retorna à página anterior, caso bem sucedido
-          this.po_lo_text = { value: translations['WORKSPACES.MESSAGES.SAVE'] };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: translations['WORKSPACES.MESSAGES.SAVE'] };
           return this._workspaceService.saveWorkspace(Object.assign(new Workspace(), this.workspace)).pipe(map((res: boolean) => {
             if (res) {
               this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.SAVE_OK']);
@@ -623,10 +633,10 @@ export class WorkspaceAddComponent {
             } else {
               this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME']);
             }
-            this.po_lo_text = { value: null };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           }, (err: any) => {
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['WORKSPACES.MESSAGES.SAVE_ERROR'], err);
-            this.po_lo_text = { value: null };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           }));
         }));
       }
@@ -687,11 +697,11 @@ export class WorkspaceAddComponent {
     return this._translateService.getTranslations([
       new TranslationInput('DATABASES.MESSAGES.LOGIN', [this.database.name]),
     ]).pipe(switchMap((translations: any) => {
-      this.po_lo_text = { value: translations['DATABASES.MESSAGES.LOGIN'] };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: translations['DATABASES.MESSAGES.LOGIN'] };
       
       //Disparo da requisição de teste ao serviço de banco de dados
       return this._databaseService.testConnection(this.database).pipe(map((validate: boolean) => {
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         return validate;
       }));
     }));

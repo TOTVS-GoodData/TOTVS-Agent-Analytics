@@ -9,7 +9,7 @@ import { TranslationInput } from '../../src-angular/app/services/translation/tra
 import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../../src-angular/app/utilities/utilities-constants';
 
 /* Interface do banco de dados do Agent */
-import { DatabaseData } from '../electron-interface';
+import { ClientData } from '../electron-interface';
 
 /* Interface de ambientes do Agent */
 import { Workspace } from '../../src-angular/app/workspace/workspace-interface';
@@ -35,7 +35,7 @@ export class WorkspaceService {
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno dos ambientes cadastrados
-    return Files.readApplicationData().pipe(map((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(map((_dbd: ClientData) => {
       return _dbd.workspaces;
     }), catchError((err: any) => {
       Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_ERROR'], null, null, err);
@@ -54,7 +54,7 @@ export class WorkspaceService {
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.LOADING_DATABASES'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e filtragem dos ambientes cadastrados
-    return Files.readApplicationData().pipe(map((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(map((_dbd: ClientData) => {
       return _dbd.workspaces.filter((w: Workspace) => {
         return (w.databaseIdRef === db.id)
       });
@@ -83,7 +83,7 @@ export class WorkspaceService {
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE'], null, null, null);
     
     //Leitura do banco de dados atual do Agent
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       
       //Validação do campo de Id do ambiente. Caso não preenchido, é gerado um novo Id
       if (newId) w.id = uuid();
@@ -124,7 +124,7 @@ export class WorkspaceService {
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.DELETE'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e remoção do ambiente cadastrado
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       let index = _dbd.workspaces.findIndex((workspace: Workspace) => { return workspace.id === w.id; });
       _dbd.workspaces.splice(index, 1);
       

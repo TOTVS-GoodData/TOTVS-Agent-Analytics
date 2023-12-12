@@ -15,6 +15,9 @@ import { CNST_LOGLEVEL } from './utilities/utilities-constants';
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from './core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from './services/mirror-service';
+
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './configuration/configuration-service';
 import { Configuration } from './configuration/configuration-interface';
@@ -33,7 +36,7 @@ import { switchMap } from 'rxjs/operators';
 import { CNST_PROGRAM_NAME, CNST_PROGRAM_VERSION } from './app-constants';
 
 @Component({
-  selector: 'app-root',
+  selector: 'totvs-agent-analytics',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
@@ -70,6 +73,10 @@ export class AppComponent {
   protected lbl_registerAgentField: string = null;
   protected registerAgent: string = null;
   
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
+  protected lbl_mirror: string = null;
+  
   /****** Portinari.UI ******/
   //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
@@ -79,6 +86,7 @@ export class AppComponent {
   /**************************/
   constructor(
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _translateService: TranslationService,
     private _configurationService: ConfigurationService,
     private _menuService: MenuService,
@@ -86,6 +94,7 @@ export class AppComponent {
     private _changeDetectorService: ChangeDetectorRef,
     private _router: Router
   ) {
+    
     //Configurações padrões do Agent
     this.programName = CNST_PROGRAM_NAME.SIMPLE;
     this._translateService.init().subscribe();
@@ -99,17 +108,45 @@ export class AppComponent {
         if (this._electronService.isElectronApp) {
           
           //Evento de abertura do modal de atualização do Agent (Disparado pelo Electron)
-          this._electronService.ipcRenderer.on('update-downloaded', () => {
+          this._electronService.ipcRenderer.on('AC_update-downloaded', () => {
             this.modal_updateAgent.open();
             this._changeDetectorService.detectChanges();
           });
           
+          //Configuração da mensagem de acesso remoto (MirrorMode)
+          this.mirrorMode = this._mirrorService.getMirrorMode();
+          this._translateService.getTranslations([
+            new TranslationInput('MIRROR_MODE.TITLE', [conf.instanceName])
+          ]).subscribe((translations: any) => {
+            this.lbl_mirror = translations['MIRROR_MODE.TITLE'];
+          });
+          
+          //Evento de alteração do acesso remoto (MirrorMode)
+          this._electronService.ipcRenderer.on('AC_setMirrorMode', (event: any, ...args: any[]) => {
+            this.mirrorMode = args[0];
+            
+            //Acesso remoto ativado
+            if (args[0] == 1) {
+              this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.ONLINE']);
+              this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.RUNNING'] };
+              
+            //Acesso remoto desativado
+            } else {
+              this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.OFFLINE']);
+              this.po_lo_text = { value: null };
+              this._router.navigate(['/workspace']);
+            }
+            
+            this._changeDetectorService.detectChanges();
+            return;
+          });
+          
           //Solicita ao Electron a versão atual do Agent
-          this.version = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getAgentVersion').version;
+          this.version = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('AC_getAgentVersion').version;
           
           //Define o valor padrão do diretório temporário do Java
           if (conf.javaTmpDir == null) {
-            conf.javaTmpDir = this._electronService.ipcRenderer.sendSync('getTmpPath');
+            conf.javaTmpDir = this._electronService.ipcRenderer.sendSync('AC_getTmpPath');
             this._configurationService.saveConfiguration(conf).subscribe();
           }
         } else {
@@ -198,8 +235,8 @@ export class AppComponent {
   /* Método para mostrar mensagens ao usuário, utilizado pelo Electron */
   protected messageFromElectron(): void {
     if (this._electronService.isElectronApp) {
-      this._electronService.ipcRenderer.on('electronMessage', (event: any, level: any, message: string) => {
-        this._utilities.createNotification(CNST_LOGLEVEL.WARN, message);
+      this._electronService.ipcRenderer.on('AC_electronMessage', (event: any, level: any, message: string) => {
+        this._utilities.createNotification(level, message);
       });
     }
   }
@@ -222,7 +259,7 @@ export class AppComponent {
   protected closeAgentInterface_YES(): void {
     if (this._electronService.isElectronApp) {
       this._utilities.writeToLog(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['ANGULAR.SYSTEM_FINISH_USER']);
-      this._electronService.ipcRenderer.send('exit');
+      this._electronService.ipcRenderer.send('AC_exit');
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['ANGULAR.SYSTEM_FINISH_USER_WARNING']);
     }
@@ -234,7 +271,7 @@ export class AppComponent {
   protected updateAgent_NOW(): void {
     this.modal_updateAgent.close();
     if (this._electronService.isElectronApp) {
-      this._electronService.ipcRenderer.send('updateAgentNow');
+      this._electronService.ipcRenderer.send('AC_updateAgentNow');
     }
   }
   
@@ -252,14 +289,14 @@ export class AppComponent {
   /* Modal de verificação da instalação do Agent (SIM) */
   protected registerAgent_YES(): void {
     if (this._electronService.isElectronApp) {
-      this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT'] };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT'] };
       this.modal_registerAgent.close();
-      this._electronService.ipcRenderer.invoke('requestSerialNumber', [this.registerAgent]).then((registerAgent: number) => {
+      this._electronService.ipcRenderer.invoke('AC_requestSerialNumber', [this.registerAgent]).then((registerAgent: number) => {
         if (registerAgent == 1) {
           this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
             this.setMenuTranslations(conf.serialNumber);
             this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_OK'], null);
-            this.po_lo_text = { value: null };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           });
         } else {
           if (registerAgent == -1) this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_INVALID'], null);
@@ -267,7 +304,7 @@ export class AppComponent {
           else this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR'], null);
           
           this.modal_registerAgent.open();
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }
       });
     } else {

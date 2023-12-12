@@ -63,7 +63,7 @@ export class QueryService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getQueries', showLogs));
+      return of(this._electronService.ipcRenderer.sendSync('AC_getQueries', showLogs));
     } else {
       
       //Escrita de logs (caso solicitado)
@@ -89,7 +89,7 @@ export class QueryService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getQueriesBySchedule', sc));
+      return of(this._electronService.ipcRenderer.sendSync('AC_getQueriesBySchedule', sc));
     } else {
         
       //Consulta das traduções
@@ -122,7 +122,7 @@ export class QueryService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('saveQuery', q));
+      return of(this._electronService.ipcRenderer.sendSync('AC_saveQuery', q));
     } else {
        
       //Itera por todas as consultas que devem ser gravadas
@@ -202,7 +202,7 @@ export class QueryService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('deleteQuery', q));
+      return of(this._electronService.ipcRenderer.sendSync('AC_deleteQuery', q));
     } else {
       
       //Consulta das traduções

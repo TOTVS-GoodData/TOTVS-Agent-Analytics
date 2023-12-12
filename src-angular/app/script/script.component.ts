@@ -20,6 +20,9 @@ import { CNST_MANDATORY_FORM_FIELD, CNST_NO_OPTION_SELECTED } from '../utilities
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Serviço de comunicação com o Agent-Server */
 import { ServerService } from '../services/server/server-service';
 import {
@@ -91,6 +94,9 @@ export class ScriptComponent {
   //Variável de suporte, para mostrar ao usuário os campos obrigatórios não preenchidos.
   protected CNST_FIELD_NAMES: Array<any> = [];
   
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
+  
   /****** Portinari.UI ******/
   //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
@@ -145,6 +151,7 @@ export class ScriptComponent {
     private _scriptService: ScriptService,
     private _scheduleService: ScheduleService,
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _translateService: TranslationService,
     private _utilities: Utilities,
     private _router: Router
@@ -203,6 +210,9 @@ export class ScriptComponent {
     //Tradução dos balões de ajuda dos campos
     this.ttp_scriptName = this._translateService.CNST_TRANSLATIONS['SCRIPTS.TOOLTIPS.SCRIPT_NAME'];
     
+    //Configuração da mensagem de acesso remoto (MirrorMode)
+    this.mirrorMode = this._mirrorService.getMirrorMode();
+    
     //Definição dos campos obrigatórios do formulário
     this.CNST_FIELD_NAMES = [
       { key: 'scheduleId', value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SCHEDULE_NAME'] },
@@ -211,7 +221,7 @@ export class ScriptComponent {
     ];
     
     //Solicita ao Agent-Server as licenças cadastradas para esta instalação do Agent, e consulta o cadastro de ambientes disponíveis no Agent
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES'] };
     forkJoin([
       this._workspaceService.getWorkspaces(false),
       this._serverService.getAvailableLicenses(true)
@@ -230,10 +240,10 @@ export class ScriptComponent {
         this.loadScripts().subscribe((res: boolean) => {
         });
         
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       }
     }, (err: any) => {
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES_ERROR'], err);
     });
   }
@@ -241,13 +251,13 @@ export class ScriptComponent {
   /* Método que redireciona o usuário para a página inicial do Agent, caso ocorra falha na comunicação com o Agent-Server */
   private connectionLostToServer(): void {
     this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERVER_ERROR']);
-    this.po_lo_text = { value: null };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     this._router.navigate(['/']);
   }
   
   /* Método de carregamento das rotinas cadastradas no Agent */
   private loadScripts(): Observable<boolean> {
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING'] };
     
     //Consulta das informações
     return forkJoin([
@@ -267,7 +277,7 @@ export class ScriptComponent {
         //Descriptografia das rotinas (caso permitido)
         ss.scripts.map((s: ScriptClient) => {
           if ((this._electronService.isElectronApp) && ((!s.TOTVS) || this.isPlatform)) {
-            s.command = this._electronService.ipcRenderer.sendSync('decrypt', s.command);
+            s.command = this._electronService.ipcRenderer.sendSync('AC_decrypt', s.command);
           }
         });
         
@@ -301,7 +311,7 @@ export class ScriptComponent {
         return { label: s.name, value: s.id };
       });
       
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       return true;
     }));
   }
@@ -314,7 +324,7 @@ export class ScriptComponent {
     let license: License = workspace.license;
     
     //Solicita as rotinas mais recentes para o Agent-Server
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_MESSAGE'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_MESSAGE'] };
     forkJoin([
       this._translateService.getTranslations([
         new TranslationInput('SCRIPTS.MESSAGES.IMPORT_ERROR', [ss.schedule.name])
@@ -326,28 +336,28 @@ export class ScriptComponent {
       } else if (results[1] == 0) {
         this.loadScripts().subscribe((res: boolean) => {
           this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_OK'], null);
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }, (err: any) => {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_ERROR'], err);
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         });
       } else if (results[1] == -1) {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.IMPORT_ERROR']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       } else if (results[1] == -2) {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_ERROR']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       } else {
         this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_WARNING_FAILURES']);
         this.loadScripts().subscribe((res: boolean) => {
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }, (err: any) => {
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         });
       }
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_ERROR'], err);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     });
   }
   
@@ -361,7 +371,7 @@ export class ScriptComponent {
     let script = new ScriptClient(null);
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.VALIDATE']);
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.VALIDATE'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.VALIDATE'] };
     
     //Verifica se todos os campos da interface de rotinas foram preenchidos
     let propertiesNotDefined = Object.getOwnPropertyNames.call(Object, script).map((p: string) => {
@@ -371,7 +381,7 @@ export class ScriptComponent {
     // Validação dos campos de formulário
     if (propertiesNotDefined.length > 0) {
       validate = false;
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
       this._translateService.getTranslations([
         new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName])
@@ -386,7 +396,7 @@ export class ScriptComponent {
       }).filter((p: string) => { return p != null; });
       if (propertiesNotDefined.length > 0) {
         validate = false;
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
         this._translateService.getTranslations([
           new TranslationInput('FORM_ERRORS.FIELD_TYPING_WRONG', [fieldName])
@@ -426,13 +436,13 @@ export class ScriptComponent {
         new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [this.script.name]),
         new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME', [this.script.name])
       ]).subscribe((translations: any) => {
-        this.po_lo_text = { value: translations['SCRIPTS.MESSAGES.SAVE'] };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: translations['SCRIPTS.MESSAGES.SAVE'] };
         
         //Criptografia da rotina escrita, caso o Electron esteja disponível
         if (this._electronService.isElectronApp) {
           this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, translations['SCRIPTS.MESSAGES.ENCRYPT']);
-          this.po_lo_text = { value: translations['SCRIPTS.MESSAGES.ENCRYPT'] };
-          this.script.command = this._electronService.ipcRenderer.sendSync('encrypt', this.script.command);
+          if (this.mirrorMode != 1) this.po_lo_text = { value: translations['SCRIPTS.MESSAGES.ENCRYPT'] };
+          this.script.command = this._electronService.ipcRenderer.sendSync('AC_encrypt', this.script.command);
         }
         
         //Detecção de customizações das rotinas padrões
@@ -446,17 +456,17 @@ export class ScriptComponent {
               this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SAVE_OK']);
             }, (err: any) => {
               this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_ERROR'], err);
-              this.po_lo_text = { value: null };
+              if (this.mirrorMode != 1) this.po_lo_text = { value: null };
             });
           } else {
-            if (this._electronService.isElectronApp) this.script.command = this._electronService.ipcRenderer.sendSync('decrypt', this.script.command);
+            if (this._electronService.isElectronApp) this.script.command = this._electronService.ipcRenderer.sendSync('AC_decrypt', this.script.command);
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR_SAME_NAME']);
-            this.po_lo_text = { value: null };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           }
         }, (err: any) => {
-          if (this._electronService.isElectronApp) this.script.command = this._electronService.ipcRenderer.sendSync('decrypt', this.script.command);
+          if (this._electronService.isElectronApp) this.script.command = this._electronService.ipcRenderer.sendSync('AC_decrypt', this.script.command);
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], err);
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         });
       });
     }
@@ -471,7 +481,7 @@ export class ScriptComponent {
   /* Modal de remoção de rotinas no Agent (SIM) */
   protected deleteScript_YES(): void {
     this.modal_deleteScript.close();
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE'] };
     
     //Remoção da rotina configurada no Agent
     this._scriptService.deleteScript(this.scriptToDelete).subscribe((b: boolean) => {
@@ -479,14 +489,14 @@ export class ScriptComponent {
       //Recarga das rotinas disponíveis atualmente
       this.loadScripts().subscribe((res: boolean) => {
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE_OK']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       }, (err: any) => {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE_ERROR'], err);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       });
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE_ERROR'], err);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     });
   }
 }

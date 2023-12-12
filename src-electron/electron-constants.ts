@@ -1,8 +1,8 @@
+/* Classe global do Agent */
+import { TOTVS_Agent_Analytics } from '../app';
+
 /* Dependência do Node, usada para consultar o endereço dos arquivos da Máquina */
 import * as path from 'path';
-
-/* Caminho completo até o diretório de instalação do Agent */
-import { CNST_APPLICATION_ROOTDIR } from '../app';
 
 /* Periodicidade, em horas, que o Agent irá buscar atualizações */
 export const CNST_AUTOUPDATE_CHECK_INTERVAL: number = 3;
@@ -11,30 +11,36 @@ export const CNST_AUTOUPDATE_CHECK_INTERVAL: number = 3;
 export const CNST_SERVER_SOURCE: string = 'SERVER';
 export const CNST_SERVER_PORT: number = 2000;
 export const CNST_SERVER_HOSTNAME: any = {
-  DEVELOPMENT: 'localhost',
-  PRODUCTION: 'localhost'
+  DEVELOPMENT: '192.168.0.1',
+  PRODUCTION: '192.168.0.1'
 };
 
+//export const CNST_SERVER_HOSTNAME: any = {
+//  DEVELOPMENT: '177.81.250.9',
+//  PRODUCTION: '177.81.250.9'
+//};
+
+
 /* Caminho completo do diretório de recursos visuais do Agent (ícones) */
-export const CNST_ICONS_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'icons');
-export const CNST_ICONS_PATH_WINDOWS: string = path.join(CNST_ICONS_PATH, 'windows');
-export const CNST_ICONS_PATH_LINUX: string = path.join(CNST_ICONS_PATH, 'linux');
-export const CNST_ICON_WINDOWS: string = path.join(CNST_ICONS_PATH_WINDOWS, 'analytics.ico');
-export const CNST_ICON_LINUX: string = path.join(CNST_ICONS_PATH_LINUX, 'analytics.png');
+export const CNST_ICONS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'icons');
+export const CNST_ICONS_PATH_WINDOWS = (): string => path.join(CNST_ICONS_PATH(), 'windows');
+export const CNST_ICONS_PATH_LINUX = (): string => path.join(CNST_ICONS_PATH(), 'linux');
+export const CNST_ICON_WINDOWS = (): string => path.join(CNST_ICONS_PATH_WINDOWS(), 'analytics.ico');
+export const CNST_ICON_LINUX = (): string => path.join(CNST_ICONS_PATH_LINUX(), 'analytics.png');
 
 /* Tamanho, em pixels, do ícone do Agent p/ renderização no menu (Tray) */
 export const CNST_ICON_SIZE: number = 16;
 
 /* Caminho completo dos diretórios do Agent */
-export const CNST_TMP_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'tmp');
-export const CNST_I18N_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'i18n');
-export const CNST_DATABASE_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'assets');
-export const CNST_LOGS_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'logs');
-export const CNST_JAVA_PATH: string = path.join(CNST_APPLICATION_ROOTDIR, 'java');
+export const CNST_TMP_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'tmp');
+export const CNST_I18N_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'i18n');
+export const CNST_AGENT_CLIENT_DATABASE_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'assets');
+export const CNST_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'logs');
+export const CNST_JAVA_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'java');
 
 /* Caminho completo dos arquivos de cadastros do Agent (Produção / Desenv.) */
-export const CNST_DATABASE_NAME: string = path.join(CNST_DATABASE_PATH, 'db.json');
-export const CNST_DATABASE_NAME_DEV: string = path.join(CNST_DATABASE_PATH, 'dbDevelopment.json');
+export const CNST_AGENT_CLIENT_DATABASE_NAME = (): string => path.join(CNST_AGENT_CLIENT_DATABASE_PATH(), 'db.json');
+export const CNST_AGENT_CLIENT_DATABASE_NAME_DEV = (): string => path.join(CNST_AGENT_CLIENT_DATABASE_PATH(), 'dbDevelopment.json');
 
 /* Nome das classes do Java, usadas para definir o ponto de entrada do Java */
 export const CNST_JAVA_CLASS_TESTCONNECTION: string = 'com.gooddata.agent.util.TestDatabaseConnection';
@@ -42,7 +48,7 @@ export const CNST_JAVA_CLASS_EXPORTQUERY: string = 'com.gooddata.agent.jdbc.Jdbc
 export const CNST_JAVA_CLASS_RUNAGENT: string = 'com.gooddata.agent.Main';
 
 /* Caminho completo do arquivo .jar do Agent */
-export const CNST_JAR_PATH_FAST: string = path.join(CNST_JAVA_PATH, 'TOTVS-Agent-Analytics-Java-1.0.0.jar');
+export const CNST_JAR_PATH_FAST = (): string => path.join(CNST_JAVA_PATH(), 'TOTVS-Agent-Analytics-Java-1.0.0.jar');
 
 /* Nome do arquivo criptografado de comandos do Java, usado para comunicação */
 export const CNST_COMMAND_FILE: string = '_jCommand';

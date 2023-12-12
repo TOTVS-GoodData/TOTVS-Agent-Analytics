@@ -54,7 +54,7 @@ export class WorkspaceService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getWorkspaces', showLogs));
+      return of(this._electronService.ipcRenderer.sendSync('AC_getWorkspaces', showLogs));
     } else {
       
       //Escrita de logs (caso solicitado)
@@ -80,7 +80,7 @@ export class WorkspaceService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getWorkspacesByDatabase', db));
+      return of(this._electronService.ipcRenderer.sendSync('AC_getWorkspacesByDatabase', db));
     } else {
       
       //Consulta das traduções
@@ -113,7 +113,7 @@ export class WorkspaceService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('saveWorkspace', w));
+      return of(this._electronService.ipcRenderer.sendSync('AC_saveWorkspace', w));
     } else {
       
       //Consulta das traduções, e dos ambientes cadastrados atualmente
@@ -167,7 +167,7 @@ export class WorkspaceService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('deleteWorkspace', w));
+      return of(this._electronService.ipcRenderer.sendSync('AC_deleteWorkspace', w));
     } else {
     
       //Consulta das traduções

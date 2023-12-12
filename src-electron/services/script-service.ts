@@ -9,7 +9,7 @@ import { TranslationInput } from '../../src-angular/app/services/translation/tra
 import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../../src-angular/app/utilities/utilities-constants';
 
 /* Interface do banco de dados do Agent */
-import { DatabaseData } from '../electron-interface';
+import { ClientData } from '../electron-interface';
 
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from './workspace-service';
@@ -47,7 +47,7 @@ export class ScriptService {
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno das rotinas cadastradas
-    return Files.readApplicationData().pipe(map((db: DatabaseData) => {
+    return Files.readApplicationData().pipe(map((db: ClientData) => {
       return db.scripts;
     }), catchError((err: any) => {
       Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_ERROR'], null, null, err);
@@ -67,7 +67,7 @@ export class ScriptService {
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SCHEDULE_LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno das rotinas válidas
-    return Files.readApplicationData().pipe(map((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(map((_dbd: ClientData) => {
       return _dbd.scripts.filter((script: ScriptClient) => {
         return (script.scheduleId === sc.id)
       });
@@ -97,7 +97,7 @@ export class ScriptService {
     let errors: number = (s.length == 0 ? null : 0);
     
     //Leitura do banco de dados atual do Agent
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       
       //Itera por todas as rotinas que devem ser gravadas
       let validate: any = s.map((ss: ScriptClient) => {
@@ -185,7 +185,7 @@ export class ScriptService {
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.DELETE'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e remoção da rotina cadastrada
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       let index = _dbd.scripts.findIndex((script: ScriptClient) => { return script.id === s.id; });
       _dbd.scripts.splice(index, 1);
       

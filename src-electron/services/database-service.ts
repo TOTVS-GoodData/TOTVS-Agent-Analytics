@@ -9,7 +9,7 @@ import { TranslationInput } from '../../src-angular/app/services/translation/tra
 import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../../src-angular/app/utilities/utilities-constants';
 
 /* Interface do banco de dados do Agent */
-import { DatabaseData } from '../electron-interface';
+import { ClientData } from '../electron-interface';
 
 /* Interface de bancos de dados do Agent */
 import { Database } from '../../src-angular/app/database/database-interface';
@@ -32,7 +32,7 @@ export class DatabaseService {
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno dos bancos de dados cadastrados
-    return Files.readApplicationData().pipe(map((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(map((_dbd: ClientData) => {
       return _dbd.databases;
     }), catchError((err: any) => {
       Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_ERROR'], null, null, err);
@@ -59,7 +59,7 @@ export class DatabaseService {
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE'], null, null, null);
     
     //Leitura do banco de dados atual do Agent
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       
       //Validação do campo de Id do banco de dados. Caso não preenchido, é gerado um novo Id
       if (newId) db.id = uuid();
@@ -100,7 +100,7 @@ export class DatabaseService {
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.DELETE'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e remoção do banco de dados cadastrado
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       let index = _dbd.databases.findIndex((database: Database) => { return database.id === db.id; });
       _dbd.databases.splice(index, 1);
       

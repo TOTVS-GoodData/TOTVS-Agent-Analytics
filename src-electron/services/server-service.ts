@@ -1,3 +1,6 @@
+/* Classe global do Agent */
+import { TOTVS_Agent_Analytics } from '../../app';
+
 /* Dependência Node.js p/ comunicação via Socket */
 import net from 'net';
 
@@ -6,15 +9,14 @@ import { Files } from '../files';
 import { Functions } from '../functions';
 import { Execute } from '../execute';
 
+import Main from '../../electron-main';
+
 /* Constantes do Agent-Server */
 import {
   CNST_SERVER_SOURCE,
   CNST_SERVER_PORT,
   CNST_SERVER_HOSTNAME
 } from '../electron-constants';
-
-/* Constante que define o modo de execução do Agent (Desenv / Prod) */
-import { CNST_APPLICATION_PRODUCTION } from '../../app';
 
 /* Componentes de utilitários do Agent */
 import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../../src-angular/app/utilities/utilities-constants';
@@ -51,7 +53,7 @@ import { JavaInputBuffer } from '../../src-angular/app/utilities/java-interface'
 import { Version } from '../../src-angular/app/utilities/version-interface';
 
 /* Interfaces do Electron */
-import { DatabaseData } from '../electron-interface';
+import { ClientData } from '../electron-interface';
 
 /* Constante que define o ERP "Protheus" */
 import { CNST_ERP_PROTHEUS } from '../../src-angular/app/workspace/workspace-constants';
@@ -85,7 +87,7 @@ import { ConfigurationService } from './configuration-service';
 import { Configuration } from '../../src-angular/app/configuration/configuration-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, of, map, lastValueFrom, switchMap, forkJoin, catchError } from 'rxjs';
+import { Observable, of, map, lastValueFrom, switchMap, forkJoin, catchError, from } from 'rxjs';
 
 export class ServerService {
   
@@ -98,6 +100,9 @@ export class ServerService {
   
   //Registra todas as conexões existentes com o Agent-Server
   private static sockets: SocketCommunication[] = [];
+  
+  //Buffer de recebimento de dados (concatenado p/ comunicações acima do limite do socket)
+  private static longBuffer: string = null;
   
   //Armazena temporariamente o código de ativação do Agent, para primeira conexão ao servidor
   private static temporarySerialNumber: string = null;
@@ -135,9 +140,15 @@ export class ServerService {
       //Evento disparado ao receber uma nova palavra de comando, do Agent-Server
       socket.on('data', (buffer: string) => {
         
+        //Adiciona o pacote recebido ao buffer concatenado
+        ServerService.longBuffer = (ServerService.longBuffer == null ? buffer : ServerService.longBuffer + buffer);
+        
         //Realiza a validação da palavra (criptografia, destino do pacote, etc). Ignora palavras inválidas.
-        ServerService.validateCommandWord(buffer).pipe(switchMap((command: ServerCommunication) => {
+        ServerService.validateCommandWord(ServerService.longBuffer).pipe(switchMap((command: ServerCommunication) => {
           if (command != null) {
+            
+            //Limpeza do buffer
+            ServerService.longBuffer = null;
             
             //Caso seja uma conexão válida, adiciona a mesma ao conjunto atual
             ServerService.sockets.push({
@@ -161,14 +172,42 @@ export class ServerService {
                 }));
                 break;
               
+              //Envio dos arquivos de log deste Agent, para o Agent-Server
+              case 'requestAgentLogs':
+                return ServerService.requestAgentLogs(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'requestAgentLogs', res);
+                }));
+                break;
+              
               //Comando de ping deste serviço
               case 'ping':
                 return ServerService.ping(command).pipe(switchMap((res: responseObj) => {
                   return ServerService.sendResponseToServer(socket, 'ping', res);
                 }));
                 break;
+                
+              //Comando de controle do acesso remoto (Mirror Mode)
+              case 'setMirrorMode':
+                return ServerService.setMirrorMode(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'setMirrorMode', res);
+                }));
+                break;
+              
+              //Comando de sobreescrita do arquivo de configuração do Agent (Mirror Mode)
+              case 'publishAgentData':
+                return ServerService.publishAgentData(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'publishAgentData', res);
+                }));
+                break;
+                
+              //Comando de teste de conexão ao banco de dados do Agent (Teste Local / Disparo Remoto)
+              case 'requestDatabaseConnectionTest':
+                return ServerService.requestDatabaseConnectionTest(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'requestDatabaseConnectionTest', res);
+                }));
+                break;
             }
-          }
+          } else { return of(null); }
         })).subscribe();
       });
       
@@ -192,7 +231,7 @@ export class ServerService {
       });
       
       //Tratamento de erro na inicialização do servidor local
-      ServerService.server.once('error', (err: any) => {console.log('c');
+      ServerService.server.once('error', (err: any) => {
         Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.ERROR'], null, null, null);
         subscriber.next(false);
         subscriber.complete();
@@ -224,7 +263,6 @@ export class ServerService {
     
     //Consulta da configuração atual do Agent
     return ConfigurationService.getConfiguration(false).pipe(map((configuration: Configuration) => {
-      
       try {
         //Descriptografa o comando recebido, e converte-o para o objeto de comunicação
         let command: ServerCommunication = JSON.parse(EncryptionService.decrypt(obj.toString()));
@@ -272,7 +310,7 @@ export class ServerService {
   private static sendCommandToServer(command: string, word: string, callbackFunction: any): Observable<any> {
     
     //Define o hostname do Agent-Server, dependendo se a aplicação está sendo executada em desenv / prod.
-    let serverHostname: string = (CNST_APPLICATION_PRODUCTION ? CNST_SERVER_HOSTNAME.DEVELOPMENT : CNST_SERVER_HOSTNAME.PRODUCTION);
+    let serverHostname: string = (TOTVS_Agent_Analytics.isProduction() ? CNST_SERVER_HOSTNAME.DEVELOPMENT : CNST_SERVER_HOSTNAME.PRODUCTION);
     
     //Retorna o observável para envio do comando ao Agent-Server
     return new Observable<any>((subscriber: any) => {
@@ -295,19 +333,24 @@ export class ServerService {
         new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND_RESPONSE', [word])
       ]);
       
+      console.log('AAA');
+      console.log(CNST_SERVER_PORT);
+      console.log(serverHostname);
+      
       //Inicializa a conexão com o servidor da TOTVS
       socket.connect(CNST_SERVER_PORT, serverHostname, () => {
-	      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTED'], null, null, null);
+	      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTED'], null, null, null);
 	      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND'], null, null, null);
         
         //Envia o pacote para o servidor
+        console.log('ENVIANDO');
         socket.write(command);
         Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND_OK'], null, null, null);
       });
       
       //Configura o evento disparado ao receber a resposta da palavra de comando, pelo Agent-Server
       socket.on('data', (buffer: any) => {
-        
+        console.log('DATA');
         //Adiciona o pacote recebido ao buffer concatenado
         longBuffer = (longBuffer == null ? buffer : longBuffer + buffer);
         
@@ -327,6 +370,7 @@ export class ServerService {
       
       //Tratamento de erros na comunicação do socket com o Agent-Server
       socket.on('error', (err: any) => {
+        console.log(err);
         hasErrors = true;
         subscriber.next(null);
         subscriber.complete();
@@ -334,7 +378,7 @@ export class ServerService {
       
       //Evento disparado ao encerrar a conexão com o Agent-Server. Emite o resultado da função de callback do método
       socket.on('close', () => {
-        if (!hasErrors) Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null);
+        if (!hasErrors) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null);
         subscriber.next(response);
         subscriber.complete();
       });
@@ -366,11 +410,12 @@ export class ServerService {
               
               //Verifica se o Agent-Server enviou um SerialNumber para esta instância do Agent
               if (response.args[0] != null) {
-                return ConfigurationService.getConfiguration(false).pipe(switchMap((configuration: Configuration) => {console.log('aaaa');
+                return ConfigurationService.getConfiguration(false).pipe(switchMap((configuration: Configuration) => {
                   Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER'], null, null, null);
                   
                   //Realiza a gravação do serialNumber desta instância do Agent
                   configuration.serialNumber = response.args[0];
+                  configuration.instanceName = response.args[1];
                   return ConfigurationService.saveConfiguration(configuration).pipe(map((b: number) => {
                     
                     //Remove o código de ativação temporário do Agent
@@ -825,18 +870,92 @@ export class ServerService {
     }));
   }
   
+  /* Método de envio das alterações feitas na instância espelhada do Agent, para o Agent-Server */
+  public static deactivateMirrorMode(db: ClientData): Observable<boolean> {
+    
+    //Prepara a palavra de comando a ser enviada, com criptografia
+    return ServerService.prepareCommandWord('deactivateMirrorMode', null, [db]).pipe(switchMap((buffer: string) => {
+      
+      //Envia o comando para o servidor da TOTVS, e processa a resposta
+      //(HOF - Higher Order Function)
+      return ServerService.sendCommandToServer(
+        buffer,
+        'deactivateMirrorMode',
+        (response: ServerCommunication) => {
+          return of(true);
+        }
+      ).pipe(map((res: boolean) => {
+        return res;
+      }));
+    }));
+  }
+  
+  /* Método de teste de conexão ao banco de dados do Agent (Teste Remoto / Disparo Remoto) */
+  public static testDatabaseConnectionRemotelly(inputBuffer: string): Observable<any> {
+    
+    //Prepara a palavra de comando a ser enviada, com criptografia
+    return ServerService.prepareCommandWord('testDatabaseConnection', null, [inputBuffer]).pipe(switchMap((buffer: string) => {
+      
+      //Envia o comando para o servidor da TOTVS, e processa a resposta
+      //(HOF - Higher Order Function)
+      return ServerService.sendCommandToServer(
+        buffer,
+        'testDatabaseConnection',
+        (response: ServerCommunication) => {
+          return of(response.args[0]);
+        }
+      ).pipe(map((b: any) => {
+        return b;
+      }));
+    }));
+  }
+  
   /****************************************/
   /*** Recebimento de mensagens (INPUT) ***/
   /****************************************/
   /* Método de envio das configurações atuais deste Agent, para o Agent-Server */
   private static requestAgentData(command: ServerCommunication): Observable<responseObj> {
-    return Files.readApplicationData().pipe(map((db: DatabaseData) => {
+    return Files.readApplicationData().pipe(map((db: ClientData) => {
       return new responseObj([db], null);
     }));
+  }
+  
+  /* Método de envio das configurações atuais deste Agent, para o Agent-Server */
+  private static requestAgentLogs(command: ServerCommunication): Observable<responseObj> {
+    return of(new responseObj(Files.readLogs(), null));
   }
   
   /* Método de teste de comunicação do Agent, com o Agent-Server */
   private static ping(command: ServerCommunication): Observable<responseObj> {
     return of(new responseObj(['pong'], null));
+  }
+  
+  /* Método de controle do acesso remoto (MirrorMode), do Agent-Server */
+  private static setMirrorMode(command: ServerCommunication): Observable<responseObj> {
+    Main.setMirrorMode(Number(command.args[0]));
+    Main.updateMirrorModePreferences();
+    return of(new responseObj([true], null));
+  }
+  
+  /* Método de sobrescrita do arquivo de configuração do Agent (MirrorMode) */
+  private static publishAgentData(command: ServerCommunication): Observable<responseObj> {
+    let db: ClientData = Object.assign(new ClientData(), command.args[0]);
+    return Files.writeApplicationData(db).pipe(map((b: boolean) => {
+      return new responseObj([b], null);
+    }));
+  }
+  
+  /* Método de teste de conexão ao banco de dados do Agent (Teste Local / Disparo Remoto) */
+  private static requestDatabaseConnectionTest(command: ServerCommunication): Observable<responseObj> {
+    return from(ServerService.testDatabaseConnectionLocally(command.args[0])).pipe(map((res: any) => {
+      return new responseObj([res], null);
+    }));
+  }
+  
+  /* Método de teste de conexão ao banco de dados do Agent (Teste Local) */
+  public static testDatabaseConnectionLocally(buffer: string): any {
+    return lastValueFrom(Execute.testDatabaseConnection(buffer).pipe(map((res: any) => {
+      return res;
+    })));
   }
 }

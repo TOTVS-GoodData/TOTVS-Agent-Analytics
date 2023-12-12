@@ -9,7 +9,7 @@ import { TranslationInput } from '../../src-angular/app/services/translation/tra
 import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../../src-angular/app/utilities/utilities-constants';
 
 /* Interface do banco de dados do Agent */
-import { DatabaseData } from '../electron-interface';
+import { ClientData } from '../electron-interface';
 
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from './workspace-service';
@@ -47,7 +47,7 @@ export class QueryService {
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno das consultas cadastradas
-    return Files.readApplicationData().pipe(map((db: DatabaseData) => {
+    return Files.readApplicationData().pipe(map((db: ClientData) => {
       return db.queries;
     }), catchError((err: any) => {
       Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_ERROR'], null, null, err);
@@ -65,7 +65,7 @@ export class QueryService {
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SCHEDULE_LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno das consultas válidas
-    return Files.readApplicationData().pipe(map((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(map((_dbd: ClientData) => {
       return _dbd.queries.filter((query: QueryClient) => {
         return (query.scheduleId === sc.id)
       });
@@ -95,7 +95,7 @@ export class QueryService {
     let errors: number = (q.length == 0 ? null : 0);
     
     //Leitura do banco de dados atual do Agent
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       
       //Itera por todas as consultas que devem ser gravadas
       let validate: any = q.map((qq: QueryClient) => {
@@ -185,7 +185,7 @@ export class QueryService {
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.DELETE'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e remoção da consulta cadastrada
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       let index = _dbd.queries.findIndex((query: QueryClient) => { return query.id === q.id; });
       _dbd.queries.splice(index, 1);
       

@@ -5,6 +5,9 @@ import { Router, Navigation } from '@angular/router';
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Porta mínima / máxima aceitável pelo Agent */
 import {
   CNST_PORT_MINIMUM,
@@ -72,6 +75,9 @@ export class DataBaseAddComponent {
   //Variável de suporte, para mostrar ao usuário os campos obrigatórios não preenchidos.
   protected CNST_FIELD_NAMES: Array<any> = [];
   
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
+  
   /****** Portinari.UI ******/
   //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
@@ -137,6 +143,7 @@ export class DataBaseAddComponent {
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _translateService: TranslationService,
     private _utilities: Utilities,
     private _router: Router
@@ -174,6 +181,9 @@ export class DataBaseAddComponent {
     this.ttp_hostName = this._translateService.CNST_TRANSLATIONS['DATABASES.TOOLTIPS.HOST_NAME'];
     this.ttp_port = this._translateService.CNST_TRANSLATIONS['DATABASES.TOOLTIPS.PORT'];
     this.ttp_connectionString = this._translateService.CNST_TRANSLATIONS['DATABASES.TOOLTIPS.CONNECTION_STRING'];
+    
+    //Configuração da mensagem de acesso remoto (MirrorMode)
+    this.mirrorMode = this._mirrorService.getMirrorMode();
     
     //Definição dos campos obrigatórios do formulário
     this.CNST_FIELD_NAMES = [
@@ -286,9 +296,9 @@ export class DataBaseAddComponent {
     
     if (type != null) {
       driverConnectionString = type.driverConnectionString;
+      
       //Tratamento dos dados preenchidos (remoção de espaços)
       this.database.ip = this.database.ip.replace(/\s+/g, '');
-      //this.database.port = ('' + this.database.port).replace(/\s+/g, '');
       this.database.db_databaseName = this.database.db_databaseName.replace(/\s+/g, '');
       this.database.instance = this.database.instance.replace(/\s+/g, '');
       
@@ -343,31 +353,31 @@ export class DataBaseAddComponent {
           //Realiza a criptografia da senha do banco de dados, caso o Electron esteja disponível
           if ((this._electronService.isElectronApp) && (this.database.id == null)) {
             this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.PASSWORD_ENCRYPT']);
-            this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.PASSWORD_ENCRYPT'] };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.PASSWORD_ENCRYPT'] };
             this.database.password = this._electronService.ipcRenderer.sendSync('encrypt', this.database.password);
           }
           
           //Grava o novo banco de dados do Agent, e retorna à página anterior, caso bem sucedido
-          this.po_lo_text = { value: translations['DATABASES.MESSAGES.SAVE'] };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: translations['DATABASES.MESSAGES.SAVE'] };
           this._databaseService.saveDatabase(Object.assign(new Database(), this.database)).subscribe((b: boolean) => {
             if (b) {
               this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.SAVE_OK']);
               this.goBack(this.database);
             } else {
-              if (this._electronService.isElectronApp) this.database.password = this._electronService.ipcRenderer.sendSync('decrypt', this.database.password);
+              if (this._electronService.isElectronApp) this.database.password = this._electronService.ipcRenderer.sendSync('AC_decrypt', this.database.password);
               this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME']);
             }
-            this.po_lo_text = { value: null };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           }, (err: any) => {
-            if (this._electronService.isElectronApp) this.database.password = this._electronService.ipcRenderer.sendSync('decrypt', this.database.password);
+            if (this._electronService.isElectronApp) this.database.password = this._electronService.ipcRenderer.sendSync('AC_decrypt', this.database.password);
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.SAVE_ERROR'], err);
-            this.po_lo_text = { value: null };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           });
         });
       }
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['ANGULAR.ERROR']);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     });
   }
   
@@ -381,7 +391,7 @@ export class DataBaseAddComponent {
     let db: Database = new Database();
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.VALIDATE']);
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.VALIDATE'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.VALIDATE'] };
     
     //Remove a obrigatoriedade do campo de instância dos bancos que não a utilizam
     //Remove também todos os campos de formulário do banco "Outro"
@@ -412,7 +422,7 @@ export class DataBaseAddComponent {
     // Validação dos campos de formulário
     if (propertiesNotDefined.length > 0) {
       validate = false;
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
       this._translateService.getTranslations([
         new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName])
@@ -427,7 +437,7 @@ export class DataBaseAddComponent {
       }).filter((p: string) => { return p != null; });
       if (propertiesNotDefined.length > 0) {
         validate = false;
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
         this._translateService.getTranslations([
           new TranslationInput('FORM_ERRORS.FIELD_TYPING_WRONG', [fieldName])
@@ -443,7 +453,7 @@ export class DataBaseAddComponent {
         });
         if (range.length > 0) {
           validate = false;
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           this._translateService.getTranslations([
             new TranslationInput('FORM_ERRORS.FIELD_RANGE_ERROR', [range[0].value, range[0].minimum, range[0].maximum])
           ]).subscribe((translations: any) => {
@@ -455,7 +465,7 @@ export class DataBaseAddComponent {
           let regexIp = new RegExp(this.regexPattern);
           if (!regexIp.test(this.database.ip)) {
             validate = false;
-            this.po_lo_text = { value: null };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.ERROR_INVALID_IP']);
           }
         }
@@ -487,15 +497,15 @@ export class DataBaseAddComponent {
     return this._translateService.getTranslations([
       new TranslationInput('DATABASES.MESSAGES.LOGIN', [this.database.name])
     ]).pipe(switchMap((translations: any) => {
-      this.po_lo_text = { value: translations['DATABASES.MESSAGES.LOGIN'] };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: translations['DATABASES.MESSAGES.LOGIN'] };
       
       //Disparo da requisição de teste ao serviço de banco de dados
       return this._databaseService.testConnection(this.database).pipe(map((test: boolean) => {
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         return test;
       }));
     }), catchError((err: any) => {
-      this.po_lo_text = null;
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['ANGULAR.ERROR']);
       throw err;
     }));
@@ -504,10 +514,10 @@ export class DataBaseAddComponent {
   /* Método de seleção do driver do banco de dados (Apenas disponível c/ Electron) */
   protected getDriverFile(): void {
     if (this._electronService.isElectronApp) {
-      this.database.driverPath = this._electronService.ipcRenderer.sendSync('getFile');
+      this.database.driverPath = this._electronService.ipcRenderer.sendSync('AC_getFile');
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['FORM_ERRORS.FOLDER_SELECT_WARNING']);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     }
   }
 }

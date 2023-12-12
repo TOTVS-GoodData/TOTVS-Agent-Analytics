@@ -16,6 +16,9 @@ import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Serviço de monitoramento do Agent */
 import { MonitorService } from './monitor-service';
 
@@ -49,6 +52,9 @@ export class MonitorComponent implements OnInit {
   
   //Subscrição do serviço de consulta dos logs
   private monitorLogSubscription: any = null;
+  
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
   
   /****** Portinari.UI ******/
   //Comunicação c/ animação (gif) de carregamento
@@ -94,6 +100,7 @@ export class MonitorComponent implements OnInit {
   constructor(
     private _monitorService: MonitorService,
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _translateService: TranslationService,
     private _utilities: Utilities
   ) {
@@ -198,6 +205,9 @@ export class MonitorComponent implements OnInit {
     this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
     this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
     this.lbl_noErrors = this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_ERRORS'];
+    
+    //Configuração da mensagem de acesso remoto (MirrorMode)
+    this.mirrorMode = this._mirrorService.getMirrorMode();
   }
   
   /* Método de inicialização do monitoramento (Apenas disponível pelo Electron) */
@@ -271,11 +281,11 @@ export class MonitorComponent implements OnInit {
       new TranslationInput('ELECTRON.PROCESS_KILL_WARN', [this.details.scheduleId, this.details.execId]),
       new TranslationInput('ELECTRON.PROCESS_KILL_ERROR', [this.details.scheduleId, this.details.execId])
     ]).subscribe((translations: any) => {
-      this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL'] };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL'] };
       
       //Redirecionamento da requisição p/ Electron
-      this._electronService.ipcRenderer.invoke('killProcess', this.details.scheduleId, this.details.execId).then((res: number) => {
-        this.po_lo_text = { value: null };
+      this._electronService.ipcRenderer.invoke('AC_killProcess', this.details.scheduleId, this.details.execId).then((res: number) => {
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         if (res == 1) {
           this._utilities.createNotification(CNST_LOGLEVEL.INFO, translations['ELECTRON.PROCESS_KILL_OK'], null);
         } else if (res == 0) {

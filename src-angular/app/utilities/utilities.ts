@@ -70,7 +70,7 @@ export class Utilities {
     
     //Redirecionamento da requisição p/ Electron (caso disponível), para gravar a mensagem de log em arquivo local
     if (this._electronService.isElectronApp) {
-      this._electronService.ipcRenderer.sendSync('writeToLog', loglevel, CNST_SYSTEMLEVEL.ANGL, message, err);
+      this._electronService.ipcRenderer.sendSync('AC_writeToLog', loglevel, CNST_SYSTEMLEVEL.ANGL, message, err);
     }
   }
   

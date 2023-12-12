@@ -9,6 +9,9 @@ import {
   PoListViewLiterals
 } from '@po-ui/ng-components';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
@@ -50,6 +53,9 @@ export class DataBaseComponent implements OnInit {
   //Banco de dados selecionado p/ remoção
   private databaseToDelete: Database = null;
   
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
+  
   /****** Portinari.UI ******/
   //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
@@ -77,6 +83,7 @@ export class DataBaseComponent implements OnInit {
   /*** MÉTODOS DO MÓDULO  ***/
   /**************************/
   constructor(
+    private _mirrorService: MirrorService,
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
     private _translateService: TranslationService,
@@ -121,6 +128,9 @@ export class DataBaseComponent implements OnInit {
     this.lbl_add = this._translateService.CNST_TRANSLATIONS['BUTTONS.ADD'];
     this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
     this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
+    
+    //Configuração da mensagem de acesso remoto (MirrorMode)
+    this.mirrorMode = this._mirrorService.getMirrorMode();
   }
   
   /* Método de inicialização do componente */
@@ -130,7 +140,7 @@ export class DataBaseComponent implements OnInit {
   
   /* Método de consulta dos bancos de dados configurados no Agent */
   private loadDatabases(): void {
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING'] };
     
     //Consulta dos bancos de dados cadastrados no Agent
     this._databaseService.getDatabases(true).subscribe((db: Database[]) => {
@@ -141,10 +151,10 @@ export class DataBaseComponent implements OnInit {
         
         return db;
       });
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_ERROR'], err);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     });
   }
   
@@ -171,7 +181,7 @@ export class DataBaseComponent implements OnInit {
       new TranslationInput('DATABASES.MESSAGES.DELETE', [this.databaseToDelete.name]),
       new TranslationInput('DATABASES.MESSAGES.DELETE_ERROR', [this.databaseToDelete.name])
     ]).subscribe((translations: any) => {
-      this.po_lo_text = { value: translations['DATABASES.MESSAGES.DELETE'] };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: translations['DATABASES.MESSAGES.DELETE'] };
       
       //Consulta dos ambientes de GoodData atualmente vinculados à este banco de dados
       this._workspaceService.getWorkspacesByDatabase(this.databaseToDelete).subscribe((w: Workspace[]) => {
@@ -179,23 +189,23 @@ export class DataBaseComponent implements OnInit {
         //Caso exista um ambiente vinculado, o banco não pode ser apagado
         if (w.length > 0) {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.DELETE_ERROR_WORKSPACES']);
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         } else {
           
           //Remoção do banco de dados configurado no Agent
           this._databaseService.deleteDatabase(this.databaseToDelete).subscribe((b: boolean) => {
             this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.DELETE_OK']);
-            this.po_lo_text = { value: null };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
             this.databaseToDelete = null;
             this.loadDatabases();
           }, (err: any) => {
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.DELETE_ERROR'], err);
-            this.po_lo_text = { value: null };
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           });
         }
       }, (err: any) => {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.DELETE_ERROR'], err);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       });
     });
   }

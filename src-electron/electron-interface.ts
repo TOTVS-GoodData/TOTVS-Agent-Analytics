@@ -21,7 +21,7 @@ import { ScriptClient } from '../src-angular/app/script/script-interface';
 import { Configuration } from '../src-angular/app/configuration/configuration-interface';
 
 /* Interface do banco de dados do Agent */
-export class DatabaseData {
+export class ClientData {
   workspaces: Workspace[];
   databases: Database[];
   schedules: Schedule[];
@@ -35,7 +35,7 @@ export class DatabaseData {
     this.schedules = [];
     this.queries = [];
     this.scripts = [];
-    this.configuration = new Configuration(10, true, 2048, CNST_TMP_PATH, CNST_DEFAULT_LANGUAGE, true);
+    this.configuration = new Configuration(10, true, 2048, CNST_TMP_PATH(), CNST_DEFAULT_LANGUAGE, true);
   }
 }
 

@@ -57,7 +57,7 @@ Function un.uCustom
     Exch $R0
 FunctionEnd
 
-!macro customRemoveFiles
+!macro un.customRemoveFiles
   ${if} ${isUpdated}
     CreateDirectory "$PLUGINSDIR\old-install"
     Push ""
@@ -97,7 +97,7 @@ FunctionEnd
   
 !macroend
 
-!macro customUnInstall
+!macro un.customUnInstall
   ClearErrors
   SetRegView 64
   DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "TOTVS Agent Analytics"

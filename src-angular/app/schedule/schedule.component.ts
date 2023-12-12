@@ -16,6 +16,9 @@ import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from '../workspace/workspace-service';
 import { Workspace } from '../workspace/workspace-interface';
@@ -54,6 +57,9 @@ export class ScheduleComponent implements OnInit {
   //Agendamento selecionado p/ remoção
   private scheduleToDelete: Schedule = null;
   
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
+  
   /****** Portinari.UI ******/
   //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
@@ -85,6 +91,7 @@ export class ScheduleComponent implements OnInit {
     private _workspaceService: WorkspaceService,
     private _scheduleService: ScheduleService,
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _translateService: TranslationService,
     private _utilities: Utilities,
     private _router: Router
@@ -129,6 +136,9 @@ export class ScheduleComponent implements OnInit {
     this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
     this.lbl_yes = this._translateService.CNST_TRANSLATIONS['BUTTONS.YES'];
     this.lbl_no = this._translateService.CNST_TRANSLATIONS['BUTTONS.NO'];
+    
+    //Configuração da mensagem de acesso remoto (MirrorMode)
+    this.mirrorMode = this._mirrorService.getMirrorMode();
   }
   
   /* Método de inicialização do componente */
@@ -138,7 +148,7 @@ export class ScheduleComponent implements OnInit {
   
   /* Método de consulta dos agendamentos configurados no Agent */
   private loadSchedules(): void {
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING'] };
     
     //Consulta dos agendamentos cadastrados no Agent
     forkJoin([
@@ -151,9 +161,9 @@ export class ScheduleComponent implements OnInit {
         
         return s;
       });
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     }, (err: any) => {
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_ERROR'], err);
     });
   }
@@ -167,15 +177,15 @@ export class ScheduleComponent implements OnInit {
         new TranslationInput('SCHEDULES.MESSAGES.RUN', [s.name]),
         new TranslationInput('SCHEDULES.MESSAGES.RUN_MANUAL', [s.name])
       ]).subscribe((translations: any) => {
-        this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.RUN'] };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.RUN'] };
         this._utilities.writeToLog(CNST_LOGLEVEL.INFO, translations['SCHEDULES.MESSAGES.RUN_MANUAL']);
         
         //Solicita a execução do agendamento pelo Electron (assíncrono)
-        this._electronService.ipcRenderer.sendSync('executeAndUpdateSchedule', s);
+        this._electronService.ipcRenderer.sendSync('AC_executeAndUpdateSchedule', s);
         
         this.loadSchedules();
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_OK']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       });
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_WARNING'], null);
@@ -205,15 +215,15 @@ export class ScheduleComponent implements OnInit {
       new TranslationInput('SCHEDULES.MESSAGES.DELETE', [this.scheduleToDelete.name]),
       new TranslationInput('SCHEDULES.MESSAGES.DELETE_ERROR', [this.scheduleToDelete.name])
     ]).subscribe((translations: any) => {
-      this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.DELETE'] };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.DELETE'] };
       
       //Remoção do agendamento configurado no Agent
       this._scheduleService.deleteSchedule(this.scheduleToDelete).subscribe((b: boolean) => {
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.DELETE_OK']);
         this.loadSchedules();
       }, (err: any) => {
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['SCHEDULES.MESSAGES.DELETE_ERROR'], err);
       });
     });

@@ -16,6 +16,9 @@ import { CNST_TIMEZONES } from '../services/timezones';
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './configuration-service';
 import { Configuration } from './configuration-interface';
@@ -65,6 +68,9 @@ export class ConfigurationComponent implements OnInit {
   protected _CNST_PORT_MINIMUM: number = CNST_PORT_MINIMUM;
   protected _CNST_PORT_MAXIMUM: number = CNST_PORT_MAXIMUM;
   
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
+  
   /****** Portinari.UI ******/
   //Posicionamento do texto do label do modo debug (Esquerda)
   protected poDebugModeLabelPosition: PoSwitchLabelPosition = PoSwitchLabelPosition.Left;
@@ -75,7 +81,7 @@ export class ConfigurationComponent implements OnInit {
   //Idiomas disponíveis no Agent
   protected CNST_LANGUAGES: Array<any> = [];
   
-  //Variável de suporte, que armazena o valor mínimo aceitável d parâmetro Xmx do Java.
+  //Variável de suporte, que armazena o valor mínimo aceitável do parâmetro Xmx do Java.
   protected _CNST_JAVA_XMX_MINIMUM: number = CNST_JAVA_XMX_MINIMUM;
   
   //Variável de suporte, que armazena o numero mínimo de arquivos de log a serem mantidos pelo Agent.
@@ -93,6 +99,7 @@ export class ConfigurationComponent implements OnInit {
   protected lbl_javaXmx: string = null;
   protected lbl_javaTmpDir: string = null;
   protected lbl_javaJREDir: string = null;
+  protected lbl_instance: string = null;
   protected lbl_debugMode: string = null;
   protected lbl_autoUpdate: string = null;
   protected lbl_activated_1: string = null;
@@ -105,6 +112,7 @@ export class ConfigurationComponent implements OnInit {
   protected lbl_clientPort: string = null;
   
   //Balões de ajuda
+  protected ttp_instance: string = null;
   protected ttp_debugMode: string = null;
   protected ttp_javaTmpDir: string = null;
   protected ttp_javaJREDir: string = null;
@@ -118,6 +126,7 @@ export class ConfigurationComponent implements OnInit {
   /**************************/
   constructor(
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _configurationService: ConfigurationService,
     private _translateService: TranslationService,
     private _customTranslationLoader: CustomTranslationLoader,
@@ -146,10 +155,20 @@ export class ConfigurationComponent implements OnInit {
     
     //Consulta das traduções
     this._translateService.updateStandardTranslations().subscribe(() => {
-      this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING'] };
+      
+      //Configuração da mensagem de acesso remoto (MirrorMode)
+      this.mirrorMode = this._mirrorService.getMirrorMode();
+      this._translateService.getTranslations([
+        new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_XMX', [CNST_JAVA_XMX_MINIMUM + ''])
+      ]).subscribe((translations: any) => {
+        this.ttp_javaXmx = translations['CONFIGURATION.TOOLTIPS.JAVA_XMX'];
+      });
+      
+      if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING'] };
       
       //Tradução dos títulos
       this.lbl_title = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TITLE'];
+      this.lbl_instance = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.INSTANCE'];
       this.lbl_debugMode = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.DEBUGMODE'];
       this.lbl_autoUpdate = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.AUTOUPDATE'];
       this.lbl_activated_1 = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.ACTIVATED_1'];
@@ -171,17 +190,13 @@ export class ConfigurationComponent implements OnInit {
       this.lbl_save = this._translateService.CNST_TRANSLATIONS['BUTTONS.SAVE'];
       
       //Tradução dos balões de ajuda dos campos
+      this.ttp_instance = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.INSTANCE'];
       this.ttp_debugMode = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.DEBUGMODE'];
       this.ttp_javaTmpDir = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.JAVA_TMPDIR'];
       this.ttp_javaJREDir = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.JAVA_JREDIR'];
       this.ttp_logfilesToKeep = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.LOGFILES'];
       this.ttp_autoUpdate = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.AUTOUPDATE'];
       this.ttp_clientPort = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.CLIENT_PORT'];
-      this._translateService.getTranslations([
-        new TranslationInput('CONFIGURATION.TOOLTIPS.JAVA_XMX', [CNST_JAVA_XMX_MINIMUM + ''])
-      ]).subscribe((translations: any) => {
-        this.ttp_javaXmx = translations['CONFIGURATION.TOOLTIPS.JAVA_XMX'];
-      });
       
       //Definição dos campos obrigatórios do formulário
       this.CNST_FIELD_NAMES = [
@@ -193,7 +208,7 @@ export class ConfigurationComponent implements OnInit {
       
       //Atualização do número de versão do Java / Agent
       if (this._electronService.isElectronApp) {
-        this.AgentVersion = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('getAgentVersion').version;
+        this.AgentVersion = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('AC_getAgentVersion').version;
         this.JavaVersion = null;
       } else {
         this.AgentVersion = CNST_PROGRAM_VERSION.DEVELOPMENT;
@@ -212,11 +227,11 @@ export class ConfigurationComponent implements OnInit {
           value: locale
         }));
         
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       });
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_ERROR'], err);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       throw err;
     });
   }
@@ -226,7 +241,7 @@ export class ConfigurationComponent implements OnInit {
     
     //Valida se os dados preenchidos no formulário são válidos
     if (this.validConfiguration()) {
-      this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'] };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'] };
       
       this._translateService.getTranslations([
         new TranslationInput('CONFIGURATION.MESSAGES.SAVE_ERROR_PORT', [this.configuration.clientPort + ''])
@@ -243,10 +258,10 @@ export class ConfigurationComponent implements OnInit {
           
           //Recarrega a página de configuração do Agent
           this.reloadConfiguration();
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }, (err: any) => {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR']);
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         });
       });
     }
@@ -261,7 +276,7 @@ export class ConfigurationComponent implements OnInit {
     let configuration: Configuration = new Configuration(3, true, 2048, '', CNST_DEFAULT_LANGUAGE, true);
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.VALIDATE']);
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.VALIDATE'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.VALIDATE'] };
     
     //Verifica se todos os campos da interface de configuração foram preenchidos
     let propertiesNotDefined: string[] = Object.getOwnPropertyNames.call(Object, configuration).map((p: string) => {
@@ -275,7 +290,7 @@ export class ConfigurationComponent implements OnInit {
       ]).subscribe((translations: any) => {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_NOT_FILLED']);
       });
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     } else {
       
       //Verifica se a tipagem esperada de todos os campos da interface estão corretas
@@ -284,7 +299,7 @@ export class ConfigurationComponent implements OnInit {
       }).filter((p: string) => { return p != null; });
       if (propertiesNotDefined.length > 0) {
         validate = false;
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
         this._translateService.getTranslations([
           new TranslationInput('FORM_ERRORS.FIELD_TYPING_WRONG', [fieldName])
@@ -301,7 +316,7 @@ export class ConfigurationComponent implements OnInit {
     });
     if (range.length > 0) {
       validate = false;
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       this._translateService.getTranslations([
         new TranslationInput('FORM_ERRORS.FIELD_RANGE_ERROR', [range[0].value, range[0].minimum, range[0].maximum])
       ]).subscribe((translations: any) => {
@@ -315,20 +330,20 @@ export class ConfigurationComponent implements OnInit {
   /* Método de seleção do diretório temporário do Agent (Apenas disponível c/ Electron) */
   protected getTmpFolder(): void {
     if (this._electronService.isElectronApp) {
-      this.configuration.javaTmpDir = this._electronService.ipcRenderer.sendSync('getFolder');
+      this.configuration.javaTmpDir = this._electronService.ipcRenderer.sendSync('AC_getFolder');
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['FORM_ERRORS.FOLDER_SELECT_WARNING']);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     }
   }
   
   /* Método de seleção do diretório onde se encontram os binários da JRE do Java (Apenas disponível c/ Electron) */
   protected getJREFolder(): void {
     if (this._electronService.isElectronApp) {
-      this.configuration.javaJREDir = this._electronService.ipcRenderer.sendSync('getFolder');
+      this.configuration.javaJREDir = this._electronService.ipcRenderer.sendSync('AC_getFolder');
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['FORM_ERRORS.FOLDER_SELECT_WARNING']);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     }
   }
 }

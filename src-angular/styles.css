@@ -4,6 +4,21 @@
   --color-action-pressed: #FFFFFF;
 }
 
+.mirror {
+  margin-left: var(--menu-width);
+  width: calc(100% - var(--menu-width));
+  background-color: #C64840;
+  color: #FFFFFF;
+  padding: 0.5em;
+  text-align: center;
+}
+
+.mirror-text {
+  width: 100%;
+  font-weight: bold;
+  font-size: 20px;
+}
+
 .po-menu {
   background: #363636;
   border: none;

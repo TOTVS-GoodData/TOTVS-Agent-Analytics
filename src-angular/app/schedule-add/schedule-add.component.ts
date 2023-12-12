@@ -11,6 +11,9 @@ import {
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Serviço de comunicação com o Agent-Server */
 import { ServerService } from '../services/server/server-service';
 import {
@@ -78,6 +81,9 @@ export class ScheduleAddComponent {
   //Listagem de todos os bancos de dados disponíveis no Agent
   private databases: Array<Database> = [];
   
+  //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
+  protected mirrorMode: number = 0;
+  
   /****** Portinari.UI ******/
   //Comunicação c/ animação (gif) de carregamento
   protected po_lo_text: any = { value: null };
@@ -139,6 +145,7 @@ export class ScheduleAddComponent {
     private _databaseService: DatabaseService,
     private _scheduleService: ScheduleService,
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _translateService: TranslationService,
     private _utilities: Utilities,
     private _router: Router
@@ -187,6 +194,9 @@ export class ScheduleAddComponent {
     this.ttp_fileFolder = this._translateService.CNST_TRANSLATIONS['SCHEDULES.TOOLTIPS.FILE_FOLDER'];
     this.ttp_fileWildcard = this._translateService.CNST_TRANSLATIONS['SCHEDULES.TOOLTIPS.FILE_WILDCARD'];
     
+    //Configuração da mensagem de acesso remoto (MirrorMode)
+    this.mirrorMode = this._mirrorService.getMirrorMode();
+    
     //Definição dos campos obrigatórios do formulário
     this.CNST_FIELD_NAMES = [
       { key: 'name', value: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.NAME'] },
@@ -197,7 +207,7 @@ export class ScheduleAddComponent {
     ];
     
     //Solicita ao Agent-Server as licenças cadastradas para esta instalação do Agent, e consulta o cadastro de ambientes / bancos de dados disponíveis no Agent
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES'] };
     forkJoin([
       this._workspaceService.getWorkspaces(false),
       this._databaseService.getDatabases(false),
@@ -207,7 +217,7 @@ export class ScheduleAddComponent {
       //Redireciona o usuário para a página de origem, caso ocorra uma falha na comunicação com o Agent-Server
       if (results[2] == null) {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERVER_ERROR']);
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         this._router.navigate(['/schedule']);
       } else {
         this.workspaces = results[0];
@@ -231,13 +241,13 @@ export class ScheduleAddComponent {
             param.sql = (param.sql == true ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
             return param;
           });
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         } else {
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }
       }
     }, (err: any) => {
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES_ERROR'], err);
     });
   }
@@ -253,16 +263,16 @@ export class ScheduleAddComponent {
     
     //Solicita os parâmetros de ETL / SQL mais recentes para o Agent-Server
     if (database != null) {
-      this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_PARAMETERS'] };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_PARAMETERS'] };
       forkJoin(
         this._serverService.getLatestETLParameters(license),
         this._serverService.getLatestSQLParameters(license, database.brand)
       ).subscribe((results: [ETLParameterCommunication, SQLParameterCommunication]) => {
-        console.log(results[1]);
+        
         //Redireciona o usuário para a página de origem, caso ocorra uma falha na comunicação com o Agent-Server
         if ((results[0] == null) || (results[1] == null)) {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERVER_ERROR']);
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           this._router.navigate(['/schedule']);
         } else {
           
@@ -273,10 +283,10 @@ export class ScheduleAddComponent {
             param.sql = (param.sql == true ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
             return param;
           });
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }
       }, (err: any) => {
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVER.MESSAGES.LOADING_PARAMETERS_ERROR'], err);
       });
     }
@@ -299,7 +309,7 @@ export class ScheduleAddComponent {
         new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR', [this.schedule.name]),
         new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME', [this.schedule.name])
       ]).subscribe((translations: any) => {
-        this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.SAVE'] };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.SAVE'] };
         
         //Converte o valor da coluna "SQL" dos parâmetros SQL, em true / false (string -> boolean)
         this.schedule.SQLParameters = this.schedule.SQLParameters.map((p: any) => {
@@ -316,9 +326,9 @@ export class ScheduleAddComponent {
           } else {
             this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME']);
           }
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }, (err: any) => {
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['SCRIPTS.MESSAGES.SAVE_ERROR']);
         });
       });
@@ -335,7 +345,7 @@ export class ScheduleAddComponent {
     let schedule: Schedule = new Schedule();
     
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.VALIDATE']);
-    this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.VALIDATE'] };
+    if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.VALIDATE'] };
     
     // Todo processo de ETL precisa ter um graph preenchido.
     if (this.schedule.fileFolder != undefined) {
@@ -350,7 +360,7 @@ export class ScheduleAddComponent {
     // Validação dos campos de formulário
     if (propertiesNotDefined.length > 0) {
       validate = false;
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
       this._translateService.getTranslations([
         new TranslationInput('FORM_ERRORS.FIELD_NOT_FILLED', [fieldName])
@@ -365,7 +375,7 @@ export class ScheduleAddComponent {
       }).filter((p: string) => { return p != null; });
       if (propertiesNotDefined.length > 0) {
         validate = false;
-        this.po_lo_text = { value: null };
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         let fieldName: string = this.CNST_FIELD_NAMES.find((f: any) => { return f.key === propertiesNotDefined[0]}).value;
         this._translateService.getTranslations([
           new TranslationInput('FORM_ERRORS.FIELD_TYPING_WRONG', [fieldName])
@@ -383,7 +393,7 @@ export class ScheduleAddComponent {
         
         if (!validate) {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['FORM_ERRORS.ONLY_YES_OR_NO']);
-          this.po_lo_text = { value: null };
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         }
       }
     }
@@ -398,10 +408,10 @@ export class ScheduleAddComponent {
   /* Método de seleção do diretório local a ser enviado para o GoodData (Apenas disponível c/ Electron) */
   protected getFolder(): void {
     if (this._electronService.isElectronApp) {
-      this.schedule.fileFolder = this._electronService.ipcRenderer.sendSync('getFolder');
+      this.schedule.fileFolder = this._electronService.ipcRenderer.sendSync('AC_getFolder');
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['FORM_ERRORS.FOLDER_SELECT_WARNING']);
-      this.po_lo_text = { value: null };
+      if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     }
   }
   

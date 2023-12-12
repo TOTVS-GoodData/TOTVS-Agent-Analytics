@@ -3,6 +3,13 @@
   <!-- Componente de animação de carregamento do Portinari.UI -->
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
   
+  <!-- Componente de aviso quando o acesso remoto está ativado (MirrorMode) -->
+  <div class="padding-bottom">
+    <div class="po-row mirror" [hidden]="mirrorMode != 2">
+      <span class="mirror-text ">{{ lbl_mirror }}</span>
+    </div>
+  </div>
+  
   <!-- Menu principal do Agent -->
   <po-menu [p-menus]="menus">
     <ng-template p-menu-header-template>
@@ -59,7 +66,7 @@
       
       <!-- Link p/ abertura de chamado -->
       <div class="po-row padding-bottom">
-         <span class="subtitle">{{ lbl_registerAgentDescription6 }}&nbsp;</span>
+         <span class="subtitle">{{ lbl_registerAgentDescription6 }}</span>
         <po-link
           p-label="https://centraldeatendimento.totvs.com/hc/pt-br/requests/new?ticket_form_id=368847"
           [p-open-new-tab]="true"

@@ -17,6 +17,17 @@
         
         <div class="po-row fields">
           
+          <!-- Nome desta instância do Agent -->
+          <po-input
+            class="form-control po-md-12 po-lg-12"
+            name="po_instance"
+            [p-label]="lbl_instance"
+            [p-tooltip]="ttp_instance"
+            [(ngModel)]="configuration.instanceName"
+            p-required="true"
+            p-disabled="true">
+          </po-input>
+          
           <!-- Número máximo de arquivos de log a serem mantidos -->
           <po-number
             class="po-sm-12 po-md-12 po-lg-12 po-xl-12"

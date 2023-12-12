@@ -64,7 +64,7 @@ export class MonitorService {
     ]).pipe(map((results: [Schedule[], Configuration]) => {
       
       //Solicita ao Electron as mensagens de todos os arquivos de log existentes
-      this._electronService.ipcRenderer.sendSync('readLogs').map((log: string) => {
+      this._electronService.ipcRenderer.sendSync('AC_readLogs').map((log: string) => {
         
         //Converte o texto do log de volta para o objeto de mensagem
         try {

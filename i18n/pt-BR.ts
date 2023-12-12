@@ -67,6 +67,15 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       }
     }
   },
+  MIRROR_MODE: {
+    TITLE: 'MODO ESPELHO ATIVADO - Todas as alterações feitas neste Agent serão automaticamente replicadados ao Agent remoto [${p1}]',
+    ONLINE: 'Aviso - Acesso remoto ativado pelo servidor central da TOTVS. Este Agent está agora bloqueado até o término do mesmo.',
+    OFFLINE: 'Acesso remoto finalizado. O Agent está disponível para uso novamente.',
+    RUNNING: 'Acesso remoto em execução',
+    SERVER_SYNC: 'Solicitando sincronização com a instância remota do Agent...',
+    SERVER_SYNC_OK: 'Sincronização bem sucedida. Todas as configurações foram atualizadas no Agent remoto.',
+    SERVER_SYNC_ERROR: 'Erro - Falha na sincronização do Agent remoto. A instância espelhada não efetuou nenhuma alteração no mesmo.'
+  },
   ANGULAR: {
     SYSTEM_EXIT: 'Tem certeza que deseja sair do Agent?',
     SYSTEM_FINISH_USER: '=== Desligamento solicitado pelo usuário (menu manual) ===',
@@ -475,6 +484,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     APPLICATION: 'Aplicação',
     JAVA: 'Java',
     VERSION: 'Versão',
+    INSTANCE: 'Nome da instância',
     DEBUGMODE: 'Modo de depuração',
     AUTOUPDATE: 'Atualização automática',
     ACTIVATED_1: 'Ativado',
@@ -500,6 +510,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       SAVE_ERROR_PORT: 'Erro - Falha na inicialização do servidor na porta \'${p1}\'. Revertendo alterações...'
     },
     TOOLTIPS: {
+      INSTANCE: 'Nome desta instância do Agent, definido automaticamente pela TOTVS. Este nome é usado para facilitar o atendimento da equipe de suporte da TOTVS.',
       DEBUGMODE: 'Permite que mensagens de debug do log de execuções do Agent sejam vistas.',
       LOGFILES: 'Número máximo, em dias, de arquivos de log a serem mantidos pelo Agent. O Agent irá apagar automaticamente os arquivos de log mais antigos do que este parâmetro.',
       JAVA_XMX: 'Alocação máxima de memória RAM (MB - Megabytes) que o Agent pode utilizar ao executar agendamentos. Caso a memória não seja suficiente, o Agent irá finalizar a execução, com uma mensagem de erro. Valor mínimo: ${p1}MB',

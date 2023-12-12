@@ -32,7 +32,7 @@ export class EncryptionService {
   private static CNST_KEY_PUBLIC_AGENT: string = null;
   private static CNST_KEY_PRIVATE_AGENT: string = null;
   private static CNST_KEY_PUBLIC_SERVER: string = null;
-  private static CNST_KEY_AGENT: Buffer =   Buffer.from('nwuaŕoapkpsdnhwofaimgaodpsanwiu');
+  private static CNST_KEY_AGENT: Buffer = Buffer.from('nwuaŕoapkpsdnhwofaimgaodpsanwiu');
   
   //Algoritmo de criptografia
   private static CNST_ALGORITHM: string = 'aes-256-cbc';
@@ -51,13 +51,13 @@ export class EncryptionService {
     
     //Geração de um novo par de chaves de criptografia (caso não exista)
     if ((!fs.existsSync(CNST_FILE_KEY_PUBLIC_AGENT)) || (!fs.existsSync(CNST_FILE_KEY_PRIVATE_AGENT))) {
-      EncryptionService.generateKeyPair();
+      //EncryptionService.generateKeyPair();
     }
     
     //Inicialização das chaves de criptografia
-    EncryptionService.CNST_KEY_PUBLIC_AGENT = fs.readFileSync(CNST_FILE_KEY_PUBLIC_AGENT, 'utf-8');
-    EncryptionService.CNST_KEY_PUBLIC_SERVER = fs.readFileSync(CNST_FILE_KEY_PUBLIC_SERVER, 'utf-8');
-    EncryptionService.CNST_KEY_PRIVATE_AGENT = fs.readFileSync(CNST_FILE_KEY_PRIVATE_AGENT, 'utf-8');
+    //EncryptionService.CNST_KEY_PUBLIC_AGENT = fs.readFileSync(CNST_FILE_KEY_PUBLIC_AGENT, 'utf-8');
+    //EncryptionService.CNST_KEY_PUBLIC_SERVER = fs.readFileSync(CNST_FILE_KEY_PUBLIC_SERVER, 'utf-8');
+    //EncryptionService.CNST_KEY_PRIVATE_AGENT = fs.readFileSync(CNST_FILE_KEY_PRIVATE_AGENT, 'utf-8');
     return true;
   }
   

@@ -80,7 +80,7 @@ export class ScheduleService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getSchedules', showLogs));
+      return of(this._electronService.ipcRenderer.sendSync('AC_getSchedules', showLogs));
     } else {
       
       //Escrita de logs (caso solicitado)
@@ -123,7 +123,7 @@ export class ScheduleService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('saveSchedule', [s]));
+      return of(this._electronService.ipcRenderer.sendSync('AC_saveSchedule', [s]));
     } else {
       
       //Consulta das traduções, e dos agendamentos cadastrados atualmente
@@ -189,7 +189,7 @@ export class ScheduleService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('deleteSchedule', s));
+      return of(this._electronService.ipcRenderer.sendSync('AC_deleteSchedule', s));
     } else {
       
       //Consulta das traduções

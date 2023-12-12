@@ -7,6 +7,9 @@ import * as fs from 'fs-extra';
 /* Dependência para gravação de arquivos de log */
 import * as winston from 'winston';
 
+/* Serviço central do Electron */
+import Main from '../electron-main';
+
 /* Serviço de tradução do Electron */
 import { TranslationService } from './services/translation-service';
 import { TranslationInput } from '../src-angular/app/services/translation/translation-interface';
@@ -29,8 +32,8 @@ import { ScriptClient } from '../src-angular/app/script/script-interface';
 /* Componentes de utilitários do Agent */
 import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../src-angular/app/utilities/utilities-constants';
 import {
-  CNST_DATABASE_NAME,
-  CNST_DATABASE_NAME_DEV,
+  CNST_AGENT_CLIENT_DATABASE_NAME,
+  CNST_AGENT_CLIENT_DATABASE_NAME_DEV,
   CNST_LOGS_PATH,
   CNST_TMP_PATH,
   CNST_LOGS_REGEX,
@@ -41,14 +44,14 @@ import {
 } from './electron-constants';
 
 /* Interface do banco de dados do Agent */
-import { DatabaseData } from './electron-interface';
+import { ClientData } from './electron-interface';
 
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './services/configuration-service';
 import { Configuration } from '../src-angular/app/configuration/configuration-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, from, map } from 'rxjs';
+import { Observable, from, map, of } from 'rxjs';
 
 export class Files {
   
@@ -93,7 +96,7 @@ export class Files {
       Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DELETE_OLD_LOGS'], null, null, null);
       
       //Realiza a leitura do nome de todos os arquivos presentes no diretório de log do Agent
-      fs.readdir(CNST_LOGS_PATH, (err: any, files: any) => {
+      fs.readdir(CNST_LOGS_PATH(), (err: any, files: any) => {
         files.forEach((file: any) => {
           
           //Filtra apenas os arquivos de log válidos
@@ -109,7 +112,7 @@ export class Files {
             let day: number = file.substring(file.length - 6, file.length - 4);
             let logDate: Date = new Date(year, month - 1, day);
             
-            if (logDate.getTime() < maxDate.getTime()) fs.remove(CNST_LOGS_PATH + '/' + file);
+            if (logDate.getTime() < maxDate.getTime()) fs.remove(CNST_LOGS_PATH() + '/' + file);
           }
         });
         
@@ -123,6 +126,7 @@ export class Files {
     
     //Inicializa o objeto a ser escrito no log
     let obj: any = {
+      mirror: (Main.getMirrorMode() == 2 ? '[MIRROR]' : '[CLIENT]'),
       timestamp: new Date(),
       loglevel: loglevel.tag,
       system: system,
@@ -151,7 +155,7 @@ export class Files {
     let logs: Array<string> = [];
     
     //Realiza a leitura do nome de todos os arquivos presentes no diretório de log do Agent
-    let files: any = fs.readdirSync(CNST_LOGS_PATH);
+    let files: any = fs.readdirSync(CNST_LOGS_PATH());
     files.map((file: string) => {
       
       //Filtra apenas os arquivos de log válidos
@@ -159,7 +163,7 @@ export class Files {
       if (regexLogs.test(file)) {
         
         //Realiza a leitura de todas as linhas do arquivo de log, e as armazena
-        fs.readFileSync(CNST_LOGS_PATH + '/' + file).toString().split(CNST_OS_LINEBREAK()).map((line: string) => {
+        fs.readFileSync(CNST_LOGS_PATH() + '/' + file).toString().split(CNST_OS_LINEBREAK()).map((line: string) => {
           logs.push(line);
         });
         logs.pop();
@@ -183,10 +187,10 @@ export class Files {
         winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ssZ' }),
         winston.format((info) => {
           const {
-            timestamp, loglevel, system, message, level, ...rest
+            mirror, timestamp, loglevel, system, message, level, ...rest
           } = info;
           return {
-            timestamp, loglevel, system, message, level, ...rest,
+            mirror, timestamp, loglevel, system, message, level, ...rest,
           };
         })(),
         winston.format.json({ deterministic: false })
@@ -194,7 +198,7 @@ export class Files {
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          filename: CNST_LOGS_PATH + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
+          filename: CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
         })
       ]
     });
@@ -208,48 +212,48 @@ export class Files {
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          filename: CNST_LOGS_PATH + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
+          filename: CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
         })
       ]
     });
     
     //Verifica se existe um banco de testes/desenv. no diretório de dados do Agent
-    if (fs.existsSync(CNST_DATABASE_NAME_DEV)) {
-      Files.filepath = CNST_DATABASE_NAME_DEV;
+    if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME_DEV())) {
+      Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME_DEV();
       if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_DEVELOPMENT'], null, null, null);
       
     //Caso não exista, procura por um banco de produção no mesmo diretório
-    } else if (fs.existsSync(CNST_DATABASE_NAME)) {
-      Files.filepath = CNST_DATABASE_NAME;
+    } else if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME())) {
+      Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME();
       if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_PRODUCTION'], null, null, null);
       
     //Caso também não exista, é criado um novo arquivo de banco, de produção, 
     } else {
       if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE'], null, null, null);
-      fs.createFileSync(CNST_DATABASE_NAME);
+      fs.createFileSync(CNST_AGENT_CLIENT_DATABASE_NAME());
       
       fs.writeJsonSync(
-        CNST_DATABASE_NAME,
-        new DatabaseData(),
+        CNST_AGENT_CLIENT_DATABASE_NAME(),
+        new ClientData(),
         {
           spaces: CNST_LOGS_SPACING,
           'EOL': CNST_OS_LINEBREAK()
         }
       );
       
-      Files.filepath = CNST_DATABASE_NAME;
+      Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME();
       if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE_OK'], null, null, null);
     }
     
     //Cria o diretório de arquivos temporários do Agent (Caso ainda não exista)
-    if (!fs.existsSync(CNST_TMP_PATH)) {
-      fs.mkdirSync(CNST_TMP_PATH);
+    if (!fs.existsSync(CNST_TMP_PATH())) {
+      fs.mkdirSync(CNST_TMP_PATH());
     }
   }
   
   /* Método de leitura do banco do Agent */
-  public static readApplicationData(): Observable<DatabaseData> {
-    return from(fs.readJson(Files.filepath)).pipe(map((data: DatabaseData) => {
+  public static readApplicationData(): Observable<ClientData> {
+    return from(fs.readJson(Files.filepath)).pipe(map((data: ClientData) => {
       data.workspaces = data.workspaces.map((parameter: Workspace) => {
         return new Workspace().toObject(parameter);
       });
@@ -275,7 +279,7 @@ export class Files {
   }
   
   /* Método de escrita do banco do Agent */
-  public static writeApplicationData(db: DatabaseData): Observable<boolean> {
+  public static writeApplicationData(db: ClientData): Observable<boolean> {
     return from(fs.writeJson(
       Files.filepath,
       db,

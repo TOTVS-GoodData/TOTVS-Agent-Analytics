@@ -60,7 +60,7 @@ export class ServerService {
       
       //Redirecionamento da requisição p/ Electron (caso disponível)
       if (this._electronService.isElectronApp) {
-        return this._electronService.ipcRenderer.invoke('getAvailableLicenses', showLogs).then((res: AvailableLicenses) => {
+        return this._electronService.ipcRenderer.invoke('AC_getAvailableLicenses', showLogs).then((res: AvailableLicenses) => {
           return res;
           });
       } else {
@@ -80,7 +80,7 @@ export class ServerService {
       
       //Redirecionamento da requisição p/ Electron (caso disponível)
       if (this._electronService.isElectronApp) {
-        return this._electronService.ipcRenderer.invoke('saveLatestQueries', license, database, scheduleId).then((res: number) => {
+        return this._electronService.ipcRenderer.invoke('AC_saveLatestQueries', license, database, scheduleId).then((res: number) => {
           return res;
         });
       } else {
@@ -100,7 +100,7 @@ export class ServerService {
       
       //Redirecionamento da requisição p/ Electron (caso disponível)
       if (this._electronService.isElectronApp) {
-        return this._electronService.ipcRenderer.invoke('saveLatestScripts', license, brand, scheduleId).then((res: number) => {
+        return this._electronService.ipcRenderer.invoke('AC_saveLatestScripts', license, brand, scheduleId).then((res: number) => {
           return res;
         });
       } else {
@@ -120,7 +120,7 @@ export class ServerService {
       
       //Redirecionamento da requisição p/ Electron (caso disponível)
       if (this._electronService.isElectronApp) {
-        return this._electronService.ipcRenderer.invoke('getLatestETLParameters', license).then((res: ETLParameterCommunication) => {
+        return this._electronService.ipcRenderer.invoke('AC_getLatestETLParameters', license).then((res: ETLParameterCommunication) => {
           return res;
         });
       } else {
@@ -140,7 +140,7 @@ export class ServerService {
       
       //Redirecionamento da requisição p/ Electron (caso disponível)
       if (this._electronService.isElectronApp) {
-        return this._electronService.ipcRenderer.invoke('getLatestSQLParameters', license, brand).then((res: SQLParameterCommunication) => {
+        return this._electronService.ipcRenderer.invoke('AC_getLatestSQLParameters', license, brand).then((res: SQLParameterCommunication) => {
           return res;
         });
       } else {

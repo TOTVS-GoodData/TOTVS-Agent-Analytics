@@ -21,7 +21,7 @@ import {
 } from '../electron-constants';
 
 /* Interface do banco de dados do Agent */
-import { DatabaseData } from '../electron-interface';
+import { ClientData } from '../electron-interface';
 
 /* Serviço de ambientes do Agent */
 import { WorkspaceService } from './workspace-service';
@@ -71,7 +71,7 @@ export class ScheduleService {
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno dos agendamentos cadastrados
-    return Files.readApplicationData().pipe(map((db: DatabaseData) => {
+    return Files.readApplicationData().pipe(map((db: ClientData) => {
       
       //Converte a data de execução de cada agendamento, para o fuso horário configurado no Agent.
       db.schedules = db.schedules.map((s: Schedule) => {
@@ -149,7 +149,7 @@ export class ScheduleService {
     let errors: number = (sc.length == 0 ? null : 0);
     
     //Leitura do banco de dados atual do Agent
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       
       //Itera por todos os agendamentos que devem ser gravados
       let validate: any = sc.map((sc2: Schedule) => {
@@ -242,7 +242,7 @@ export class ScheduleService {
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.DELETE'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e remoção do agendamento cadastrado
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       let index = _dbd.schedules.findIndex((schedule: Schedule) => { return schedule.id === sc.id; });
       _dbd.schedules.splice(index, 1);
       
@@ -304,7 +304,7 @@ export class ScheduleService {
       });
       
       let conf: Configuration = results[4];
-      conf.logPath = CNST_LOGS_PATH;
+      conf.logPath = CNST_LOGS_PATH();
       
       //Descriptografia da senha do banco de dados no Agent, para posterior envio para o Java (caso exista)
       if (db) db.password = EncryptionService.decrypt(db.password);

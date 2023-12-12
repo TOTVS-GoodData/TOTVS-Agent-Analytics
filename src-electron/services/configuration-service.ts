@@ -9,7 +9,7 @@ import { TranslationInput } from '../../src-angular/app/services/translation/tra
 import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../../src-angular/app/utilities/utilities-constants';
 
 /* Interface do banco de dados do Agent */
-import { DatabaseData } from '../electron-interface';
+import { ClientData } from '../electron-interface';
 
 /* Interface de configuração do Agent */
 import { Configuration } from '../../src-angular/app/configuration/configuration-interface';
@@ -32,7 +32,7 @@ export class ConfigurationService {
     if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING'], null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno da configuraçãO atual
-    return Files.readApplicationData().pipe(map((db: DatabaseData) => {
+    return Files.readApplicationData().pipe(map((db: ClientData) => {
       let conf: Configuration = new Configuration(
         db.configuration.logfilesToKeep,
         db.configuration.debug,
@@ -41,6 +41,8 @@ export class ConfigurationService {
         db.configuration.locale,
         db.configuration.autoUpdate
       );
+      
+      conf.instanceName = db.configuration.instanceName;
       conf.logPath = db.configuration.logPath;
       conf.timezone = db.configuration.timezone;
       conf.clientPort = db.configuration.clientPort;
@@ -64,8 +66,8 @@ export class ConfigurationService {
     
     //Leitura da configuração atual do Agent
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'], null, null, null);
-    return Files.readApplicationData().pipe(switchMap((_dbd: DatabaseData) => {
-      let oldData: DatabaseData = { ..._dbd };
+    return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
+      let oldData: ClientData = { ..._dbd };
       _dbd.configuration = conf;
       
       //Reinicialização do servidor do Agent, e gravação da nova configuração

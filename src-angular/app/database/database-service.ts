@@ -5,6 +5,9 @@ import { Injectable } from '@angular/core';
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
@@ -47,6 +50,7 @@ export class DatabaseService {
   constructor(
     private http: HttpClient,
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _utilities: Utilities,
     private _translateService: TranslationService,
     private _configurationService: ConfigurationService
@@ -59,7 +63,7 @@ export class DatabaseService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getDatabases', showLogs));
+      return of(this._electronService.ipcRenderer.sendSync('AC_getDatabases', showLogs));
     } else {
       
       //Escrita de logs (caso solicitado)
@@ -91,7 +95,7 @@ export class DatabaseService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('saveDatabase', db));
+      return of(this._electronService.ipcRenderer.sendSync('AC_saveDatabase', db));
     } else {
       
       //Consulta das traduções, e dos bancos de dados cadastrados atualmente
@@ -145,7 +149,7 @@ export class DatabaseService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('deleteDatabase', db));
+      return of(this._electronService.ipcRenderer.sendSync('AC_deleteDatabase', db));
     } else {
       
       //Consulta das traduções
@@ -172,9 +176,6 @@ export class DatabaseService {
   public testConnection(db: Database): Observable<boolean> {
     let password: string = null;
     
-    //Resultado da conexão (true = funcionou)
-    let connectionResult: boolean = false;
-    
     //Objeto de resultado da conexão, enviado pelo Java
     let testConnection = {
       success: null,
@@ -195,7 +196,7 @@ export class DatabaseService {
         this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, results[0]['DATABASES.MESSAGES.LOGIN']);
         
         //Descriptografia da senha armazenada no Agent, para posterior envio para o Java
-        if (db.id != null) db.password = this._electronService.ipcRenderer.sendSync('decrypt', db.password);
+        if (db.id != null) db.password = this._electronService.ipcRenderer.sendSync('AC_decrypt', db.password);
         
         //Preparação do buffer de entrada para o Java
         let javaInput: JavaInputBuffer = {
@@ -208,23 +209,37 @@ export class DatabaseService {
         }
         
         //Criptografia do pacote a ser enviado
-        let params = this._electronService.ipcRenderer.sendSync('encrypt', JSON.stringify(javaInput));
+        let params = this._electronService.ipcRenderer.sendSync('AC_encrypt', JSON.stringify(javaInput));
         
         //Envio da requisição para o Electron, e processamento da resposta
-        return this._electronService.ipcRenderer.invoke('testDatabaseConnection', params).then((testConnection: any) => {
-          if (!testConnection.success) {
-            this._utilities.createNotification(CNST_LOGLEVEL.ERROR, results[0]['DATABASES.MESSAGES.LOGIN_ERROR'], testConnection.err);
-          } else {
-            connectionResult = true;
-            this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOGIN_OK']);
-          }
-          return connectionResult;
-        });
+        if (this._mirrorService.getMirrorMode() != 2) {
+          return this._electronService.ipcRenderer.invoke('AC_testDatabaseConnectionLocally', params).then((testConnection: any) => {
+            return this.testConnectionResult(testConnection, results[0]['DATABASES.MESSAGES.LOGIN_ERROR']);
+          });
+        } else {
+          let testConnection: any = this._electronService.ipcRenderer.sendSync('AC_testDatabaseConnectionRemotelly', params);
+          return of(this.testConnectionResult(testConnection, results[0]['DATABASES.MESSAGES.LOGIN_ERROR']));
+        }
       } else {
-        connectionResult = true;
         this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOGIN_WARNING']);
-        return of(connectionResult);
+        return of(true);
       }
     }));
+  }
+  
+  /* Método de processamento do resultado do teste de conexão ao banco de dados */
+  private testConnectionResult(testConnection: any, message: string): boolean {
+    
+    //Resultado da conexão (true = funcionou)
+    let connectionResult: boolean = false;
+    
+    if (!testConnection.success) {
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, message, testConnection.err);
+    } else {
+      connectionResult = true;
+      this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOGIN_OK']);
+    }
+    
+    return connectionResult;
   }
 }

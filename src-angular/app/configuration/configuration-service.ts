@@ -51,7 +51,7 @@ export class ConfigurationService {
     
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
-      return of(this._electronService.ipcRenderer.sendSync('getConfiguration', showLogs));
+      return of(this._electronService.ipcRenderer.sendSync('AC_getConfiguration', showLogs));
     } else {
       
       //Escrita de logs (caso solicitado)
@@ -83,7 +83,7 @@ export class ConfigurationService {
       
       //Redirecionamento da requisição p/ Electron (caso disponível)
       if (this._electronService.isElectronApp) {
-        return this._electronService.ipcRenderer.invoke('saveConfiguration', conf).then((b: number) => {
+        return this._electronService.ipcRenderer.invoke('AC_saveConfiguration', conf).then((b: number) => {
           if (b == 1) {
             this._translateService.use(conf.locale).subscribe((b: boolean) => {
               this._menuService.updateMenu();

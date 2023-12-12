@@ -28,9 +28,12 @@
     ],
     "win": {
       "icon": "icons/windows/analytics.ico",
-      "target": [
-        "nsis"
-      ],
+      "target": {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      },
       "publish": [
         "github"
       ]
@@ -66,36 +69,36 @@
   "version": "1.0.0",
   "author": "Diego Matos Guedes <suporte.gd@totvs.com.br> (https://www.totvs.com/)",
   "description": "Programa de envio de dados para a plataforma GoodData.",
-  "main": "./dist/TOTVS-Agent-Analytics/app.js",
+  "main": "./dist/TOTVS-Agent-Analytics/boot.js",
   "type": "commonjs",
   "scripts": {
-    "start": "ng build --configuration production && ./node_modules/.bin/tsc && electron dist/TOTVS-Agent-Analytics/app.js --trace-warnings",
+    "start": "ng build --configuration production && ./node_modules/.bin/tsc && electron dist/TOTVS-Agent-Analytics/boot.js --trace-warnings",
     "angular": "ng serve",
     "build-angular": "ng build --configuration production",
     "build-electron": "./node_modules/.bin/tsc",
     "build-electron-w": "./node_modules/.bin/tsc -w",
-    "electron": "electron --no-sandbox dist/TOTVS-Agent-Analytics/app.js --trace-warnings",
+    "electron": "electron --no-sandbox dist/TOTVS-Agent-Analytics/boot.js --trace-warnings",
     "json-server": "json-server --watch ./assets/dbDevelopment.json",
     "github": "git add . && timestamp=$(date \"+%Y-%m-%d %H:%M:%S\") && git commit -m \"Build $timestamp\" && git push",
-    "release-windows-64": "electron-builder build --win --x64",
-    "release-windows-64-p": "electron-builder build --win --x64 --publish always",
-    "release-windows-32": "electron-builder build --win --x86",
-    "release-windows-32-p": "electron-builder build --win --x86 --publish always",
-    "release-linux": "electron-builder build --linux --x64",
-    "release-linux-p": "electron-builder build --linux --x64 --publish always",
-    "release-mac": "electron-builder build --mac --x64",
-    "release-mac-p": "electron-builder build --mac --x64 --publish always"
+    "release-windows-64": "npm pkg set 'main'='./dist/TOTVS-Agent-Analytics/boot.js' && electron-builder build --win nsis:x64",
+    "release-windows-64-p": "npm pkg set 'main'='./dist/TOTVS-Agent-Analytics/boot.js' && electron-builder build --win --x64 --publish always",
+    "release-windows-32": "npm pkg set 'main'='./dist/TOTVS-Agent-Analytics/boot.js' && electron-builder build --win --ia32",
+    "release-windows-32-p": "npm pkg set 'main'='./dist/TOTVS-Agent-Analytics/boot.js' && electron-builder build --win --ia32 --publish always",
+    "release-linux": "npm pkg set 'main'='./dist/TOTVS-Agent-Analytics/boot.js' && electron-builder build --linux --x64",
+    "release-linux-p": "npm pkg set 'main'='./dist/TOTVS-Agent-Analytics/boot.js' && electron-builder build --linux --x64 --publish always",
+    "release-mac": "npm pkg set 'main'='./dist/TOTVS-Agent-Analytics/boot.js' && electron-builder build --mac --x64",
+    "release-mac-p": "npm pkg set 'main'='./dist/TOTVS-Agent-Analytics/boot.js' && electron-builder build --mac --x64 --publish always"
   },
   "license": "ISC",
   "dependencies": {
-    "@angular/animations": "16.2.11",
-    "@angular/common": "16.2.11",
-    "@angular/core": "16.2.11",
-    "@angular/forms": "16.2.11",
-    "@angular/platform-browser": "16.2.11",
-    "@angular/platform-browser-dynamic": "16.2.11",
-    "@angular/platform-server": "16.2.11",
-    "@angular/router": "16.2.11",
+    "@angular/animations": "16.2.12",
+    "@angular/common": "16.2.12",
+    "@angular/core": "16.2.12",
+    "@angular/forms": "16.2.12",
+    "@angular/platform-browser": "16.2.12",
+    "@angular/platform-browser-dynamic": "16.2.12",
+    "@angular/platform-server": "16.2.12",
+    "@angular/router": "16.2.12",
     "@electron/remote": "^2.0.9",
     "@ngx-translate/core": "^14.0.0",
     "@ngx-translate/http-loader": "^7.0.0",
@@ -121,12 +124,14 @@
   "devDependencies": {
     "@angular-devkit/build-angular": "^16.2.8",
     "@angular/cli": "16.2.8",
-    "@angular/compiler": "^16.2.11",
-    "@angular/compiler-cli": "16.2.11",
-    "@angular/language-service": "16.2.11",
+    "@angular/compiler": "^16.2.12",
+    "@angular/compiler-cli": "16.2.12",
+    "@angular/language-service": "16.2.12",
+    "@electron/packager": "^18.1.1",
     "@types/node": "^18.11.18",
     "electron": "^27.0.0",
-    "electron-builder": "^24.6.4",
+    "electron-builder": "^24.9.1",
+    "electron-installer-windows": "^3.0.0",
     "eslint": "^8.0.0",
     "json-server": "^0.17.3",
     "ts-node": "^10.9.1",

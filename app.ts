@@ -4,21 +4,37 @@ import { app, BrowserWindow } from 'electron';
 /* Dependência do Node, para consulta de diretórios */
 import * as path from 'path';
 
-//Define o diretório de instalação do Agent, se o mesmo está executando em modo de produção (exe)
-let rootFolder: string = null;
-let isProduction: boolean = null;
-if (app.isPackaged) {
-  rootFolder = path.dirname(app.getPath('exe'));
-  isProduction = true;
-} else {
-  rootFolder = process.env.PWD;
-  isProduction = false;
-}
-
-//Exporta o diretório de instalação do Electron, e o modo de execução
-export const CNST_APPLICATION_ROOTDIR: string = rootFolder;
-export const CNST_APPLICATION_PRODUCTION: boolean = isProduction;
-
-//Dispara a inicialização do Electron
+//Thread central de inicialização do Electron
 import Main from './electron-main';
-Main.main(app);
+
+export class TOTVS_Agent_Analytics {
+  
+  //Define se o Agent será inicializado em modo espelho, ou não
+  private static mirrorMode: number = 0;
+  private static setMirrorMode(mirror: number): void {
+    TOTVS_Agent_Analytics.mirrorMode = mirror;
+  }
+  
+  //Exporta o modo de execução do Electron
+  public static isProduction(): boolean {
+    if (app.isPackaged) return true;
+    else return false;
+  }
+  
+  //Exporta o diretório de instalação do Electron
+  public static getRootDir(): string {
+    let rootFolder: string = null;
+    if (app.isPackaged) rootFolder = path.dirname(app.getPath('exe'));
+    else rootFolder = process.env.PWD;
+    
+    if (TOTVS_Agent_Analytics.mirrorMode == 2) rootFolder = path.join(rootFolder, 'node_modules/TOTVS-Agent-Analytics');
+    
+    return rootFolder;
+  }
+  
+  //Função de disparo da inicialização do TOTVS-Agent-Analytics
+  public static init(mirror: number): void {
+    TOTVS_Agent_Analytics.setMirrorMode(mirror);
+    Main.main(app, TOTVS_Agent_Analytics.mirrorMode);
+  }
+}

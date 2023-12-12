@@ -67,6 +67,15 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       }
     }
   },
+  MIRROR_MODE: {
+    TITLE: 'MIRROR MODE ACTIVATED - All changes to this Agent instance will be replicated to remote Agent [${p1}]',
+    ONLINE: 'Warning - Remote access triggered by TOTVS\'s central server. This Agent is now blocked until remote access end.',
+    OFFLINE: 'Remote access finished. Agent is ready to use again.',
+    RUNNING: 'Remote access in progress',
+    SERVER_SYNC: 'Requesting synchronization with Agent\'s remote instance...',
+    SERVER_SYNC_OK: 'Synchronization has been successfull. All updates were applied on remote Agent.',
+    SERVER_SYNC_ERROR: 'Error - Synchronization has failed. The mirrored instance couldn\'t apply any updates on remote Agent.'
+  },
   ANGULAR: {
     SYSTEM_EXIT: 'Are you sure you want to close Agent?',
     SYSTEM_FINISH_USER: '=== System shutdown request received from user (exit menu) ===',
@@ -474,6 +483,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     APPLICATION: 'Application',
     JAVA: 'Java',
     VERSION: 'Version',
+    INSTANCE: 'Instance name',
     DEBUGMODE: 'Debug mode',
     AUTOUPDATE: 'Auto update',
     ACTIVATED_1: 'On',
@@ -499,6 +509,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       SAVE_ERROR_PORT: 'Error - Server initialization at port \'${p1}\' has failed. Reverting changes...'
     },
     TOOLTIPS: {
+      INSTANCE: 'Agent\'s instance name, set automatically by TOTVS. This name is used to help TOTVS\'s support team.',
       DEBUGMODE: 'Adds extra logging messages on Agent\'s execution log.',
       LOGFILES: 'Maximum number of logfiles to be kept inside Agent\'s log directory. Agent will automatically delete logfiles older than this parameter.',
       JAVA_XMX: 'Maximum RAM memory allocation (MB - Megabytes) that Agent is allowed to use when running schedules. If this threshold is not enough to upload data, Agent will terminate it\'s execution, with an error message. Minimum value: ${p1}MB',
