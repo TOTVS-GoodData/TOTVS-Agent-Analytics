@@ -149,4 +149,24 @@ export class ServerService {
       }
     }));
   }
+  
+  /* Método de consulta das janelas de execução disponíveis para este Agent */
+  public getAvailableExecutionWindows(): Observable<string[]> {
+    
+    //Vai entender essa maluquice do compilador, sei la
+    return this._translateService.getTranslations([
+      new TranslationInput('SERVICES.SERVER.MESSAGES.LOADING_EXECUTION_WINDOWS', [])
+    ]).pipe(switchMap((translations: any) => {
+      
+      //Redirecionamento da requisição p/ Electron (caso disponível)
+      if (this._electronService.isElectronApp) {
+        return this._electronService.ipcRenderer.invoke('AC_getAvailableExecutionWindows').then((res: string[]) => {
+          return res;
+        });
+      } else {
+        this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.COMMUNICATION_WARNING']);
+        return of(null);
+      }
+    }));
+  }
 }

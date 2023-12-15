@@ -1,6 +1,12 @@
 /* Serviço de logs / arquivos do Agent */
 import { Files } from '../files';
 
+/* Serviços do Electron */
+import { Execute } from '../execute';
+
+/* Serviço de criptografia do Agent */
+import { EncryptionService } from '../encryption/encryption-service';
+
 /* Serviço de tradução do Electron */
 import { TranslationService } from './translation-service';
 import { TranslationInput } from '../../src-angular/app/services/translation/translation-interface';
@@ -193,6 +199,27 @@ export class QueryService {
     }), catchError((err: any) => {
         Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.DELETE_ERROR'], null, null, err);
         throw err;
+    }));
+  }
+  
+  /* Método de exportação das consultas padrões da tabela I01 do Protheus */
+  public static exportQueriesFromI01Locally(inputBuffer: string, scheduleId: string): Observable<QueryClient[]> {
+    return Execute.exportQuery(inputBuffer).pipe(map((res: any) => {
+      if (res.err) {
+        throw res.err;
+      } else {
+        
+        //Montagem dos objetos de consulta do Agent
+        let queriesToSave: QueryClient[] = res.message.map((q: QueryClient) => {
+          q.scheduleId = scheduleId;
+          q.TOTVS = true;
+          q.version = new Version(null);
+          q.command = EncryptionService.encrypt(q.command);
+          return q;
+        });
+        
+        return queriesToSave;
+      }
     }));
   }
   

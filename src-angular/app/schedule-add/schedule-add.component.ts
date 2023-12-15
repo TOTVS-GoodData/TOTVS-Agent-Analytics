@@ -36,7 +36,7 @@ import { CNST_DATABASE_TYPES, CNST_DATABASE_OTHER } from '../database/database-c
 /* Serviço de agendamento do Agent */
 import { ScheduleService } from '../schedule/schedule-service';
 import { Schedule, ETLParameterClient, SQLParameterClient } from '../schedule/schedule-interface';
-import { CNST_NEW_PARAMETER_VALUE, CNST_EXTENSION, CNST_EXECUTION_WINDOWS } from '../schedule/schedule-constants';
+import { CNST_NEW_PARAMETER_VALUE, CNST_EXTENSION } from '../schedule/schedule-constants';
 
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
@@ -91,10 +91,8 @@ export class ScheduleAddComponent {
   //Variável de suporte, para mostrar as extensões disponíveis do arquivo de upload do Agent
   protected _CNST_EXTENSION: Array<any> = CNST_EXTENSION;
   
-  //Variável de suporte, para mostrar as janelas de execução disponíveis
-  protected _CNST_EXECUTION_WINDOWS: Array<PoSelectOption> = CNST_EXECUTION_WINDOWS.map((v: string) => {
-    return { label: v, value: v };
-  });
+  //Variável de suporte, que armazena as janelas de execução válidas para este Agent
+  protected windows: Array<PoSelectOption> = [];
   
   //Variável de suporte, que define as colunas e ações da tabela de parâmetros SQL
   protected po_grid_config_sql: Array<any> = [];
@@ -211,23 +209,30 @@ export class ScheduleAddComponent {
     forkJoin([
       this._workspaceService.getWorkspaces(false),
       this._databaseService.getDatabases(false),
+      this._serverService.getAvailableExecutionWindows(),
       this._serverService.getAvailableLicenses(true)
-    ]).subscribe((results: [Workspace[], Database[], AvailableLicenses]) => {
+    ]).subscribe((results: [Workspace[], Database[], string[], AvailableLicenses]) => {
       
       //Redireciona o usuário para a página de origem, caso ocorra uma falha na comunicação com o Agent-Server
-      if (results[2] == null) {
+      if (results[3] == null) {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERVER_ERROR']);
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         this._router.navigate(['/schedule']);
       } else {
         this.workspaces = results[0];
         this.databases = results[1];
+        
+        //Configuração dos horários de agendamentos válidos
+        this.windows = results[2].map((v: string) => {
+          return { label: v, value: v };
+        });
+        
         this.listWorkspaces = this.workspaces.map((w: Workspace) => {
           return { label: w.name, value: w.id }
         });
         
         //Habilita a edição dos campos disponíveis apenas para a contratação da Plataforma GoodData
-        this.isPlatform = (results[2].contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA);
+        this.isPlatform = (results[3].contractType == CNST_MODALIDADE_CONTRATACAO_PLATAFORMA);
         
         //Realiza a leitura do agendamento a ser editado (se houver)
         if ((nav != undefined) && (nav.extras.state)) {

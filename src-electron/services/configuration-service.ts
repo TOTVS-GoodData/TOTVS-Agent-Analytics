@@ -1,6 +1,9 @@
 /* Serviço de logs / arquivos do Agent */
 import { Files } from '../files';
 
+/* Serviço central do Electron */
+import Main from '../../electron-main';
+
 /* Serviço de tradução do Electron */
 import { TranslationService } from './translation-service';
 import { TranslationInput } from '../../src-angular/app/services/translation/translation-interface';
@@ -74,21 +77,27 @@ export class ConfigurationService {
       return ServerService.startServer(conf.clientPort).pipe(switchMap((b: boolean) => {
         if (b) return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
           if (conf.serialNumber != null) {
-            if (b) return ServerService.updateCommunicationPort(['' + conf.clientPort]).pipe(switchMap((b: boolean) => {
-              if (b) {
-                //Atualiza o idioma utilizado pelo Agent (caso tenha sido alterado)
+            if (b) {
+              if (Main.getMirrorMode() != 2) {
+                return ServerService.updateCommunicationPort(['' + conf.clientPort]).pipe(switchMap((b: boolean) => {
+                  if (b) {
+                    //Atualiza o idioma utilizado pelo Agent (caso tenha sido alterado)
+                    TranslationService.use(conf.locale);
+                    return of(1);
+                  } else {
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_SERVER'], null, null, null);
+                    return ServerService.startServer(oldData.configuration.clientPort).pipe(switchMap((b: boolean) => {
+                      return Files.writeApplicationData(oldData).pipe(map((b: boolean) => {
+                        return -3;
+                      }));
+                    }));
+                  }
+                }));
+              } else {
                 TranslationService.use(conf.locale);
                 return of(1);
-              } else {
-                Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_SERVER'], null, null, null);
-                return ServerService.startServer(oldData.configuration.clientPort).pipe(switchMap((b: boolean) => {
-                  return Files.writeApplicationData(oldData).pipe(map((b: boolean) => {
-                    return -3;
-                  }));
-                }));
               }
-            }));
-            else {
+            } else {
               Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_CONFIG'], null, null, null);
               return ServerService.startServer(oldData.configuration.clientPort).pipe(map((b: boolean) => {
                 return -2;

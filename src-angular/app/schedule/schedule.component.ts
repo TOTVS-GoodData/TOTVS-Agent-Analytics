@@ -181,7 +181,11 @@ export class ScheduleComponent implements OnInit {
         this._utilities.writeToLog(CNST_LOGLEVEL.INFO, translations['SCHEDULES.MESSAGES.RUN_MANUAL']);
         
         //Solicita a execução do agendamento pelo Electron (assíncrono)
-        this._electronService.ipcRenderer.sendSync('AC_executeAndUpdateSchedule', s);
+        if (this._mirrorService.getMirrorMode() != 2) {
+          this._electronService.ipcRenderer.sendSync('AC_executeAndUpdateScheduleLocally', s);
+        } else {
+          this._electronService.ipcRenderer.sendSync('AC_executeAndUpdateScheduleRemotelly', s);
+        }
         
         this.loadSchedules();
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_OK']);

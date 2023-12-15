@@ -123,14 +123,18 @@ export default class Main {
   }
   
   /* Método de atualização das preferências vinculadas ao acesso remoto (MirrorMode) */
-  public static updateMirrorModePreferences(): void {
-    Main.mainWindow.webContents.send('AC_setMirrorMode', Main.getMirrorMode());
-    if (Main.getMirrorMode() == 1) {
-      Main.trayMenu.destroy();
-      Main.trayMenu = null;
-    } else if (Main.getMirrorMode() == 0) {
-      Main.updateTrayMenu();
-    }
+  public static updateMirrorModePreferences(): Observable<boolean> {
+    return ConfigurationService.getConfiguration(false).pipe(map((conf: Configuration) => {
+      if (Main.mainWindow != null) Main.mainWindow.webContents.send('AC_setMirrorMode', Main.getMirrorMode());
+      if (Main.getMirrorMode() == 1) {
+        Main.trayMenu.destroy();
+        Main.trayMenu = null;
+        return true;
+      } else if (Main.getMirrorMode() == 0) {
+        TranslationService.use(conf.locale);
+        Main.updateTrayMenu();
+      }
+    }));
   }
   /*********************************/
   /*** Inicialização Automática  ***/
@@ -286,7 +290,8 @@ export default class Main {
     ipcMain.removeAllListeners('AC_getSchedules');
     ipcMain.removeAllListeners('AC_saveSchedule');
     ipcMain.removeAllListeners('AC_deleteSchedule');
-    ipcMain.removeAllListeners('AC_executeAndUpdateSchedule');
+    ipcMain.removeAllListeners('AC_executeAndUpdateScheduleLocally');
+    ipcMain.removeAllListeners('AC_executeAndUpdateScheduleRemotelly');
     ipcMain.removeHandler('AC_killProcess');
     ipcMain.removeAllListeners('AC_getConfiguration');
     ipcMain.removeHandler('AC_saveConfiguration');
@@ -390,7 +395,7 @@ export default class Main {
     
     //Teste de conexão a um banco de dados (Disparo Local)
     ipcMain.handle('AC_testDatabaseConnectionLocally', (event: IpcMainEvent, buffer: string) => {
-      return ServerService.testDatabaseConnectionLocally(buffer);
+      return DatabaseService.testDatabaseConnectionLocally(buffer);
     });
     
     /*
@@ -434,11 +439,27 @@ export default class Main {
     });
     
     //Disparo da execução de um agendamento, e atualização da última data de execução do mesmo
-    ipcMain.on('AC_executeAndUpdateSchedule', (event: IpcMainEvent, schedule: Schedule) => {
-      return ScheduleService.executeAndUpdateSchedule(schedule).subscribe((b: boolean) => {
-        event.returnValue = b;
-        return b;
-      });
+    ipcMain.on('AC_executeAndUpdateScheduleLocally', (event: IpcMainEvent, s: Schedule) => {
+      return ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
+        return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((b1: boolean) => {
+          return ScheduleService.updateScheduleLastExecution(s).pipe(map((b2: boolean) => {
+            event.returnValue = b2;
+            return b2;
+          }));
+        }));
+      })).subscribe();
+    });
+    
+    //Disparo da execução de um agendamento, e atualização da última data de execução do mesmo
+    ipcMain.on('AC_executeAndUpdateScheduleRemotelly', (event: IpcMainEvent, s: Schedule) => {
+      return ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
+        return ServerService.executeAndUpdateScheduleRemotelly(inputBuffer, s.id).pipe(switchMap((b1: boolean) => {
+          return ScheduleService.updateScheduleLastExecution(s).pipe(map((b2: boolean) => {
+            event.returnValue = b2;
+            return b2;
+          }));
+        }));
+      })).subscribe();
     });
     
     //Término forçado de um processo do Agent (Java)
@@ -672,6 +693,13 @@ export default class Main {
       })));
     });
     
+    //Consulta dos parâmetros de SQL padrões para determinada licença vinculada à este Agent
+    ipcMain.handle('AC_getAvailableExecutionWindows', (event: IpcMainEvent) => {
+      return lastValueFrom(ServerService.getAvailableExecutionWindows().pipe(map((res: string[]) => {
+        return res;
+      })));
+    });
+    
     /*****************************/
     /*** Acesso Remoto (Mirror) **/
     /*****************************/
@@ -703,7 +731,7 @@ export default class Main {
         width: width,
         height: height - 35,
         frame: true,
-        autoHideMenuBar: true,
+        autoHideMenuBar: false,
         resizable: true,
         webPreferences: {
           contextIsolation: false,
@@ -937,9 +965,13 @@ export default class Main {
               if ((configuration.serialNumber != null) && (date.getSeconds() == 0)) {
                 ScheduleService.getSchedulesToExecute().subscribe((schedules: Schedule[]) => {
                   schedules.map(async (s: Schedule) => {
-                    await ScheduleService.executeAndUpdateSchedule(s).subscribe((b: boolean) => {
-                      return b;
-                    });
+                    await ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
+                      return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((b1: boolean) => {
+                        return ScheduleService.updateScheduleLastExecution(s).pipe(map((b2: boolean) => {
+                          return b2;
+                        }));
+                      }));
+                    })).subscribe();
                   });
                 });
               }

@@ -50,7 +50,8 @@
             [p-label]="lbl_clientPort"
             [p-tooltip]="ttp_clientPort"
             p-maxlength=5
-            p-regex="99999">
+            p-regex="99999"
+            [p-disabled]="mirrorMode == 2">
           </po-number>
           
           <!-- Chave de habilitação do modo debug -->
@@ -129,6 +130,7 @@
                 (p-click)="getTmpFolder()"
                 p-icon="po-icon-folder"
                 p-size="medium"
+                [p-disabled]="mirrorMode == 2"
               />
             </div>
           </div>
@@ -142,6 +144,7 @@
                 (p-click)="getJREFolder()"
                 p-icon="po-icon-folder"
                 p-size="medium"
+                [p-disabled]="mirrorMode == 2"
               />
             </div>
           </div>

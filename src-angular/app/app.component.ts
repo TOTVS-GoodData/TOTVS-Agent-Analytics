@@ -132,9 +132,12 @@ export class AppComponent {
               
             //Acesso remoto desativado
             } else {
-              this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.OFFLINE']);
-              this.po_lo_text = { value: null };
-              this._router.navigate(['/workspace']);
+              this._translateService.use(conf.locale).subscribe((b: boolean) => {
+                this._menuService.updateMenu();
+                this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.OFFLINE']);
+                this.po_lo_text = { value: null };
+                this._router.navigate(['/workspace']);
+              });
             }
             
             this._changeDetectorService.detectChanges();

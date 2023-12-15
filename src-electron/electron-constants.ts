@@ -11,15 +11,9 @@ export const CNST_AUTOUPDATE_CHECK_INTERVAL: number = 3;
 export const CNST_SERVER_SOURCE: string = 'SERVER';
 export const CNST_SERVER_PORT: number = 2000;
 export const CNST_SERVER_HOSTNAME: any = {
-  DEVELOPMENT: '192.168.0.1',
-  PRODUCTION: '192.168.0.1'
+  DEVELOPMENT: 'localhost',
+  PRODUCTION: 'localhost'
 };
-
-//export const CNST_SERVER_HOSTNAME: any = {
-//  DEVELOPMENT: '177.81.250.9',
-//  PRODUCTION: '177.81.250.9'
-//};
-
 
 /* Caminho completo do diretório de recursos visuais do Agent (ícones) */
 export const CNST_ICONS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'icons');

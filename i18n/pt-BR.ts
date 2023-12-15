@@ -116,6 +116,8 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
         COMMUNICATION_WARNING: 'Aviso - Comunicação com o Agent-Server não pode ser testada sem o Electron.',
         LOADING_PARAMETERS: 'Carregando parâmetros...',
         LOADING_PARAMETERS_ERROR: 'Erro - Falha no recebimento dos parâmetros de ETL / SQL padrões do servidor da TOTVS. Por favor tente novamente',
+        LOADING_EXECUTION_WINDOWS: 'Carregando janelas de execução...',
+        LOADING_EXECUTION_WINDOWS_ERROR: 'Erro - Falha no recebimento das janelas de execução dos agendamentos. Por favor tente novamente.',
         SERIAL_NUMBER: 'Registrando instalação do Agent...',
         SERIAL_NUMBER_OK: 'Agent registrado com sucesso.',
         SERIAL_NUMBER_ERROR: 'Falha na ativação do Agent. Por favor tente novamente',

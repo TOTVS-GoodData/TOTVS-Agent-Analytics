@@ -264,8 +264,8 @@ export class ScheduleService {
     }));
   }
   
-  /* Método de execução de um agendamento do Agent */
-  public static executeAndUpdateSchedule(s: Schedule): Observable<boolean> {
+  /* Método que prepara a execução de um agendamento do Agent pelo Java */
+  public static prepareScheduleToExecute(s: Schedule): Observable<string> {
     
     //Consulta todas as informações necessárias para execução do agendamento pelo Java
     return forkJoin([
@@ -274,13 +274,11 @@ export class ScheduleService {
       QueryService.getQueriesBySchedule(s, false),
       ScriptService.getScriptsBySchedule(s, false),
       ConfigurationService.getConfiguration(false)
-    ]).pipe(switchMap(((results: [Workspace[], Database[], QueryClient[], ScriptClient[], Configuration]) => {
+    ]).pipe(map(((results: [Workspace[], Database[], QueryClient[], ScriptClient[], Configuration]) => {
       
       //Consulta das traduções
       let translations: any = TranslationService.getTranslations([
-        new TranslationInput('SCHEDULES.MESSAGES.RUN_EXECUTIONDATE', [s.lastExecution + '']),
-        new TranslationInput('SCHEDULES.MESSAGES.RUN_PREPARE', [s.name]),
-        new TranslationInput('SCHEDULES.MESSAGES.RUN_ERROR', [s.name])
+        new TranslationInput('SCHEDULES.MESSAGES.RUN_PREPARE', [s.name])
       ]);
       
       Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_PREPARE'], null, null, null);
@@ -324,21 +322,37 @@ export class ScheduleService {
       
       //Criptografia do pacote a ser enviado
       let params = EncryptionService.encrypt(JSON.stringify(javaInput));
-      
-      //Solicita a execução do pacote criptografado ao Java, e atualiza os dados do agendamento imediatamente
-      return Execute.runAgent(params, s.id).pipe(switchMap((b: boolean) => {
-        
-        //Atualiza a data de última execução do agendamento, e grava o mesmo no banco de dados do Agent
-        s.lastExecution = new Date();
-        s.lastExecutionString = new Date(s.lastExecution).toLocaleString(conf.locale, {timeZone: conf.timezone});
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_EXECUTIONDATE'], null, null, null);
-        return ScheduleService.saveSchedule([s]).pipe(map((res: number) => {
-          return (res == 0);
-        }), catchError((err: any) => {
-          Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_ERROR'], null, null, err);
-          throw err;
-        }));
-      }));
+      return params;
     })));
+  }
+  
+  /* Método de atualização da data/hora de última execução do agendamento */
+  public static updateScheduleLastExecution(s: Schedule): Observable<boolean> {
+    
+    //Consulta das traduções
+    let translations: any = TranslationService.getTranslations([
+      new TranslationInput('SCHEDULES.MESSAGES.RUN_EXECUTIONDATE', [s.lastExecution + '']),
+      new TranslationInput('SCHEDULES.MESSAGES.RUN_ERROR', [s.name])
+    ]);
+    
+    //Atualização da data / hora de última execução do agendamento
+    return ConfigurationService.getConfiguration(false).pipe(switchMap((conf: Configuration) => {
+      s.lastExecution = new Date();
+      s.lastExecutionString = new Date(s.lastExecution).toLocaleString(conf.locale, {timeZone: conf.timezone});
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_EXECUTIONDATE'], null, null, null);
+      return ScheduleService.saveSchedule([s]).pipe(map((res: number) => {
+        return (res == 0);
+      }), catchError((err: any) => {
+        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_ERROR'], null, null, err);
+        throw err;
+      }));
+    }));
+  }
+  
+  /* Método de execução de um agendamento do Agent */
+  public static executeAndUpdateScheduleLocally(inputBuffer: string, scheduleId: string): Observable<boolean> {
+    return Execute.runAgent(inputBuffer, scheduleId).pipe(map((b: boolean) => {
+      return b;
+    }));
   }
 }

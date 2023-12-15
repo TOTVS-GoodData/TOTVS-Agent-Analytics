@@ -330,7 +330,7 @@ export class ScriptComponent {
         new TranslationInput('SCRIPTS.MESSAGES.IMPORT_ERROR', [ss.schedule.name])
       ]),
       this._serverService.saveLatestScripts(license, ss.databaseType, ss.schedule.id)
-    ]).subscribe((results: [TranslationInput[], number]) => {console.log(results[1]);
+    ]).subscribe((results: [TranslationInput[], number]) => {
       if (results[1] == null) {
         this.connectionLostToServer();
       } else if (results[1] == 0) {

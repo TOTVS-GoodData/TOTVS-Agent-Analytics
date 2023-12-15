@@ -1,6 +1,9 @@
 /* Serviço de logs / arquivos do Agent */
 import { Files } from '../files';
 
+/* Serviço de execução do Java pelo Agent */
+import { Execute } from '../execute';
+
 /* Serviço de tradução do Electron */
 import { TranslationService } from './translation-service';
 import { TranslationInput } from '../../src-angular/app/services/translation/translation-interface';
@@ -15,7 +18,7 @@ import { ClientData } from '../electron-interface';
 import { Database } from '../../src-angular/app/database/database-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, from, switchMap, map, of, catchError, forkJoin } from 'rxjs';
+import { Observable, from, switchMap, map, of, catchError, forkJoin, lastValueFrom } from 'rxjs';
 
 /* Componente de geração de Id's únicos para os registros */
 import uuid from 'uuid-v4';
@@ -109,5 +112,12 @@ export class DatabaseService {
       Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.DELETE_ERROR'], null, null, err);
       throw err;
     }));
+  }
+  
+  /* Método de teste de conexão ao banco de dados do Agent (Teste Local) */
+  public static testDatabaseConnectionLocally(buffer: string): any {
+    return lastValueFrom(Execute.testDatabaseConnection(buffer).pipe(map((res: any) => {
+      return res;
+    })));
   }
 }

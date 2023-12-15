@@ -206,6 +206,20 @@ export class ServerService {
                   return ServerService.sendResponseToServer(socket, 'requestDatabaseConnectionTest', res);
                 }));
                 break;
+              
+              //Comando de execução remota e imediata de um agendamento do Agent (Teste Local / Disparo Remoto)
+              case 'requestScheduleExecution':
+                return ServerService.requestScheduleExecution(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'requestScheduleExecution', res);
+                }));
+                break;
+              
+              //Comando de exportação da tabela I01 do Protheus (Teste Local / Disparo Remoto)
+              case 'requestQueryExport':
+                return ServerService.requestQueryExport(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'requestQueryExport', res);
+                }));
+                break;
             }
           } else { return of(null); }
         })).subscribe();
@@ -333,24 +347,19 @@ export class ServerService {
         new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND_RESPONSE', [word])
       ]);
       
-      console.log('AAA');
-      console.log(CNST_SERVER_PORT);
-      console.log(serverHostname);
-      
       //Inicializa a conexão com o servidor da TOTVS
       socket.connect(CNST_SERVER_PORT, serverHostname, () => {
 	      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTED'], null, null, null);
 	      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND'], null, null, null);
         
         //Envia o pacote para o servidor
-        console.log('ENVIANDO');
         socket.write(command);
         Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND_OK'], null, null, null);
       });
       
       //Configura o evento disparado ao receber a resposta da palavra de comando, pelo Agent-Server
       socket.on('data', (buffer: any) => {
-        console.log('DATA');
+        
         //Adiciona o pacote recebido ao buffer concatenado
         longBuffer = (longBuffer == null ? buffer : longBuffer + buffer);
         
@@ -370,7 +379,6 @@ export class ServerService {
       
       //Tratamento de erros na comunicação do socket com o Agent-Server
       socket.on('error', (err: any) => {
-        console.log(err);
         hasErrors = true;
         subscriber.next(null);
         subscriber.complete();
@@ -492,6 +500,26 @@ export class ServerService {
     }));
   }
   
+  /* Método de solicitação das janelas de execução dos agendamentos válidas para esta instalação do Agent */
+  public static getAvailableExecutionWindows(): Observable<string[]> {
+    
+    //Prepara a palavra de comando a ser enviada, com criptografia
+    return ServerService.prepareCommandWord('getAvailableExecutionWindows', null, []).pipe(switchMap((buffer: string) => {
+      
+      //Envia o comando para o servidor da TOTVS, e processa a resposta
+      //(HOF - Higher Order Function)
+      return ServerService.sendCommandToServer(
+        buffer,
+        'getAvailableExecutionWindows',
+        (response: ServerCommunication) => {
+          return of(response.args[0]);
+        }
+      ).pipe(map((res: string[]) => {
+        return res;
+      }));
+    }));
+  }
+  
   /* Método de solicitação dos últimos parâmetros de ETL disponíveis para esta licença do Agent */
   public static getLatestETLParameters(license: License): Observable<ETLParameterCommunication> {
     
@@ -584,27 +612,19 @@ export class ServerService {
                 //Criptografia do pacote a ser enviado
                 let params = EncryptionService.encrypt(JSON.stringify(javaInput));
                 
-                //Envio da requisição para o Electron, e processamento da resposta
-                return Execute.exportQuery(params).pipe(switchMap((res: any) => {
-                  if (res.err) {
-                    throw res.err;
-                  } else {
-                    
-                    //Montagem dos objetos de consulta do Agent
-                    queriesToSave = res.message.map((q: QueryClient) => {
-                      q.scheduleId = scheduleId;
-                      q.TOTVS = true;
-                      q.version = new Version(null);
-                      q.command = EncryptionService.encrypt(q.command);
-                      return q;
-                    });
-                    
-                    //Gravação de todas as consultas padrões recebidas da tabela I01 do Protheus
-                    return QueryService.saveQuery(queriesToSave).pipe(map((res: number) => {
+                if (Main.getMirrorMode() != 2) {
+                  return QueryService.exportQueriesFromI01Locally(params, scheduleId).pipe(switchMap((queriesI01: QueryClient[]) => {
+                    return QueryService.saveQuery(queriesI01).pipe(map((res: number) => {
                       return res;
                     }));
-                  }
-                }));
+                  }));
+                } else {
+                  return ServerService.exportQueriesFromI01Remotelly(params, scheduleId).pipe(switchMap((queriesI01: QueryClient[]) => {
+                    return QueryService.saveQuery(queriesI01).pipe(map((res: number) => {
+                      return res;
+                    }));
+                  }));
+                }
               }));
             
             //Caso a origem dos dados não seja do Protheus, é gerada uma mensagem de erro
@@ -910,6 +930,46 @@ export class ServerService {
     }));
   }
   
+  /* Método de teste de conexão ao banco de dados do Agent (Teste Remoto / Disparo Remoto) */
+  public static executeAndUpdateScheduleRemotelly(inputBuffer: string, scheduleId: string): Observable<any> {
+    
+    //Prepara a palavra de comando a ser enviada, com criptografia
+    return ServerService.prepareCommandWord('executeAndUpdateSchedule', null, [inputBuffer, scheduleId]).pipe(switchMap((buffer: string) => {
+      
+      //Envia o comando para o servidor da TOTVS, e processa a resposta
+      //(HOF - Higher Order Function)
+      return ServerService.sendCommandToServer(
+        buffer,
+        'executeAndUpdateSchedule',
+        (response: ServerCommunication) => {
+          return of(response.args[0]);
+        }
+      ).pipe(map((b: any) => {
+        return b;
+      }));
+    }));
+  }
+  
+  /* Método de teste de conexão ao banco de dados do Agent (Teste Remoto / Disparo Remoto) */
+  public static exportQueriesFromI01Remotelly(inputBuffer: string, scheduleId: string): Observable<any> {
+    
+    //Prepara a palavra de comando a ser enviada, com criptografia
+    return ServerService.prepareCommandWord('exportQueriesFromI01', null, [inputBuffer, scheduleId]).pipe(switchMap((buffer: string) => {
+      
+      //Envia o comando para o servidor da TOTVS, e processa a resposta
+      //(HOF - Higher Order Function)
+      return ServerService.sendCommandToServer(
+        buffer,
+        'exportQueriesFromI01',
+        (response: ServerCommunication) => {
+          return of(response.args[0]);
+        }
+      ).pipe(map((b: any) => {
+        return b;
+      }));
+    }));
+  }
+  
   /****************************************/
   /*** Recebimento de mensagens (INPUT) ***/
   /****************************************/
@@ -933,8 +993,9 @@ export class ServerService {
   /* Método de controle do acesso remoto (MirrorMode), do Agent-Server */
   private static setMirrorMode(command: ServerCommunication): Observable<responseObj> {
     Main.setMirrorMode(Number(command.args[0]));
-    Main.updateMirrorModePreferences();
-    return of(new responseObj([true], null));
+    return Main.updateMirrorModePreferences().pipe(map((b: boolean) => {
+      return new responseObj([true], null);
+    }));
   }
   
   /* Método de sobrescrita do arquivo de configuração do Agent (MirrorMode) */
@@ -947,15 +1008,22 @@ export class ServerService {
   
   /* Método de teste de conexão ao banco de dados do Agent (Teste Local / Disparo Remoto) */
   private static requestDatabaseConnectionTest(command: ServerCommunication): Observable<responseObj> {
-    return from(ServerService.testDatabaseConnectionLocally(command.args[0])).pipe(map((res: any) => {
+    return from(DatabaseService.testDatabaseConnectionLocally(command.args[0])).pipe(map((res: any) => {
       return new responseObj([res], null);
     }));
   }
   
-  /* Método de teste de conexão ao banco de dados do Agent (Teste Local) */
-  public static testDatabaseConnectionLocally(buffer: string): any {
-    return lastValueFrom(Execute.testDatabaseConnection(buffer).pipe(map((res: any) => {
-      return res;
-    })));
+  /* Método de execução remota e imediata de um agendamento do Agent  (Teste Local / Disparo Remoto) */
+  private static requestScheduleExecution(command: ServerCommunication): Observable<responseObj> {
+    return ScheduleService.executeAndUpdateScheduleLocally(command.args[0], command.args[1]).pipe(map((res: boolean) => {
+      return new responseObj([res], null);
+    }));
+  }
+  
+  /* Método de exportação da tabela I01 do Protheus (Teste Local / Disparo Remoto) */
+  private static requestQueryExport(command: ServerCommunication): Observable<responseObj> {
+    return QueryService.exportQueriesFromI01Locally(command.args[0], command.args[1]).pipe(map((res: QueryClient[]) => {
+      return new responseObj([res], null);
+    }));
   }
 }

@@ -126,7 +126,7 @@ export class Files {
     
     //Inicializa o objeto a ser escrito no log
     let obj: any = {
-      mirror: (Main.getMirrorMode() == 2 ? '[MIRROR]' : '[CLIENT]'),
+      mirror: (Main.getMirrorMode() != 0 ? '[MIRROR]' : '[CLIENT]'),
       timestamp: new Date(),
       loglevel: loglevel.tag,
       system: system,
