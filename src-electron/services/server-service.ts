@@ -107,6 +107,8 @@ export class ServerService {
   //Armazena temporariamente o código de ativação do Agent, para primeira conexão ao servidor
   private static temporarySerialNumber: string = null;
   
+  //Armazena o código serial deste Agent, enquanto a desativação está em andamento.
+  private static deactivatedSerialNumber: string = null;
   /**************************/
   /*** MÉTODOS DO SERVIÇO ***/
   /**************************/
@@ -165,6 +167,13 @@ export class ServerService {
             //Disparo da rotina para processar a palavra de comando.
             switch (command.word) {
               
+              //Desativação deste Agent
+              case 'deactivateAgent':
+                return ServerService.deactivateAgent(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'deactivateAgent', res);
+                }));
+                break;
+                
               //Envio da configuração atual deste Agent (workspaces, databases, etc), para o Agent-Server
               case 'requestAgentData':
                 return ServerService.requestAgentData(command).pipe(switchMap((res: responseObj) => {
@@ -261,13 +270,14 @@ export class ServerService {
       
       //Montagem e criptografia da palavra de comando a ser enviada
       let command: ServerCommunication = {
-        source: configuration.serialNumber,
+        source: (ServerService.deactivatedSerialNumber != null ? ServerService.deactivatedSerialNumber : configuration.serialNumber),
         destination: CNST_SERVER_SOURCE,
         word: word,
         errorCode: errorCode,
         args: args
       };
       
+      ServerService.deactivatedSerialNumber = null;
       return EncryptionService.encrypt(JSON.stringify(command));
     }));
   }
@@ -393,6 +403,27 @@ export class ServerService {
     });
   }
   
+  /* Método de resposta de uma palavra recebida pelo Agent-Server */
+  public static pingServer(): Observable<boolean> {
+    
+    //Prepara a palavra de comando a ser enviada, com criptografia
+    return ServerService.prepareCommandWord('ping', null, []).pipe(switchMap((buffer: string) => {
+      
+      //Envia o comando para o servidor da TOTVS, e processa a resposta
+      //(HOF - Higher Order Function)
+      return ServerService.sendCommandToServer(
+        buffer,
+        'ping',
+        (response: ServerCommunication) => {
+          return of(response.args[0]);
+        }
+      ).pipe(map((res: string) => {
+        if (res == 'pong') return true;
+        else return false;
+      }));
+    }));
+  }
+  
   /* Método de solicitação do SerialNumber do Agent (Ativação) */
   public static requestSerialNumber(args: string[]): Observable<number> {
     
@@ -424,17 +455,21 @@ export class ServerService {
                   //Realiza a gravação do serialNumber desta instância do Agent
                   configuration.serialNumber = response.args[0];
                   configuration.instanceName = response.args[1];
-                  return ConfigurationService.saveConfiguration(configuration).pipe(map((b: number) => {
-                    
-                    //Remove o código de ativação temporário do Agent
-                    ServerService.temporarySerialNumber = null;
-                    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_OK'], null, null, null);
-                    if (b == 1) return 1;
-                    else return 0;
                   
-                  //Tratamento de erros
-                  }, (err: any) => {
-                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR'], null, null, null);
+                  return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
+                    _dbd.configuration = configuration;
+                    return Files.writeApplicationData(_dbd).pipe(map((b: boolean) => {
+                      
+                      //Remove o código de ativação temporário do Agent
+                      ServerService.temporarySerialNumber = null;
+                      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_OK'], null, null, null);
+                      if (b) return 1;
+                      else return 0;
+                    
+                    //Tratamento de erros
+                    }, (err: any) => {
+                      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR'], null, null, null);
+                    }));
                   }));
                 }));
               
@@ -614,15 +649,19 @@ export class ServerService {
                 
                 if (Main.getMirrorMode() != 2) {
                   return QueryService.exportQueriesFromI01Locally(params, scheduleId).pipe(switchMap((queriesI01: QueryClient[]) => {
-                    return QueryService.saveQuery(queriesI01).pipe(map((res: number) => {
-                      return res;
+                    return QueryService.saveQuery(queriesI01).pipe(map((q: number) => {
+                      return q;
                     }));
                   }));
                 } else {
-                  return ServerService.exportQueriesFromI01Remotelly(params, scheduleId).pipe(switchMap((queriesI01: QueryClient[]) => {
-                    return QueryService.saveQuery(queriesI01).pipe(map((res: number) => {
-                      return res;
-                    }));
+                  return ServerService.exportQueriesFromI01Remotelly(params, scheduleId).pipe(switchMap((res: any) => {
+                    if (res.errorCode == null) {
+                      return QueryService.saveQuery(res.args).pipe(map((q: number) => {
+                        return q;
+                      }));
+                    } else {
+                      return of(res.errorCode);
+                    }
                   }));
                 }
               }));
@@ -902,16 +941,16 @@ export class ServerService {
         buffer,
         'deactivateMirrorMode',
         (response: ServerCommunication) => {
-          return of(true);
+          return of(response);
         }
-      ).pipe(map((res: boolean) => {
-        return res;
+      ).pipe(map((res: ServerCommunication) => {
+        return Boolean(res.args[0]);
       }));
     }));
   }
   
   /* Método de teste de conexão ao banco de dados do Agent (Teste Remoto / Disparo Remoto) */
-  public static testDatabaseConnectionRemotelly(inputBuffer: string): Observable<any> {
+  public static testDatabaseConnectionRemotelly(inputBuffer: string): Observable<number> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
     return ServerService.prepareCommandWord('testDatabaseConnection', null, [inputBuffer]).pipe(switchMap((buffer: string) => {
@@ -922,16 +961,16 @@ export class ServerService {
         buffer,
         'testDatabaseConnection',
         (response: ServerCommunication) => {
-          return of(response.args[0]);
+          return of(response);
         }
-      ).pipe(map((b: any) => {
-        return b;
+      ).pipe(map((res: ServerCommunication) => {
+        return res.errorCode;
       }));
     }));
   }
   
   /* Método de teste de conexão ao banco de dados do Agent (Teste Remoto / Disparo Remoto) */
-  public static executeAndUpdateScheduleRemotelly(inputBuffer: string, scheduleId: string): Observable<any> {
+  public static executeAndUpdateScheduleRemotelly(inputBuffer: string, scheduleId: string): Observable<number> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
     return ServerService.prepareCommandWord('executeAndUpdateSchedule', null, [inputBuffer, scheduleId]).pipe(switchMap((buffer: string) => {
@@ -942,16 +981,17 @@ export class ServerService {
         buffer,
         'executeAndUpdateSchedule',
         (response: ServerCommunication) => {
-          return of(response.args[0]);
+          return of(response);
         }
-      ).pipe(map((b: any) => {
-        return b;
+      ).pipe(map((res: ServerCommunication) => {
+        if (res.errorCode) return res.errorCode;
+        else return Number(res.args[0]);
       }));
     }));
   }
   
   /* Método de teste de conexão ao banco de dados do Agent (Teste Remoto / Disparo Remoto) */
-  public static exportQueriesFromI01Remotelly(inputBuffer: string, scheduleId: string): Observable<any> {
+  public static exportQueriesFromI01Remotelly(inputBuffer: string, scheduleId: string): Observable<ServerCommunication> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
     return ServerService.prepareCommandWord('exportQueriesFromI01', null, [inputBuffer, scheduleId]).pipe(switchMap((buffer: string) => {
@@ -962,10 +1002,10 @@ export class ServerService {
         buffer,
         'exportQueriesFromI01',
         (response: ServerCommunication) => {
-          return of(response.args[0]);
+          return of(response);
         }
-      ).pipe(map((b: any) => {
-        return b;
+      ).pipe(map((res: ServerCommunication) => {
+        return res;
       }));
     }));
   }
@@ -973,6 +1013,20 @@ export class ServerService {
   /****************************************/
   /*** Recebimento de mensagens (INPUT) ***/
   /****************************************/
+  /* Método de envio das configurações atuais deste Agent, para o Agent-Server */
+  private static deactivateAgent(command: ServerCommunication): Observable<responseObj> {
+    return ConfigurationService.getConfiguration(false).pipe(switchMap((conf: Configuration) => {
+      ServerService.deactivatedSerialNumber = conf.serialNumber;
+      return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
+        _dbd.configuration.serialNumber = null;
+        return Files.writeApplicationData(_dbd).pipe(map((b: boolean) => {
+          if (b) Main.updateDeactivationPreferrences();
+          return new responseObj([b], null);
+        }));
+      }));
+    }));
+  }
+  
   /* Método de envio das configurações atuais deste Agent, para o Agent-Server */
   private static requestAgentData(command: ServerCommunication): Observable<responseObj> {
     return Files.readApplicationData().pipe(map((db: ClientData) => {
@@ -991,7 +1045,7 @@ export class ServerService {
   }
   
   /* Método de controle do acesso remoto (MirrorMode), do Agent-Server */
-  private static setMirrorMode(command: ServerCommunication): Observable<responseObj> {
+  public static setMirrorMode(command: ServerCommunication): Observable<responseObj> {
     Main.setMirrorMode(Number(command.args[0]));
     return Main.updateMirrorModePreferences().pipe(map((b: boolean) => {
       return new responseObj([true], null);
@@ -1002,20 +1056,20 @@ export class ServerService {
   private static publishAgentData(command: ServerCommunication): Observable<responseObj> {
     let db: ClientData = Object.assign(new ClientData(), command.args[0]);
     return Files.writeApplicationData(db).pipe(map((b: boolean) => {
-      return new responseObj([b], null);
+      return new responseObj([(b ? 1 : 0)], null);
     }));
   }
   
   /* Método de teste de conexão ao banco de dados do Agent (Teste Local / Disparo Remoto) */
   private static requestDatabaseConnectionTest(command: ServerCommunication): Observable<responseObj> {
-    return from(DatabaseService.testDatabaseConnectionLocally(command.args[0])).pipe(map((res: any) => {
-      return new responseObj([res], null);
+    return from(DatabaseService.testDatabaseConnectionLocally(command.args[0])).pipe(map((res: number) => {
+      return new responseObj([], res);
     }));
   }
   
   /* Método de execução remota e imediata de um agendamento do Agent  (Teste Local / Disparo Remoto) */
   private static requestScheduleExecution(command: ServerCommunication): Observable<responseObj> {
-    return ScheduleService.executeAndUpdateScheduleLocally(command.args[0], command.args[1]).pipe(map((res: boolean) => {
+    return ScheduleService.executeAndUpdateScheduleLocally(command.args[0], command.args[1]).pipe(map((res: number) => {
       return new responseObj([res], null);
     }));
   }
@@ -1023,7 +1077,7 @@ export class ServerService {
   /* Método de exportação da tabela I01 do Protheus (Teste Local / Disparo Remoto) */
   private static requestQueryExport(command: ServerCommunication): Observable<responseObj> {
     return QueryService.exportQueriesFromI01Locally(command.args[0], command.args[1]).pipe(map((res: QueryClient[]) => {
-      return new responseObj([res], null);
+      return new responseObj(res, null);
     }));
   }
 }

@@ -108,6 +108,16 @@ export class AppComponent {
         if (this._electronService.isElectronApp) {
           
           //Evento de abertura do modal de atualização do Agent (Disparado pelo Electron)
+          this._electronService.ipcRenderer.on('AC_deactivateAgent', () => {
+            this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
+              this.setMenuTranslations(conf.serialNumber);
+              this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DEACTIVATED']);
+              this._changeDetectorService.detectChanges();
+              this._router.navigate(['/configuration']);
+            });
+          });
+          
+          //Evento de abertura do modal de atualização do Agent (Disparado pelo Electron)
           this._electronService.ipcRenderer.on('AC_update-downloaded', () => {
             this.modal_updateAgent.open();
             this._changeDetectorService.detectChanges();

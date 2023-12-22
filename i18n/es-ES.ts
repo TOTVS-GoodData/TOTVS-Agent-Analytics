@@ -63,7 +63,9 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
         DISCONNECTED: '=== CONEXIÓN CERRADA CON EL SERVIDOR (CLIENT) ===',
         SEND_COMMAND: 'Enviando comando \'${p1}\' para el servidor TOTVS...',
         SEND_COMMAND_RESPONSE: 'Respuesta del comando \'${p1}\' fue recibida.',
-        SEND_COMMAND_OK: 'Comando enviado. Esperando por una respuesta...'
+        SEND_COMMAND_OK: 'Comando enviado. Esperando por una respuesta...',
+        CONNECTION_ERROR: '=== Perda de conexión con el Agent remoto. Por favor cerre instância del Agent y intenta otra vez ===',
+        DEACTIVATED: 'Atención - Agent desactivado por el servidor del TOTVS. Por favor entre en contacto con nuestro equipo de soporte.'
       }
     }
   },
@@ -74,7 +76,9 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     RUNNING: 'Acceso remoto em ejecución',
     SERVER_SYNC: 'Solicitando sincronización con la instancia remota del Agent [${p1}]...',
     SERVER_SYNC_OK: 'Sincronización hecha con éxito. Todas las actualizaciones fueron aplicadas en el Agent remoto.',
-    SERVER_SYNC_ERROR: 'Error - La sincronización del Agent [${p1}] ha fallado. La instancia espejo no pudiste cambiar ninguna configuración del Agent remoto.'
+    SERVER_SYNC_ERROR: 'Error - La sincronización del Agent [${p1}] ha fallado. La instancia espejo no pudiste cambiar ninguna configuración del Agent remoto.',
+    SERVER_PING_WARNING: 'Atención - La comunicación con el servidor ha fallado (${p1}/${p2}). Vamos a intentar otra vez en 1 minuto...',
+    SERVER_PING_ERROR: 'Error - Comunicación con el servidor perdida. Acceso remoto abortado.'
   },
   ANGULAR: {
     SYSTEM_EXIT: '¿Seguro que quieres cerrar el Agent?',
@@ -141,6 +145,36 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
   SOURCES: {
     LOCALLY: 'Local',
     CLOUD_OTHERS: 'Cloud (Otro)'
+  },
+  LICENSES: {
+    MODULES: {
+      ACCOUNTING: 'Controlaría',
+      ANALYTICS: 'Analytics',
+      CEP_TIN: 'C&P (TIN)',
+      CEP_TOP: 'C&P (TOP)',
+      COMERCIAL: 'Comercial',
+      CUSTOM: 'Customización',
+      DISTRIBUTION: 'Distribuición',
+      EDUCACIONAL: 'Educacional',
+      FINANCIAL: 'Financiero',
+      GFE: 'GFE',
+      GPS: 'GPS',
+      HEALTHCARE: 'Salud',
+      HR: 'Recursos Humanos',
+      LEARNING: 'Learning',
+      LEGAL: 'Jurídico',
+      LOGISTICS: 'Logistica',
+      MATERIALS: 'Mantenimientos',
+      PLS: 'PLS',
+      PMS: 'PMS',
+      PRODUCTION: 'Producción',
+      SERVICES: 'Gestión de Servicios',
+      SHOPPING: 'Shopping',
+      SUPPLY: 'Supply',
+      TMS: 'TMS',
+      UNIVERSAL: 'Universal',
+      WMS: 'WMS'
+    }
   },
   MENU: {
     WORKSPACES: 'Ambientes',
@@ -311,7 +345,9 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
         TITLE: 'Parámetros SQL',
         DESCRIPTION: 'Parámetros utilizados por las consultas / rutinas',
         TABLE: {
+          MODULE: 'Modulo',
           NAME: 'Nombre',
+          TOTVS: '¿Customización?',
           VALUE: 'Valor',
           SQL: 'SQL (S/N)?'
         }
@@ -320,7 +356,9 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
         TITLE: 'Parámetros ETL',
         DESCRIPTION: 'Parámetros del ETL (CloudConnect / Bricks)',
         TABLE: {
+          MODULE: 'Modulo',
           NAME: 'Nombre',
+          TOTVS: '¿Customización?',
           VALUE: 'Valor'
         }
       }
@@ -367,8 +405,10 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     DELETE_CONFIRMATION: '¿Estás seguro que quieres borrar esta consulta?',
     TABLE: {
       SCHEDULE_NAME: 'Nombre del horario',
+      MODULE: 'Modulo',
       QUERY_NAME: 'Nombre de la consulta',
       MODE: 'Modo de ejecución',
+      TOTVS: '¿Customización?',
       SQL: 'Comando SQL'
     },
     EXECUTION_MODES: {
@@ -416,8 +456,10 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     DELETE_CONFIRMATION: '¿Estás seguro que quieres borrar esta rutina?',
     TABLE: {
       SCHEDULE_NAME: 'Nombre del horario',
+      MODULE: 'Modulo',
       SCRIPT_NAME: 'Nombre de la rutina',
-      SQL: 'Instrucción SQL'
+      SQL: 'Instrucción SQL',
+      TOTVS: '¿Customización?',
     },
     MESSAGES: {
       LOADING: 'Cargando rutinas...',

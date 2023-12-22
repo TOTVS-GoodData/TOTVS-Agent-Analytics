@@ -41,6 +41,10 @@ import { DatabaseService } from '../database/database-service';
 import { Database } from '../database/database-interface';
 import { CNST_DATABASE_TYPES, CNST_DATABASE_OTHER } from '../database/database-constants';
 
+/* Constante de módulos do FAST Analytics */
+import { Module } from '../utilities/module-interface';
+import { CNST_MODULES } from '../utilities/module-constants';
+
 /* Serviço de rotinas do Agent */
 import { ScriptService } from './script-service';
 import { ScriptClient } from './script-interface';
@@ -185,8 +189,10 @@ export class ScriptComponent {
     
     //Tradução das colunas da tabela de consultas dos agendamentos
     this.setColumns = [
-      { label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SCRIPT_NAME'], property: 'name', type: 'string', width: '20%', sortable: true },
-      { label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SQL'], property: 'command', type: 'string', width: '80%', sortable: false }
+      { property: 'moduleName', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.MODULE'], type: 'string', width: '15%', sortable: true },
+      { property: 'name', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SCRIPT_NAME'], type: 'string', width: '20%', sortable: true },
+      { property: 'command', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SQL'], type: 'string', width: '50%', sortable: false },
+      { property: 'TOTVSName', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.TOTVS'], type: 'string', width: '15%', sortable: true }
     ];
     
     //Tradução das mensagens padrões do componente de listagem do Portinari.UI
@@ -276,6 +282,8 @@ export class ScriptComponent {
         
         //Descriptografia das rotinas (caso permitido)
         ss.scripts.map((s: ScriptClient) => {
+          s.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == s.module).name];
+          s.TOTVSName = (s.TOTVS == false ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
           if ((this._electronService.isElectronApp) && ((!s.TOTVS) || this.isPlatform)) {
             s.command = this._electronService.ipcRenderer.sendSync('AC_decrypt', s.command);
           }

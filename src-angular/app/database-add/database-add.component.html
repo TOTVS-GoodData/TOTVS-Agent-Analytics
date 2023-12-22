@@ -166,7 +166,7 @@
         
         <!-- Testar conexão com o banco de dados -->
         <po-button class="po-sm-4 po-md-4 po-lg-4 po-xl-4 padding-bottom"
-          (p-click)="testDatabaseConnection().subscribe()"
+          (p-click)="testDatabaseConnection(true).subscribe()"
           [p-label]="lbl_testConnection"
           p-small="false"
           p-icon="po-icon-database"

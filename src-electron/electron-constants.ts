@@ -7,6 +7,9 @@ import * as path from 'path';
 /* Periodicidade, em horas, que o Agent irá buscar atualizações */
 export const CNST_AUTOUPDATE_CHECK_INTERVAL: number = 3;
 
+/* Número máximo de falhas de comunicação com o Agent-Server permitidas, enquanto o acesso remoto estiver ativado. */
+export const CNST_MIRRORMODE_PINGS_MAX: number = 5;
+
 /* Hostname / Porta do Agent-Server da TOTVS */
 export const CNST_SERVER_SOURCE: string = 'SERVER';
 export const CNST_SERVER_PORT: number = 2000;

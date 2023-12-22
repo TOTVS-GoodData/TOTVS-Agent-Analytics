@@ -88,6 +88,7 @@ export class ETLParameterServer {
   id: string;
   licenseId: string;
   name: string;
+  module: string;
   command: string;
   version: Version;
   versionName?: string;
@@ -97,6 +98,7 @@ export class ETLParameterServer {
     this.id = data.id;
     this.licenseId = data.licenseId;
     this.name = data.name;
+    this.module = data.module;
     this.command = data.command;
     this.version = new Version(data.version.major + '.' + data.version.minor + '.' + data.version.patch);
     this.versionName = this.version.getVersion();
@@ -110,6 +112,7 @@ export class ETLParameterServer {
     let param: ETLParameterClient = new ETLParameterClient();
     
     param.name = this.name;
+    param.module = this.module;
     param.command = this.command;
     param.version = this.version
     param.TOTVS = true;
@@ -136,6 +139,7 @@ export class SQLParameterServer {
   id: string;
   licenseId: string;
   name: string;
+  module: string;
   brand: string;
   command: string;
   version: Version;
@@ -147,6 +151,7 @@ export class SQLParameterServer {
     this.id = data.id;
     this.licenseId = data.licenseId;
     this.name = data.name;
+    this.module = data.module;
     this.brand = data.brand;
     this.command = data.command;
     this.version = new Version(data.version.major + '.' + data.version.minor + '.' + data.version.patch);
@@ -162,6 +167,7 @@ export class SQLParameterServer {
     let param: SQLParameterClient = new SQLParameterClient();
     
     param.name = this.name;
+    param.module = this.module;
     param.command = this.command;
     param.sql = this.sql;
     param.version = this.version
@@ -178,6 +184,7 @@ export class SQLParameterServer {
     this.id = null;
     this.licenseId = '';
     this.name = '';
+    this.module = '';
     this.brand = '';
     this.command = '';
     this.version = new Version(null);
@@ -191,6 +198,7 @@ export class QueryServer {
   id: string;
   licenseId: string;
   name: string;
+  module: string;
   command: string;
   executionMode: string;
   executionModeName?: string;
@@ -203,6 +211,7 @@ export class QueryServer {
     this.id = data.id;
     this.licenseId = data.licenseId;
     this.name = data.name;
+    this.module = data.module;
     this.command = data.command;
     this.executionMode = data.executionMode;
     this.executionModeName = data.executionModeName;
@@ -236,6 +245,7 @@ export class QueryServer {
     this.id = null;
     this.licenseId = '';
     this.name = '';
+    this.module = '';
     this.command = '';
     this.executionMode = '';
     this.executionModeName = null;
@@ -250,6 +260,7 @@ export class ScriptServer {
   id: string;
   licenseId: string;
   name: string;
+  module: string;
   command: string;
   brand: string;
   version: Version;
@@ -260,6 +271,7 @@ export class ScriptServer {
     this.id = data.id;
     this.licenseId = data.licenseId;
     this.name = data.name;
+    this.module = data.module;
     this.command = data.command;
     this.brand = data.brand;
     this.version = new Version(data.version.major + '.' + data.version.minor + '.' + data.version.patch);
@@ -289,6 +301,7 @@ export class ScriptServer {
     this.id = null;
     this.licenseId = '';
     this.name = '';
+    this.module = '';
     this.command = '';
     this.brand = '';
     this.version = new Version(null);

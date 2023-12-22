@@ -33,6 +33,9 @@ import { QueryClient } from '../src-angular/app/query/query-interface';
 import { ConfigurationService } from './services/configuration-service';
 import { Configuration } from '../src-angular/app/configuration/configuration-interface';
 
+/* Interfaces de comunicação com o Agent-Server */
+import { responseObj } from '../src-angular/app/services/server/server-interface';
+
 /* Componentes rxjs para controle de Promise / Observable */
 import { Observable, switchMap } from 'rxjs';
 
@@ -292,7 +295,7 @@ export class Execute {
   }
   
   /* Método de teste de conexão ao banco de dados */
-  public static testDatabaseConnection(inputBuffer: string): Observable<any> {
+  public static testDatabaseConnection(inputBuffer: string): Observable<number> {
     return Execute.callJavaExecution(
       'ELECTRON.DATABASE_LOGIN_ELEC_START',
       'ELECTRON.DATABASE_LOGIN_ELEC_FINISH',
@@ -303,12 +306,7 @@ export class Execute {
         return null;
       },
       (statusCode: number, err: any) => {
-        let res: any = {
-          success: (statusCode == 0 ? true : false),
-          err: err
-        };
-        
-        return res;
+        return statusCode;
       }
     );
   }

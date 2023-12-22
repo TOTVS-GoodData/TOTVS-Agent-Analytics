@@ -41,6 +41,10 @@ import { DatabaseService } from '../database/database-service';
 import { Database } from '../database/database-interface';
 import { CNST_DATABASE_TYPES, CNST_DATABASE_OTHER } from '../database/database-constants';
 
+/* Constante de módulos do FAST Analytics */
+import { Module } from '../utilities/module-interface';
+import { CNST_MODULES } from '../utilities/module-constants';
+
 /* Serviço de consultas do Agent */
 import { QueryService } from './query-service';
 import { QueryClient } from './query-interface';
@@ -199,9 +203,11 @@ export class QueryComponent {
     
     //Tradução das colunas da tabela de consultas dos agendamentos
     this.setColumns = [
-      { property: "name", label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.QUERY_NAME'], type: 'string', width: '20%', sortable: true },
-      { property: "executionModeName", label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODE'], type: 'string', width: '20%', sortable: true },
-      { property: "command", label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'], type: 'string', width: '60%', sortable: false }
+      { property: 'moduleName', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODULE'], type: 'string', width: '15%', sortable: true },
+      { property: 'name', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.QUERY_NAME'], type: 'string', width: '20%', sortable: true },
+      { property: 'executionModeName', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODE'], type: 'string', width: '20%', sortable: true },
+      { property: 'command', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'], type: 'string', width: '30%', sortable: false },
+      { property: 'TOTVSName', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.TOTVS'], type: 'string', width: '15%', sortable: true }
     ];
     
     //Tradução das mensagens padrões do componente de listagem do Portinari.UI
@@ -295,6 +301,8 @@ export class QueryComponent {
         //Descriptografia das consultas (caso permitido)
         sc.queries = sc.queries.map((q: QueryClient) => {
           q.executionModeName = this.CNST_QUERY_EXECUTION_MODES.find((exec: any) => exec.value == q.executionMode).label;
+          q.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == q.module).name];
+          q.TOTVSName = (q.TOTVS == false ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
           if ((this._electronService.isElectronApp) && ((!q.TOTVS) || this.isPlatform)) {
             q.command = this._electronService.ipcRenderer.sendSync('AC_decrypt', q.command);
           }
@@ -367,6 +375,9 @@ export class QueryComponent {
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       } else if (results[1] == -2) {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_ERROR']);
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
+      } else if (results[1] == -999) {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTION_ERROR']);
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       } else {
         this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_WARNING_FAILURES']);

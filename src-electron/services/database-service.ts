@@ -8,6 +8,9 @@ import { Execute } from '../execute';
 import { TranslationService } from './translation-service';
 import { TranslationInput } from '../../src-angular/app/services/translation/translation-interface';
 
+/* Interfaces de comunicação com o Agent-Server */
+import { responseObj } from '../../src-angular/app/services/server/server-interface';
+
 /* Componentes de utilitários do Agent */
 import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../../src-angular/app/utilities/utilities-constants';
 
@@ -116,7 +119,7 @@ export class DatabaseService {
   
   /* Método de teste de conexão ao banco de dados do Agent (Teste Local) */
   public static testDatabaseConnectionLocally(buffer: string): any {
-    return lastValueFrom(Execute.testDatabaseConnection(buffer).pipe(map((res: any) => {
+    return lastValueFrom(Execute.testDatabaseConnection(buffer).pipe(map((res: number) => {
       return res;
     })));
   }

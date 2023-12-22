@@ -5,6 +5,9 @@ import { Injectable } from '@angular/core';
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
@@ -41,7 +44,7 @@ import { ConfigurationService } from '../configuration/configuration-service';
 import { Configuration } from '../configuration/configuration-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, of, catchError, map, switchMap, forkJoin } from 'rxjs';
+import { Observable, of, catchError, map, switchMap, forkJoin, from } from 'rxjs';
 
 /* Componente de geração de Id's únicos para os registros */
 import uuid from 'uuid-v4';
@@ -64,6 +67,7 @@ export class ScheduleService {
   constructor(
     private http: HttpClient,
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _workspaceService: WorkspaceService,
     private _databaseService: DatabaseService,
     private _configurationService: ConfigurationService,
@@ -186,7 +190,7 @@ export class ScheduleService {
   
   /* Método de remoção dos agendamentos do Agent */
   public deleteSchedule(s: Schedule): Observable<boolean> {
-    
+  
     //Redirecionamento da requisição p/ Electron (caso disponível)
     if (this._electronService.isElectronApp) {
       return of(this._electronService.ipcRenderer.sendSync('AC_deleteSchedule', s));
@@ -210,5 +214,57 @@ export class ScheduleService {
         }));
       }));
     }
+  }
+  
+  /* Método para execução imediata de um agendamento */
+  public runSchedule(s: Schedule): Observable<number> {
+    if (this._electronService.isElectronApp) {
+      
+      //Consulta das traduções
+      return this._translateService.getTranslations([
+        new TranslationInput('SCHEDULES.MESSAGES.RUN_MANUAL', [s.name])
+      ]).pipe(switchMap((translations: any) => {
+        this._utilities.writeToLog(CNST_LOGLEVEL.INFO, translations['SCHEDULES.MESSAGES.RUN_MANUAL']);
+        
+        //Solicita a execução do agendamento pelo Electron (assíncrono)
+        let res: number = null;
+        if (this._mirrorService.getMirrorMode() != 2) {
+          return from(this._electronService.ipcRenderer.invoke('AC_executeAndUpdateScheduleLocally', s)).pipe(switchMap((res: number) => {
+            return this.printMessage(s, res).pipe(map((res: number) => {
+              return res;
+            }));
+          }));
+        } else {
+          return from(this._electronService.ipcRenderer.invoke('AC_executeAndUpdateScheduleRemotelly', s)).pipe(switchMap((res: number) => {
+            return this.printMessage(s, res).pipe(map((res: number) => {
+              return res;
+            }));
+          }));
+        }
+      }));
+    } else {
+      return this.printMessage(s, -998).pipe(map((res: number) => {
+        return res;
+      }));
+    }
+  }
+  
+  /* Método usado para mostrar a mensagem final ao usuário, após o teste de conexão ao banco ter sido concluído */
+  private printMessage(s: Schedule, res: number): Observable<number> {
+    return this._translateService.getTranslations([
+      new TranslationInput('SCHEDULES.MESSAGES.RUN', [s.name])
+    ]).pipe(map((translations: any) => {
+      if (res == 0) {
+        this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_OK']);
+      } else if (res == -998) {
+        this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_WARNING']);
+      } else if (res == -999) {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTION_ERROR']);
+      } else {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['ANGULAR.ERROR']);
+      }
+      
+      return res;
+    }));
   }
 }

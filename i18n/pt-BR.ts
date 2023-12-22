@@ -63,7 +63,11 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
         DISCONNECTED: '=== CONEXÃO ENCERRADA COM O SERVIDOR (CLIENT) ===',
         SEND_COMMAND: 'Enviando comando \'${p1}\' ao servidor da TOTVS...',
         SEND_COMMAND_RESPONSE: 'Resposta do comando \'${p1}\' foi recebida.',
-        SEND_COMMAND_OK: 'Requisição enviada. Aguardando resposta...'
+        SEND_COMMAND_OK: 'Requisição enviada. Aguardando resposta...',
+        CONNECTION_ERROR: '=== Perda de conexão com o Agent remoto. Feche esta instância do Agent e tente novamente ===',
+        SERVER_PING_WARNING: 'Aviso - Falha na comunicação com o Servidor (${p1}/${p2}). Tentaremos novamente em 1 minuto...',
+        SERVER_PING_ERROR: 'Erro - Comunicação com o servidor perdida. Acesso remoto abortado.',
+        DEACTIVATED: 'Aviso - Agent desativado pelo servidor da TOTVS. Por favor entre em contato com a equipe de suporte.'
       }
     }
   },
@@ -176,6 +180,36 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
   SOURCES: {
     LOCALLY: 'Local',
     CLOUD_OTHERS: 'Cloud (Outro)'
+  },
+  LICENSES: {
+    MODULES: {
+      ACCOUNTING: 'Controladoria',
+      ANALYTICS: 'Analytics',
+      CEP_TIN: 'C&P (TIN)',
+      CEP_TOP: 'C&P (TOP)',
+      COMERCIAL: 'Comercial',
+      CUSTOM: 'Customizado',
+      DISTRIBUTION: 'Distribuição',
+      EDUCACIONAL: 'Educacional',
+      FINANCIAL: 'Financeiro',
+      GFE: 'GFE',
+      GPS: 'GPS',
+      HEALTHCARE: 'Saúde',
+      HR: 'Recursos Humanos',
+      LEARNING: 'Learning',
+      LEGAL: 'Jurídico',
+      LOGISTICS: 'Logística',
+      MATERIALS: 'Materiais',
+      PLS: 'PLS',
+      PMS: 'PMS',
+      PRODUCTION: 'Produção',
+      SERVICES: 'Gestão de Serviços',
+      SHOPPING: 'Shopping',
+      SUPPLY: 'Estoque',
+      TMS: 'TMS',
+      UNIVERSAL: 'Universal',
+      WMS: 'WMS'
+    }
   },
   WORKSPACES: {
     TITLE: 'Cadastro de Ambientes',
@@ -314,7 +348,9 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
         TITLE: 'Parâmetros SQL',
         DESCRIPTION: 'Parâmetros das consultas / rotinas de extração',
         TABLE: {
+          MODULE: 'Módulo',
           NAME: 'Nome',
+          TOTVS: 'Customizado?',
           VALUE: 'Valor',
           SQL: 'SQL (S/N)?'
         }
@@ -323,7 +359,9 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
         TITLE: 'Parâmetros ETL',
         DESCRIPTION: 'Parâmetros das consultas do ETL (CloudConnect / Bricks)',
         TABLE: {
+          MODULE: 'Módulo',
           NAME: 'Nome',
+          TOTVS: 'Customizado?',
           VALUE: 'Valor'
         }
       }
@@ -370,8 +408,10 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     DELETE_CONFIRMATION: 'Deseja realmente excluir esta consulta?',
     TABLE: {
       SCHEDULE_NAME: 'Nome do agendamento',
+      MODULE: 'Módulo',
       QUERY_NAME: 'Nome da consulta',
       MODE: 'Modo de execução',
+      TOTVS: 'Customizado?',
       SQL: 'Comando SQL'
     },
     EXECUTION_MODES: {
@@ -419,7 +459,9 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     DELETE_CONFIRMATION: 'Deseja realmente excluir esta rotina?',
     TABLE: {
       SCHEDULE_NAME: 'Nome do agendamento',
+      MODULE: 'Módulo',
       SCRIPT_NAME: 'Nome da rotina',
+      TOTVS: 'Customizado?',
       SQL: 'Comando SQL'
     },
     MESSAGES: {

@@ -32,7 +32,7 @@ import { TranslationService } from '../services/translation/translation-service'
 import { TranslationInput } from '../services/translation/translation-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { forkJoin } from 'rxjs';
+import { Observable, map, switchMap, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-schedule',
@@ -170,30 +170,18 @@ export class ScheduleComponent implements OnInit {
   
   /* Método de disparo da execução do Agent (Apenas disponível com o Electron) */
   public runAgent(s: Schedule): void {
-    if (this._electronService.isElectronApp) {
-      
-      //Consulta das traduções
-      this._translateService.getTranslations([
-        new TranslationInput('SCHEDULES.MESSAGES.RUN', [s.name]),
-        new TranslationInput('SCHEDULES.MESSAGES.RUN_MANUAL', [s.name])
-      ]).subscribe((translations: any) => {
-        if (this.mirrorMode != 1) this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.RUN'] };
-        this._utilities.writeToLog(CNST_LOGLEVEL.INFO, translations['SCHEDULES.MESSAGES.RUN_MANUAL']);
-        
-        //Solicita a execução do agendamento pelo Electron (assíncrono)
-        if (this._mirrorService.getMirrorMode() != 2) {
-          this._electronService.ipcRenderer.sendSync('AC_executeAndUpdateScheduleLocally', s);
-        } else {
-          this._electronService.ipcRenderer.sendSync('AC_executeAndUpdateScheduleRemotelly', s);
-        }
-        
+    
+    //Consulta das traduções
+    this._translateService.getTranslations([
+      new TranslationInput('SCHEDULES.MESSAGES.RUN', [s.name])
+    ]).pipe(switchMap((translations: any) => {
+      if (this.mirrorMode == 2) this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.RUN'] };
+      return this._scheduleService.runSchedule(s).pipe(map((res: number) => {
         this.loadSchedules();
-        this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_OK']);
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
-      });
-    } else {
-      this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_WARNING'], null);
-    }
+        return;
+      }));
+    })).subscribe();
   }
   
   /* Método de redirecionamento para a página de cadastro de agendamentos */

@@ -7,6 +7,9 @@ import { QueryClient } from '../query/query-interface';
 /* Interface de rotinas do Agent */
 import { ScriptClient } from '../script/script-interface';
 
+/* Constante do módulo 'Customizado' */
+import { CNST_MODULE_CUSTOM } from '../utilities/module-constants';
+
 /* Interface de parâmetros de ETL / SQL do Agent-Server */
 import {
   ETLParameterServer,
@@ -73,13 +76,17 @@ export class Schedule {
 export class ETLParameterClient {
   id: string;
   name: string;
+  module: string;
+  moduleName?: string;
   command: string;
   version: Version;
   TOTVS: boolean;
+  TOTVSName?: string;
   
   constructor() {
     this.id = null;
     this.name = CNST_NEW_PARAMETER_VALUE;
+    this.module = CNST_MODULE_CUSTOM;
     this.command = CNST_NEW_PARAMETER_VALUE;
     this.version = new Version(null);
     this.TOTVS = false;
@@ -89,6 +96,7 @@ export class ETLParameterClient {
   public toObject(param: ETLParameterClient): ETLParameterClient {
     this.id = param.id;
     this.name = param.name;
+    this.module = param.module;
     this.command = param.command;
     this.version = new Version(param.version.major + '.' + param.version.minor + '.' + param.version.patch);
     this.TOTVS = param.TOTVS;
@@ -103,6 +111,7 @@ export class ETLParameterClient {
     param.id = this.id;
     param.licenseId = licenseId;
     param.name = this.name;
+    param.module = this.module;
     param.command = null;
     param.version = this.version;
     
@@ -114,14 +123,18 @@ export class ETLParameterClient {
 export class SQLParameterClient {
   id: string;
   name: string;
+  module: string;
+  moduleName?: string;
   command: string;
   sql: boolean | string;
   version: Version;
   TOTVS: boolean;
+  TOTVSName?: string;
   
   constructor() {
     this.id = null;
     this.name = CNST_NEW_PARAMETER_VALUE;
+    this.module = CNST_MODULE_CUSTOM;
     this.command = CNST_NEW_PARAMETER_VALUE;
     this.sql = false;
     this.version = new Version(null);
@@ -136,6 +149,7 @@ export class SQLParameterClient {
     param.licenseId = licenseId;
     param.brand = brand;
     param.name = this.name;
+    param.module = this.module;
     param.command = null;
     param.sql = null;
     param.version = this.version;
@@ -147,6 +161,7 @@ export class SQLParameterClient {
   public toObject(param: SQLParameterClient): SQLParameterClient {
     this.id = param.id;
     this.name = param.name;
+    this.module = param.module;
     this.command = param.command;
     this.sql = param.sql;
     this.version = new Version(param.version.major + '.' + param.version.minor + '.' + param.version.patch);

@@ -135,6 +135,8 @@ export class QueryService {
           
           //Remoção dos campos de suporte
           delete qq.executionModeName;
+          delete qq.moduleName;
+          delete qq.TOTVSName;
           
           //Inclusão da consulta no banco do Agent
           if (newId) {

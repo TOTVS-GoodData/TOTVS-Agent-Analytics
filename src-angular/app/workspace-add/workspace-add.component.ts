@@ -700,9 +700,10 @@ export class WorkspaceAddComponent {
       if (this.mirrorMode != 1) this.po_lo_text = { value: translations['DATABASES.MESSAGES.LOGIN'] };
       
       //Disparo da requisição de teste ao serviço de banco de dados
-      return this._databaseService.testConnection(this.database).pipe(map((validate: boolean) => {
+      let db: Database = new Database().toObject(this.database);
+      return this._databaseService.testConnection(db, true).pipe(map((res: number) => {
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
-        return validate;
+        return ((res == 0) || (res == -998));
       }));
     }));
   }

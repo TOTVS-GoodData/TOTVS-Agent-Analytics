@@ -474,7 +474,7 @@ export class DataBaseAddComponent {
     
     // Validação da conexão do banco de dados
     if (validate) {
-      return this.testDatabaseConnection().pipe(map((validate: boolean) => {
+      return this.testDatabaseConnection(false).pipe(map((validate: boolean) => {
         
         //Remoção dos dados irrelevantes do tipo de banco "Outro"
         if ((validate) && (this.database.type == CNST_DATABASE_OTHER)) {
@@ -491,18 +491,20 @@ export class DataBaseAddComponent {
   }
   
   /* Método de disparo do teste de conexão ao banco de dados */
-  public testDatabaseConnection(): Observable<boolean> {
+  public testDatabaseConnection(showMessage: boolean): Observable<boolean> {
     
     //Consulta das traduções
     return this._translateService.getTranslations([
-      new TranslationInput('DATABASES.MESSAGES.LOGIN', [this.database.name])
+      new TranslationInput('DATABASES.MESSAGES.LOGIN', [this.database.name]),
+      new TranslationInput('DATABASES.MESSAGES.LOGIN_ERROR', [this.database.name])
     ]).pipe(switchMap((translations: any) => {
       if (this.mirrorMode != 1) this.po_lo_text = { value: translations['DATABASES.MESSAGES.LOGIN'] };
       
       //Disparo da requisição de teste ao serviço de banco de dados
-      return this._databaseService.testConnection(this.database).pipe(map((test: boolean) => {
+      let db: Database = new Database().toObject(this.database);
+      return this._databaseService.testConnection(db, showMessage).pipe(map((res: number) => {
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
-        return test;
+        return ((res == 0) || (res == -998));
       }));
     }), catchError((err: any) => {
       if (this.mirrorMode != 1) this.po_lo_text = { value: null };

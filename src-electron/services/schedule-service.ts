@@ -171,12 +171,22 @@ export class ScheduleService {
         //Validação do campo de Id dos parâmetros de ETL. Caso não preenchido, é gerado um novo Id
         sc2.ETLParameters = sc2.ETLParameters.map((param: ETLParameterClient) => {
           if (param.id == null) param.id = uuid();
+          
+          //Remoção dos campos de suporte
+          delete param.moduleName;
+          delete param.TOTVSName;
+          
           return param;
         });
         
         //Validação do campo de Id dos parâmetros de SQL. Caso não preenchido, é gerado um novo Id
         sc2.SQLParameters = sc2.SQLParameters.map((param: SQLParameterClient) => {
           if (param.id == null) param.id = uuid();
+          
+          //Remoção dos campos de suporte
+          delete param.moduleName;
+          delete param.TOTVSName;
+          
           return param;
         });
         
@@ -327,7 +337,7 @@ export class ScheduleService {
   }
   
   /* Método de atualização da data/hora de última execução do agendamento */
-  public static updateScheduleLastExecution(s: Schedule): Observable<boolean> {
+  public static updateScheduleLastExecution(s: Schedule): Observable<number> {
     
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
@@ -341,7 +351,7 @@ export class ScheduleService {
       s.lastExecutionString = new Date(s.lastExecution).toLocaleString(conf.locale, {timeZone: conf.timezone});
       Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_EXECUTIONDATE'], null, null, null);
       return ScheduleService.saveSchedule([s]).pipe(map((res: number) => {
-        return (res == 0);
+        return res;
       }), catchError((err: any) => {
         Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_ERROR'], null, null, err);
         throw err;
@@ -350,9 +360,9 @@ export class ScheduleService {
   }
   
   /* Método de execução de um agendamento do Agent */
-  public static executeAndUpdateScheduleLocally(inputBuffer: string, scheduleId: string): Observable<boolean> {
-    return Execute.runAgent(inputBuffer, scheduleId).pipe(map((b: boolean) => {
-      return b;
+  public static executeAndUpdateScheduleLocally(inputBuffer: string, scheduleId: string): Observable<number> {
+    return Execute.runAgent(inputBuffer, scheduleId).pipe(map((res: boolean) => {
+      return (res ? 1 : -1);
     }));
   }
 }

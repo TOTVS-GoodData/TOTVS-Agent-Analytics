@@ -129,6 +129,10 @@ export class ScriptService {
           }
         } else {
           
+          //Remoção dos campos de suporte
+          delete ss.moduleName;
+          delete ss.TOTVSName;
+          
           //Inclusão da rotina no banco do Agent
           if (newId) {
             _dbd.scripts.push(ss);

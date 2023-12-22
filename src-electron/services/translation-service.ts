@@ -118,6 +118,7 @@ export class TranslationService {
       new TranslationInput('MIRROR_MODE.ONLINE', []),
       new TranslationInput('MIRROR_MODE.OFFLINE', []),
       new TranslationInput('MIRROR_MODE.SERVER_SYNC_OK', []),
+      new TranslationInput('MIRROR_MODE.SERVER_PING_ERROR', []),
       new TranslationInput('QUERIES.MESSAGES.LOADING', []),
       new TranslationInput('QUERIES.MESSAGES.LOADING_OK', []),
       new TranslationInput('QUERIES.MESSAGES.LOADING_ERROR', []),

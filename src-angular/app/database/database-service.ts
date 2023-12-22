@@ -24,7 +24,7 @@ import { Configuration } from '../configuration/configuration-interface';
 import { JavaInputBuffer } from '../utilities/java-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, of, catchError, map, switchMap, forkJoin } from 'rxjs';
+import { Observable, of, catchError, map, switchMap, forkJoin, from } from 'rxjs';
 
 //Interface de bancos de dados do Agent
 import { Database } from './database-interface';
@@ -173,14 +173,8 @@ export class DatabaseService {
   }
   
   /* Método para teste de conexão ao banco de dados do Agent */
-  public testConnection(db: Database): Observable<boolean> {
+  public testConnection(db: Database, showMessage: boolean): Observable<number> {
     let password: string = null;
-    
-    //Objeto de resultado da conexão, enviado pelo Java
-    let testConnection = {
-      success: null,
-      err: null
-    };
     
     //Consulta das traduções, e das informações necessárias para envio do pacote
     return forkJoin([
@@ -213,33 +207,44 @@ export class DatabaseService {
         
         //Envio da requisição para o Electron, e processamento da resposta
         if (this._mirrorService.getMirrorMode() != 2) {
-          return this._electronService.ipcRenderer.invoke('AC_testDatabaseConnectionLocally', params).then((testConnection: any) => {
-            return this.testConnectionResult(testConnection, results[0]['DATABASES.MESSAGES.LOGIN_ERROR']);
-          });
+          return from(this._electronService.ipcRenderer.invoke('AC_testDatabaseConnectionLocally', params)).pipe(switchMap((res: number) => {
+            return this.printMessage(db, res, showMessage).pipe(map((res: number) => {
+              return res;
+            }));
+          }));
         } else {
-          let testConnection: any = this._electronService.ipcRenderer.sendSync('AC_testDatabaseConnectionRemotelly', params);
-          return of(this.testConnectionResult(testConnection, results[0]['DATABASES.MESSAGES.LOGIN_ERROR']));
+          return from(this._electronService.ipcRenderer.invoke('AC_testDatabaseConnectionRemotelly', params)).pipe(switchMap((res: number) => {
+            return this.printMessage(db, res, showMessage).pipe(map((res: number) => {
+              return res;
+            }));
+          }));
         }
       } else {
-        this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOGIN_WARNING']);
-        return of(true);
+        return this.printMessage(db, -998, showMessage).pipe(map((res: number) => {
+          return res;
+        }));
       }
     }));
   }
   
-  /* Método de processamento do resultado do teste de conexão ao banco de dados */
-  private testConnectionResult(testConnection: any, message: string): boolean {
-    
-    //Resultado da conexão (true = funcionou)
-    let connectionResult: boolean = false;
-    
-    if (!testConnection.success) {
-      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, message, testConnection.err);
-    } else {
-      connectionResult = true;
-      this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOGIN_OK']);
-    }
-    
-    return connectionResult;
+  /* Método usado para mostrar a mensagem final ao usuário, após o teste de conexão ao banco ter sido concluído */
+  private printMessage(db: Database, res: number, showMessage: boolean): Observable<number> {
+    return this._translateService.getTranslations([
+      new TranslationInput('DATABASES.MESSAGES.LOGIN_ERROR', [db.name])
+    ]).pipe(map((translations: any) => {
+      if (res == 0) {
+        if (showMessage) this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOGIN_OK']);
+      } else if (res == 1) {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['DATABASES.MESSAGES.LOGIN_ERROR']);
+      } else if (res == -998) {
+        this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOGIN_WARNING']);
+      } else if (res == -999) {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTION_ERROR']);
+      } else {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['ANGULAR.ERROR']);
+      }
+      
+      return res;
+    }));
   }
 }

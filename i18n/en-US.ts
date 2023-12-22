@@ -63,7 +63,9 @@ export const CNST_TRANSLATIONS_EN_US: any = {
         DISCONNECTED: '=== DISCONNECTED FROM SERVER ===',
         SEND_COMMAND: 'Sending \'${p1}\' command to TOTVS\'s server...',
         SEND_COMMAND_RESPONSE: '\'${p1}\'s command response was received.',
-        SEND_COMMAND_OK: 'Request sent. Listening for a reponse...'
+        SEND_COMMAND_OK: 'Request sent. Listening for a reponse...',
+        CONNECTION_ERROR: '=== Connection lost to remote Agent. Please close this instance and try again ===',
+        DEACTIVATED: 'Warning - Agent deactivated by TOTVS\'s server. Please reach out to support team.'
       }
     }
   },
@@ -74,7 +76,9 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     RUNNING: 'Remote access in progress',
     SERVER_SYNC: 'Requesting synchronization with Agent\'s remote instance...',
     SERVER_SYNC_OK: 'Synchronization has been successfull. All updates were applied on remote Agent.',
-    SERVER_SYNC_ERROR: 'Error - Synchronization has failed. The mirrored instance couldn\'t apply any updates on remote Agent.'
+    SERVER_SYNC_ERROR: 'Error - Synchronization has failed. The mirrored instance couldn\'t apply any updates on remote Agent.',
+    SERVER_PING_WARNING: 'Warning - Server communication has failed (${p1}/${p2}). We\'ll try again in 1 minute...',
+    SERVER_PING_ERROR: 'Error - Server communication has failed. Remote access aborted.'
   },
   ANGULAR: {
     SYSTEM_EXIT: 'Are you sure you want to close Agent?',
@@ -141,6 +145,36 @@ export const CNST_TRANSLATIONS_EN_US: any = {
   SOURCES: {
     LOCALLY: 'Locally',
     CLOUD_OTHERS: 'Cloud (Other)'
+  },
+  LICENSES: {
+    MODULES: {
+      ACCOUNTING: 'Account',
+      ANALYTICS: 'Analytics',
+      CEP_TIN: 'C&P (TIN)',
+      CEP_TOP: 'C&P (TOP)',
+      COMERCIAL: 'Comercial',
+      CUSTOM: 'Custom',
+      DISTRIBUTION: 'Distributiion',
+      EDUCACIONAL: 'Educacional',
+      FINANCIAL: 'Financial',
+      GFE: 'GFE',
+      GPS: 'GPS',
+      HEALTHCARE: 'Healthcare',
+      HR: 'Human Resources',
+      LEARNING: 'Learning',
+      LEGAL: 'Legal',
+      LOGISTICS: 'Logistics',
+      MATERIALS: 'Materials',
+      PLS: 'PLS',
+      PMS: 'PMS',
+      PRODUCTION: 'Production',
+      SERVICES: 'Service Management',
+      SHOPPING: 'Shopping',
+      SUPPLY: 'Supply',
+      TMS: 'TMS',
+      UNIVERSAL: 'Universal',
+      WMS: 'WMS'
+    }
   },
   MENU: {
     WORKSPACES: 'Workspaces',
@@ -312,7 +346,9 @@ export const CNST_TRANSLATIONS_EN_US: any = {
         TITLE: 'SQL Parameters',
         DESCRIPTION: 'Parameters to be sent to queries / scripts',
         TABLE: {
+          MODULE: 'Module',
           NAME: 'Name',
+          TOTVS: 'Custom?',
           VALUE: 'Value',
           SQL: 'SQL (Y/N)?'
         }
@@ -321,7 +357,9 @@ export const CNST_TRANSLATIONS_EN_US: any = {
         TITLE: 'ETL Parameters',
         DESCRIPTION: 'Parameters to be sent to ETL (CloudConnect / Bricks)',
         TABLE: {
+          MODULE: 'Module',
           NAME: 'Name',
+          TOTVS: 'Custom?',
           VALUE: 'Value'
         }
       }
@@ -368,8 +406,10 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     NO_DATA: 'No queries were found',
     TABLE: {
       SCHEDULE_NAME: 'Schedule name',
+      MODULE: 'Module',
       QUERY_NAME: 'Query name',
       MODE: 'Execution mode',
+      TOTVS: 'Custom?',
       SQL: 'SQL command'
     },
     EXECUTION_MODES: {
@@ -417,7 +457,9 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     NO_DATA: 'No scripts were found',
     TABLE: {
       SCHEDULE_NAME: 'Schedule name',
+      MODULE: 'Module',
       SCRIPT_NAME: 'Script name',
+      TOTVS: 'Custom?',
       SQL: 'SQL command'
     },
     MESSAGES: {

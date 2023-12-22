@@ -38,6 +38,10 @@ import { ScheduleService } from '../schedule/schedule-service';
 import { Schedule, ETLParameterClient, SQLParameterClient } from '../schedule/schedule-interface';
 import { CNST_NEW_PARAMETER_VALUE, CNST_EXTENSION } from '../schedule/schedule-constants';
 
+/* Constante de módulos do FAST Analytics */
+import { Module } from '../utilities/module-interface';
+import { CNST_MODULES } from '../utilities/module-constants';
+
 /* Componentes de utilitários do Agent */
 import { Utilities } from '../utilities/utilities';
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
@@ -156,15 +160,19 @@ export class ScheduleAddComponent {
     
     //Tradução das colunas da tabela de parâmetros SQL
     this.po_grid_config_sql = [
+      { property: 'moduleName', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.MODULE'], width: 15, required: true, editable: true  },
       { property: 'name', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.NAME'], width: 30, required: true, editable: true  },
-      { property: 'command', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.VALUE'], width: 59, required: true, editable: true },
-      { property: 'sql', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.SQL'], width: 11, required: true, editable: true }
+      { property: 'command', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.VALUE'], width: 29, required: true, editable: true },
+      { property: 'sql', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.SQL'], width: 11, required: true, editable: true },
+      { property: 'TOTVSName', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.SQL_PARAMETERS.TABLE.TOTVS'], width: 15, required: true, editable: true }
     ];
     
     //Tradução das colunas da tabela de parâmetros ETL
     this.po_grid_config_etl = [
+      { property: 'moduleName', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.ETL_PARAMETERS.TABLE.MODULE'], width: 15, required: true, editable: true },
       { property: 'name', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.ETL_PARAMETERS.TABLE.NAME'], width: 30, required: true, editable: true },
-      { property: 'command', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.ETL_PARAMETERS.TABLE.VALUE'], width: 70, required: true, editable: true }
+      { property: 'command', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.ETL_PARAMETERS.TABLE.VALUE'], width: 40, required: true, editable: true },
+      { property: 'TOTVSName', label: this._translateService.CNST_TRANSLATIONS['SCHEDULES.TABLE.ETL_PARAMETERS.TABLE.TOTVS'], width: 15, required: true, editable: true }
     ];
     
     //Tradução dos botões
@@ -240,12 +248,23 @@ export class ScheduleAddComponent {
             this.schedule[p] = nav.extras.state[p];
           });
           
-          //Converte o valor da coluna "SQL" dos parâmetros SQL, em texto (boolean -> string)
+          //Converte os valores booleanos dos parâmetros de ETL, em texto
+          this.schedule.ETLParameters = this.schedule.ETLParameters.map((p: ETLParameterClient) => {
+            let param: ETLParameterClient = new ETLParameterClient().toObject(p);
+            param.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == param.module).name];
+            param.TOTVSName = (param.TOTVS == false ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
+            return param;
+          });
+          
+          //Converte os valores booleanos dos parâmetros de SQL, em texto
           this.schedule.SQLParameters = this.schedule.SQLParameters.map((p: SQLParameterClient) => {
             let param: SQLParameterClient = new SQLParameterClient().toObject(p);
             param.sql = (param.sql == true ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
+            param.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == param.module).name];
+            param.TOTVSName = (param.TOTVS == false ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
             return param;
           });
+          
           if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         } else {
           if (this.mirrorMode != 1) this.po_lo_text = { value: null };
@@ -282,10 +301,16 @@ export class ScheduleAddComponent {
         } else {
           
           //Atualiza todos os parâmetros deste agendamento, com os valores padrões recebidos
-          this.schedule.ETLParameters = results[0].ETLParameters;
+          this.schedule.ETLParameters = results[0].ETLParameters.map((p: ETLParameterClient) => {
+            p.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == p.module).name];
+            p.TOTVSName = (p.TOTVS == false ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
+            return p;
+          });
           this.schedule.SQLParameters = results[1].SQLParameters.map((p: SQLParameterClient) => {
             let param: SQLParameterClient = new SQLParameterClient().toObject(p);
-            param.sql = (param.sql == true ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
+            param.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == param.module).name];
+            param.TOTVSName = (param.TOTVS == false ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
+            param.sql = (param.sql == false ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
             return param;
           });
           if (this.mirrorMode != 1) this.po_lo_text = { value: null };
@@ -352,7 +377,7 @@ export class ScheduleAddComponent {
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.VALIDATE']);
     if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.VALIDATE'] };
     
-    // Todo processo de ETL precisa ter um graph preenchido.
+    //Todo processo de ETL precisa ter um graph preenchido.
     if (this.schedule.fileFolder != undefined) {
       schedule.fileFolderWildcard = this.schedule.fileFolderWildcard;
     }
@@ -387,11 +412,22 @@ export class ScheduleAddComponent {
         ]).subscribe((translations: any) => {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['FORM_ERRORS.FIELD_TYPING_WRONG']);
         });
-      
-      //Validação dos parâmetros SQL
       } else {
+        
+        //Validação dos parâmetros SQL
         this.schedule.SQLParameters.map((p: any) => {
-          if ((p.sql.toUpperCase() != this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED']) && (p.sql.toUpperCase() != this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED'])) { 
+          if
+           (((p.sql.toUpperCase() != this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED']) && (p.sql.toUpperCase() != this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED'])) 
+            ||
+            ((p.TOTVSName.toUpperCase() != this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED']) && (p.TOTVSName.toUpperCase() != this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED'])))
+          {
+            validate = false;
+          }
+        });
+        
+        //Validação dos parâmetros ETL
+        this.schedule.ETLParameters.map((p: any) => {
+          if ((p.TOTVSName.toUpperCase() != this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED']) && (p.TOTVSName.toUpperCase() != this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED'])) {
             validate = false;
           }
         });
@@ -406,7 +442,6 @@ export class ScheduleAddComponent {
     //Remoção dos parâmetros default (Caso existam)
     this.schedule.ETLParameters = this.schedule.ETLParameters.filter((p: ETLParameterClient) => ((p.name != CNST_NEW_PARAMETER_VALUE) && (p.name != '')));
     this.schedule.SQLParameters = this.schedule.SQLParameters.filter((p: SQLParameterClient) => ((p.name != CNST_NEW_PARAMETER_VALUE) && (p.name != '')));
-    
     return validate;
   }
   
@@ -436,7 +471,11 @@ export class ScheduleAddComponent {
     
     //Caso seja encontrado, não é incluído um segundo parâmetro
     if (new_parameter === undefined) {
-      this.schedule.ETLParameters.push(new ETLParameterClient());
+      let param: ETLParameterClient = new ETLParameterClient();
+      param.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == param.module).name];
+      param.TOTVSName = (param.TOTVS == false ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
+      
+      this.schedule.ETLParameters.push(param);
       valid = true;
     }
     
@@ -446,6 +485,9 @@ export class ScheduleAddComponent {
   /* Método executado após a edição de um parâmetro de ETL */
   protected onSaveETL(p1: ETLParameterClient, p2: ETLParameterClient): boolean {
     p1.TOTVS = false;
+    p1.TOTVSName = this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'];
+    p1.module = p2.module;
+    p1.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == p2.module).name];
     return true;
   }
   
@@ -471,6 +513,8 @@ export class ScheduleAddComponent {
     //Caso seja encontrado, não é incluído um segundo parâmetro
     if (new_parameter === undefined) {
       let param: SQLParameterClient = new SQLParameterClient();
+      param.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == param.module).name];
+      param.TOTVSName = (param.TOTVS == false ? this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'] : this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED']);
       param.sql = this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_SIMPLIFIED'];
       this.schedule.SQLParameters.push(param);
       valid = true;
@@ -482,6 +526,9 @@ export class ScheduleAddComponent {
   /* Método executado após a edição de um parâmetro de SQL */
   protected onSaveSQL(p1: SQLParameterClient, p2: SQLParameterClient): boolean {
     p1.TOTVS = false;
+    p1.TOTVSName = this._translateService.CNST_TRANSLATIONS['BUTTONS.YES_SIMPLIFIED'];
+    p1.module = p2.module;
+    p1.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == p2.module).name];
     return true;
   }
   

@@ -24,7 +24,8 @@ import {
   QueryCommunication,
   ScriptCommunication,
   ETLParameterCommunication,
-  SQLParameterCommunication
+  SQLParameterCommunication,
+  ServerCommunication
 } from './src-angular/app/services/server/server-interface';
 
 /* Serviço de tradução do Electron */
@@ -40,6 +41,7 @@ import {
   CNST_ICON_WINDOWS,
   CNST_ICON_LINUX,
   CNST_TMP_PATH,
+  CNST_MIRRORMODE_PINGS_MAX
 } from './src-electron/electron-constants';
 
 /* Dependência de comunicação com o Registro do Windows */
@@ -74,7 +76,7 @@ import { ConfigurationService } from './src-electron/services/configuration-serv
 import { Configuration } from './src-angular/app/configuration/configuration-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, from, lastValueFrom, map, switchMap } from 'rxjs';
+import { Observable, from, lastValueFrom, map, switchMap, of } from 'rxjs';
 
 export default class Main {
   
@@ -98,6 +100,7 @@ export default class Main {
   
   //Referência da função de temporização do Agent
   private static timerRefId: any = null;
+  private static mirrorPing: any = null;
   
   /********* Parâmetros CMD *********/
   //Define se a interface do Agent deve ser renderizada em tela, ou não
@@ -123,14 +126,52 @@ export default class Main {
   }
   
   /* Método de atualização das preferências vinculadas ao acesso remoto (MirrorMode) */
+  public static updateDeactivationPreferrences(): void {
+    if (Main.mainWindow != null) Main.mainWindow.webContents.send('AC_deactivateAgent', null);
+    return;
+  }
+  
+  /* Método de atualização das preferências vinculadas ao acesso remoto (MirrorMode) */
   public static updateMirrorModePreferences(): Observable<boolean> {
     return ConfigurationService.getConfiguration(false).pipe(map((conf: Configuration) => {
       if (Main.mainWindow != null) Main.mainWindow.webContents.send('AC_setMirrorMode', Main.getMirrorMode());
       if (Main.getMirrorMode() == 1) {
-        Main.trayMenu.destroy();
-        Main.trayMenu = null;
+        if (Main.trayMenu) {
+          Main.trayMenu.destroy();
+          Main.trayMenu = null;
+          
+          //Ativa a verificação de conexão com o Agent-Server
+          let i: number = 0;
+          let errors: number = 0;
+          Main.mirrorPing = setInterval(() => {
+            if (i == 60) {
+              i = 0;
+              ServerService.pingServer().subscribe((b: boolean) => {
+                if (!b) {
+                  errors = errors + 1;
+                  if (errors == CNST_MIRRORMODE_PINGS_MAX) {
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.SERVER_PING_ERROR'], null, null, null);
+                    let comm: ServerCommunication = new ServerCommunication();
+                    comm.args = ['0'];
+                    ServerService.setMirrorMode(comm).subscribe();
+                  }
+                  
+                  if (errors < CNST_MIRRORMODE_PINGS_MAX) {
+                    let translations: any = TranslationService.getTranslations([
+                      new TranslationInput('MIRROR_MODE.SERVER_PING_WARNING', ['' + errors, '' + CNST_MIRRORMODE_PINGS_MAX])
+                    ]);
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.SERVER_PING_WARNING'], null, null, null);
+                  }
+                }
+                
+              });
+            }
+            i = i + 1;
+          }, 1000);
+        }
         return true;
       } else if (Main.getMirrorMode() == 0) {
+        clearInterval(Main.mirrorPing);
         TranslationService.use(conf.locale);
         Main.updateTrayMenu();
       }
@@ -286,12 +327,13 @@ export default class Main {
     ipcMain.removeAllListeners('AC_saveDatabase');
     ipcMain.removeAllListeners('AC_deleteDatabase');
     ipcMain.removeHandler('AC_testDatabaseConnectionLocally');
-    ipcMain.removeAllListeners('AC_testDatabaseConnectionRemotelly');
+    ipcMain.removeHandler('AC_testDatabaseConnectionRemotelly');
     ipcMain.removeAllListeners('AC_getSchedules');
     ipcMain.removeAllListeners('AC_saveSchedule');
     ipcMain.removeAllListeners('AC_deleteSchedule');
-    ipcMain.removeAllListeners('AC_executeAndUpdateScheduleLocally');
-    ipcMain.removeAllListeners('AC_executeAndUpdateScheduleRemotelly');
+    ipcMain.removeHandler('AC_executeAndUpdateScheduleLocally');
+    ipcMain.removeHandler('AC_executeAndUpdateScheduleRemotelly');
+    ipcMain.removeHandler('AC_getAvailableExecutionWindows');
     ipcMain.removeHandler('AC_killProcess');
     ipcMain.removeAllListeners('AC_getConfiguration');
     ipcMain.removeHandler('AC_saveConfiguration');
@@ -402,11 +444,8 @@ export default class Main {
       Teste de conexão a um banco de dados (Disparo Remoto)
       Este método é sempre disparado pela instância espelhada do Agent
     */
-    ipcMain.on('AC_testDatabaseConnectionRemotelly', (event: IpcMainEvent, buffer: string) => {
-      ServerService.testDatabaseConnectionRemotelly(buffer).subscribe((res: any) => {
-        event.returnValue = res;
-        return res;
-      });
+    ipcMain.handle('AC_testDatabaseConnectionRemotelly', (event: IpcMainEvent, buffer: string) => {
+      return lastValueFrom(ServerService.testDatabaseConnectionRemotelly(buffer));
     });
     
     /*****************************/
@@ -439,27 +478,33 @@ export default class Main {
     });
     
     //Disparo da execução de um agendamento, e atualização da última data de execução do mesmo
-    ipcMain.on('AC_executeAndUpdateScheduleLocally', (event: IpcMainEvent, s: Schedule) => {
-      return ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
-        return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((b1: boolean) => {
-          return ScheduleService.updateScheduleLastExecution(s).pipe(map((b2: boolean) => {
-            event.returnValue = b2;
-            return b2;
-          }));
+    ipcMain.handle('AC_executeAndUpdateScheduleLocally', (event: IpcMainEvent, s: Schedule) => {
+      return lastValueFrom(ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
+        return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((res1: number) => {
+          if (res1 == 1) {
+            return ScheduleService.updateScheduleLastExecution(s).pipe(map((res2: number) => {
+              return res2;
+            }));
+          } else {
+            return of(res1);
+          }
         }));
-      })).subscribe();
+      })));
     });
     
     //Disparo da execução de um agendamento, e atualização da última data de execução do mesmo
-    ipcMain.on('AC_executeAndUpdateScheduleRemotelly', (event: IpcMainEvent, s: Schedule) => {
-      return ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
-        return ServerService.executeAndUpdateScheduleRemotelly(inputBuffer, s.id).pipe(switchMap((b1: boolean) => {
-          return ScheduleService.updateScheduleLastExecution(s).pipe(map((b2: boolean) => {
-            event.returnValue = b2;
-            return b2;
-          }));
+    ipcMain.handle('AC_executeAndUpdateScheduleRemotelly', (event: IpcMainEvent, s: Schedule) => {
+      return lastValueFrom(ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
+        return ServerService.executeAndUpdateScheduleRemotelly(inputBuffer, s.id).pipe(switchMap((res1: number) => {
+          if (res1 == 1) {
+            return ScheduleService.updateScheduleLastExecution(s).pipe(map((res2: number) => {
+              return res2;
+            }));
+          } else {
+            return of(res1);
+          }
         }));
-      })).subscribe();
+      })));
     });
     
     //Término forçado de um processo do Agent (Java)
@@ -966,10 +1011,14 @@ export default class Main {
                 ScheduleService.getSchedulesToExecute().subscribe((schedules: Schedule[]) => {
                   schedules.map(async (s: Schedule) => {
                     await ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
-                      return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((b1: boolean) => {
-                        return ScheduleService.updateScheduleLastExecution(s).pipe(map((b2: boolean) => {
-                          return b2;
-                        }));
+                      return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((res1: number) => {
+                        if (res1 == 1) {
+                          return ScheduleService.updateScheduleLastExecution(s).pipe(map((res2: number) => {
+                            return res2;
+                          }));
+                        } else {
+                          return of(res1);
+                        }
                       }));
                     })).subscribe();
                   });
