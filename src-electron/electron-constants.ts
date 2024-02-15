@@ -45,7 +45,7 @@ export const CNST_JAVA_CLASS_EXPORTQUERY: string = 'com.gooddata.agent.jdbc.Jdbc
 export const CNST_JAVA_CLASS_RUNAGENT: string = 'com.gooddata.agent.Main';
 
 /* Caminho completo do arquivo .jar do Agent */
-export const CNST_JAR_PATH_FAST = (): string => path.join(CNST_JAVA_PATH(), 'TOTVS-Agent-Analytics-Java-1.0.0.jar');
+export const CNST_JAR_PATH_FAST = (): string => path.join(CNST_JAVA_PATH(), 'TOTVS-Agent-Analytics-Java-0.9.0.jar');
 
 /* Nome do arquivo criptografado de comandos do Java, usado para comunicação */
 export const CNST_COMMAND_FILE: string = '_jCommand';
@@ -65,6 +65,24 @@ export const CNST_OS_LINEBREAK = () => {
   } else {
     return CNST_LINEBREAK.MAC;
   }
+}
+
+/* Função usada para retornar o comando de barra padrão do sistema operacional*/
+export const CNST_OS_SLASH = () => {
+  if (process.platform == 'win32') {
+    return CNST_SLASH.WIN;
+  } else if (process.platform == 'linux') {
+    return CNST_SLASH.LINUX;
+  } else {
+    return CNST_SLASH.MAC;
+  }
+}
+
+/* Cadastro das quebras de linha, por sistema operacional */
+export const CNST_SLASH: any = {
+  WIN: '\\',
+  LINUX: '\/',
+  MAC: '\/'
 }
 
 /* Cadastro das quebras de linha, por sistema operacional */

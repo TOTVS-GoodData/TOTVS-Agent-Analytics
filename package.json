@@ -119,6 +119,7 @@
     "uuid-v4": "^0.1.0",
     "winreg": "^1.2.4",
     "winston": "^3.8.2",
+    "xml2js": "^0.6.2",
     "zone.js": "~0.13.3"
   },
   "devDependencies": {

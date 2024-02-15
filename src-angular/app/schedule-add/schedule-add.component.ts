@@ -377,16 +377,13 @@ export class ScheduleAddComponent {
     this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.VALIDATE']);
     if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.VALIDATE'] };
     
-    //Todo processo de ETL precisa ter um graph preenchido.
-    if (this.schedule.fileFolder != undefined) {
-      schedule.fileFolderWildcard = this.schedule.fileFolderWildcard;
-    }
+    //Define o valor padrão do fileFolderWilcard, caso o usuário apague o mesmo, e não informe nada diferente.
+    if (this.schedule.fileFolderWildcard == '') this.schedule.fileFolderWildcard = '*.*';
     
     //Verifica se todos os campos da interface de agendamento foram preenchidos
     let propertiesNotDefined: string[] = Object.getOwnPropertyNames.call(Object, schedule).map((p: string) => {
-      if ((this.schedule[p] == '') && (p != 'id') && (p != 'enabled') && (p != 'SQLParameters') && (p != 'ETLParameters')) return p;
+      if ((this.schedule[p] == '') && (p != 'id') && (p != 'enabled') && (p != 'SQLParameters') && (p != 'ETLParameters') && (p != 'fileFolder') && (p != 'fileWildcard')) return p;
     }).filter((p: string) => { return (p != null); });
-    
     // Validação dos campos de formulário
     if (propertiesNotDefined.length > 0) {
       validate = false;
@@ -449,6 +446,7 @@ export class ScheduleAddComponent {
   protected getFolder(): void {
     if (this._electronService.isElectronApp) {
       this.schedule.fileFolder = this._electronService.ipcRenderer.sendSync('AC_getFolder');
+      if (this.schedule.fileFolder == null) this.schedule.fileFolder = '';
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['FORM_ERRORS.FOLDER_SELECT_WARNING']);
       if (this.mirrorMode != 1) this.po_lo_text = { value: null };

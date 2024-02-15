@@ -17,7 +17,8 @@ import { Functions } from '../functions';
 import {
   CNST_LOGS_PATH,
   CNST_LOGS_FILENAME,
-  CNST_LOGS_EXTENSION
+  CNST_LOGS_EXTENSION,
+  CNST_OS_SLASH
 } from '../electron-constants';
 
 /* Interface do banco de dados do Agent */
@@ -361,8 +362,8 @@ export class ScheduleService {
   
   /* Método de execução de um agendamento do Agent */
   public static executeAndUpdateScheduleLocally(inputBuffer: string, scheduleId: string): Observable<number> {
-    return Execute.runAgent(inputBuffer, scheduleId).pipe(map((res: boolean) => {
-      return (res ? 1 : -1);
+    return Execute.runAgent(inputBuffer, scheduleId).pipe(map((res: number) => {
+      return res;
     }));
   }
 }

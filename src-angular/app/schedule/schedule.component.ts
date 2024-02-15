@@ -175,8 +175,9 @@ export class ScheduleComponent implements OnInit {
     this._translateService.getTranslations([
       new TranslationInput('SCHEDULES.MESSAGES.RUN', [s.name])
     ]).pipe(switchMap((translations: any) => {
-      if (this.mirrorMode == 2) this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.RUN'] };
+      if ((this.mirrorMode != 1) && (s.fileFolder != null)) this.po_lo_text = { value: translations['SCHEDULES.MESSAGES.RUN'] };
       return this._scheduleService.runSchedule(s).pipe(map((res: number) => {
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         this.loadSchedules();
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         return;

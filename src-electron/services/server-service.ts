@@ -5,9 +5,12 @@ import { TOTVS_Agent_Analytics } from '../../app';
 import net from 'net';
 
 /* Serviços do Electron */
-import { Files } from '../files';
 import { Functions } from '../functions';
 import { Execute } from '../execute';
+
+/* Serviço de arquivos */
+import { Files } from '../files';
+import { FileValidation } from '../files-interface';
 
 import Main from '../../electron-main';
 
@@ -220,6 +223,13 @@ export class ServerService {
               case 'requestScheduleExecution':
                 return ServerService.requestScheduleExecution(command).pipe(switchMap((res: responseObj) => {
                   return ServerService.sendResponseToServer(socket, 'requestScheduleExecution', res);
+                }));
+                break;
+              
+              //Comando de execução remota e imediata da validação dos arquivos locais de um agendamento
+              case 'requestFileIntegrityTest':
+                return ServerService.requestFileIntegrityTest(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'requestFileIntegrityTest', res);
                 }));
                 break;
               
@@ -990,6 +1000,32 @@ export class ServerService {
     }));
   }
   
+  /* Método de validação dos arquivos locais de um agendamento (Teste Remoto / Disparo Remoto) */
+  public static checkFileIntegrityRemotelly(scheduleId: string): Observable<FileValidation[]> {
+    
+    //Prepara a palavra de comando a ser enviada, com criptografia
+    return ServerService.prepareCommandWord('checkFileIntegrity', null, [scheduleId]).pipe(switchMap((buffer: string) => {
+      
+      //Envia o comando para o servidor da TOTVS, e processa a resposta
+      //(HOF - Higher Order Function)
+      return ServerService.sendCommandToServer(
+        buffer,
+        'checkFileIntegrity',
+        (response: ServerCommunication) => {
+          return of(response);
+        }
+      ).pipe(map((res: ServerCommunication) => {
+        let files: FileValidation[] = [];
+        res.args.map((file: string) => {
+          let f: FileValidation = Object.assign(new FileValidation(null, null), file);
+          files.push(f);
+        });
+        
+        return files;
+      }));
+    }));
+  }
+  
   /* Método de teste de conexão ao banco de dados do Agent (Teste Remoto / Disparo Remoto) */
   public static exportQueriesFromI01Remotelly(inputBuffer: string, scheduleId: string): Observable<ServerCommunication> {
     
@@ -1071,6 +1107,16 @@ export class ServerService {
   private static requestScheduleExecution(command: ServerCommunication): Observable<responseObj> {
     return ScheduleService.executeAndUpdateScheduleLocally(command.args[0], command.args[1]).pipe(map((res: number) => {
       return new responseObj([res], null);
+    }));
+  }
+  
+  /* Método de execução remota e imediata de um agendamento do Agent  (Teste Local / Disparo Remoto) */
+  private static requestFileIntegrityTest(command: ServerCommunication): Observable<responseObj> {
+    return ScheduleService.getSchedules(false).pipe(switchMap((schedules: Schedule[]) => {
+      let s: Schedule = schedules.find((schedule: Schedule) => schedule.id == command.args[0]);
+      return Files.checkFileIntegrityLocally(s.fileFolder).pipe(map((res: FileValidation[]) => {
+        return new responseObj(res, null);
+      }));
     }));
   }
   

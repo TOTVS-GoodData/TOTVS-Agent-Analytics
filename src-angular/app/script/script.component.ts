@@ -291,7 +291,7 @@ export class ScriptComponent {
         
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
         ss.erp = w.license.source;
-        ss.module = w.license.module;
+        ss.product = w.license.product;
         
         //Definição do tipo do banco de dados do agendamento
         ss.databaseType = (() => {

@@ -94,8 +94,8 @@ export class WorkspaceAddComponent {
   //Listagem dos ERPs disponíveis
   protected _CNST_ERP: Array<PoSelectOption> = [];
   
-  //Listagem dos módulos dos ERPs disponíveis
-  protected _CNST_MODULO: Array<PoSelectOption> = [];
+  //Listagem dos produtos dos ERPs disponíveis
+  protected _CNST_PRODUTO: Array<PoSelectOption> = [];
   
   //Listagem dos ambientes de GoodData disponíveis
   protected listWorkspaces: Array<PoSelectOption> = [];
@@ -444,11 +444,11 @@ export class WorkspaceAddComponent {
   
   /* Método executado ao trocar o ERP do ambiente */
   protected onChangeERP(e: string): void {
-    
+    console.log(this.licenses);
     //Define a listagem de todos os módulos disponíveis para o ERP selecionado
-    this._CNST_MODULO = this.licenses.filter((l: License) => l.source === e)
+    this._CNST_PRODUTO = this.licenses.filter((l: License) => l.source === e)
     .map((l: License) => {
-      return { label: l.module, value: l.module };
+      return { label: l.product, value: l.product };
     }).sort((m1: any, m2: any) => {
       let order: number = null;
       
@@ -460,12 +460,12 @@ export class WorkspaceAddComponent {
     });
     
     //Realiza a tradução da opção "Outro" dos módulos
-    let outros: any = this._CNST_MODULO.find((module: any) => (module.value == CNST_ERP_OTHER));
+    let outros: any = this._CNST_PRODUTO.find((product: any) => (product.value == CNST_ERP_OTHER));
     if (outros) outros.label = this._translateService.CNST_TRANSLATIONS['ANGULAR.OTHER'];
     
     //Define o valor padrão do campo de módulo
-    if (this._CNST_MODULO.length == 1) {
-      this.workspaceModule = this._CNST_MODULO[0].value + '';
+    if (this._CNST_PRODUTO.length == 1) {
+      this.workspaceModule = this._CNST_PRODUTO[0].value + '';
     } else {
       this.workspaceModule = '';
     }
@@ -608,7 +608,7 @@ export class WorkspaceAddComponent {
       if (validate) {
         
         //Vincula a licença selecionada neste ambiente
-        this.workspace.license = this.licenses.find((l: License) => ((l.source == this.workspaceSource) && (l.module == this.workspaceModule)));
+        this.workspace.license = this.licenses.find((l: License) => ((l.source == this.workspaceSource) && (l.product == this.workspaceModule)));
         
         //Consulta das traduções
         return this._translateService.getTranslations([

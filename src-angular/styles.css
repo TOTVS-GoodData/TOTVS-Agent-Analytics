@@ -72,9 +72,6 @@
   flex-grow: 1;
 }
 
-
-
-
 .input-text {
   width: 100%;
   padding: 0 8px;
@@ -239,6 +236,7 @@ nav {
 
 .subtitle{
     color: #4a5c60;
+    white-space: pre-wrap;
 }
 
 .button-save{

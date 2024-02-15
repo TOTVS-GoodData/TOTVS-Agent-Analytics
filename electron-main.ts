@@ -11,7 +11,10 @@ import AutoLaunch from 'auto-launch';
 /* Serviços do Electron */
 import { Execute } from './src-electron/execute';
 import { Functions } from './src-electron/functions';
+
+/* Serviços de arquivos */
 import { Files } from './src-electron/files';
+import { FileValidation } from './src-electron/files-interface';
 
 /* Serviço de criptografia do Agent */
 import { EncryptionService } from './src-electron/encryption/encryption-service';
@@ -336,6 +339,7 @@ export default class Main {
     ipcMain.removeHandler('AC_getAvailableExecutionWindows');
     ipcMain.removeHandler('AC_killProcess');
     ipcMain.removeAllListeners('AC_getConfiguration');
+    ipcMain.removeHandler('AC_getJavaVersion');
     ipcMain.removeHandler('AC_saveConfiguration');
     ipcMain.removeAllListeners('AC_getQueries');
     ipcMain.removeAllListeners('AC_getQueriesBySchedule');
@@ -479,31 +483,81 @@ export default class Main {
     
     //Disparo da execução de um agendamento, e atualização da última data de execução do mesmo
     ipcMain.handle('AC_executeAndUpdateScheduleLocally', (event: IpcMainEvent, s: Schedule) => {
-      return lastValueFrom(ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
-        return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((res1: number) => {
-          if (res1 == 1) {
-            return ScheduleService.updateScheduleLastExecution(s).pipe(map((res2: number) => {
-              return res2;
+      return lastValueFrom(Files.checkFileIntegrityLocally(s.fileFolder).pipe(switchMap((res1: FileValidation[]) => {
+        
+        let errors: number = 0;
+        res1.map((file: FileValidation) => errors += file.errors);
+        
+        console.log(errors);
+        
+        if ((errors == 0) || (res1.length == 0)) {
+          return ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
+            return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((res2: number) => {
+              if (res2 == 1) {
+                return ScheduleService.updateScheduleLastExecution(s).pipe(map((res3: number) => {
+                  return res3;
+                }));
+              } else {
+                return of(res2);
+              }
             }));
-          } else {
-            return of(res1);
-          }
-        }));
+          }));
+        } else {
+          //Mostra todas as mensagens de erro para o usuário
+          res1.map((file: FileValidation) => {
+            if (file.errors > 0) {
+              
+              //Consulta das traduções
+              let translations3: any = TranslationService.getTranslations([
+                new TranslationInput('SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR', [file.errors + '', file.type])
+              ]);
+              
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations3['SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR'], null, null, null);
+              Main.electronMessage(CNST_LOGLEVEL.ERROR, translations3['SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR']);
+            }
+          });
+          
+          return of(-2);
+        }
       })));
     });
     
     //Disparo da execução de um agendamento, e atualização da última data de execução do mesmo
     ipcMain.handle('AC_executeAndUpdateScheduleRemotelly', (event: IpcMainEvent, s: Schedule) => {
-      return lastValueFrom(ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
-        return ServerService.executeAndUpdateScheduleRemotelly(inputBuffer, s.id).pipe(switchMap((res1: number) => {
-          if (res1 == 1) {
-            return ScheduleService.updateScheduleLastExecution(s).pipe(map((res2: number) => {
-              return res2;
+      return lastValueFrom(ServerService.checkFileIntegrityRemotelly(s.id).pipe(switchMap((res1: FileValidation[]) => {
+        let errors: number = 0;
+        res1.map((file: FileValidation) => errors += file.errors);
+        
+        console.log(errors);
+        if ((errors == 0) || (res1.length == 0)) {
+          return ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
+            return ServerService.executeAndUpdateScheduleRemotelly(inputBuffer, s.id).pipe(switchMap((res1: number) => {
+              if (res1 == 1) {
+                return ScheduleService.updateScheduleLastExecution(s).pipe(map((res2: number) => {
+                  return res2;
+                }));
+              } else {
+                return of(res1);
+              }
             }));
-          } else {
-            return of(res1);
-          }
-        }));
+          }));
+        } else {
+          //Mostra todas as mensagens de erro para o usuário
+          res1.map((file: FileValidation) => {
+            if (file.errors > 0) {
+              
+              //Consulta das traduções
+              let translations3: any = TranslationService.getTranslations([
+                new TranslationInput('SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR', [file.errors + '', file.type])
+              ]);
+              
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations3['SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR'], null, null, null);
+              Main.electronMessage(CNST_LOGLEVEL.ERROR, translations3['SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR']);
+            }
+          });
+          
+          return of(-2);
+        }
       })));
     });
     
@@ -539,6 +593,13 @@ export default class Main {
         }
         
         return b;
+      })));
+    });
+    
+    //Consulta da versão atual do Java usado pelo Agent
+    ipcMain.handle('AC_getJavaVersion', (event: IpcMainEvent) => {
+      return lastValueFrom(Execute.getJavaVersion().pipe(map((res: string[]) => {
+        return res;
       })));
     });
     

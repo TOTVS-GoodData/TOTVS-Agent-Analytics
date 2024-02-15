@@ -249,13 +249,19 @@ export class ScheduleService {
     }
   }
   
-  /* Método usado para mostrar a mensagem final ao usuário, após o teste de conexão ao banco ter sido concluído */
+  /* Método usado para mostrar a mensagem final ao usuário, após a execução do agendamento ter sido concluída */
   private printMessage(s: Schedule, res: number): Observable<number> {
     return this._translateService.getTranslations([
-      new TranslationInput('SCHEDULES.MESSAGES.RUN', [s.name])
+      new TranslationInput('SCHEDULES.MESSAGES.SCHEDULE_ALREADY_EXECUTING', [s.name]),
+      new TranslationInput('SCHEDULES.MESSAGES.VALIDATION_ERROR', [s.fileFolder])
     ]).pipe(map((translations: any) => {
       if (res == 0) {
         this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_OK']);
+      } else if (res == -1) {
+        this._utilities.writeToLog(CNST_LOGLEVEL.WARN, translations['SCHEDULES.MESSAGES.SCHEDULE_ALREADY_EXECUTING']);
+        this._utilities.createNotification(CNST_LOGLEVEL.WARN, translations['SCHEDULES.MESSAGES.SCHEDULE_ALREADY_EXECUTING']);
+      } else if (res == -2) {
+        this._utilities.writeToLog(CNST_LOGLEVEL.ERROR, translations['SCHEDULES.MESSAGES.VALIDATION_ERROR']);
       } else if (res == -998) {
         this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.RUN_WARNING']);
       } else if (res == -999) {

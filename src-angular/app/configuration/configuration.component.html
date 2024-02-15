@@ -4,17 +4,27 @@
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
   
   <form #configurationForm="ngForm">
-    <div class="po-row">
-      <div class="po-row-50">
-        
-        <!-- Título da seção "Aplicação" do Agent -->
-        <div class="po-row display-title">
+      <!-- Título da seção "Aplicação" do Agent -->
+      <div class="po-row">
+        <div class="po-row-50-title">
           <span class="title">{{ lbl_application }}</span>
+          &nbsp;
           <span class="subtitle">({{ lbl_version }} {{ AgentVersion }})</span>
         </div>
-        
-        <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
-        
+        <div class="po-row-50-title">
+          <span class="title">{{ lbl_java }}</span>
+          &nbsp;
+          <span class="subtitle">({{ lbl_version }} {{ JavaVersionTitle }})</span>
+          <div>
+            <span class="subtitle">{{ JavaVersionDetails }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
+      
+    <div class="po-row">
+      <div class="po-row-50">
         <div class="po-row fields">
           
           <!-- Nome desta instância do Agent -->
@@ -98,15 +108,6 @@
       </div>
       
       <div class="po-row-50">
-        
-        <!-- Título da seção "Java" do Agent -->
-        <div class="po-row display-title">
-          <span class="title">{{ lbl_java }}</span>
-          <!--<span class="subtitle">({{ lbl_version }} {{ JavaVersion }})</span>-->
-        </div>
-        
-        <hr class="line po-sm-12 po-md-12 po-lg-12 po-xl-12" />
-        
         <div class="po-row fields">
           
           <!-- Alocação máxima de memória do Java -->

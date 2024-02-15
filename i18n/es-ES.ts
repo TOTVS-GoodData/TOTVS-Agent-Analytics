@@ -36,6 +36,8 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     PROCESS_KILL_ERROR: 'Error - No fue possible finalizar la ejecución del proceso [Hor: ${p1}, Exec: ${p2}].',
     PROCESS_KILL_ALL: 'Finalizando todos los procesos en ejecución...',
     PROCESS_KILL_ALL_OK: 'Procesos finalizados.',
+    JAVA_VERSION: 'Solicitando numero de versión del Java...',
+    JAVA_VERSION_OK: 'Versión del Java recibida.',
     JAVA_EXECUTION_START: '===Inicio de ejecución del Agent: (.*)===',
     JAVA_EXECUTION_END: '===Fin de ejecución del Agent: (.*)===',
     JAVA_EXECUTION_DURATION: '===Tiempo de ejecución del Agent: (.*)===',
@@ -387,7 +389,15 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       RUN_EXECUTIONDATE: 'Gravando fecha de última ejecución del horario \'${p1}\'.',
       RUN_ERROR: 'Error - Un error inesperado ocurrió mientras solicitación de ejecución del horario \'${p1}\'. Por favor intenta otra vez.',
       RUN_PREPARE: '  [Horario: ${p1}] Preparando paquete de solicitación para el java...',
-      RUN_WARNING: 'Atención - Ejecución de horarios solo pueden ser probadas con Electron.'
+      RUN_WARNING: 'Atención - Ejecución de horarios solo pueden ser probadas con Electron.',
+      SCHEDULE_ALREADY_EXECUTING: 'Atención - El horario [${p1}] no fue ejecutado, porque el mismo ya esta en ejecución.',
+      VALIDATION: 'Início de la validación de los archivos locales [${p1}].',
+      VALIDATION_OK: 'Validación de los archivos locales [${p1}] hecha con éxito.',
+      VALIDATION_ERROR: 'Error - La validación de los archivos locales [${p1}] ha fallado. La ejecución del horario fue cerrada.',
+      VALIDATION_FILE: 'Validando archivo [${p1}]...',
+      VALIDATION_FILE_OK: 'Archivo [${p1}] validado con éxito.',
+      VALIDATION_FILE_ERROR: 'Error - La validación del archivo [${p1}] ha fallado.',
+      FILE_VALIDATION_ERROR: 'Error - Foram encontados ${p1} archivos ${p2} corruptos en el directorio de upload del Agent. Por favor verifica los archivos de log del Agent.'
     },
     TOOLTIPS: {
       WINDOWS: 'Informe cuales horários el Agent va ejecutar este horario, a diario.',

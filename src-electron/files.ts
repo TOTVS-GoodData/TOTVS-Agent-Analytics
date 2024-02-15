@@ -1,8 +1,14 @@
 /* Componentes padrões do Electron */
 import { dialog } from 'electron';
 
+/* Dependência do Node, usada para consultar o endereço dos arquivos da Máquina */
+import * as path from 'path';
+
 /* Dependência de manipulação de arquivos da máquina do usuário */
 import * as fs from 'fs-extra';
+
+/* Dependência de conversão de arquivos XML p/ JSON */
+import * as xml2js from 'xml2js';
 
 /* Dependência para gravação de arquivos de log */
 import * as winston from 'winston';
@@ -46,12 +52,15 @@ import {
 /* Interface do banco de dados do Agent */
 import { ClientData } from './electron-interface';
 
+/* Interface de validação de arquivos Agent */
+import { FileValidation } from './files-interface';
+
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './services/configuration-service';
 import { Configuration } from '../src-angular/app/configuration/configuration-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, from, map, of } from 'rxjs';
+import { Observable, from, map, switchMap, of, catchError, concat, zip } from 'rxjs';
 
 export class Files {
   
@@ -148,6 +157,130 @@ export class Files {
     } else if (err) Files.loggerTEXT.error(err);
     
     return true;
+  }
+  
+  /* Método de validação da integridade dos arquivos XML / JSON, que serão enviados para o GoodData */
+  public static checkFileIntegrityLocally(fileFolder: string): Observable<FileValidation[]> {
+    
+    //Número de arquivos com erros encontrados
+    let errorsJSON: number = 0;
+    let errorsXML: number = 0;
+        
+    //Armazena o array de observáveis que irão validar cada um dos arquivos xml / json encontrados
+    let validators: Observable<any>[] = [];
+    
+    //Verifica se existem arquivos locais para serem enviados ao GoodData
+    if (fileFolder != '') {
+      
+      //Consulta das traduções
+      let translations1: any = TranslationService.getTranslations([
+        new TranslationInput('SCHEDULES.MESSAGES.VALIDATION', [fileFolder]),
+        new TranslationInput('SCHEDULES.MESSAGES.VALIDATION_OK', [fileFolder]),
+        new TranslationInput('SCHEDULES.MESSAGES.VALIDATION_ERROR', [fileFolder])
+      ]);
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations1['SCHEDULES.MESSAGES.VALIDATION'], null, null, null);
+      
+      //Extrai todos os nomes dos arquivos de um diretório, com suas extensões.
+      let files: string[] = Files.getFileNames(fileFolder);
+      files.map((file: string) => {
+        
+        //Consulta das traduções
+        let translations2: any = TranslationService.getTranslations([
+          new TranslationInput('SCHEDULES.MESSAGES.VALIDATION_FILE', [file]),
+          new TranslationInput('SCHEDULES.MESSAGES.VALIDATION_FILE_OK', [file]),
+          new TranslationInput('SCHEDULES.MESSAGES.VALIDATION_FILE_ERROR', [file])
+        ]);
+        
+        //Extrai a extensão do arquivo
+        let extension: string = file.split('.').filter(Boolean).slice(1).join('.').toUpperCase();
+        
+        //Validação de arquivos XML.
+        //Comandos de TIMEOUT foram adicionados para a ordenação do arquivo de log ficar correta.
+        if (extension == 'XML') {
+          validators.push(new Observable<FileValidation>((subscriber: any) => {
+            setTimeout(() => {
+            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE'], null, null, null);
+            let xmlData: string = fs.readFileSync(path.join(fileFolder, file)).toString();
+            xml2js.parseString(xmlData, (err, result) => {
+              if (err == null) {
+                Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_OK'], null, null, null);
+                subscriber.next(new FileValidation('XML', 0));
+                subscriber.complete();
+              } else {
+                Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_ERROR'], null, null, null);
+                setTimeout(() => { Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, null, null, null, err.toString()); }, 100);
+                subscriber.next(new FileValidation('XML', 1));
+                subscriber.complete();
+              }
+            });
+          }, 100);
+          }));
+        }
+        
+        //Validação de arquivos JSON
+        //Comandos de TIMEOUT foram adicionados para a ordenação do arquivo de log ficar correta.
+        else if (extension == 'JSON') {
+          validators.push(new Observable<FileValidation>((subscriber: any) => {
+            setTimeout(() => {
+            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE'], null, null, null);
+            try {
+              fs.readJsonSync(path.join(fileFolder, file), { throws: true });
+              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_OK'], null, null, null);
+              subscriber.next(new FileValidation('JSON', 0));
+              subscriber.complete();
+            } catch (err: any) {
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_ERROR'], null, null, null);
+              setTimeout(() => { Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, null, null, null, err.toString()); }, 100);
+              subscriber.next(new FileValidation('JSON', 1));
+              subscriber.complete();
+            }
+            }, 100);
+          }));
+        }
+      });
+      
+      //Retorna o observável final do método
+      return new Observable<FileValidation[]>((subscriber: any) => {
+        let i: number = 0;
+        let errors: FileValidation[] = [];
+        
+        //Itera por todos os observáveis de validação dos arquivos, e coleta suas respostas, um por um, de maneira síncrona
+        concat(...validators).pipe(map((file: FileValidation) => {
+          i = i + 1;
+          if (file.errors == 1) {
+            switch (file.type) {
+            case 'XML':
+              errorsXML = errorsXML + 1;
+              break;
+            case 'JSON':
+              errorsJSON = errorsJSON + 1;
+              break;
+            }
+          }
+          
+          if (validators.length == i) {
+            if (errorsXML > 0) errors.push(new FileValidation('XML', errorsXML));
+            if (errorsJSON > 0) errors.push(new FileValidation('JSON', errorsJSON));
+            
+            subscriber.next(errors)
+            subscriber.complete();
+          }
+        })).subscribe();
+      });
+    } else {
+      return of([]);
+    }
+  }
+  
+  /* Método de validação de um arquivo JSON */
+  public static validateJSON(filepath: string): boolean {
+    let json: any = fs.readJsonSync(filepath, { throws: true });
+    return true;
+  }
+  
+  /* Método de leitura dos arquivos de log gerados pelo Agent */
+  public static getFileNames(filePath: string): Array<string> {
+    return fs.readdirSync(filePath);
   }
   
   /* Método de leitura dos arquivos de log gerados pelo Agent */

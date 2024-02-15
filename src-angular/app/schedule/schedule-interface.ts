@@ -33,8 +33,8 @@ export class Schedule {
   lastExecutionString?: string;
   GDZipFilename: string;
   GDZipExtension: string;
-  fileFolder?: string;
-  fileFolderWildcard?: string;
+  fileFolder: string;
+  fileFolderWildcard: string;
   
   constructor() {
     this.id = null;
@@ -46,6 +46,8 @@ export class Schedule {
     this.GDZipExtension = '';
     this.ETLParameters = [];
     this.SQLParameters = [];
+    this.fileFolder = '';
+    this.fileFolderWildcard = '*.*';
   }
   
   /* Método de conversão do agendamento (JSON => Objeto) */
@@ -177,7 +179,7 @@ export class ScheduleQuery {
   schedule: Schedule;
   queries: QueryClient[];
   erp: string;
-  module: string;
+  product: string;
   contractType: string;
   databaseType: string;
 }
@@ -188,6 +190,6 @@ export class ScheduleScript {
   schedule: Schedule;
   scripts: ScriptClient[];
   erp: string;
-  module: string;
+  product: string;
   databaseType: string;
 }

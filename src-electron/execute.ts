@@ -37,7 +37,7 @@ import { Configuration } from '../src-angular/app/configuration/configuration-in
 import { responseObj } from '../src-angular/app/services/server/server-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, switchMap } from 'rxjs';
+import { Observable, switchMap, of } from 'rxjs';
 
 /* Interface de cadastro dos processos do Java em execução no Agent */
 export class JavaProcess {
@@ -92,13 +92,13 @@ export class Execute {
   public static callJavaExecution(startMessage: string, endMessage: string, jClass: string, inputBuffer: string, scheduleId: string, stdDataFunction: any, stdCloseFunction: any): Observable<any> {
     
     //Define o código de execução deste processo (Apenas disponível caso exista um agendamento vinculado)
-    let execId: string = (scheduleId != null ? Math.floor(Math.random() * 1000) + '' : null);
+    let execId: string = (scheduleId != null ? Math.floor(Math.random() * 10000) + '' : null);
     
     //Consulta da configuração atual do Agent
     return ConfigurationService.getConfiguration(true).pipe(switchMap((conf: Configuration) => {
       
       //Cria o arquivo de comando do Java
-      let commandPath: string = path.join(conf.javaTmpDir, CNST_COMMAND_FILE);
+      let commandPath: string = path.join(conf.javaTmpDir, CNST_COMMAND_FILE + '_' + execId);
       fs.writeFile(commandPath, inputBuffer);
       
       //Define o idioma/país atualmente utilizado pelo Agent para configuração da JVM do Java (Locale)
@@ -271,9 +271,7 @@ export class Execute {
           Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations[endMessage], null, null, null);
           
           //Remoção do processo terminado da pilha de controle do Agent
-          Execute.processes = Execute.processes.filter(
-            (jp: JavaProcess) => ((jp.scheduleId == scheduleId) && (jp.execId == execId))
-          );
+          Execute.processes = Execute.processes.filter((jp: JavaProcess) => jp.execId != execId);
           
           //Executa a função de tratamento final do processo, e retorna seu resultado
           if (stdCloseFunction != null) {
@@ -290,6 +288,45 @@ export class Execute {
           subscriber.next(true);
           subscriber.complete();
         }
+      });
+    }));
+  }
+  
+  /* Método de teste de conexão ao banco de dados */
+  public static getJavaVersion(): Observable<string[]> {
+    let javaData: string = '';
+    return ConfigurationService.getConfiguration(true).pipe(switchMap((conf: Configuration) => {
+      
+      //Define o idioma/país atualmente utilizado pelo Agent para configuração da JVM do Java (Locale)
+      let language: string = conf.getLocaleLanguage();
+      let country: string = conf.getLocaleCountry();
+      
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.JAVA_VERSION'], null, null, null);
+      
+      //Configuração da JVM
+      let child: any = childProcess.spawn(
+        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'java')),
+        [
+          '-version',
+          '-Duser.language=' + language,
+          '-Duser.country=' + country
+        ]
+      );
+      
+      //Retorna o observável que irá controlar este processo
+      return new Observable<any>((subscriber: any) => {
+        
+        //Função de controle do canal de erros
+        //Por algum motivo insano na história recente da humanidade, a versão do java é retornada como erro pelo OS.
+        child.stderr.on('data', (stdErrorBuffer: string) => {
+            javaData += stdErrorBuffer
+        });
+        
+        child.on('close', (statusCode: number) => {
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.JAVA_VERSION_OK'], null, null, null);
+          subscriber.next(javaData.split(CNST_OS_LINEBREAK()));
+          subscriber.complete();
+        });
       });
     }));
   }
@@ -345,21 +382,27 @@ export class Execute {
   }
   
   /* Método de execução de um agendamento do Agent (Envio de dados p/ GoodData) */
-  public static runAgent(inputBuffer: string, scheduleId: string): Observable<boolean> {
+  public static runAgent(inputBuffer: string, scheduleId: string): Observable<number> {
     
-    //Solicita a criação de um processo do Java para execução das consultas do agendamento
-    //(HOF - Higher Order Function)
-    return Execute.callJavaExecution(
-      'ELECTRON.RUN_AGENT_ELEC_START',
-      'ELECTRON.RUN_AGENT_ELEC_FINISH',
-      CNST_JAVA_CLASS_RUNAGENT,
-      inputBuffer,
-      scheduleId,
-      (obj: any) => {
-        return null;
-      },
-      null
-    );
+    //Impede o dispardo do agendamento, caso o mesmo já esteja em execução
+    if (Execute.processes.find((jp: JavaProcess) => (jp.scheduleId == scheduleId)) != undefined) {
+      return of(-1);
+    } else {
+      
+      //Solicita a criação de um processo do Java para execução das consultas do agendamento
+      //(HOF - Higher Order Function)
+      return Execute.callJavaExecution(
+        'ELECTRON.RUN_AGENT_ELEC_START',
+        'ELECTRON.RUN_AGENT_ELEC_FINISH',
+        CNST_JAVA_CLASS_RUNAGENT,
+        inputBuffer,
+        scheduleId,
+        (obj: any) => {
+          return null;
+        },
+        null
+      );
+    }
   }
   
   /* Método que finaliza todos os processos mapeados pelo Agent */
@@ -394,9 +437,7 @@ export class Execute {
         Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.PROCESS_KILL_OK'], null, null, null);
         
         //Remoção do processo da pilha de controle do Agent
-        Execute.processes = Execute.processes.filter(
-          (jp: JavaProcess) => ((jp.scheduleId = scheduleId) && (jp.execId = execId))
-        );
+        Execute.processes = Execute.processes.filter((jp: JavaProcess) => jp.execId != execId);
         
         return 1;
       } else {

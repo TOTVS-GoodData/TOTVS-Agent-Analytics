@@ -30,7 +30,7 @@ import { TranslationInput } from '../services/translation/translation-interface'
 import { CustomTranslationLoader } from '../services/translation/custom-translation-loader';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { map } from 'rxjs';
+import { map, from } from 'rxjs';
 
 /* Constantes do Agent */
 import {
@@ -59,7 +59,8 @@ export class ConfigurationComponent implements OnInit {
   
   //Versões do Agent / Java
   protected AgentVersion: string = null;
-  protected JavaVersion: string = null;
+  protected JavaVersionTitle: string = null;
+  protected JavaVersionDetails: string = null;
   
   //Objeto de configuração do formulário
   protected configuration: Configuration = new Configuration(3, true, 2048, '', CNST_DEFAULT_LANGUAGE, true);
@@ -209,10 +210,20 @@ export class ConfigurationComponent implements OnInit {
       //Atualização do número de versão do Java / Agent
       if (this._electronService.isElectronApp) {
         this.AgentVersion = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('AC_getAgentVersion').version;
-        this.JavaVersion = null;
+        from(this._electronService.ipcRenderer.invoke('AC_getJavaVersion')).pipe(map((res: string[]) => {
+          
+          //Formata as informações recebidas do Java, para visualização em tela.
+          let comma1: number = res[0].indexOf('"');
+          let comma2: number = res[0].indexOf('"', comma1 + 1);
+          this.JavaVersionTitle = CNST_PROGRAM_VERSION.PRODUCTION + res[0].slice(comma1 + 1, comma2);
+          
+          delete res[0];
+          this.JavaVersionDetails = res.reduce((acc: string, s: string) => (acc += '\n' + s));
+        })).subscribe();
       } else {
         this.AgentVersion = CNST_PROGRAM_VERSION.DEVELOPMENT;
-        this.JavaVersion = null;
+        this.JavaVersionTitle = CNST_PROGRAM_VERSION.DEVELOPMENT;
+        this.JavaVersionDetails = 'Java(TM) SE Runtime Environment (build 1.8.0_381-b09)\nJava HotSpot(TM) 64-Bit Server VM (build 25.381-b09, mixed mode)';
       }
       
       this._configurationService.getConfiguration(true).subscribe((conf: Configuration) => {

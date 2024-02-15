@@ -36,6 +36,8 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     PROCESS_KILL_ERROR: 'Erro - Não foi possível forçar a interrupção do processo [Ag: ${p1}, Exec: ${p2}].',
     PROCESS_KILL_ALL: 'Encerrando todos os processos em execução...',
     PROCESS_KILL_ALL_OK: 'Todos os processos foram encerrados.',
+    JAVA_VERSION: 'Solicitando número de versão do Java...',
+    JAVA_VERSION_OK: 'Versão do Java recebida.',
     JAVA_EXECUTION_START: '===Início da execução do Agent: (.*)===',
     JAVA_EXECUTION_END: '===Término da execução do Agent: (.*)===',
     JAVA_EXECUTION_DURATION: '===Tempo total de execução do Agent: (.*)===',
@@ -390,7 +392,15 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       RUN_EXECUTIONDATE: 'Gravando nova data de última execução do agendamento: ${p1}',
       RUN_ERROR: 'Erro - Um erro inesperado ocorreu ao solicitar a execução do agendamento ${p1}. Por favor tente novamente.',
       RUN_PREPARE: '  [Agend: ${p1}] Preparando informações para envio ao java...',
-      RUN_WARNING: 'Aviso - Execução de agendamentos não podem ser testados sem o Electron.'
+      RUN_WARNING: 'Aviso - Execução de agendamentos não podem ser testados sem o Electron.',
+      SCHEDULE_ALREADY_EXECUTING: 'Aviso - O agendamento [${p1}] não foi disparado, pois o mesmo já está em execução.',
+      VALIDATION: 'Início da validação dos arquivos locais [${p1}].',
+      VALIDATION_OK: 'Validação dos arquivos locais [${p1}] concluída com sucesso.',
+      VALIDATION_ERROR: 'Erro - Falha na validação dos arquivos locais [${p1}]. A execução do agendamento foi cancelada.',
+      VALIDATION_FILE: 'Validando arquivo [${p1}]...',
+      VALIDATION_FILE_OK: 'Arquivo [${p1}] validado com sucesso.',
+      VALIDATION_FILE_ERROR: 'Erro - Falha na validação do arquivo [${p1}].',
+      FILE_VALIDATION_ERROR: 'Erro - Foram encontados ${p1} arquivos ${p2} corrompidos na pasta de upload do Agent. Por favor verifique os arquivos de log do Agent.'
     },
     TOOLTIPS: {
       WINDOWS: 'Informe em quais horários o Agent deverá executar este agendamento, de maneira diária.',

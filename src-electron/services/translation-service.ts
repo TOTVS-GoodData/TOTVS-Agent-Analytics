@@ -87,6 +87,8 @@ export class TranslationService {
       new TranslationInput('ELECTRON.SYSTEM_WINDOW_CLOSE', []),
       new TranslationInput('ELECTRON.SYSTEM_FINISH', []),
       new TranslationInput('ELECTRON.SYSTEM_SERVICE', []),
+      new TranslationInput('ELECTRON.JAVA_VERSION', []),
+      new TranslationInput('ELECTRON.JAVA_VERSION_OK', []),
       new TranslationInput('ELECTRON.JAVA_EXECUTION_CANCELLED', []),
       new TranslationInput('ELECTRON.AUTOLAUNCH_ERROR', []),
       new TranslationInput('ELECTRON.UPDATE_CHECK', []),

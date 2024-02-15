@@ -311,7 +311,7 @@ export class QueryComponent {
         
         let w: Workspace = results[2].find((w: Workspace) => (w.id == s.workspaceId));
         sc.erp = w.license.source;
-        sc.module = w.license.module;
+        sc.product = w.license.product;
         
         //Definição do tipo do banco de dados do agendamento
         sc.databaseType = (() => {

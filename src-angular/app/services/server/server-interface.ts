@@ -43,7 +43,8 @@ export class SocketCommunication {
 export class License {
   id: string;
   source: string;
-  module: string;
+  product: string;
+  modules: string[];
 }
 
 /* Interface de resposta do Agent-Server, com as licenças disponíveis para esta instalação do Agent */

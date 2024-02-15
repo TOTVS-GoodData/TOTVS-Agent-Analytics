@@ -347,6 +347,7 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('SCHEDULES.MESSAGES.RUN_OK', []),
       new TranslationInput('SCHEDULES.MESSAGES.RUN_WARNING', []),
       new TranslationInput('SCHEDULES.MESSAGES.VALIDATE', []),
+      new TranslationInput('SCHEDULES.MESSAGES.VALIDATION_ERROR', []),
       new TranslationInput('SCHEDULES.TOOLTIPS.WINDOWS', []),
       new TranslationInput('SCHEDULES.TOOLTIPS.ZIP_FILENAME', []),
       new TranslationInput('SCHEDULES.TOOLTIPS.FILE_FOLDER', []),
