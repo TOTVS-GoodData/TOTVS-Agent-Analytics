@@ -6,5 +6,6 @@ tmp/
 assets/db.json
 assets/dbDevelopment.json
 .angular
+.vs
 src-electron/encryption/keys/agent.rsa.public
 src-electron/encryption/keys/agent.rsa.private

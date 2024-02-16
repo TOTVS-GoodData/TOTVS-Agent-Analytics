@@ -25,7 +25,7 @@ export class TOTVS_Agent_Analytics {
   public static getRootDir(): string {
     let rootFolder: string = null;
     if (app.isPackaged) rootFolder = path.dirname(app.getPath('exe'));
-    else rootFolder = process.env.PWD;
+    else rootFolder = process.env.INIT_CWD || process.env.PWD;
     
     if (TOTVS_Agent_Analytics.mirrorMode == 2) rootFolder = path.join(rootFolder, 'node_modules/TOTVS-Agent-Analytics');
     
