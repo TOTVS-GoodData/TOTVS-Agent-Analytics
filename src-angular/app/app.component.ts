@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* Componentes padrões do Angular */
 import { Component, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
@@ -64,15 +66,25 @@ export class AppComponent {
   
   @ViewChild('modal_registerAgent') modal_registerAgent: PoModalComponent = null;
   protected lbl_registerAgentTitle: string = null;
-  protected lbl_registerAgentDescription1: string = null;
-  protected lbl_registerAgentDescription2: string = null;
-  protected lbl_registerAgentDescription3: string = null;
-  protected lbl_registerAgentDescription4: string = null;
-  protected lbl_registerAgentDescription5: string = null;
-  protected lbl_registerAgentDescription6: string = null;
+  protected lbl_registerAgentDescription: string = null;
   protected lbl_registerAgentField: string = null;
   protected registerAgent: string = null;
+
+  @ViewChild('modal_mirrorMode') modal_mirrorMode: PoModalComponent = null;
+  protected lbl_mirrorModeTitle: string = null;
+  protected lbl_mirrorModeDescription1: string = null;
+  protected lbl_mirrorModeDescription2: string = null;
+  protected lbl_mirrorModeField: string = null;
+  protected lbl_mirrorModeProceed: string = null;
+  protected lbl_mirrorModeCancel: string = null;
+  protected mirrorModeAgentCode: string = null;
   
+  protected lbl_supportHelp: string = null;
+  protected lbl_supportGroup1: string = null;
+  protected lbl_supportGroup2: string = null;
+  protected lbl_supportGroup3: string = null;
+  protected lbl_supportLink: string = null;
+
   //Define se o Agent está sendo executado via acesso remoto (MirrorMode)
   protected mirrorMode: number = 0;
   protected lbl_mirror: string = null;
@@ -126,9 +138,9 @@ export class AppComponent {
           //Configuração da mensagem de acesso remoto (MirrorMode)
           this.mirrorMode = this._mirrorService.getMirrorMode();
           this._translateService.getTranslations([
-            new TranslationInput('MIRROR_MODE.TITLE', [conf.instanceName])
+            new TranslationInput('MIRROR_MODE.MESSAGES.TITLE', [conf.instanceName])
           ]).subscribe((translations: any) => {
-            this.lbl_mirror = translations['MIRROR_MODE.TITLE'];
+            this.lbl_mirror = translations['MIRROR_MODE.MESSAGES.TITLE'];
           });
           
           //Evento de alteração do acesso remoto (MirrorMode)
@@ -137,14 +149,14 @@ export class AppComponent {
             
             //Acesso remoto ativado
             if (args[0] == 1) {
-              this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.ONLINE']);
-              this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.RUNNING'] };
+              this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.ONLINE']);
+              this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.RUNNING'] };
               
             //Acesso remoto desativado
             } else {
               this._translateService.use(conf.locale).subscribe((b: boolean) => {
                 this._menuService.updateMenu();
-                this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.OFFLINE']);
+                this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.OFFLINE']);
                 this.po_lo_text = { value: null };
                 this._router.navigate(['/workspace']);
               });
@@ -181,24 +193,40 @@ export class AppComponent {
     //Tradução das opções do menu principal do Agent, caso a instalação já tenha sido validada
     if (serialNumber != null) {
       this.menus = [
-          { label: this._translateService.CNST_TRANSLATIONS['MENU.WORKSPACES'], icon: 'po-icon-chart-columns', link: './workspace'
-        },{ label: this._translateService.CNST_TRANSLATIONS['MENU.DATABASES'], icon: 'po-icon-database', link: './database'
-        },{ label: this._translateService.CNST_TRANSLATIONS['MENU.SCHEDULES'], icon: 'po-icon-clock', link: './schedule'
-        },{ label: this._translateService.CNST_TRANSLATIONS['MENU.QUERIES'], icon: 'po-icon-filter', link: './query'
-        },{ label: this._translateService.CNST_TRANSLATIONS['MENU.SCRIPTS'], icon: 'po-icon-filter', link: './script'
-        },{ label: this._translateService.CNST_TRANSLATIONS['MENU.MONITOR'], icon: 'po-icon-device-desktop', link: './monitor'
-        },{
+        {
+          label: this._translateService.CNST_TRANSLATIONS['MENU.WORKSPACES'], icon: 'po-icon-chart-columns', link: './workspace'
+        }, {
+          label: this._translateService.CNST_TRANSLATIONS['MENU.DATABASES'], icon: 'po-icon-database', link: './database'
+        }, {
+          label: this._translateService.CNST_TRANSLATIONS['MENU.SCHEDULES'], icon: 'po-icon-clock', link: './schedule'
+        }, {
+          label: this._translateService.CNST_TRANSLATIONS['MENU.QUERIES'], icon: 'po-icon-filter', link: './query'
+        }, {
+          label: this._translateService.CNST_TRANSLATIONS['MENU.SCRIPTS'], icon: 'po-icon-filter', link: './script'
+        }, {
+          label: this._translateService.CNST_TRANSLATIONS['MENU.MONITOR'], icon: 'po-icon-device-desktop', link: './monitor'
+        }, {
           label: this._translateService.CNST_TRANSLATIONS['MENU.CONFIGURATION'],
           icon: 'po-icon-settings',
           link: './configuration'
-        },{
-          label: this._translateService.CNST_TRANSLATIONS['MENU.EXIT'],
-          icon: 'po-icon-exit',
-          action: () => {
-            this.modal_closeAgentInterface.open();
-          }
         }
       ];
+
+      //Caso o agent esteja na instância espelhada, não pode existir um segundo acesso remoto.
+      if (this.mirrorMode != 2) this.menus.push({
+        label: this._translateService.CNST_TRANSLATIONS['MENU.REMOTE'],
+        icon: 'po-icon-link',
+        action: () => { this.modal_mirrorMode.open(); }
+      });
+
+      //Opção de fechamento do Agent no menu.
+      this.menus.push({
+        label: this._translateService.CNST_TRANSLATIONS['MENU.EXIT'],
+        icon: 'po-icon-exit',
+        action: () => {
+          this.modal_closeAgentInterface.open();
+        }
+      });
       
     //Tradução do menu do Agent, caso a instalação não tenha sido validada
     } else {
@@ -213,31 +241,51 @@ export class AppComponent {
           action: () => {
             this.modal_registerAgent.open();
           }
-        },{
-          label: this._translateService.CNST_TRANSLATIONS['MENU.EXIT'],
-          icon: 'po-icon-exit',
-          action: () => {
-            this.modal_closeAgentInterface.open();
-          }
         }
       ];
+
+      //Caso o agent esteja na instância espelhada, não pode existir um segundo acesso remoto.
+      if (this.mirrorMode != 2) this.menus.push({
+        label: this._translateService.CNST_TRANSLATIONS['MENU.REMOTE'],
+        icon: 'po-icon-link',
+        action: () => { this.modal_mirrorMode.open(); }
+      });
+
+      //Opção de fechamento do Agent no menu.
+      this.menus.push({
+        label: this._translateService.CNST_TRANSLATIONS['MENU.EXIT'],
+        icon: 'po-icon-exit',
+        action: () => {
+          this.modal_closeAgentInterface.open();
+        }
+      });
     }
     
     //Tradução dos modais do menu (Título / botões)
     this.lbl_closeAgentInterfaceTitle = this._translateService.CNST_TRANSLATIONS['ANGULAR.SYSTEM_EXIT'];
     this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
     this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
-    
+
+    //Tradução das mensagens do canal de suporte da TOTVS
+    this.lbl_supportHelp = this._translateService.CNST_TRANSLATIONS['SUPPORT_TICKET.HELP'];
+    this.lbl_supportGroup1 = this._translateService.CNST_TRANSLATIONS['SUPPORT_TICKET.GROUP_1'];
+    this.lbl_supportGroup2 = this._translateService.CNST_TRANSLATIONS['SUPPORT_TICKET.GROUP_2'];
+    this.lbl_supportGroup3 = this._translateService.CNST_TRANSLATIONS['SUPPORT_TICKET.GROUP_3'];
+    this.lbl_supportLink = this._translateService.CNST_TRANSLATIONS['SUPPORT_TICKET.LINK'];
+
     //Tradução do modal de ativação da instalação do Agent
     this.lbl_registerAgentTitle = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_TITLE'];
-    this.lbl_registerAgentDescription1 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_1'];
-    this.lbl_registerAgentDescription2 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_2'];
-    this.lbl_registerAgentDescription3 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_3'];
-    this.lbl_registerAgentDescription4 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_4'];
-    this.lbl_registerAgentDescription5 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_5'];
-    this.lbl_registerAgentDescription6 = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION_6'];
+    this.lbl_registerAgentDescription = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_DESCRIPTION'];
     this.lbl_registerAgentField = this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_FIELD'];
-    
+
+    //Tradução do modal de acesso remoto do Agent
+    this.lbl_mirrorModeTitle = this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MODAL.TITLE'];
+    this.lbl_mirrorModeDescription1 = this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MODAL.DESCRIPTION_1'];
+    this.lbl_mirrorModeDescription2 = this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MODAL.DESCRIPTION_2'];
+    this.lbl_mirrorModeField = this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MODAL.FIELD'];
+    this.lbl_mirrorModeProceed = this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MODAL.BUTTONS.PROCEED'];
+    this.lbl_mirrorModeCancel = this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MODAL.BUTTONS.CANCEL'];
+
     //Tradução do modal de atualização
     this.lbl_updateAgentTitle = this._translateService.CNST_TRANSLATIONS['ELECTRON.UPDATE_READY_TITLE'];
     this.lbl_updateAgentDescription = this._translateService.CNST_TRANSLATIONS['ELECTRON.UPDATE_READY_DESCRIPTION'];
@@ -318,6 +366,38 @@ export class AppComponent {
           
           this.modal_registerAgent.open();
           if (this.mirrorMode != 1) this.po_lo_text = { value: null };
+        }
+      });
+    } else {
+      this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_WARNING'], null);
+    }
+  }
+
+  /* Modal de ativação do acesso remoto do Agent (NAO) */
+  protected mirrorMode_NO(): void {
+    this.modal_mirrorMode.close();
+    this.mirrorModeAgentCode = null;
+  }
+
+  /* Modal de ativação do acesso remoto do Agent (SIM) */
+  protected mirrorMode_YES(): void {
+    if (this._electronService.isElectronApp) {
+      this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
+        if (conf.serialNumber == this.mirrorModeAgentCode) {
+          if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.WAIT'] };
+          this.modal_mirrorMode.close();
+          this._electronService.ipcRenderer.invoke('AC_requestRemoteAccess', [this.mirrorModeAgentCode]).then((res: number) => {
+            if (res != 1) {
+              this._translateService.getTranslations([
+                new TranslationInput('MIRROR_MODE.MESSAGES.LOADING_ERROR', [this.mirrorModeAgentCode])
+              ]).subscribe((translations: any) => {
+                this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['MIRROR_MODE.MESSAGES.LOADING_ERROR'], null);
+                if (this.mirrorMode != 1) this.po_lo_text = { value: null };
+              });
+            }
+          });
+        } else {
+          this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.WARNING_SAME_AGENT'], null);
         }
       });
     } else {

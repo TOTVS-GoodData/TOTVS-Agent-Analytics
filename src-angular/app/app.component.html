@@ -51,33 +51,30 @@
       
       <!-- Mensagens sobre a ativação do Agent -->
       <div class="po-row padding-bottom">
-        <span class="subtitle">{{ lbl_registerAgentDescription1 }}</span>
-        <span class="subtitle">{{ lbl_registerAgentDescription2 }}</span>
+        <span class="subtitle">{{ lbl_registerAgentDescription }}</span>
+        <span class="subtitle">{{ lbl_supportHelp }}</span>
       </div>
       
       <!-- Agrupadores p/ abertura de chamado -->
       <div class="po-row padding-bottom">
         <ul class="padding-list subtitle">
-          <li>{{ lbl_registerAgentDescription3 }}</li>
-          <li>{{ lbl_registerAgentDescription4 }}</li>
-          <li>{{ lbl_registerAgentDescription5 }}</li>
+          <li>{{ lbl_supportGroup1 }}</li>
+          <li>{{ lbl_supportGroup2 }}</li>
+          <li>{{ lbl_supportGroup3 }}</li>
         </ul>
       </div>
       
       <!-- Link p/ abertura de chamado -->
       <div class="po-row padding-bottom">
-         <span class="subtitle">{{ lbl_registerAgentDescription6 }}</span>
-        <po-link
-          p-label="https://centraldeatendimento.totvs.com/hc/pt-br/requests/new?ticket_form_id=368847"
+        <span class="subtitle">{{ lbl_supportLink }}</span>
+        <po-link p-label="https://centraldeatendimento.totvs.com/hc/pt-br/requests/new?ticket_form_id=368847"
           [p-open-new-tab]="true"
-          p-url="https://centraldeatendimento.totvs.com/hc/pt-br/requests/new?ticket_form_id=368847"
-        />
+          p-url="https://centraldeatendimento.totvs.com/hc/pt-br/requests/new?ticket_form_id=368847" />
       </div>
       
       <!-- Código de ativação do Agent -->
       <div class="po-row">
-        <po-input
-          name="po_registerAgent"
+        <po-input name="po_registerAgent"
           class="form-control po-md-12"
           [p-label]="lbl_registerAgentField"
           p-required="true"
@@ -88,6 +85,51 @@
     <po-modal-footer>
       <po-button [p-label]="lbl_goBack" (p-click)="registerAgent_NO()"></po-button>
       <po-button [p-label]="lbl_confirm" (p-click)="registerAgent_YES()" p-kind="primary" [p-disabled]="!registerAgentForm.valid"></po-button>
+    </po-modal-footer>
+  </po-modal>
+  
+  <!-- Modal de registro desta instalação do Agent -->
+  <po-modal #modal_mirrorMode
+    [p-title]="lbl_mirrorModeTitle">
+    <form #mirrorModeForm="ngForm">
+      
+      <!-- Mensagens sobre a ativação do Agent -->
+      <div class="po-row padding-bottom">
+        <span class="subtitle">{{ lbl_mirrorModeDescription1 }}</span>
+        <span class="subtitle">{{ lbl_mirrorModeDescription2 }}</span>
+        <span class="subtitle">{{ lbl_supportHelp }}</span>
+      </div>
+      
+      <!-- Agrupadores p/ abertura de chamado -->
+      <div class="po-row padding-bottom">
+        <ul class="padding-list subtitle">
+          <li>{{ lbl_supportGroup1 }}</li>
+          <li>{{ lbl_supportGroup2 }}</li>
+          <li>{{ lbl_supportGroup3 }}</li>
+        </ul>
+      </div>
+      
+      <!-- Link p/ abertura de chamado -->
+      <div class="po-row padding-bottom">
+        <span class="subtitle">{{ lbl_supportLink }}</span>
+        <po-link p-label="https://centraldeatendimento.totvs.com/hc/pt-br/requests/new?ticket_form_id=368847"
+          [p-open-new-tab]="true"
+          p-url="https://centraldeatendimento.totvs.com/hc/pt-br/requests/new?ticket_form_id=368847" />
+      </div>
+      
+      <!-- Código de ativação do Agent -->
+      <div class="po-row">
+        <po-input name="po_mirrorMode"
+          class="form-control po-md-12"
+          [p-label]="lbl_mirrorModeField"
+          p-required="true"
+          [(ngModel)]="mirrorModeAgentCode"
+          (keydown.enter)="enterPassword($event)" />
+      </div>
+    </form>
+    <po-modal-footer>
+      <po-button [p-label]="lbl_mirrorModeCancel" (p-click)="mirrorMode_NO()"></po-button>
+      <po-button [p-label]="lbl_mirrorModeProceed" (p-click)="mirrorMode_YES()" p-kind="primary" [p-disabled]="!mirrorModeForm.valid"></po-button>
     </po-modal-footer>
   </po-modal>
   

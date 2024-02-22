@@ -18,6 +18,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     TRAY_FINISH_PROCESS: 'Encerrar processo',
     FOLDER_SELECT: 'Selecione o diretório',
     FILE_SELECT_DRIVER: 'Selecione o arquivo JDBC do driver',
+    DATABASE_MIRROR: 'Utilizando banco da instância espelhada.',
     DATABASE_DEVELOPMENT: 'Utilizando banco de desenvolvimento.',
     DATABASE_PRODUCTION: 'Utilizando banco de produção.',
     DATABASE_CREATE: 'Nova instalação detectada. Criando novo banco vazio.',
@@ -73,14 +74,51 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       }
     }
   },
+  SUPPORT_TICKET: {
+    HELP: 'Caso precise de apoio, abra um chamado para a equipe de suporte da TOTVS, informando os seguintes agrupadores no formulário:',
+    GROUP_1: 'Macrossegmento -> Cross Segmentos',
+    GROUP_2: 'Produto -> Analytics By GoodData',
+    GROUP_3: 'ABC -> 123',
+    LINK: 'Link:'
+  },
   MIRROR_MODE: {
-    TITLE: 'MODO ESPELHO ATIVADO - Todas as alterações feitas neste Agent serão automaticamente replicadados ao Agent remoto [${p1}]',
-    ONLINE: 'Aviso - Acesso remoto ativado pelo servidor central da TOTVS. Este Agent está agora bloqueado até o término do mesmo.',
-    OFFLINE: 'Acesso remoto finalizado. O Agent está disponível para uso novamente.',
-    RUNNING: 'Acesso remoto em execução',
-    SERVER_SYNC: 'Solicitando sincronização com a instância remota do Agent...',
-    SERVER_SYNC_OK: 'Sincronização bem sucedida. Todas as configurações foram atualizadas no Agent remoto.',
-    SERVER_SYNC_ERROR: 'Erro - Falha na sincronização do Agent remoto. A instância espelhada não efetuou nenhuma alteração no mesmo.'
+    MODAL: {
+      TITLE: 'Acesso remoto do Agent',
+      DESCRIPTION_1: 'ATENÇÃO - O acesso remoto irá bloquear o uso manual do Agent pelo cliente até a finalização do mesmo, via comando de \'Sair\' da própria interface. Além disso, quaisquer alterações nas configurações do Agent serão, automaticamente, sincronizadas com a instalação remota do mesmo.',
+      DESCRIPTION_2: 'Caso esteja de acordo com o descrito acima, informe abaixo o código de contratação do GoodData, informado pela TOTVS.',
+      FIELD: 'Código de contratação',
+      BUTTONS: {
+        PROCEED: 'Seguir com o acesso remoto',
+        CANCEL: 'Cancelar acesso'
+      }
+    },
+    MESSAGES: {
+      TITLE: 'MODO ESPELHO ATIVADO - Todas as alterações feitas neste Agent serão automaticamente replicadados ao Agent remoto [${p1}]',
+      ONLINE: 'Aviso - Acesso remoto ativado pelo servidor central da TOTVS. Este Agent está agora bloqueado até o término do mesmo.',
+      OFFLINE: 'Acesso remoto finalizado. O Agent está disponível para uso novamente.',
+      RUNNING: 'Acesso remoto em execução',
+      WAIT: 'Aguarde...',
+      WARNING: 'Aviso - Acesso remoto não pode ser testado sem o Electron.',
+      WARNING_SAME_AGENT: 'Aviso - Acesso remoto não é permitido para o mesmo Agent de origem.',
+      LOADING: '========== INICIANDO MIRRORMODE [${p1}] ==========',
+      LOADING_OK: '========== MIRRORMODE ATIVADO [${p1}] ==========',
+      LOADING_ERROR: 'Erro - Falha na inicialização do protocolo \'mirrorMode\' do Agent [${p1}]',
+      SHUTDOWN: '========== DESATIVANDO MIRRORMODE [${p1}] ==========',
+      SHUTDOWN_OK: '========== MIRRORMODE DESATIVADO [${p1}] ==========',
+      SHUTDOWN_ERROR: 'Erro - Falha no desligamento do protocolo \'mirrorMode\ do Agent [${p1}]',
+      SYNCHRONIZE_LOGS: 'Sincronizando arquivos de log do Agent remoto...',
+      SYNCHRONIZE_LOGS_OK: 'Sincronização dos arquivos de log concluído com sucesso.',
+      SYNCHRONIZE_DB: 'Sincronizando configurações do Agent remoto...',
+      SYNCHRONIZE_DB_OK: 'Sincronização das configurações concluído com sucesso.',
+      REDIRECT_REQUEST: 'Redirecionando solicitação \'${p1}\' para o Agent remoto [${p2}]',
+      REDIRECT_REQUEST_OK: 'Solicitação \'${p1}\' redirecionada com sucesso.',
+      REDIRECT_REQUEST_ERROR: 'Error - Falha no redirecionamento da requisição \'${p1}\' para o Agent remoto.',
+      SERVER_SYNC: 'Solicitando sincronização com a instância remota do Agent...',
+      SERVER_SYNC_OK: 'Sincronização bem sucedida. Todas as configurações foram atualizadas no Agent remoto.',
+      SERVER_SYNC_ERROR: 'Erro - Falha na sincronização do Agent remoto. A instância espelhada não efetuou nenhuma alteração no mesmo.',
+      SERVER_PING_WARNING: 'Atenção - A comunicação com o servidor falhou (${p1}/${p2}). Vamos tentar novamente em 1 minuto...',
+      SERVER_PING_ERROR: 'Erro - Comunicação com o servidor foi perdida. Acesso remoto abortado.'
+    }
   },
   ANGULAR: {
     SYSTEM_EXIT: 'Tem certeza que deseja sair do Agent?',
@@ -90,14 +128,9 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     OTHER: 'Outro',
     NONE: 'Nenhum',
     REGISTER_AGENT_TITLE: 'Ativação da instalação',
-    REGISTER_AGENT_DESCRIPTION_1: 'Informe abaixo o código de contratação do GoodData, informado pela TOTVS.',
-    REGISTER_AGENT_DESCRIPTION_2: 'Caso não conheça este código, abra um chamado para a equipe de suporte da TOTVS, informando os seguintes agrupadores no formulário:',
-    REGISTER_AGENT_DESCRIPTION_3: 'Macrossegmento -> Cross Segmentos',
-    REGISTER_AGENT_DESCRIPTION_4: 'Produto -> Analytics By GoodData',
-    REGISTER_AGENT_DESCRIPTION_5: 'ABC -> 123',
-    REGISTER_AGENT_DESCRIPTION_6: 'Link:',
+    REGISTER_AGENT_DESCRIPTION: 'Informe abaixo o código de contratação do GoodData, informado pela TOTVS.',
     REGISTER_AGENT: 'Ativando licença...',
-    REGISTER_AGENT_FIELD: 'Código de verificação',
+    REGISTER_AGENT_FIELD: 'Código de contratação',
     REGISTER_AGENT_OK: 'Licença ativada com sucesso. O Agent está disponível para uso.',
     REGISTER_AGENT_ERROR: 'Erro - Falha na ativação da licença do Agent. Por favor tente novamente.',
     REGISTER_AGENT_WARNING: 'Aviso - Ativação da instalação do Agent não pode ser testada sem o Electron.'
@@ -145,6 +178,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     MONITOR: 'Monitor',
     CONFIGURATION: 'Configurações',
     ACTIVATION: 'Ativação',
+    REMOTE: 'Acesso remoto',
     EXIT: 'Sair'
   },
   LANGUAGES: {

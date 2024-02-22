@@ -112,9 +112,12 @@ export default class Main {
   //Define se os agendamentos configurados no Agent devem ser automaticamente checados, e disparados
   private static triggerSchedules: boolean = true;
   
-  //Define se esta instância do Agent está sendo executada pelo MirrorMode (Agent-Server)
+  //Define se esta instância do Agent está sendo executada pelo MirrorMode
   private static mirrorMode: number = 0;
-  
+
+  //Define se esta instância do Agent está controlando outro Agent-Client
+  private static remoteAccess: boolean = false;
+
   /*********************************/
   /******* MÉTODOS DO MÓDULO  ******/
   /*********************************/
@@ -127,7 +130,17 @@ export default class Main {
   public static setMirrorMode(mirror: number): void {
     Main.mirrorMode = mirror;
   }
-  
+
+  /* Método de consulta do acesso Client p/ Client */
+  public static getRemoteAccess(): boolean {
+    return Main.remoteAccess;
+  }
+
+  /* Método de ativação do acesso Client p/ Client */
+  public static setRemoteAccess(remoteAccess: boolean): void {
+    Main.remoteAccess = remoteAccess;
+  }
+
   /* Método de atualização das preferências vinculadas ao acesso remoto (MirrorMode) */
   public static updateDeactivationPreferrences(): void {
     if (Main.mainWindow != null) Main.mainWindow.webContents.send('AC_deactivateAgent', null);
@@ -166,7 +179,6 @@ export default class Main {
                     Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.SERVER_PING_WARNING'], null, null, null);
                   }
                 }
-                
               });
             }
             i = i + 1;
@@ -298,7 +310,7 @@ export default class Main {
       ]);
       
       //Atualiza o registro do Windows com a chave de atualização pendente
-      if (process.platform == 'win32') res = Main.setWindowsAutoUpdateRegistry(1);
+      if ((process.platform == 'win32') && (TOTVS_Agent_Analytics.isProduction())) res = Main.setWindowsAutoUpdateRegistry(1);
       
       //Força a renderização da interface do Agent
       if (res) {
@@ -367,6 +379,7 @@ export default class Main {
     ipcMain.removeHandler('AC_getLatestETLParameters');
     ipcMain.removeHandler('AC_getLatestSQLParameters');
     ipcMain.removeAllListeners('AC_getMirrorMode');
+    ipcMain.removeHandler('AC_requestRemoteAccess');
   }
   
   /* Método que define os eventos de comunicação com o Angular (Interface) */
@@ -814,6 +827,25 @@ export default class Main {
       event.returnValue = Main.getMirrorMode();
       return Main.getMirrorMode();
     });
+
+    //Acesso remoto do Agent client p/ outro client
+    ipcMain.handle('AC_requestRemoteAccess', (event: IpcMainEvent, agentCode: string) => {
+      return lastValueFrom(ServerService.requestRemoteAccess(agentCode).pipe(map((res: boolean) => {
+        if (res) {
+          Main.willClose();
+
+          //Espera 3 segundos para os eventos de fechamento da interface sejam encerrados
+          setTimeout(() => {
+            Main.setRemoteAccess(true);
+            Main.setMirrorMode(2);
+            Files.initApplicationData(true, 'pt-BR');
+            Main.createWindowObject();
+          }, 1000);
+        }
+
+        return res;
+      })));
+    });
   }
   
   /* Método de envio de mensagens ao usuário */
@@ -949,7 +981,7 @@ export default class Main {
     Main.setMirrorMode(mirrorMode);
     
     if (Main.getMirrorMode() != 2) Main.application.disableHardwareAcceleration();
-    
+
     //Inicialização do serviço de tradução
     TranslationService.init();
     TranslationService.updateStandardTranslations();
@@ -1012,7 +1044,7 @@ export default class Main {
       TranslationService.use((configuration.locale));
       
       //Atualização do registro do Windows p/ atualização automática (false)
-      if ((process.platform == 'win32') && (Main.getMirrorMode() != 2)) Main.setWindowsAutoUpdateRegistry(0);
+      if ((process.platform == 'win32') && (Main.getMirrorMode() != 2) && (TOTVS_Agent_Analytics.isProduction())) Main.setWindowsAutoUpdateRegistry(0);
       
       //Configuração da atualização automática do Agent
       if (Main.getMirrorMode() != 2) Main.setAutoUpdaterPreferences();
@@ -1028,7 +1060,7 @@ export default class Main {
           Main.setIpcListeners();
           
           //Configuração da inicialização automática do Agent, ao ligar o computador
-          if (Main.getMirrorMode() != 2) Main.setAutoLaunchOptions();
+          if ((Main.getMirrorMode() != 2) && (TOTVS_Agent_Analytics.isProduction())) Main.setAutoLaunchOptions();
           
           //Configuração do menu minimizado do Agent (Tray)
           if (Main.getMirrorMode() != 2) Main.updateTrayMenu();
@@ -1120,37 +1152,48 @@ export default class Main {
   
   /* Método de desligamento completo do Agent (Solicitado pelo Tray) */
   private static terminateApplication(): void {
-    
-    //Remove todos os eventos de comunicação do Electron criados por esta instância do Agent
-    Main.removeIpcListeners();
-    
-    //Interrompe o temporizador do Agent
-    clearInterval(Main.timerRefId);
-    
-    //Desliga todos os processos do Java atualmente em execução
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL'], null, null, null);
-    Execute.killAllProcesses();
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL_OK'], null, null, null);
-    
-    //Envia as alterações feitas na instância espelhada, para o Agent-Server
     ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
+
+      //Verifica se este instância espelhada foi ativada pelo próprio Agent-Client
+      if (!Main.getRemoteAccess()) {
+
+        //Remove todos os eventos de comunicação do Electron criados por esta instância do Agent
+        Main.removeIpcListeners();
+
+        //Interrompe o temporizador do Agent
+        clearInterval(Main.timerRefId);
+        
+        //Desliga todos os processos do Java atualmente em execução
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL'], null, null, null);
+        Execute.killAllProcesses();
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL_OK'], null, null, null);
+      }
+
+      //Envia as alterações feitas na instância espelhada, para o Agent-Server
       if (Main.getMirrorMode() == 2) {
         let translations: any = TranslationService.getTranslations([
-          new TranslationInput('MIRROR_MODE.SERVER_SYNC', [conf.instanceName]),
-          new TranslationInput('MIRROR_MODE.SERVER_SYNC_ERROR', [conf.instanceName])
+          new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_SYNC', [conf.instanceName]),
+          new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR', [conf.instanceName])
         ]);
         
-        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.SERVER_SYNC'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.MESSAGES.SERVER_SYNC'], null, null, null);
         
         //Leitura do arquivo de configuração da instância espelhada do Agent
         Files.readApplicationData().subscribe((db: ClientData) => {
-          
+          Main.setMirrorMode(0);
+          Files.initApplicationData(true, 'pt-BR');
+
           //Solicitação de sincronização com o Agent remoto
           ServerService.deactivateMirrorMode(db).subscribe((b: boolean) => {
-            if (b) Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.SERVER_SYNC_OK'], null, null, null);
-            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.SERVER_SYNC_ERROR'], null, null, null);
+            if (b) Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.SERVER_SYNC_OK'], null, null, null);
+            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR'], null, null, null);
             
-            Main.terminateElectron();
+            if (Main.getRemoteAccess()) {
+              Main.setRemoteAccess(false);
+              Main.createWindowObject();
+            } else {
+              Main.terminateElectron();
+            }
           });
         });
       } else {
@@ -1162,7 +1205,10 @@ export default class Main {
   /* Método de desligamento do Electron */
   private static terminateElectron(): void {
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_FINISH'], null, null, null);
+
+    //Encerramento dos canais de log
+    Files.terminateLogStreams();
+
     if ((process.platform !== 'darwin') && (Main.getMirrorMode() != 2)) Main.application.quit();
   }
 }
-

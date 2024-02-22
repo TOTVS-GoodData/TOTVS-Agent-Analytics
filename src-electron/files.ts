@@ -40,6 +40,8 @@ import { CNST_LOGLEVEL, CNST_SYSTEMLEVEL } from '../src-angular/app/utilities/ut
 import {
   CNST_AGENT_CLIENT_DATABASE_NAME,
   CNST_AGENT_CLIENT_DATABASE_NAME_DEV,
+  CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR,
+  CNST_REMOTE_LOGS_PATH,
   CNST_LOGS_PATH,
   CNST_TMP_PATH,
   CNST_LOGS_REGEX,
@@ -312,6 +314,15 @@ export class Files {
     Caso não exista banco, é criado um com as configurações iniciais padrões.
   */
   public static initApplicationData(showLogs: boolean, language: string): void {
+
+    //Apaga os arquivos temporários de logs / configuração do acesso remoto
+    if (Main.getMirrorMode() != 2) {
+      fs.emptyDirSync(CNST_REMOTE_LOGS_PATH());
+      if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR())) fs.removeSync(CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR());
+    }
+
+    //Encerramento dos canais de logs anteriores (caso existam)
+    Files.terminateLogStreams();
     
     //Inicializa o canal de log p/ mensagens de debug / info
     Files.loggerJSON = winston.createLogger({
@@ -331,11 +342,11 @@ export class Files {
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          filename: CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
+          filename: (Main.getMirrorMode() != 2 ? CNST_LOGS_PATH() : CNST_REMOTE_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
         })
       ]
     });
-    
+
     //Inicializa o canal de log p/ mensagens de erro
     Files.loggerTEXT = winston.createLogger({
       level: 'error',
@@ -345,13 +356,18 @@ export class Files {
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          filename: CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
+          filename: (Main.getMirrorMode() != 2 ? CNST_LOGS_PATH() : CNST_REMOTE_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
         })
       ]
     });
     
-    //Verifica se existe um banco de testes/desenv. no diretório de dados do Agent
-    if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME_DEV())) {
+    //Verifica se existe um banco da instância espelhada no diretório de dados do Agent
+    if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR())) {
+        Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR();
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_MIRROR'], null, null, null);
+
+    //Caso não exista, verifica se existe um banco de testes/desenv no mesmo diretório
+    } else if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME_DEV())) {
       Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME_DEV();
       if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_DEVELOPMENT'], null, null, null);
       
@@ -383,7 +399,13 @@ export class Files {
       fs.mkdirSync(CNST_TMP_PATH());
     }
   }
-  
+
+  /* Método de encerramento dos canais de logs */
+  public static terminateLogStreams(): void {
+    if (Files.loggerJSON) Files.loggerJSON.end();
+    if (Files.loggerTEXT) Files.loggerTEXT.end();
+  }
+
   /* Método de leitura do banco do Agent */
   public static readApplicationData(): Observable<ClientData> {
     return from(fs.readJson(Files.filepath)).pipe(map((data: ClientData) => {
@@ -424,7 +446,42 @@ export class Files {
       return true;
     }));
   }
-  
+
+  /* Método de escrita do banco do Agent */
+  public static writeMirrorData(db: ClientData): Observable<boolean> {
+    return from(fs.writeJson(
+      CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR(),
+      db,
+      {
+        spaces: CNST_LOGS_SPACING,
+        'EOL': CNST_OS_LINEBREAK()
+      }
+    )).pipe(map((r: any) => {
+      return true;
+    }));
+  }
+
+  /*
+    Método de escrita dos arquivos de log de um Agent remoto
+    Caso não exista arquivo de log, é criado um novo.
+  */
+  public static writeRemoteLogData(lines: string[]): void {
+    
+    //Apaga todos os arquivos de log existentes no diretório
+    fs.emptyDirSync(CNST_REMOTE_LOGS_PATH());
+
+    //Cria um novo arquivo de log
+    let logfile: string = CNST_REMOTE_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION;
+
+    //Realiza a escrita de todo o log recebido no arquivo
+    let stream: any = fs.createWriteStream(logfile, { flags: 'a' });
+    lines.map((line: string) => {
+      stream.write(line + CNST_OS_LINEBREAK());
+    });
+
+    stream.end();
+  }
+
   /* Método de seleção de um diretório da máquina do usuário */
   public static getFolder(b: any): Observable<string> {
     return from(dialog.showOpenDialog(b, {

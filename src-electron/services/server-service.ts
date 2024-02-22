@@ -112,6 +112,7 @@ export class ServerService {
   
   //Armazena o código serial deste Agent, enquanto a desativação está em andamento.
   private static deactivatedSerialNumber: string = null;
+
   /**************************/
   /*** MÉTODOS DO SERVIÇO ***/
   /**************************/
@@ -211,7 +212,21 @@ export class ServerService {
                   return ServerService.sendResponseToServer(socket, 'publishAgentData', res);
                 }));
                 break;
-                
+
+              //Comando de escrita do arquivo de configuração do Agent, para o acesso remoto (Client p/ Client)
+              case 'publishAgentDataAsMirror':
+                return ServerService.publishAgentDataAsMirror(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'publishAgentDataAsMirror', res);
+                }));
+                break;
+
+              //Comando de escrita do arquivos de log do Agent, para o acesso remoto (Client p/ Client)
+              case 'publishAgentLogsAsMirror':
+                return ServerService.publishAgentLogsAsMirror(command).pipe(switchMap((res: responseObj) => {
+                  return ServerService.sendResponseToServer(socket, 'publishAgentLogsAsMirror', res);
+                }));
+                break;
+
               //Comando de teste de conexão ao banco de dados do Agent (Teste Local / Disparo Remoto)
               case 'requestDatabaseConnectionTest':
                 return ServerService.requestDatabaseConnectionTest(command).pipe(switchMap((res: responseObj) => {
@@ -246,7 +261,7 @@ export class ServerService {
       
       //Configuração do evento disparado ao terminar a conexão com o Agent-Server
       socket.on('close', () => {
-        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null);
       });
     });
     
@@ -399,6 +414,7 @@ export class ServerService {
       
       //Tratamento de erros na comunicação do socket com o Agent-Server
       socket.on('error', (err: any) => {
+        console.log(err);
         hasErrors = true;
         subscriber.next(null);
         subscriber.complete();
@@ -1045,7 +1061,27 @@ export class ServerService {
       }));
     }));
   }
-  
+
+  /* Método de acesso remoto ao Agent (Client p/ Client) */
+  public static requestRemoteAccess(inputBuffer: string): Observable<boolean> {
+
+    //Prepara a palavra de comando a ser enviada, com criptografia
+    return ServerService.prepareCommandWord('requestRemoteAccess', null, [inputBuffer]).pipe(switchMap((buffer: string) => {
+
+      //Envia o comando para o servidor da TOTVS, e processa a resposta
+      //(HOF - Higher Order Function)
+      return ServerService.sendCommandToServer(
+        buffer,
+        'requestRemoteAccess',
+        (response: ServerCommunication) => {
+          return of(response);
+        }
+      ).pipe(map((res: ServerCommunication) => {
+        return Boolean(res.args[0]);
+      }));
+    }));
+  }
+
   /****************************************/
   /*** Recebimento de mensagens (INPUT) ***/
   /****************************************/
@@ -1095,7 +1131,21 @@ export class ServerService {
       return new responseObj([(b ? 1 : 0)], null);
     }));
   }
-  
+
+  /* Método de escrita do arquivo de configuração do agent, para o acesso remoto (Client p/ Client) */
+  private static publishAgentDataAsMirror(command: ServerCommunication): Observable<responseObj> {
+    let db: ClientData = Object.assign(new ClientData(), command.args[0]);
+    return Files.writeMirrorData(db).pipe(map((b: boolean) => {
+      return new responseObj([(b ? 1 : 0)], null);
+    }));
+  }
+
+  /* Método de escrita do arquivo de configuração do agent, para o acesso remoto (Client p/ Client) */
+  private static publishAgentLogsAsMirror(command: ServerCommunication): Observable<responseObj> {
+    Files.writeRemoteLogData(command.args);
+    return of(new responseObj([true], null));
+  }
+
   /* Método de teste de conexão ao banco de dados do Agent (Teste Local / Disparo Remoto) */
   private static requestDatabaseConnectionTest(command: ServerCommunication): Observable<responseObj> {
     return from(DatabaseService.testDatabaseConnectionLocally(command.args[0])).pipe(map((res: number) => {

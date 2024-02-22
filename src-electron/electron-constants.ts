@@ -33,11 +33,13 @@ export const CNST_TMP_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRo
 export const CNST_I18N_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'i18n');
 export const CNST_AGENT_CLIENT_DATABASE_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'assets');
 export const CNST_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'logs');
+export const CNST_REMOTE_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'remote');
 export const CNST_JAVA_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'java');
 
 /* Caminho completo dos arquivos de cadastros do Agent (Produção / Desenv.) */
 export const CNST_AGENT_CLIENT_DATABASE_NAME = (): string => path.join(CNST_AGENT_CLIENT_DATABASE_PATH(), 'db.json');
 export const CNST_AGENT_CLIENT_DATABASE_NAME_DEV = (): string => path.join(CNST_AGENT_CLIENT_DATABASE_PATH(), 'dbDevelopment.json');
+export const CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR = (): string => path.join(CNST_AGENT_CLIENT_DATABASE_PATH(), 'dbMirror.json');
 
 /* Nome das classes do Java, usadas para definir o ponto de entrada do Java */
 export const CNST_JAVA_CLASS_TESTCONNECTION: string = 'com.gooddata.agent.util.TestDatabaseConnection';

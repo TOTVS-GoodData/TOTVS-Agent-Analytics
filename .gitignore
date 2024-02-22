@@ -3,8 +3,10 @@ release-builds/
 dist/
 logs/
 tmp/
+remote/
 assets/db.json
 assets/dbDevelopment.json
+assets/dbMirror.json
 .angular
 .vs
 src-electron/encryption/keys/agent.rsa.public

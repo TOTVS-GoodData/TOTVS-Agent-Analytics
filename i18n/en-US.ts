@@ -18,6 +18,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     TRAY_FINISH_PROCESS: 'Finish process',
     FOLDER_SELECT: 'Please select the directory',
     FILE_SELECT_DRIVER: 'Please select the driver\'s JDBC file',
+    DATABASE_MIRROR: 'Using mirrorMode database.',
     DATABASE_DEVELOPMENT: 'Using development database.',
     DATABASE_PRODUCTION: 'Using production database.',
     DATABASE_CREATE: 'New installation detected. Creating new database.',
@@ -71,16 +72,51 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       }
     }
   },
+  SUPPORT_TICKET: {
+    HELP: 'If you need any assistance, please reach out to our support team, with the following options on the form:',
+    GROUP_1: 'Macrossegmento -> Cross Segmentos',
+    GROUP_2: 'Produto -> Analytics By GoodData',
+    GROUP_3: 'ABC -> 123',
+    LINK: 'Link:'
+  },
   MIRROR_MODE: {
-    TITLE: 'MIRROR MODE ACTIVATED - All changes to this Agent instance will be replicated to remote Agent [${p1}]',
-    ONLINE: 'Warning - Remote access triggered by TOTVS\'s central server. This Agent is now blocked until remote access end.',
-    OFFLINE: 'Remote access finished. Agent is ready to use again.',
-    RUNNING: 'Remote access in progress',
-    SERVER_SYNC: 'Requesting synchronization with Agent\'s remote instance...',
-    SERVER_SYNC_OK: 'Synchronization has been successfull. All updates were applied on remote Agent.',
-    SERVER_SYNC_ERROR: 'Error - Synchronization has failed. The mirrored instance couldn\'t apply any updates on remote Agent.',
-    SERVER_PING_WARNING: 'Warning - Server communication has failed (${p1}/${p2}). We\'ll try again in 1 minute...',
-    SERVER_PING_ERROR: 'Error - Server communication has failed. Remote access aborted.'
+    MODAL: {
+      TITLE: 'Agent\'s remote access',
+      DESCRIPTION_1: 'WARNING - Remote accessing will hold any manual interaction with Agent by the client until it\'s end, by the \'Exit\' menu option of Agent\'s interface. Also, any Agent changes will automatically be sync to it\'s remote counterpart.',
+      DESCRIPTION_2: 'If you agree with the above, please inform below GoodData\'s verification code, which was sent by TOTVS.',
+      FIELD: 'Verification code',
+      BUTTONS: {
+        PROCEED: 'Proceed with remote access',
+        CANCEL: 'Abort access'
+      },
+    },
+    MESSAGES: {
+      TITLE: 'MIRROR MODE ACTIVATED - All changes to this Agent instance will be replicated to remote Agent [${p1}]',
+      ONLINE: 'Warning - Remote access triggered by TOTVS\'s central server. This Agent is now blocked until remote access end.',
+      OFFLINE: 'Remote access finished. Agent is ready to use again.',
+      RUNNING: 'Remote access in progress',
+      WAIT: 'Please wait...',
+      WARNING: 'Warning - Remote access cannot be tested without Electron.',
+      WARNING_SAME_AGENT: 'Warning - Remote access cannot be executed to the same source Agent.',
+      LOADING: '========== ACTIVATING MIRRORMODE [${p1}] ==========',
+      LOADING_OK: '========== MIRRORMODE ACTIVATED [${p1}] ==========',
+      LOADING_ERROR: 'Error - \'mirrorMode\ protocol could not be established on Agent [${p1}]',
+      SHUTDOWN: '========== SHUTTING DOWN MIRRORMODE [${p1}] ==========',
+      SHUTDOWN_OK: '========== MIRRORMODE SHUTDOWN [${p1}] ==========',
+      SHUTDOWN_ERROR: 'Error - Couldn\'t shutdown \'mirrorMode\ protocol on Agent [${p1}]',
+      SYNCHRONIZE_LOGS: 'Syncing logfiles on remote Agent...',
+      SYNCHRONIZE_LOGS_OK: 'Logfile synchronization successfully finished.',
+      SYNCHRONIZE_DB: 'Syncing configuration file on remote Agent...',
+      SYNCHRONIZE_DB_OK: 'Configuration synchronization successfully finished.',
+      REDIRECT_REQUEST: 'Reirecting request \'${p1}\' to remote Agent [${p2}]',
+      REDIRECT_REQUEST_OK: 'Request \'${p1}\' successfully redirected.',
+      REDIRECT_REQUEST_ERROR: 'Error - Request \'${p1}\' couldn\'t be redirected to remote Agent.',
+      SERVER_SYNC: 'Requesting synchronization with Agent\'s remote instance...',
+      SERVER_SYNC_OK: 'Synchronization has been successfull. All updates were applied on remote Agent.',
+      SERVER_SYNC_ERROR: 'Error - Synchronization has failed. The mirrored instance couldn\'t apply any updates on remote Agent.',
+      SERVER_PING_WARNING: 'Warning - Server communication has failed (${p1}/${p2}). We\'ll try again in 1 minute...',
+      SERVER_PING_ERROR: 'Error - Server communication has failed. Remote access aborted.'
+    }
   },
   ANGULAR: {
     SYSTEM_EXIT: 'Are you sure you want to close Agent?',
@@ -90,12 +126,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     OTHER: 'Other',
     NONE: 'None',
     REGISTER_AGENT_TITLE: 'Installation activation',
-    REGISTER_AGENT_DESCRIPTION_1: 'Enter GoodData\'s verification code, which was sent by TOTVS.',
-    REGISTER_AGENT_DESCRIPTION_2: 'If you don\'t know this code, please open a support ticket for us, with the following options on the form:',
-    REGISTER_AGENT_DESCRIPTION_3: 'Macrossegmento -> Cross Segmentos',
-    REGISTER_AGENT_DESCRIPTION_4: 'Produto -> Analytics By GoodData',
-    REGISTER_AGENT_DESCRIPTION_5: 'ABC -> 123',
-    REGISTER_AGENT_DESCRIPTION_6: 'Link:',
+    REGISTER_AGENT_DESCRIPTION: 'Enter GoodData\'s verification code, which was sent by TOTVS.',
     REGISTER_AGENT: 'Registering license...',
     REGISTER_AGENT_FIELD: 'Verification code',
     REGISTER_AGENT_OK: 'License sucessfully activated. Agent is ready to use.',
@@ -187,6 +218,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     MONITOR: 'Monitor',
     CONFIGURATION: 'Settings',
     ACTIVATION: 'Activation',
+    REMOTE: 'Remote access',
     EXIT: 'Exit'
   },
   BUTTONS: {

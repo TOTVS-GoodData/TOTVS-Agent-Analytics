@@ -18,6 +18,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     TRAY_FINISH_PROCESS: 'Cerrar el proceso',
     FOLDER_SELECT: 'Selecciona el diretorio',
     FILE_SELECT_DRIVER: 'Selecciona el archivo JDBC del driver',
+    DATABASE_MIRROR: 'Utilizando banco espejo.',
     DATABASE_DEVELOPMENT: 'Utilizando banco de desarrollo.',
     DATABASE_PRODUCTION: 'Utilizando banco de produción.',
     DATABASE_CREATE: 'Nueva instalación detectada. Creando nuevo banco.',
@@ -32,7 +33,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     RUN_AGENT_ELEC_FINISH: 'Extración de los datos ha terminado. Resultado de la extración: ${p1}',
     PROCESS_KILL: 'Forzando la terminación imediata del proceso [Sch: ${p1} - Exec: ${p2}]...',
     PROCESS_KILL_OK: 'Proceso [Ag: ${p1} - Exec: ${p2}] finalizado con éxito',
-    PROCESS_KILL_WARN: 'Aviso - El proceso a ser finalizado [Hor: ${p1}, Exec: ${p2}] no esta en ejecución.',
+    PROCESS_KILL_WARN: 'Atención - El proceso a ser finalizado [Hor: ${p1}, Exec: ${p2}] no esta en ejecución.',
     PROCESS_KILL_ERROR: 'Error - No fue possible finalizar la ejecución del proceso [Hor: ${p1}, Exec: ${p2}].',
     PROCESS_KILL_ALL: 'Finalizando todos los procesos en ejecución...',
     PROCESS_KILL_ALL_OK: 'Procesos finalizados.',
@@ -71,36 +72,66 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       }
     }
   },
+  SUPPORT_TICKET: {
+    HELP: 'Si necesitas de ayuda, por favor entre en contacto con nuestro equipo de soporte, con las seguientes opciones en el formulario:',
+    GROUP_1: 'Macrossegmento -> Cross Segmentos',
+    GROUP_2: 'Produto -> Analytics By GoodData',
+    GROUP_3: 'ABC -> 123',
+    LINK: 'Link:'
+  },
   MIRROR_MODE: {
-    TITLE: 'MODO ESPEJO ACTIVADO - Todos los cambios en este Agent van a ser replicados hasta el Agent remoto [${p1}]',
-    ONLINE: 'Aviso - Acceso remoto activado por el servidor central del TOTVS. Ese Agent esta bloqueado ahora hasta la finalización del acceso.',
-    OFFLINE: 'Acceso remoto finalizado. El Agent esta listo para utilización.',
-    RUNNING: 'Acceso remoto em ejecución',
-    SERVER_SYNC: 'Solicitando sincronización con la instancia remota del Agent [${p1}]...',
-    SERVER_SYNC_OK: 'Sincronización hecha con éxito. Todas las actualizaciones fueron aplicadas en el Agent remoto.',
-    SERVER_SYNC_ERROR: 'Error - La sincronización del Agent [${p1}] ha fallado. La instancia espejo no pudiste cambiar ninguna configuración del Agent remoto.',
-    SERVER_PING_WARNING: 'Atención - La comunicación con el servidor ha fallado (${p1}/${p2}). Vamos a intentar otra vez en 1 minuto...',
-    SERVER_PING_ERROR: 'Error - Comunicación con el servidor perdida. Acceso remoto abortado.'
+    MODAL: {
+      TITLE: 'Acceso remoto del Agent',
+      DESCRIPTION_1: 'ATENCIÓN - El acceso remoto va bloquear la utilización del Agent por su cliente hasta su finalización, por el comando \'Salir\' de la interfaz. Además, cualquier cambio en las configuraciones del Agent van a ser, automaticamente, sincronizadas con la instalación remota del mismo.',
+      DESCRIPTION_2: 'Si esté seguro que quieres seguir con el acceso, por favor informe abajo el codigo de contratación del GoodData, informado por TOTVS',
+      FIELD: 'Codigo de contratación',
+      BUTTONS: {
+        PROCEED: 'Seguir con el acceso remoto',
+        CANCEL: 'Cancelar acceso'
+      },
+    },
+    MESSAGES: {
+      TITLE: 'MODO ESPEJO ACTIVADO - Todos los cambios en este Agent van a ser replicados hasta el Agent remoto [${p1}]',
+      ONLINE: 'Atención - Acceso remoto activado por el servidor central del TOTVS. Ese Agent esta bloqueado ahora hasta la finalización del acceso.',
+      OFFLINE: 'Acceso remoto finalizado. El Agent esta listo para utilización.',
+      RUNNING: 'Acceso remoto em ejecución',
+      WAIT: 'Aguarde...',
+      WARNING: 'Atención - Acceso remoto no puede ser probado sin el Electron.',
+      WARNING_SAME_AGENT: 'Atención - Acceso remoto no es permitido para el mismo Agent fuente.',
+      LOADING: '========== INICIANDO MIRRORMODE [${p1}] ==========',
+      LOADING_OK: '========== MIRRORMODE ACTIVADO [${p1}] ==========',
+      LOADING_ERROR: 'Error - La inicialización del protocolo \'mirrorMode\ de Agent [${p1}] ha fallado.',
+      SHUTDOWN: '========== CERRANDO MIRRORMODE [${p1}] ==========',
+      SHUTDOWN_OK: '========== MIRRORMODE CERRADO [${p1}] ==========',
+      SHUTDOWN_ERROR: 'Error - El cerre del protocolo \'mirrorMode\ del Agent [${p1}] ha fallado.',
+      SYNCHRONIZE_LOGS: 'Sincronizando archivos de log del Agent remoto...',
+      SYNCHRONIZE_LOGS_OK: 'Sincronización de los archivos de log hecho con éxito.',
+      SYNCHRONIZE_DB: 'Sincronizando configuraciones del Agent remoto...',
+      SYNCHRONIZE_DB_OK: 'Sincronización de las configuraciones hecha con éxito.',
+      REDIRECT_REQUEST: 'Redireccionando solicitud \'${p1}\' para el Agent remoto [${p2}]',
+      REDIRECT_REQUEST_OK: 'Solicitud \'${p1}\' redireccionana con éxito.',
+      REDIRECT_REQUEST_ERROR: 'Error - El envio de la solicitud \'${p1}\' para el Agent remoto ha fallado.',
+      SERVER_SYNC: 'Solicitando sincronización con la instancia remota del Agent [${p1}]...',
+      SERVER_SYNC_OK: 'Sincronización hecha con éxito. Todas las actualizaciones fueron aplicadas en el Agent remoto.',
+      SERVER_SYNC_ERROR: 'Error - La sincronización del Agent [${p1}] ha fallado. La instancia espejo no pudiste cambiar ninguna configuración del Agent remoto.',
+      SERVER_PING_WARNING: 'Atención - La comunicación con el servidor ha fallado (${p1}/${p2}). Vamos a intentar otra vez en 1 minuto...',
+      SERVER_PING_ERROR: 'Error - Comunicación con el servidor perdida. Acceso remoto abortado.'
+    }
   },
   ANGULAR: {
     SYSTEM_EXIT: '¿Seguro que quieres cerrar el Agent?',
     SYSTEM_FINISH_USER: '=== Desligamento del sistema solicitado por el usuario (menu de salida) ===',
-    SYSTEM_FINISH_USER_WARNING: 'Aviso - Desligamento del sistema no puede ser probado sin el Electron.',
+    SYSTEM_FINISH_USER_WARNING: 'Atención - Desligamento del sistema no puede ser probado sin el Electron.',
     ERROR: 'Error - Un error inesperado ocurrió. Por favor intenta otra vez.',
     OTHER: 'Otro',
     NONE: 'Ninguno',
     REGISTER_AGENT_TITLE: 'Activación de la instalación',
-    REGISTER_AGENT_DESCRIPTION_1: 'Ingrese el codigo de contratación del GoodData, informado por TOTVS.',
-    REGISTER_AGENT_DESCRIPTION_2: 'Si no lo conoces, por favor entre en contacto con nuestro equipo de soporte, con las seguientes opciones en el formulario:',
-    REGISTER_AGENT_DESCRIPTION_3: 'Macrossegmento -> Cross Segmentos',
-    REGISTER_AGENT_DESCRIPTION_4: 'Produto -> Analytics By GoodData',
-    REGISTER_AGENT_DESCRIPTION_5: 'ABC -> 123',
-    REGISTER_AGENT_DESCRIPTION_6: 'Link:',
+    REGISTER_AGENT_DESCRIPTION: 'Ingrese el codigo de contratación del GoodData, informado por TOTVS.',
     REGISTER_AGENT: 'Activando licencia...',
-    REGISTER_AGENT_FIELD: 'Codigo de verificación',
+    REGISTER_AGENT_FIELD: 'Codigo de contratación',
     REGISTER_AGENT_OK: 'Licencia activada con éxito. El Agent esta listo para utilización.',
     REGISTER_AGENT_ERROR: 'Error - La activación de la licencia del Agent ha fallado. Por favor intenta otra vez.',
-    REGISTER_AGENT_WARNING: 'Aviso - Activación de la instalación del Agent no puede ser probada sin el Electron.'
+    REGISTER_AGENT_WARNING: 'Atención - Activación de la instalación del Agent no puede ser probada sin el Electron.'
   },
   SERVICES: {
     GOODDATA: {
@@ -119,7 +150,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
         LOADING_LICENSES: 'Cargando licencias del servidor TOTVS...',
         LOADING_LICENSES_ERROR: 'Error - El recibimiento de las licencias del servidor TOTVS ha fallado. Por favor intenta otra vez.',
         SERVER_ERROR: 'Error - La comunicación con el servidor TOTVS ha fallado. Por favor mira su conexión del internet y intenta otra vez.',
-        COMMUNICATION_WARNING: 'Aviso - La comunicación con el Agent-Server no puede ser probada sin el Electron.',
+        COMMUNICATION_WARNING: 'Atención - La comunicación con el Agent-Server no puede ser probada sin el Electron.',
         LOADING_PARAMETERS: 'Cargando parámetros...',
         LOADING_PARAMETERS_ERROR: 'Error - Los parámetros de ETL / SQL estándar del servidor TOTVS no fueron recibidos. Por favor intenta otra vez.',
         SERIAL_NUMBER: 'Activando Agent...',
@@ -187,6 +218,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     MONITOR: 'Monitor',
     CONFIGURATION: 'Configuración',
     ACTIVATION: 'Activación',
+    REMOTE: 'Acceso remoto',
     EXIT: 'Salir',
   },
   BUTTONS: {
@@ -436,7 +468,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       SAVE_OK: 'Consulta gravada con éxito!',
       SAVE_ERROR: 'Error - Un error inesperado ocurrió mientras gravación de la consulta \'${p1}\'. Por favor intenta otra vez.',
       SAVE_ERROR_SAME_NAME: 'Error - La consulta \'${p1}\' no puede ser gravada, porqué ya existe una consulta con este nombre.',
-      SAVE_WARNING_ALREADY_EXISTS: 'Aviso - La consulta \'${p1}\' ya existe en este horario. Ignorando...',
+      SAVE_WARNING_ALREADY_EXISTS: 'Atención - La consulta \'${p1}\' ya existe en este horario. Ignorando...',
       DELETE: 'Borrando consulta: \'${p1}\'',
       DELETE_OK: 'Consulta borrada con éxito!',
       DELETE_ERROR: 'Error - Un error inesperado ocurrió mientras borro de la consulta \'${p1}\'. Por favor intenta otra vez.',
@@ -482,7 +514,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       SAVE_OK: 'Rutina gravada con éxito!',
       SAVE_ERROR: 'Error - Un error inesperado ocurrió mientras gravación de la rutina \'${p1}\'. Por favor intenta otra vez.',
       SAVE_ERROR_SAME_NAME: 'Error - La rutina \'${p1}\' no puede ser gravada, porqué ya existe una rutina con este nombre.',
-      SAVE_WARNING_ALREADY_EXISTS: 'Aviso - La consulta \'${p1}\' ya existe en este horario. Ignorando...',
+      SAVE_WARNING_ALREADY_EXISTS: 'Atención - La consulta \'${p1}\' ya existe en este horario. Ignorando...',
       DELETE: 'Borrando rutina: \'${p1}\'',
       DELETE_OK: 'Rutina borrada con éxito!',
       DELETE_ERROR: 'Error - Un error inesperado ocurrió mientras borro de la rutina \'${p1}\'. Por favor intenta otra vez.',
@@ -525,7 +557,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       }
     },
     MESSAGES: {
-      WARNING: 'Aviso - Monitoramento de logs no puede ser probado sin el Electron.',
+      WARNING: 'Atención - Monitoramento de logs no puede ser probado sin el Electron.',
       KILL_PROCESS_TITLE: '¿Seguro que quieres finalizar la ejecución del horario?',
       SCHEDULE_NOT_FOUND: 'Desconocido'
     }
