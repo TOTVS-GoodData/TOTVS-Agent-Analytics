@@ -93,12 +93,18 @@ Para definir o IP / Porta do Agent-Server, deve-se alterar seguintes constantes 
   export const CNST_SERVER_SOURCE: string = 'SERVER';
   export const CNST_SERVER_PORT: number = 2000;
   export const CNST_SERVER_HOSTNAME: any = {
-    DEVELOPMENT: 'localhost',
-    PRODUCTION: 'localhost'
+    DEVELOPMENT: '::1',
+    PRODUCTION: 'gooddata.fluig.com'
   };
+
+  //Tipos de IP (IPv4 / IPv6)
+  export const CNST_SERVER_IP: any = {
+    DEVELOPMENT: CNST_SERVER_IP_TYPES.IPV6,
+    PRODUCTION: CNST_SERVER_IP_TYPES.IPV4
+};
 ```
 
-Vale lembrar que a porta definida acima deve estar devidamente configurada no menu de "Configuração" do Agent-Server **(e não do Agent)**.
+Vale lembrar que a porta definida acima deve estar devidamente configurada no menu de "Configuração" do Agent-Server **(e não do Agent)**. Além disso, é necessário informar o tipo de IP usado nos hosts definidos acima.
 
 Após ativar o Agent-Server localmente, é possível testar qualquer funcionalidade da aplicação (executar o java, agendamento automático, etc), com exceção apenas à atualização automática dos Agents.
 

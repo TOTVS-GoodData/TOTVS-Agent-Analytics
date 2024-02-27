@@ -34,9 +34,12 @@ export class ServerCommunication {
 }
 
 /* Interface de registro dos sockets de conexão */
-export class SocketCommunication {
-  socket: any;
+export class WebSocketCommunication {
+  webSocket: any;
   serialNumber: string;
+  name: string;
+  word: string;
+  buffer: string;
 }
 
 /* Interface de licenças do Agent */

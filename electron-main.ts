@@ -112,7 +112,14 @@ export default class Main {
   //Define se os agendamentos configurados no Agent devem ser automaticamente checados, e disparados
   private static triggerSchedules: boolean = true;
   
-  //Define se esta instância do Agent está sendo executada pelo MirrorMode
+  /*
+  Define se esta instância do Agent está sendo executada pelo MirrorMode
+    
+    0 = Acesso normal (Usuário)
+    1 = Acesso bloqueado por comando remoto
+    2 = Instância espelhada, disparada pelo Agent-Server
+    3 = Instância espelhada, dispara pelo Agent-Client
+  */
   private static mirrorMode: number = 0;
 
   //Define se esta instância do Agent está controlando outro Agent-Client
@@ -130,17 +137,7 @@ export default class Main {
   public static setMirrorMode(mirror: number): void {
     Main.mirrorMode = mirror;
   }
-
-  /* Método de consulta do acesso Client p/ Client */
-  public static getRemoteAccess(): boolean {
-    return Main.remoteAccess;
-  }
-
-  /* Método de ativação do acesso Client p/ Client */
-  public static setRemoteAccess(remoteAccess: boolean): void {
-    Main.remoteAccess = remoteAccess;
-  }
-
+  
   /* Método de atualização das preferências vinculadas ao acesso remoto (MirrorMode) */
   public static updateDeactivationPreferrences(): void {
     if (Main.mainWindow != null) Main.mainWindow.webContents.send('AC_deactivateAgent', null);
@@ -597,10 +594,10 @@ export default class Main {
         if (b == 1) {
           
           //Atualiza o menu do sistema operacional, pois o usuário pode ter alterado o idioma do Agent
-          if (Main.getMirrorMode() != 2) Main.updateTrayMenu();
+          if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.updateTrayMenu();
           
           //Reinicia a consulta de atualizações do Agent, pois a mesma pode ter sido desligada
-          if (Main.getMirrorMode() != 2) Main.autoUpdaterCheck(conf.autoUpdate);
+          if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.autoUpdaterCheck(conf.autoUpdate);
           
           Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK'], null, null, null);
         }
@@ -836,8 +833,7 @@ export default class Main {
 
           //Espera 3 segundos para os eventos de fechamento da interface sejam encerrados
           setTimeout(() => {
-            Main.setRemoteAccess(true);
-            Main.setMirrorMode(2);
+            Main.setMirrorMode(3);
             Files.initApplicationData(true, 'pt-BR');
             Main.createWindowObject();
           }, 1000);
@@ -980,7 +976,7 @@ export default class Main {
     Main.application = _app;
     Main.setMirrorMode(mirrorMode);
     
-    if (Main.getMirrorMode() != 2) Main.application.disableHardwareAcceleration();
+    if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.application.disableHardwareAcceleration();
 
     //Inicialização do serviço de tradução
     TranslationService.init();
@@ -991,7 +987,7 @@ export default class Main {
     
     //Solicita a trava de única instância do Agent. Caso não consiga, este Agent é encerrado
     //Este processo é utilizado para bloquear a abertura de 2 Agents ao mesmo tempo
-    if ((TOTVS_Agent_Analytics.isProduction()) && (Main.getMirrorMode() != 2)) {
+    if ((TOTVS_Agent_Analytics.isProduction()) && ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1))) {
       Main.application.requestSingleInstanceLock();
       if (!Main.application.hasSingleInstanceLock()) {
         let translations: any = TranslationService.getTranslations([
@@ -1010,7 +1006,7 @@ export default class Main {
     Main.hidden = (Main.application.commandLine.hasSwitch('hidden') ? true : false);
     
     //Configuração dos eventos a serem disparados após a inicialização do Electron
-    if (Main.getMirrorMode() != 2) Main.application.on('ready', Main.onReady);
+    if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.application.on('ready', Main.onReady);
     else Main.onReady();
     
     Main.application.on('window-all-closed', () => {});
@@ -1044,13 +1040,13 @@ export default class Main {
       TranslationService.use((configuration.locale));
       
       //Atualização do registro do Windows p/ atualização automática (false)
-      if ((process.platform == 'win32') && (Main.getMirrorMode() != 2) && (TOTVS_Agent_Analytics.isProduction())) Main.setWindowsAutoUpdateRegistry(0);
+      if ((process.platform == 'win32') && ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) && (TOTVS_Agent_Analytics.isProduction())) Main.setWindowsAutoUpdateRegistry(0);
       
       //Configuração da atualização automática do Agent
-      if (Main.getMirrorMode() != 2) Main.setAutoUpdaterPreferences();
+      if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.setAutoUpdaterPreferences();
       
       //Disparo da atualização automática do Agent (Caso habilitado)
-      if (Main.getMirrorMode() != 2) Main.autoUpdaterCheck(configuration.autoUpdate);
+      if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.autoUpdaterCheck(configuration.autoUpdate);
       
       //Inicialização do servidor de comunicação do Agent, para receber comandos do Agent-Server
       ServerService.startServer(configuration.clientPort).subscribe((b: boolean) => {
@@ -1060,10 +1056,10 @@ export default class Main {
           Main.setIpcListeners();
           
           //Configuração da inicialização automática do Agent, ao ligar o computador
-          if ((Main.getMirrorMode() != 2) && (TOTVS_Agent_Analytics.isProduction())) Main.setAutoLaunchOptions();
+          if (((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) && (TOTVS_Agent_Analytics.isProduction())) Main.setAutoLaunchOptions();
           
           //Configuração do menu minimizado do Agent (Tray)
-          if (Main.getMirrorMode() != 2) Main.updateTrayMenu();
+          if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.updateTrayMenu();
           
           //Configuração da interface do Agent (Angular)
           Main.createWindowObject();
@@ -1076,7 +1072,7 @@ export default class Main {
           //Configuração do temporizador de execuções automática do Agent, a cada segundo
           let thisDay: number = 0;
           let i: number = 0;
-          if (Main.getMirrorMode() != 2) {
+          if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) {
             Main.timerRefId = setInterval(() => {
               let date: Date = new Date();
               
@@ -1155,7 +1151,7 @@ export default class Main {
     ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
 
       //Verifica se este instância espelhada foi ativada pelo próprio Agent-Client
-      if (!Main.getRemoteAccess()) {
+      if (Main.getMirrorMode() != 3) {
 
         //Remove todos os eventos de comunicação do Electron criados por esta instância do Agent
         Main.removeIpcListeners();
@@ -1170,7 +1166,7 @@ export default class Main {
       }
 
       //Envia as alterações feitas na instância espelhada, para o Agent-Server
-      if (Main.getMirrorMode() == 2) {
+      if ((Main.getMirrorMode() == 2) || (Main.getMirrorMode() == 3)) {
         let translations: any = TranslationService.getTranslations([
           new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_SYNC', [conf.instanceName]),
           new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR', [conf.instanceName])
@@ -1188,8 +1184,7 @@ export default class Main {
             if (b) Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.SERVER_SYNC_OK'], null, null, null);
             else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR'], null, null, null);
             
-            if (Main.getRemoteAccess()) {
-              Main.setRemoteAccess(false);
+            if (Main.getMirrorMode() == 3) {
               Main.createWindowObject();
             } else {
               Main.terminateElectron();
@@ -1209,6 +1204,6 @@ export default class Main {
     //Encerramento dos canais de log
     Files.terminateLogStreams();
 
-    if ((process.platform !== 'darwin') && (Main.getMirrorMode() != 2)) Main.application.quit();
+    if (process.platform !== 'darwin') Main.application.quit();
   }
 }

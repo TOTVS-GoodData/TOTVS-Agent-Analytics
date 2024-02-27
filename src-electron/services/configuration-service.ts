@@ -78,7 +78,7 @@ export class ConfigurationService {
         if (b) return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
           if (conf.serialNumber != null) {
             if (b) {
-              if (Main.getMirrorMode() != 2) {
+              if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) {
                 return ServerService.updateCommunicationPort(['' + conf.clientPort]).pipe(switchMap((b: boolean) => {
                   if (b) {
                     //Atualiza o idioma utilizado pelo Agent (caso tenha sido alterado)

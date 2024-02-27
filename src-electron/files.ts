@@ -316,7 +316,7 @@ export class Files {
   public static initApplicationData(showLogs: boolean, language: string): void {
 
     //Apaga os arquivos temporários de logs / configuração do acesso remoto
-    if (Main.getMirrorMode() != 2) {
+    if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) {
       fs.emptyDirSync(CNST_REMOTE_LOGS_PATH());
       if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR())) fs.removeSync(CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR());
     }
@@ -342,7 +342,7 @@ export class Files {
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          filename: (Main.getMirrorMode() != 2 ? CNST_LOGS_PATH() : CNST_REMOTE_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
+          filename: (Main.getMirrorMode() == 3 ? CNST_REMOTE_LOGS_PATH() : CNST_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
         })
       ]
     });
@@ -356,7 +356,7 @@ export class Files {
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          filename: (Main.getMirrorMode() != 2 ? CNST_LOGS_PATH() : CNST_REMOTE_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
+          filename: (Main.getMirrorMode() == 3 ? CNST_REMOTE_LOGS_PATH() : CNST_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
         })
       ]
     });

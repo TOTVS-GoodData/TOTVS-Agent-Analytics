@@ -213,7 +213,7 @@ export class AppComponent {
       ];
 
       //Caso o agent esteja na instância espelhada, não pode existir um segundo acesso remoto.
-      if (this.mirrorMode != 2) this.menus.push({
+      if ((this.mirrorMode == 0) || (this.mirrorMode == 1)) this.menus.push({
         label: this._translateService.CNST_TRANSLATIONS['MENU.REMOTE'],
         icon: 'po-icon-link',
         action: () => { this.modal_mirrorMode.open(); }
@@ -245,7 +245,7 @@ export class AppComponent {
       ];
 
       //Caso o agent esteja na instância espelhada, não pode existir um segundo acesso remoto.
-      if (this.mirrorMode != 2) this.menus.push({
+      if ((this.mirrorMode == 0) || (this.mirrorMode == 1)) this.menus.push({
         label: this._translateService.CNST_TRANSLATIONS['MENU.REMOTE'],
         icon: 'po-icon-link',
         action: () => { this.modal_mirrorMode.open(); }
