@@ -117,7 +117,9 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       SERVER_SYNC_OK: 'Sincronização bem sucedida. Todas as configurações foram atualizadas no Agent remoto.',
       SERVER_SYNC_ERROR: 'Erro - Falha na sincronização do Agent remoto. A instância espelhada não efetuou nenhuma alteração no mesmo.',
       SERVER_PING_WARNING: 'Atenção - A comunicação com o servidor falhou (${p1}/${p2}). Vamos tentar novamente em 1 minuto...',
-      SERVER_PING_ERROR: 'Erro - Comunicação com o servidor foi perdida. Acesso remoto abortado.'
+      SERVER_PING_ERROR: 'Erro - Comunicação com o servidor foi perdida. Acesso remoto abortado.',
+      INVALID_TOKEN_ERROR: 'Erro - Token de acesso remoto inválido. Por favor entre em contato com a equipe de suporte.',
+      INVALID_AGENT_ERROR: 'Erro - Não foi possível se conectar ao Agent remoto. Por favor entre em contato com a equipe de suporte.'
     }
   },
   ANGULAR: {

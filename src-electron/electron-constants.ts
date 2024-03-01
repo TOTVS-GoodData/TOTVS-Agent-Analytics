@@ -17,7 +17,7 @@ export const CNST_SERVER_SOURCE: string = 'SERVER';
 export const CNST_SERVER_PORT: number = 2000;
 export const CNST_SERVER_HOSTNAME: any = {
   DEVELOPMENT: '::1',
-  PRODUCTION: 'gooddata.fluig.com'
+  PRODUCTION: '10.171.70.55'
 };
 
 //Tipos de IP (IPv4 / IPv6)

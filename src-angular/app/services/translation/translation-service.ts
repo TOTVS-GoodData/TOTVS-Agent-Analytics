@@ -273,6 +273,8 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_SYNC_OK', []),
       new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR', []),
       new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_PING_ERROR', []),
+      new TranslationInput('MIRROR_MODE.MESSAGES.INVALID_TOKEN_ERROR', []),
+      new TranslationInput('MIRROR_MODE.MESSAGES.INVALID_AGENT_ERROR', []),
       new TranslationInput('MONITOR.TITLE', []),
       new TranslationInput('MONITOR.NO_DATA', []),
       new TranslationInput('MONITOR.TABLE.STATUS', []),

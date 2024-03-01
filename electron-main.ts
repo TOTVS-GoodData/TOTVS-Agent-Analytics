@@ -827,16 +827,16 @@ export default class Main {
 
     //Acesso remoto do Agent client p/ outro client
     ipcMain.handle('AC_requestRemoteAccess', (event: IpcMainEvent, agentCode: string) => {
-      return lastValueFrom(ServerService.requestRemoteAccess(agentCode).pipe(map((res: boolean) => {
-        if (res) {
-          Main.willClose();
+      return lastValueFrom(ServerService.requestRemoteAccess(agentCode).pipe(map((res: number) => {
+        if (res == 1) {
+            Main.willClose();
 
-          //Espera 3 segundos para os eventos de fechamento da interface sejam encerrados
+            //Espera 3 segundos para os eventos de fechamento da interface sejam encerrados
           setTimeout(() => {
-            Main.setMirrorMode(3);
-            Files.initApplicationData(true, 'pt-BR');
-            Main.createWindowObject();
-          }, 1000);
+                Main.setMirrorMode(3);
+                Files.initApplicationData(true, 'pt-BR');
+                Main.createWindowObject();
+            }, 1000);
         }
 
         return res;
@@ -961,7 +961,7 @@ export default class Main {
     Main.mainWindow = null;
     
     //Desligamento forçado do Agent, caso esta instância seja invocada pelo Agent-Server (MirrorMode)
-    if (Main.getMirrorMode() == 2) Main.terminateApplication();
+    if ((Main.getMirrorMode() == 2) || (Main.getMirrorMode() == 3)) Main.terminateApplication();
     else {
       Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_WINDOW_CLOSE'], null, null, null);
       Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_SERVICE'], null, null, null);
@@ -1164,7 +1164,7 @@ export default class Main {
         Execute.killAllProcesses();
         Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL_OK'], null, null, null);
       }
-
+      
       //Envia as alterações feitas na instância espelhada, para o Agent-Server
       if ((Main.getMirrorMode() == 2) || (Main.getMirrorMode() == 3)) {
         let translations: any = TranslationService.getTranslations([

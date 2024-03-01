@@ -383,22 +383,25 @@ export class AppComponent {
   protected mirrorMode_YES(): void {
     if (this._electronService.isElectronApp) {
       this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
-        if (conf.serialNumber == this.mirrorModeAgentCode) {
-          if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.WAIT'] };
-          this.modal_mirrorMode.close();
-          this._electronService.ipcRenderer.invoke('AC_requestRemoteAccess', [this.mirrorModeAgentCode]).then((res: number) => {
-            if (res != 1) {
-              this._translateService.getTranslations([
-                new TranslationInput('MIRROR_MODE.MESSAGES.LOADING_ERROR', [this.mirrorModeAgentCode])
-              ]).subscribe((translations: any) => {
-                this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['MIRROR_MODE.MESSAGES.LOADING_ERROR'], null);
-                if (this.mirrorMode != 1) this.po_lo_text = { value: null };
-              });
+        if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.WAIT'] };
+        this.modal_mirrorMode.close();
+        this._electronService.ipcRenderer.invoke('AC_requestRemoteAccess', [this.mirrorModeAgentCode]).then((res: number) => {
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
+          if (res == 0) {
+            this._translateService.getTranslations([
+              new TranslationInput('MIRROR_MODE.MESSAGES.LOADING_ERROR', [this.mirrorModeAgentCode])
+            ]).subscribe((translations: any) => {
+              this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['MIRROR_MODE.MESSAGES.LOADING_ERROR'], null);
+            });
+          } else {
+            this.modal_mirrorMode.open();
+            switch (res) {
+              case -1: this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.INVALID_TOKEN_ERROR'], null); break;
+              case -2: this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.INVALID_AGENT_ERROR'], null); break;
+              case -3: this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.WARNING_SAME_AGENT'], null); break;
             }
-          });
-        } else {
-          this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.WARNING_SAME_AGENT'], null);
-        }
+          }
+        });
       });
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['ANGULAR.REGISTER_AGENT_WARNING'], null);

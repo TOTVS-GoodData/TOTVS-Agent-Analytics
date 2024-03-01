@@ -5,7 +5,7 @@
   
   <!-- Componente de aviso quando o acesso remoto está ativado (MirrorMode) -->
   <div class="padding-bottom">
-    <div class="po-row mirror" [hidden]="mirrorMode != 2">
+    <div class="po-row mirror" [hidden]="((mirrorMode == 0) || (mirrorMode == 1))">
       <span class="mirror-text ">{{ lbl_mirror }}</span>
     </div>
   </div>

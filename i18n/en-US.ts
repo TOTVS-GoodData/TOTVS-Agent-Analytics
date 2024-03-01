@@ -115,7 +115,9 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       SERVER_SYNC_OK: 'Synchronization has been successfull. All updates were applied on remote Agent.',
       SERVER_SYNC_ERROR: 'Error - Synchronization has failed. The mirrored instance couldn\'t apply any updates on remote Agent.',
       SERVER_PING_WARNING: 'Warning - Server communication has failed (${p1}/${p2}). We\'ll try again in 1 minute...',
-      SERVER_PING_ERROR: 'Error - Server communication has failed. Remote access aborted.'
+      SERVER_PING_ERROR: 'Error - Server communication has failed. Remote access aborted.',
+      INVALID_TOKEN_ERROR: 'Error - Invalid access token. Please reach out to our support team.',
+      INVALID_AGENT_ERROR: 'Error - Unable to conect to remote Agent. Please reach out to our support team.'
     }
   },
   ANGULAR: {

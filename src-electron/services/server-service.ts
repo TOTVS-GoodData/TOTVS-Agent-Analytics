@@ -320,7 +320,7 @@ export class ServerService {
       try {
         //Descriptografa o comando recebido, e converte-o para o objeto de comunicação
         let command: ServerCommunication = JSON.parse(EncryptionService.decrypt(obj.toString()));
-
+        
         //Verifica se o pacote recebido é destinado para esta instância do Agent
         if (
              ((command.destination == configuration.serialNumber) && (ServerService.temporarySerialNumber == null))
@@ -1072,7 +1072,7 @@ export class ServerService {
   }
 
   /* Método de acesso remoto ao Agent (Client p/ Client) */
-  public static requestRemoteAccess(inputBuffer: string): Observable<boolean> {
+  public static requestRemoteAccess(inputBuffer: string): Observable<number> {
 
     //Prepara a palavra de comando a ser enviada, com criptografia
     return ServerService.prepareCommandWord('requestRemoteAccess', null, [inputBuffer]).pipe(switchMap((buffer: string) => {
@@ -1086,7 +1086,7 @@ export class ServerService {
           return of(response);
         }
       ).pipe(map((res: ServerCommunication) => {
-        return Boolean(res.args[0]);
+        return Number(res.args[0]);
       }));
     }));
   }
