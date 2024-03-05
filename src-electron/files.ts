@@ -44,6 +44,7 @@ import {
   CNST_REMOTE_LOGS_PATH,
   CNST_LOGS_PATH,
   CNST_TMP_PATH,
+  CNST_JRE_PATH,
   CNST_LOGS_REGEX,
   CNST_LOGS_FILENAME,
   CNST_LOGS_EXTENSION,
@@ -380,10 +381,13 @@ export class Files {
     } else {
       if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE'], null, null, null);
       fs.createFileSync(CNST_AGENT_CLIENT_DATABASE_NAME());
-      
+
+      //Gravação das configurações iniciais do banco de dados do Agent-Client
+      let db: ClientData = new ClientData();
+      db.configuration.javaJREDir = CNST_JRE_PATH();
       fs.writeJsonSync(
         CNST_AGENT_CLIENT_DATABASE_NAME(),
-        new ClientData(),
+        db,
         {
           spaces: CNST_LOGS_SPACING,
           'EOL': CNST_OS_LINEBREAK()

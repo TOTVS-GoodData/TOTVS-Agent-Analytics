@@ -43,6 +43,7 @@ export const CNST_AGENT_CLIENT_DATABASE_PATH = (): string => path.join(TOTVS_Age
 export const CNST_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'logs');
 export const CNST_REMOTE_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'remote');
 export const CNST_JAVA_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'java');
+export const CNST_JRE_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'java', 'jre');
 
 /* Caminho completo dos arquivos de cadastros do Agent (Produção / Desenv.) */
 export const CNST_AGENT_CLIENT_DATABASE_NAME = (): string => path.join(CNST_AGENT_CLIENT_DATABASE_PATH(), 'db.json');

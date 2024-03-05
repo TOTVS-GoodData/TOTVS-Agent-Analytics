@@ -110,7 +110,7 @@ export class Execute {
       
       //Configuração da JVM, e da classe do Java a ser executada
       let child: any = childProcess.spawn(
-        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'java')),
+        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'bin', 'java')),
         [
           '-Duser.language=' + language,
           '-Duser.country=' + country,
@@ -305,7 +305,7 @@ export class Execute {
       
       //Configuração da JVM
       let child: any = childProcess.spawn(
-        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'java')),
+        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'bin', 'java')),
         [
           '-version',
           '-Duser.language=' + language,
