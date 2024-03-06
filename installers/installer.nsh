@@ -97,7 +97,7 @@ FunctionEnd
   
 !macroend
 
-!macro un.customUnInstall
+!macro customUnInstall
   ClearErrors
   SetRegView 64
   DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "TOTVS Agent Analytics"

@@ -1148,10 +1148,14 @@ export default class Main {
   
   /* Método de desligamento completo do Agent (Solicitado pelo Tray) */
   private static terminateApplication(): void {
+
+    //Variável que armazena o nível de acesso que disparou esta função.
+    let mirror: number = Main.getMirrorMode();
+
     ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
 
       //Verifica se este instância espelhada foi ativada pelo próprio Agent-Client
-      if (Main.getMirrorMode() != 3) {
+      if (mirror != 3) {
 
         //Remove todos os eventos de comunicação do Electron criados por esta instância do Agent
         Main.removeIpcListeners();
@@ -1166,7 +1170,7 @@ export default class Main {
       }
       
       //Envia as alterações feitas na instância espelhada, para o Agent-Server
-      if ((Main.getMirrorMode() == 2) || (Main.getMirrorMode() == 3)) {
+      if ((mirror == 2) || (mirror == 3)) {
         let translations: any = TranslationService.getTranslations([
           new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_SYNC', [conf.instanceName]),
           new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR', [conf.instanceName])
@@ -1176,18 +1180,15 @@ export default class Main {
         
         //Leitura do arquivo de configuração da instância espelhada do Agent
         Files.readApplicationData().subscribe((db: ClientData) => {
-          Main.setMirrorMode(0);
-          Files.initApplicationData(true, 'pt-BR');
-
-          //Solicitação de sincronização com o Agent remoto
           ServerService.deactivateMirrorMode(db).subscribe((b: boolean) => {
             if (b) Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.SERVER_SYNC_OK'], null, null, null);
             else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR'], null, null, null);
-            
-            if (Main.getMirrorMode() == 3) {
+
+            Main.setMirrorMode(0);
+            Files.initApplicationData(true, 'pt-BR');
+
+            if (mirror == 3) {
               Main.createWindowObject();
-            } else {
-              Main.terminateElectron();
             }
           });
         });
