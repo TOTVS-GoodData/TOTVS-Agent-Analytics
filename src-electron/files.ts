@@ -164,11 +164,11 @@ export class Files {
   
   /* Método de validação da integridade dos arquivos XML / JSON, que serão enviados para o GoodData */
   public static checkFileIntegrityLocally(fileFolder: string): Observable<FileValidation[]> {
-    
+
     //Número de arquivos com erros encontrados
     let errorsJSON: number = 0;
     let errorsXML: number = 0;
-        
+
     //Armazena o array de observáveis que irão validar cada um dos arquivos xml / json encontrados
     let validators: Observable<any>[] = [];
     
@@ -243,7 +243,8 @@ export class Files {
       });
       
       //Retorna o observável final do método
-      return new Observable<FileValidation[]>((subscriber: any) => {
+      if (validators.length == 0) return of([]);
+      else return new Observable<FileValidation[]>((subscriber: any) => {
         let i: number = 0;
         let errors: FileValidation[] = [];
         
@@ -264,7 +265,6 @@ export class Files {
           if (validators.length == i) {
             if (errorsXML > 0) errors.push(new FileValidation('XML', errorsXML));
             if (errorsJSON > 0) errors.push(new FileValidation('JSON', errorsJSON));
-            
             subscriber.next(errors)
             subscriber.complete();
           }

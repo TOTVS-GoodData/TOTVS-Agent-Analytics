@@ -204,9 +204,9 @@ export class DatabaseService {
         
         //Criptografia do pacote a ser enviado
         let params = this._electronService.ipcRenderer.sendSync('AC_encrypt', JSON.stringify(javaInput));
-        
+
         //Envio da requisição para o Electron, e processamento da resposta
-        if (this._mirrorService.getMirrorMode() != 2) {
+        if ((this._mirrorService.getMirrorMode() == 0) || (this._mirrorService.getMirrorMode() == 1)) {
           return from(this._electronService.ipcRenderer.invoke('AC_testDatabaseConnectionLocally', params)).pipe(switchMap((res: number) => {
             return this.printMessage(db, res, showMessage).pipe(map((res: number) => {
               return res;

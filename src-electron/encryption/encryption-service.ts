@@ -32,7 +32,7 @@ export class EncryptionService {
   private static CNST_KEY_PUBLIC_AGENT: string = null;
   private static CNST_KEY_PRIVATE_AGENT: string = null;
   private static CNST_KEY_PUBLIC_SERVER: string = null;
-  private static CNST_KEY_AGENT: Buffer = Buffer.from('nwuaŕoapkpsdnhwofaimgaodpsanwiu');
+  private static CNST_KEY_AGENT: Buffer = Buffer.from('nwuaroapkpsdnhwofaimgaodpsanwiu2');
   
   //Algoritmo de criptografia
   private static CNST_ALGORITHM: string = 'aes-256-cbc';

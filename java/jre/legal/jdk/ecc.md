@@ -30,8 +30,8 @@ Elliptic Curve Cryptography library:
 For third party technology that you receive from Oracle in binary form 
 which is licensed under an open source license that gives you the right
 to receive the source code for that binary, you can obtain a copy of 
-the applicable source code from this page:
-http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/file/tip/src/share/native/sun/security/ec/impl
+the applicable source code here:
+https://download.java.net/java/GA/jdk8u361/0ae14417abb444ebb02b9815e2103550/b09/ecc-8u-src.zip
 
 If the source code for the technology was not provided to you with the 
 binary, you can also receive a copy of the source code on physical 

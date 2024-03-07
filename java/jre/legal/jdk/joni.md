@@ -1,4 +1,4 @@
-## JRuby Joni v2.1.40
+## JRuby Joni v2.1.43
 
 ### MIT License
 ```

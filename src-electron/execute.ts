@@ -100,7 +100,7 @@ export class Execute {
       //Cria o arquivo de comando do Java
       let commandPath: string = path.join(conf.javaTmpDir, CNST_COMMAND_FILE + '_' + execId);
       fs.writeFile(commandPath, inputBuffer);
-      
+      console.log(inputBuffer);
       //Define o idioma/país atualmente utilizado pelo Agent para configuração da JVM do Java (Locale)
       let language: string = conf.getLocaleLanguage();
       let country: string = conf.getLocaleCountry();
@@ -116,6 +116,7 @@ export class Execute {
           '-Duser.country=' + country,
           '-Xmx'+ conf.javaXmx + 'm',
           '-Djava.io.tmpdir=' + conf.javaTmpDir,
+          '-Dfile.encoding=UTF-8',
           '-classpath', CNST_JAR_PATH_FAST(), jClass, commandPath
         ]
       );
@@ -309,7 +310,8 @@ export class Execute {
         [
           '-version',
           '-Duser.language=' + language,
-          '-Duser.country=' + country
+          '-Duser.country=' + country,
+          '-Dfile.encoding=UTF-8'
         ]
       );
       

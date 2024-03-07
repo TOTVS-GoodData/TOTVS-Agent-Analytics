@@ -354,7 +354,7 @@ export class DataBaseAddComponent {
           if ((this._electronService.isElectronApp) && (this.database.id == null)) {
             this._utilities.writeToLog(CNST_LOGLEVEL.DEBUG, this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.PASSWORD_ENCRYPT']);
             if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['DATABASES.MESSAGES.PASSWORD_ENCRYPT'] };
-            this.database.password = this._electronService.ipcRenderer.sendSync('encrypt', this.database.password);
+            this.database.password = this._electronService.ipcRenderer.sendSync('AC_encrypt', this.database.password);
           }
           
           //Grava o novo banco de dados do Agent, e retorna à página anterior, caso bem sucedido

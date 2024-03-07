@@ -228,7 +228,7 @@ export class ScheduleService {
         
         //Solicita a execução do agendamento pelo Electron (assíncrono)
         let res: number = null;
-        if (this._mirrorService.getMirrorMode() != 2) {
+        if ((this._mirrorService.getMirrorMode() == 0) || (this._mirrorService.getMirrorMode() == 1)) {
           return from(this._electronService.ipcRenderer.invoke('AC_executeAndUpdateScheduleLocally', s)).pipe(switchMap((res: number) => {
             return this.printMessage(s, res).pipe(map((res: number) => {
               return res;

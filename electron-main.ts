@@ -498,8 +498,6 @@ export default class Main {
         let errors: number = 0;
         res1.map((file: FileValidation) => errors += file.errors);
         
-        console.log(errors);
-        
         if ((errors == 0) || (res1.length == 0)) {
           return ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
             return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((res2: number) => {
