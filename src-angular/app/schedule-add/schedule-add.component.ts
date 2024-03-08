@@ -287,19 +287,20 @@ export class ScheduleAddComponent {
     
     //Solicita os parâmetros de ETL / SQL mais recentes para o Agent-Server
     if (database != null) {
+      
       if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_PARAMETERS'] };
       forkJoin(
         this._serverService.getLatestETLParameters(license),
         this._serverService.getLatestSQLParameters(license, database.brand)
       ).subscribe((results: [ETLParameterCommunication, SQLParameterCommunication]) => {
-        
+
         //Redireciona o usuário para a página de origem, caso ocorra uma falha na comunicação com o Agent-Server
         if ((results[0] == null) || (results[1] == null)) {
           this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERVER_ERROR']);
           if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           this._router.navigate(['/schedule']);
         } else {
-          
+
           //Atualiza todos os parâmetros deste agendamento, com os valores padrões recebidos
           this.schedule.ETLParameters = results[0].ETLParameters.map((p: ETLParameterClient) => {
             p.moduleName = this._translateService.CNST_TRANSLATIONS['LICENSES.MODULES.' + CNST_MODULES.find((module: Module) => module.id == p.module).name];

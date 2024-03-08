@@ -68,9 +68,9 @@ export class WorkspaceAddComponent {
   //Ambientes a ser configurado
   protected workspace: Workspace = new Workspace();
   
-  //Variávels de suporte, usadas para armazenar o ERP / Módulo selecionado pelo usuário
+  //Variávels de suporte, usadas para armazenar o ERP / Produto selecionado pelo usuário
   protected workspaceSource: string = '';
-  protected workspaceModule: string = '';
+  protected workspaceProduct: string = '';
   
   //Licenças recebidas pelo Agent-Server, para esta instalação do Agent
   protected licenses: License[] = [];
@@ -116,7 +116,7 @@ export class WorkspaceAddComponent {
   /******* Formulário *******/
   //Títulos dos campos de ambientes
   protected lbl_erp: string = null;
-  protected lbl_module: string = null;
+  protected lbl_product: string = null;
   protected lbl_GDEnvironment: string = null;
   protected lbl_GDUsername: string = null;
   protected lbl_GDPassword: string = null;
@@ -180,7 +180,7 @@ export class WorkspaceAddComponent {
     
     //Tradução dos campos de formulário (Ambiente)
     this.lbl_erp = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ERP'] + CNST_MANDATORY_FORM_FIELD;
-    this.lbl_module = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.MODULE'] + CNST_MANDATORY_FORM_FIELD;
+    this.lbl_product = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PRODUCT'] + CNST_MANDATORY_FORM_FIELD;
     this.lbl_GDUsername = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.USERNAME'] + CNST_MANDATORY_FORM_FIELD;
     this.lbl_GDEnvironment = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ENVIRONMENT'] + CNST_MANDATORY_FORM_FIELD;
     this.lbl_GDPassword = this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PASSWORD'] + CNST_MANDATORY_FORM_FIELD;
@@ -213,7 +213,7 @@ export class WorkspaceAddComponent {
     //Definição dos campos obrigatórios do formulário
     this.CNST_FIELD_NAMES = [
       { key: 'workspaceSource', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ERP'] },
-      { key: 'workspaceModule', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.MODULE'] },
+      { key: 'workspaceProduct', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PRODUCT'] },
       { key: 'GDUsername', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.USERNAME'] },
       { key: 'GDEnvironment', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.ENVIRONMENT'] },
       { key: 'GDPassword', value: this._translateService.CNST_TRANSLATIONS['WORKSPACES.TABLE.PASSWORD'] },
@@ -282,8 +282,8 @@ export class WorkspaceAddComponent {
           this.onChangeERP(nav.extras.state['license'].source);
           
           //Configura as variáveis de suporte da licença
-          this.workspaceSource = nav.extras.state['license'].source
-          this.workspaceModule = nav.extras.state['license'].module
+          this.workspaceSource = nav.extras.state['license'].source;
+          this.workspaceProduct = nav.extras.state['license'].product;
           
           //Método disparado para atualiza a listagem de ambientes de GoodData disponíveis para o usuário cadastrado
           this.getWorkspaces(
@@ -459,15 +459,15 @@ export class WorkspaceAddComponent {
       return order;
     });
     
-    //Realiza a tradução da opção "Outro" dos módulos
+    //Realiza a tradução da opção "Outro" dos produtos
     let outros: any = this._CNST_PRODUTO.find((product: any) => (product.value == CNST_ERP_OTHER));
     if (outros) outros.label = this._translateService.CNST_TRANSLATIONS['ANGULAR.OTHER'];
     
-    //Define o valor padrão do campo de módulo
+    //Define o valor padrão do campo de produto
     if (this._CNST_PRODUTO.length == 1) {
-      this.workspaceModule = this._CNST_PRODUTO[0].value + '';
+      this.workspaceProduct = this._CNST_PRODUTO[0].value + '';
     } else {
-      this.workspaceModule = '';
+      this.workspaceProduct = '';
     }
   }
   
@@ -551,7 +551,7 @@ export class WorkspaceAddComponent {
     
     //Verifica se os campos de suporte da licença foi preenchido
     if (this.workspaceSource == '') propertiesNotDefined.push('workspaceSource');
-    if (this.workspaceModule == '') propertiesNotDefined.push('workspaceModule');
+    if (this.workspaceProduct == '') propertiesNotDefined.push('workspaceProduct');
     
     // Validação dos campos de formulário
     if (propertiesNotDefined.length > 0) {
@@ -608,7 +608,7 @@ export class WorkspaceAddComponent {
       if (validate) {
         
         //Vincula a licença selecionada neste ambiente
-        this.workspace.license = this.licenses.find((l: License) => ((l.source == this.workspaceSource) && (l.product == this.workspaceModule)));
+        this.workspace.license = this.licenses.find((l: License) => ((l.source == this.workspaceSource) && (l.product == this.workspaceProduct)));
         
         //Consulta das traduções
         return this._translateService.getTranslations([

@@ -28,11 +28,11 @@
         </po-select>
         
         <!-- Módulo do ERP -->
-        <po-select #po_workspaceModule
+        <po-select #po_workspaceProduct
           class="form-control po-md-6 po-lg-6"
           name="po_modulo"
-          [p-label]="lbl_module"
-          [(ngModel)]="workspaceModule"
+          [p-label]="lbl_product"
+          [(ngModel)]="workspaceProduct"
           [p-options]="_CNST_PRODUTO"
           p-required="true"
           [p-disabled]="((workspaceSource === '') || (_CNST_PRODUTO.length == 1))">

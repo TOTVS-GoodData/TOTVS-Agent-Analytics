@@ -112,7 +112,7 @@ export class ServerService {
   
   /* Método de consulta dos parâmetros de ETL padrões para esta licença do Agent */
   public getLatestETLParameters(license: License): Observable<ETLParameterCommunication> {
-    
+
     //Vai entender essa maluquice do compilador, sei la
     return this._translateService.getTranslations([
       new TranslationInput('SERVICES.SERVER.MESSAGES.LOADING_LICENSES', [])

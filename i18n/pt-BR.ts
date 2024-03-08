@@ -285,7 +285,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     },
     TABLE: {
       ERP: 'ERP',
-      MODULE: 'Módulo',
+      PRODUCT: 'Módulo',
       USERNAME: 'Usuário',
       ENVIRONMENT: 'Domínio',
       PASSWORD: 'Senha',

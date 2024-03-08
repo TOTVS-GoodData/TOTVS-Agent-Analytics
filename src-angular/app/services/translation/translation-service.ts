@@ -425,7 +425,7 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('WORKSPACES.SECTIONS.3', []),
       new TranslationInput('WORKSPACES.SECTIONS.4', []),
       new TranslationInput('WORKSPACES.TABLE.ERP', []),
-      new TranslationInput('WORKSPACES.TABLE.MODULE', []),
+      new TranslationInput('WORKSPACES.TABLE.PRODUCT', []),
       new TranslationInput('WORKSPACES.TABLE.USERNAME', []),
       new TranslationInput('WORKSPACES.TABLE.ENVIRONMENT', []),
       new TranslationInput('WORKSPACES.TABLE.PASSWORD', []),
