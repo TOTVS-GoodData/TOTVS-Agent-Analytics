@@ -32,7 +32,7 @@ export class ConfigurationService {
   public static getConfiguration(showLogs): Observable<Configuration> {
     
     //Escrita de logs (caso solicitado)
-    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING'], null, null, null);
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno da configuraçãO atual
     return Files.readApplicationData().pipe(map((db: ClientData) => {
@@ -54,7 +54,7 @@ export class ConfigurationService {
       
       return conf;
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -68,7 +68,7 @@ export class ConfigurationService {
     ]);
     
     //Leitura da configuração atual do Agent
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'], null, null, null, null, null);
     return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       let oldData: ClientData = { ..._dbd };
       _dbd.configuration = conf;
@@ -85,7 +85,7 @@ export class ConfigurationService {
                     TranslationService.use(conf.locale);
                     return of(1);
                   } else {
-                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_SERVER'], null, null, null);
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_SERVER'], null, null, null, null, null);
                     return ServerService.startServer(oldData.configuration.clientPort).pipe(switchMap((b: boolean) => {
                       return Files.writeApplicationData(oldData).pipe(map((b: boolean) => {
                         return -3;
@@ -98,7 +98,7 @@ export class ConfigurationService {
                 return of(1);
               }
             } else {
-              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_CONFIG'], null, null, null);
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_CONFIG'], null, null, null, null, null);
               return ServerService.startServer(oldData.configuration.clientPort).pipe(map((b: boolean) => {
                 return -2;
               }));
@@ -108,14 +108,14 @@ export class ConfigurationService {
           }
         }));
         else {
-          Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.SAVE_ERROR_PORT'], null, null, null);
+          Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.SAVE_ERROR_PORT'], null, null, null, null, null);
           return ServerService.startServer(oldData.configuration.clientPort).pipe(map((b: boolean) => {
             return -1;
           }));
         }
       }));
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }

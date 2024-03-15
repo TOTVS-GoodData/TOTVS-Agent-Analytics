@@ -106,11 +106,11 @@ export class Execute {
       let country: string = conf.getLocaleCountry();
       
       //Escrita da mensagem de inicialização no log
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS[startMessage], execId, scheduleId, null);
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS[startMessage], execId, scheduleId, null, null, null);
       
       //Configuração da JVM, e da classe do Java a ser executada
       let child: any = childProcess.spawn(
-        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'bin', 'java')),
+        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'java')),
         [
           '-Duser.language=' + language,
           '-Duser.country=' + country,
@@ -183,19 +183,19 @@ export class Execute {
               
               //Escrita do objeto recebido no arquivo de log (Ex: query da tabela I01)
               if (obj.message_json) {
-                Files.writeToLog(loglevel, CNST_SYSTEMLEVEL.JAVA, JSON.stringify(obj.message_json), execId, scheduleId, null);
+                Files.writeToLog(loglevel, CNST_SYSTEMLEVEL.JAVA, JSON.stringify(obj.message_json), execId, scheduleId, null, null, null);
                 
                 //Executa a função de processamento de objetos recebidos pelo Java 
                 stdDataFunction(obj.message_json);
                 
               //Escrita da mensagem tratada no arquivo de log
               } else {
-                Files.writeToLog(loglevel, CNST_SYSTEMLEVEL.JAVA, obj.message_string, execId, scheduleId, null);
+                Files.writeToLog(loglevel, CNST_SYSTEMLEVEL.JAVA, obj.message_string, execId, scheduleId, null, null, null);
               }
             
             //Escrita da mensagem não tratada (stacktrace) no arquivo de log
             } catch (ex) {
-              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.JAVA, null, execId, scheduleId, buffer);
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.JAVA, null, execId, scheduleId, buffer, null, null);
             }
           }
         });
@@ -251,11 +251,11 @@ export class Execute {
               obs_errorMessage = obj.message_string;
               
               //Escrita da mensagem tratada no arquivo de log
-              Files.writeToLog(loglevel, CNST_SYSTEMLEVEL.JAVA, obs_errorMessage, execId, scheduleId, null);
+              Files.writeToLog(loglevel, CNST_SYSTEMLEVEL.JAVA, obs_errorMessage, execId, scheduleId, null, null, null);
               
             //Escrita da mensagem não tratada (stacktrace) no arquivo de log
             } catch (ex) {
-              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.JAVA, null, execId, scheduleId, buffer);
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.JAVA, null, execId, scheduleId, buffer, null, null);
             }
           }
         });
@@ -269,7 +269,7 @@ export class Execute {
           let translations: any = TranslationService.getTranslations([
             new TranslationInput(endMessage, [statusCode + ''])
           ]);
-          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations[endMessage], null, null, null);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations[endMessage], null, null, null, null, null);
           
           //Remoção do processo terminado da pilha de controle do Agent
           Execute.processes = Execute.processes.filter((jp: JavaProcess) => jp.execId != execId);
@@ -302,11 +302,11 @@ export class Execute {
       let language: string = conf.getLocaleLanguage();
       let country: string = conf.getLocaleCountry();
       
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.JAVA_VERSION'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.JAVA_VERSION'], null, null, null, null, null);
       
       //Configuração da JVM
       let child: any = childProcess.spawn(
-        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'bin', 'java')),
+        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'java')),
         [
           '-version',
           '-Duser.language=' + language,
@@ -325,7 +325,7 @@ export class Execute {
         });
         
         child.on('close', (statusCode: number) => {
-          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.JAVA_VERSION_OK'], null, null, null);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.JAVA_VERSION_OK'], null, null, null, null, null);
           subscriber.next(javaData.split(CNST_OS_LINEBREAK()));
           subscriber.complete();
         });
@@ -430,20 +430,20 @@ export class Execute {
       new TranslationInput('ELECTRON.PROCESS_KILL_ERROR', [scheduleId, execId])
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.PROCESS_KILL'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.PROCESS_KILL'], null, null, null, null, null);
     
     //Caso o processo tenha sido encontrado, o mesmo é terminado
     if (process) {
       if (process.childRef.kill('SIGTERM')) {
-        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.JAVA, CNST_TRANSLATIONS[process.locale].ELECTRON.JAVA_EXECUTION_CANCELLED, execId, scheduleId, null);
-        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.PROCESS_KILL_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.JAVA, CNST_TRANSLATIONS[process.locale].ELECTRON.JAVA_EXECUTION_CANCELLED, execId, scheduleId, null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.PROCESS_KILL_OK'], null, null, null, null, null);
         
         //Remoção do processo da pilha de controle do Agent
         Execute.processes = Execute.processes.filter((jp: JavaProcess) => jp.execId != execId);
         
         return 1;
       } else {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.PROCESS_KILL_ERROR'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.PROCESS_KILL_ERROR'], null, null, null, null, null);
         return 0;
       }
       
@@ -457,10 +457,10 @@ export class Execute {
         do Agent, como um desligamento de máquina imediato.
       */
       Object.getOwnPropertyNames.call(Object, CNST_TRANSLATIONS).map((p: string) => {
-        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.JAVA, CNST_TRANSLATIONS[p].ELECTRON.JAVA_EXECUTION_CANCELLED, execId, scheduleId, null);
+        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.JAVA, CNST_TRANSLATIONS[p].ELECTRON.JAVA_EXECUTION_CANCELLED, execId, scheduleId, null, null, null);
       });
       
-      Files.writeToLog(CNST_LOGLEVEL.WARN, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.PROCESS_KILL_WARN'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.WARN, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.PROCESS_KILL_WARN'], null, null, null, null, null);
       
       return 2;
     }

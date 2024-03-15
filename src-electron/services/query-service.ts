@@ -50,13 +50,13 @@ export class QueryService {
   public static getQueries(showLogs: boolean): Observable<QueryClient[]> {
     
     //Escrita de logs (caso solicitado)
-    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING'], null, null, null);
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno das consultas cadastradas
     return Files.readApplicationData().pipe(map((db: ClientData) => {
       return db.queries;
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -68,7 +68,7 @@ export class QueryService {
     ]);
     
     //Escrita de logs (caso solicitado)
-    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SCHEDULE_LOADING'], null, null, null);
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SCHEDULE_LOADING'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno das consultas válidas
     return Files.readApplicationData().pipe(map((_dbd: ClientData) => {
@@ -76,7 +76,7 @@ export class QueryService {
         return (query.scheduleId === sc.id)
       });
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SCHEDULE_LOADING_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SCHEDULE_LOADING_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -114,7 +114,7 @@ export class QueryService {
           new TranslationInput('QUERIES.MESSAGES.SAVE_WARNING_ALREADY_EXISTS', [qq.name])
         ]);
         
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE'], null, null, null, null, null);
         
         //Validação do campo de Id da consulta. Caso não preenchido, é gerado um novo Id
         newId = (qq.id == null);
@@ -155,7 +155,7 @@ export class QueryService {
         //Caso a gravação funcione, é gerado o log de sucesso / erro / avisos para todas as consultas consideradas
         if (res) {
           validate.map((obj: any) => {
-            Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+            Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null, null, null);
           });
           
           return errors;
@@ -169,8 +169,8 @@ export class QueryService {
               new TranslationInput('QUERIES.MESSAGES.SAVE_ERROR', [obj.query.name]),
             ]);
             
-            if (obj.level != CNST_LOGLEVEL.ERROR) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE_ERROR'], null, null, null);
-            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+            if (obj.level != CNST_LOGLEVEL.ERROR) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.SAVE_ERROR'], null, null, null, null, null);
+            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null, null, null);
           });
           
           return -1;
@@ -190,7 +190,7 @@ export class QueryService {
       new TranslationInput('QUERIES.MESSAGES.DELETE_ERROR', [q.name])
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.DELETE'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.DELETE'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e remoção da consulta cadastrada
     return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
@@ -199,7 +199,7 @@ export class QueryService {
       
       return Files.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.DELETE_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['QUERIES.MESSAGES.DELETE_ERROR'], null, null, err, null, null);
         throw err;
     }));
   }

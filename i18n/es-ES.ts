@@ -93,6 +93,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     MESSAGES: {
       TITLE: 'MODO ESPEJO ACTIVADO - Todos los cambios en este Agent van a ser replicados hasta el Agent remoto [${p1}]',
       ONLINE: 'Atención - Acceso remoto activado por el servidor central del TOTVS. Ese Agent esta bloqueado ahora hasta la finalización del acceso.',
+      ONLINE_CONSULTANT: 'Atención - Acceso remoto activado por consultor externo. Ese Agent esta bloqueado ahora hasta la finalización del acceso.',
       OFFLINE: 'Acceso remoto finalizado. El Agent esta listo para utilización.',
       RUNNING: 'Acceso remoto em ejecución',
       WAIT: 'Aguarde...',

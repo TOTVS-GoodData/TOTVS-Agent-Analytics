@@ -69,7 +69,7 @@ export class ScheduleService {
   public static getSchedules(showLogs: boolean): Observable<Schedule[]> {
     
     //Escrita de logs (caso solicitado)
-    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING'], null, null, null);
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno dos agendamentos cadastrados
     return Files.readApplicationData().pipe(map((db: ClientData) => {
@@ -82,7 +82,7 @@ export class ScheduleService {
       
       return db.schedules;
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -95,7 +95,7 @@ export class ScheduleService {
       new TranslationInput('SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING', [Functions.formatDate(new Date())])
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING'], null, null, null, null, null);
     
     //Consulta de todos os agendamentos cadastrados no Agent
     return ScheduleService.getSchedules(false).pipe(
@@ -122,10 +122,10 @@ export class ScheduleService {
         });
         
         //Retorna todos os agendamentos a serem executados
-        if (schedules.length > 0) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING_OK'], null, null, null);
+        if (schedules.length > 0) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING_OK'], null, null, null, null, null);
         return schedules;
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.TRIGGERSCHEDULES_LOADING_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -163,7 +163,7 @@ export class ScheduleService {
           new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR_SAME_NAME', [sc2.name])
         ]);
         
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE'], null, null, null, null, null);
         
         //Validação do campo de Id do agendamento. Caso não preenchido, é gerado um novo Id
         newId = (sc2.id == null);
@@ -215,7 +215,7 @@ export class ScheduleService {
         //Caso a gravação funcione, é gerado o log de sucesso / erro / avisos para todos os agendamentos considerados
         if (res) {
           validate.map((obj: any) => {
-            Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+            Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null, null, null);
           });
           
           return errors;
@@ -229,8 +229,8 @@ export class ScheduleService {
               new TranslationInput('SCHEDULES.MESSAGES.SAVE_ERROR', [obj.schedule.name]),
             ]);
             
-            if (obj.level != CNST_LOGLEVEL.ERROR) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE_ERROR'], null, null, null);
-            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+            if (obj.level != CNST_LOGLEVEL.ERROR) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.SAVE_ERROR'], null, null, null, null, null);
+            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null, null, null);
           });
           
           return -1;
@@ -250,7 +250,7 @@ export class ScheduleService {
       new TranslationInput('SCHEDULES.MESSAGES.DELETE_ERROR', [sc.name])
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.DELETE'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.DELETE'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e remoção do agendamento cadastrado
     return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
@@ -270,7 +270,7 @@ export class ScheduleService {
       //Remoção do agendamento no banco do Agent
       return Files.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.DELETE_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.DELETE_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -292,7 +292,7 @@ export class ScheduleService {
         new TranslationInput('SCHEDULES.MESSAGES.RUN_PREPARE', [s.name])
       ]);
       
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_PREPARE'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_PREPARE'], null, null, null, null, null);
       
       //Define o ambiente do agendamento
       let w: Workspace = results[0].find((w: Workspace) => (w.id === s.workspaceId));
@@ -350,11 +350,11 @@ export class ScheduleService {
     return ConfigurationService.getConfiguration(false).pipe(switchMap((conf: Configuration) => {
       s.lastExecution = new Date();
       s.lastExecutionString = new Date(s.lastExecution).toLocaleString(conf.locale, {timeZone: conf.timezone});
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_EXECUTIONDATE'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_EXECUTIONDATE'], null, null, null, null, null);
       return ScheduleService.saveSchedule([s]).pipe(map((res: number) => {
         return res;
       }), catchError((err: any) => {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_ERROR'], null, null, err);
+        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCHEDULES.MESSAGES.RUN_ERROR'], null, null, err, null, null);
         throw err;
       }));
     }));

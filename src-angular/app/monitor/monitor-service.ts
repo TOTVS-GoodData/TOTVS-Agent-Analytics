@@ -77,7 +77,7 @@ export class MonitorService {
           }
         //Conversão dos textos de log de erro
         } catch (ex) {
-          agentLogMessages.push(new AgentLogMessage(lastMessage.timestamp, lastMessage.str_timestamp, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+          agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.timestamp, lastMessage.str_timestamp, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
         }
       });
       

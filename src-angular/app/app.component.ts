@@ -158,7 +158,10 @@ export class AppComponent {
                 this._menuService.updateMenu();
                 this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.OFFLINE']);
                 this.po_lo_text = { value: null };
-                this._router.navigate(['/workspace']);
+
+                //Navega para uma página do Agent, para forçar a atualização da interface.
+                if (this._router.url == '/workspace') this._router.navigate(['/database']);
+                else this._router.navigate(['/workspace']);
               });
             }
             
@@ -385,7 +388,7 @@ export class AppComponent {
       this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
         if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.WAIT'] };
         this.modal_mirrorMode.close();
-        this._electronService.ipcRenderer.invoke('AC_requestRemoteAccess', [this.mirrorModeAgentCode]).then((res: number) => {
+        this._electronService.ipcRenderer.invoke('AC_requestRemoteAccessFromClient', [this.mirrorModeAgentCode]).then((res: number) => {
           if (this.mirrorMode != 1) this.po_lo_text = { value: null };
           if (res == 0) {
             this._translateService.getTranslations([

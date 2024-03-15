@@ -43,7 +43,7 @@ export const CNST_AGENT_CLIENT_DATABASE_PATH = (): string => path.join(TOTVS_Age
 export const CNST_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'logs');
 export const CNST_REMOTE_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'remote');
 export const CNST_JAVA_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'java');
-export const CNST_JRE_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'java', 'jre');
+export const CNST_JRE_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'java', 'jre', 'bin');
 
 /* Caminho completo dos arquivos de cadastros do Agent (Produção / Desenv.) */
 export const CNST_AGENT_CLIENT_DATABASE_NAME = (): string => path.join(CNST_AGENT_CLIENT_DATABASE_PATH(), 'db.json');
@@ -63,9 +63,12 @@ export const CNST_COMMAND_FILE: string = '_jCommand';
 
 /* RegEx usada para filtrar os arquivos de logs válidos do diretório do Agent */
 export const CNST_LOGS_FILENAME: string = 'logfile';
+export const CNST_LOGS_MIRROR_FILENAME: string = 'mirror';
 export const CNST_LOGS_EXTENSION: string = 'log';
 export const CNST_LOGS_SPACING: number = 2;
-export const CNST_LOGS_REGEX: string = CNST_LOGS_FILENAME + '\-[0-9]{4}\-[0-9]{2}\-[0-9]{2}';
+export const CNST_LOGS_REGEX: string = CNST_LOGS_FILENAME + '\-(' + CNST_LOGS_MIRROR_FILENAME + '\-)?[0-9]{4}\-[0-9]{2}\-[0-9]{2}\.log';
+export const CNST_LOGS_TAGS_CLIENT: string = '[CLIENT]';
+export const CNST_LOGS_TAGS_MIRROR: string = '[MIRROR]';
 
 /* Função usada para retornar o comando de quebra de linha padrão do sistema operacional*/
 export const CNST_OS_LINEBREAK = () => {

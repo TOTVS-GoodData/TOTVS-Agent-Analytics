@@ -79,6 +79,9 @@ import {
   SQLParameterClient
 } from '../../src-angular/app/schedule/schedule-interface';
 
+/* Interfaces de logs do Agent-Client */
+import { AgentLogMessage } from '../../src-angular/app/monitor/monitor-interface';
+
 /* Serviço de rotinas do Agent */
 import { ScriptService } from './script-service';
 import { ScriptClient } from '../../src-angular/app/script/script-interface';
@@ -111,6 +114,9 @@ export class ServerService {
   
   //Armazena o código serial deste Agent, enquanto a desativação está em andamento.
   private static deactivatedSerialNumber: string = null;
+
+  //Armazena a data de início do acesso remoto
+  private static mirrorModeDateStart: Date = null;
 
   /**************************/
   /*** MÉTODOS DO SERVIÇO ***/
@@ -151,12 +157,12 @@ export class ServerService {
       ServerService.server.on('connection', (ws: any, req: any) => {
         
         ws.on('error', () => {
-          Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.ERROR'], null, null, null);
+          Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.ERROR'], null, null, null, null, null);
         });
       
         //Configuração do evento disparado ao terminar a conexão com o Agent-Server
         ws.on('close', () => {
-          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null, null, null);
         });
       
         //Evento disparado ao receber uma nova palavra de comando, do Agent-Server
@@ -191,7 +197,7 @@ export class ServerService {
               let translations: any = TranslationService.getTranslations([
                 new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD', [command.source, command.word])
               ]);
-              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD'], null, null, null);
+              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD'], null, null, null, null, null);
               
               //Disparo da rotina para processar a palavra de comando.
               switch (command.word) {
@@ -216,7 +222,18 @@ export class ServerService {
                     return ServerService.sendResponseToServer(ws, 'requestAgentLogs', res);
                   }));
                   break;
-                
+
+                /*
+                  Envio dos arquivos de log deste Agent, para o Agent-Server
+
+                  Este método retorna apenas as mensagens geradas a partir do início do acesso remoto.
+                */
+                case 'getAgentLogsSinceRemoteStart':
+                  return ServerService.getAgentLogsSinceRemoteStart(command).pipe(switchMap((res: responseObj) => {
+                    return ServerService.sendResponseToServer(ws, 'getAgentLogsSinceRemoteStart', res);
+                  }));
+                  break;
+                  
                 //Comando de ping deste serviço
                 case 'ping':
                   return ServerService.ping(command).pipe(switchMap((res: responseObj) => {
@@ -237,7 +254,7 @@ export class ServerService {
                     return ServerService.sendResponseToServer(ws, 'publishAgentData', res);
                   }));
                   break;
-      
+                
                 //Comando de escrita do arquivo de configuração do Agent, para o acesso remoto (Client p/ Client)
                 case 'publishAgentDataAsMirror':
                   return ServerService.publishAgentDataAsMirror(command).pipe(switchMap((res: responseObj) => {
@@ -251,7 +268,14 @@ export class ServerService {
                     return ServerService.sendResponseToServer(ws, 'publishAgentLogsAsMirror', res);
                   }));
                   break;
-      
+
+                //Comando de sincronização dos arquivos de log do Agent, para o acesso remoto (Servidor p/ Client)
+                case 'appendLogData':
+                  return ServerService.appendLogData(command.args[0]).pipe(switchMap((res: responseObj) => {
+                    return ServerService.sendResponseToServer(ws, 'appendLogData', res);
+                  }));
+                  break;
+
                 //Comando de teste de conexão ao banco de dados do Agent (Teste Local / Disparo Remoto)
                 case 'requestDatabaseConnectionTest':
                   return ServerService.requestDatabaseConnectionTest(command).pipe(switchMap((res: responseObj) => {
@@ -286,7 +310,7 @@ export class ServerService {
       });
 
       //ServerService.server.listen(clientPort, 'localhost', null, () => {
-      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.START'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.START'], null, null, null, null, null);
       subscriber.next(true);
       subscriber.complete();
     });
@@ -394,12 +418,12 @@ export class ServerService {
       //Inicializa a conexão com o servidor da TOTVS
       ws.on('open', () => {
 
-	      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTED'], null, null, null);
-	      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTED'], null, null, null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND'], null, null, null, null, null);
         
         //Envia o pacote para o servidor
         ws.send(command);
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND_OK'], null, null, null, null, null);
       });
       
       //Configura o evento disparado ao receber a resposta da palavra de comando, pelo Agent-Server
@@ -410,7 +434,7 @@ export class ServerService {
         //Realiza a validação da palavra (criptografia, destino do pacote, etc). Ignora palavras inválidas.
         ServerService.validateCommandWord(longBuffer).subscribe((command: ServerCommunication) => {
           if ((command != null) && (command.word == word)) {
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND_RESPONSE'], null, null, null);
+            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_COMMAND_RESPONSE'], null, null, null, null, null);
             
             //Executa a função de callback desta thread, e encerra a conexão
             callbackFunction(command).subscribe((res: any) => {
@@ -431,7 +455,7 @@ export class ServerService {
       
       //Evento disparado ao encerrar a conexão com o Agent-Server. Emite o resultado da função de callback do método
       ws.on('close', () => {
-        if (!hasErrors) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null);
+        if (!hasErrors) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DISCONNECTED'], null, null, null, null, null);
         subscriber.next(response);
         subscriber.complete();
       });
@@ -485,7 +509,7 @@ export class ServerService {
               //Verifica se o Agent-Server enviou um SerialNumber para esta instância do Agent
               if (response.args[0] != null) {
                 return ConfigurationService.getConfiguration(false).pipe(switchMap((configuration: Configuration) => {
-                  Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER'], null, null, null);
+                  Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER'], null, null, null, null, null);
                   
                   //Realiza a gravação do serialNumber desta instância do Agent
                   configuration.serialNumber = response.args[0];
@@ -497,13 +521,13 @@ export class ServerService {
                       
                       //Remove o código de ativação temporário do Agent
                       ServerService.temporarySerialNumber = null;
-                      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_OK'], null, null, null);
+                      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_OK'], null, null, null, null, null);
                       if (b) return 1;
                       else return 0;
                     
                     //Tratamento de erros
                     }, (err: any) => {
-                      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR'], null, null, null);
+                      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR'], null, null, null, null, null);
                     }));
                   }));
                 }));
@@ -512,10 +536,10 @@ export class ServerService {
               } else {
                 switch (response.errorCode) {
                   case (-1):
-                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_INVALID'], null, null, null);
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_INVALID'], null, null, null, null, null);
                     break;
                   case (-2):
-                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_COMMUNICATION'], null, null, null);
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_COMMUNICATION'], null, null, null, null, null);
                     break;
                 }
                 return of(response.errorCode);
@@ -658,15 +682,15 @@ export class ServerService {
               return res;
             }));
           } else {
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA'], null, null, null);
+            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA'], null, null, null, null, null);
             
             //Caso a origem dos dados seja do Protheus, é realizada uma consulta à tabela I01 (Caso aplicável)
             if (license.source == CNST_ERP_PROTHEUS) {
-              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_I01'], null, null, null);
+              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_I01'], null, null, null, null, null);
               
               //Leitura da configuração atual do Agent
               return ConfigurationService.getConfiguration(false).pipe(switchMap((conf: Configuration) => {
-                Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_I01_PREPARE'], null, null, null);
+                Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_I01_PREPARE'], null, null, null, null, null);
                 database.password = EncryptionService.decrypt(database.password);
                 
                 //Preparação do buffer de entrada para o Java
@@ -703,7 +727,7 @@ export class ServerService {
             
             //Caso a origem dos dados não seja do Protheus, é gerada uma mensagem de erro
             } else {
-              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_ERROR'], null, null, null);
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_ERROR'], null, null, null, null, null);
               return of(-2);
             }
           }
@@ -745,8 +769,8 @@ export class ServerService {
               return res;
             }));
           } else {
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA'], null, null, null);
-            Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_ERROR'], null, null, null);
+            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA'], null, null, null, null, null);
+            Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_ERROR'], null, null, null, null, null);
             return of(-2);
           }
         }
@@ -774,7 +798,7 @@ export class ServerService {
     let SQLParameterUpdates: SQLParameterServer[] = [];
     
     //Consulta das informações necessárias
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES'], null, null, null, null, null);
     return forkJoin([
       ScheduleService.getSchedules(false),
       WorkspaceService.getWorkspaces(false),
@@ -965,10 +989,10 @@ export class ServerService {
   }
   
   /* Método de envio das alterações feitas na instância espelhada do Agent, para o Agent-Server */
-  public static deactivateMirrorMode(db: ClientData): Observable<boolean> {
+  public static deactivateMirrorMode(db: ClientData, agentLogMessages: string): Observable<boolean> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('deactivateMirrorMode', null, [db]).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('deactivateMirrorMode', null, [db, agentLogMessages]).pipe(switchMap((buffer: string) => {
       
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
@@ -988,18 +1012,42 @@ export class ServerService {
   public static testDatabaseConnectionRemotelly(inputBuffer: string): Observable<number> {
     
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('testDatabaseConnection', null, [inputBuffer]).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('testDatabaseConnection', null, [inputBuffer]).pipe(switchMap((buffer1: string) => {
       
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
       return ServerService.sendCommandToServer(
-        buffer,
+        buffer1,
         'testDatabaseConnection',
         (response: ServerCommunication) => {
           return of(response);
         }
-      ).pipe(map((res: ServerCommunication) => {
-        return res.errorCode;
+      ).pipe(switchMap((res1: ServerCommunication) => {
+        return ServerService.requestAgentLogsSinceRemoteStart().pipe(map((res2: number) => {
+          return res1.errorCode;
+        }));
+      }));
+    }));
+  }
+
+  /* Método de teste de conexão ao banco de dados do Agent (Teste Remoto / Disparo Remoto) */
+  public static requestAgentLogsSinceRemoteStart(): Observable<number> {
+
+    //Prepara a palavra de comando a ser enviada, com criptografia
+    return ServerService.prepareCommandWord('requestAgentLogsSinceRemoteStart', null, []).pipe(switchMap((buffer1: string) => {
+
+      //Envia o comando para o servidor da TOTVS, e processa a resposta
+      //(HOF - Higher Order Function)
+      return ServerService.sendCommandToServer(
+        buffer1,
+        'requestAgentLogsSinceRemoteStart',
+        (response: ServerCommunication) => {
+          return of(response);
+        }
+      ).pipe(switchMap((res1: ServerCommunication) => {
+        return ServerService.appendLogData(res1.args[0]).pipe(map((res2: responseObj) => {
+          return res2.errorCode;
+        }));
       }));
     }));
   }
@@ -1072,16 +1120,16 @@ export class ServerService {
   }
 
   /* Método de acesso remoto ao Agent (Client p/ Client) */
-  public static requestRemoteAccess(inputBuffer: string): Observable<number> {
+  public static requestRemoteAccessFromClient(inputBuffer: string): Observable<number> {
 
     //Prepara a palavra de comando a ser enviada, com criptografia
-    return ServerService.prepareCommandWord('requestRemoteAccess', null, [inputBuffer]).pipe(switchMap((buffer: string) => {
+    return ServerService.prepareCommandWord('requestRemoteAccessFromClient', null, [inputBuffer]).pipe(switchMap((buffer: string) => {
 
       //Envia o comando para o servidor da TOTVS, e processa a resposta
       //(HOF - Higher Order Function)
       return ServerService.sendCommandToServer(
         buffer,
-        'requestRemoteAccess',
+        'requestRemoteAccessFromClient',
         (response: ServerCommunication) => {
           return of(response);
         }
@@ -1115,11 +1163,47 @@ export class ServerService {
     }));
   }
   
-  /* Método de envio das configurações atuais deste Agent, para o Agent-Server */
+  /* Método de envio dos arquivos de logs deste Agent, para o Agent-Server */
   private static requestAgentLogs(command: ServerCommunication): Observable<responseObj> {
     return of(new responseObj(Files.readLogs(), null));
   }
-  
+
+  /*
+    Método de envio dos arquivos de logs deste Agent, para o Agent-Server
+
+    Este método é disparado pela instância espelhada do Agent, para receber apenas os logs desde o início do acesso remoto.
+  */
+  private static getAgentLogsSinceRemoteStart(command: ServerCommunication): Observable<responseObj> {
+
+    //Armazena todas as mensagens de log a serem anexadas para o Agent-Server
+    let agentLogMessages: Array<AgentLogMessage> = [];
+
+    //Variável de suporte, usada para armazenar a última linha de log lida.
+    let lastMessage: any = null;
+    
+    //Leitura de todas as mensagens de log atualmente presentes no log deste Agent-Client
+    Files.readLogs().map((log: string) => {
+      try {
+        let messages: any = JSON.parse(log);
+        messages.str_timestamp = messages.timestamp;
+        messages.timestamp = new Date('' + messages.timestamp);
+        agentLogMessages.push(messages);
+        lastMessage = messages;
+
+        //Conversão dos textos de log de erro
+      } catch (ex) {
+        agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.timestamp, lastMessage.str_timestamp, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+      }
+    });
+
+    /* Remoção de todas as mensagens de log que não foram geradas após o início do acesso remoto */
+    agentLogMessages = agentLogMessages.filter((message: AgentLogMessage) => {
+      return (Files.dateDiff(ServerService.mirrorModeDateStart, message.timestamp) >= 0);
+    });
+
+    return of(new responseObj([JSON.stringify(agentLogMessages)], null));
+  }
+
   /* Método de teste de comunicação do Agent, com o Agent-Server */
   private static ping(command: ServerCommunication): Observable<responseObj> {
     return of(new responseObj(['pong'], null));
@@ -1127,7 +1211,14 @@ export class ServerService {
   
   /* Método de controle do acesso remoto (MirrorMode), do Agent-Server */
   public static setMirrorMode(command: ServerCommunication): Observable<responseObj> {
-    Main.setMirrorMode(Number(command.args[0]));
+    let mirror: number = Number(command.args[0]);
+
+    //Atualiza a data de início do acesso remoto
+    if (mirror == 1) ServerService.mirrorModeDateStart = new Date();
+    else ServerService.mirrorModeDateStart = null;
+
+    Main.setMirrorMode(mirror);
+    Files.initApplicationData(false, 'pt-BR');
     return Main.updateMirrorModePreferences().pipe(map((b: boolean) => {
       return new responseObj([true], null);
     }));
@@ -1149,7 +1240,13 @@ export class ServerService {
     }));
   }
 
-  /* Método de escrita do arquivo de configuração do agent, para o acesso remoto (Client p/ Client) */
+  /* Método de escrita dos arquivos de log do Agent-Client, para o acesso remoto (Servidor p/ Client) */
+  private static appendLogData(logs: string): Observable<responseObj> {
+    Files.appendLogData(logs);
+    return of(new responseObj([true], null));
+  }
+
+  /* Método de escrita dos arquivos de log do Agent-Client, para o acesso remoto (Client p/ Client) */
   private static publishAgentLogsAsMirror(command: ServerCommunication): Observable<responseObj> {
     Files.writeRemoteLogData(command.args);
     return of(new responseObj([true], null));

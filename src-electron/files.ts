@@ -29,6 +29,9 @@ import { Database } from '../src-angular/app/database/database-interface';
 /* Interface de agendamentos do Agent */
 import { Schedule } from '../src-angular/app/schedule/schedule-interface';
 
+/* Interfaces de logs do Agent-Client */
+import { AgentLogMessage } from '../src-angular/app/monitor/monitor-interface';
+
 /* Interface de consultas do Agent */
 import { QueryClient } from '../src-angular/app/query/query-interface';
 
@@ -47,9 +50,12 @@ import {
   CNST_JRE_PATH,
   CNST_LOGS_REGEX,
   CNST_LOGS_FILENAME,
+  CNST_LOGS_MIRROR_FILENAME,
   CNST_LOGS_EXTENSION,
   CNST_LOGS_SPACING,
-  CNST_OS_LINEBREAK
+  CNST_OS_LINEBREAK,
+  CNST_LOGS_TAGS_CLIENT,
+  CNST_LOGS_TAGS_MIRROR
 } from './electron-constants';
 
 /* Interface do banco de dados do Agent */
@@ -76,25 +82,57 @@ export class Files {
   
   //Armazena as configurações do sistema de log do Agent, para mensagens json (INFO / DEBUG / WARN)
   private static loggerJSON: any = null;
-  
+  private static loggerJSONMIRROR: any = null;
+
   //Armazena as configurações do sistema de log do Agent, para mensagens de texto (ERROR)
   private static loggerTEXT: any = null;
-  
+  private static loggerTEXTMIRROR: any = null;
+
+  //Armazena a data em que os arquivos de log foram inicializados
+  private static startDate: Date = new Date();
+
   /*********************************/
   /******* MÉTODOS DO MÓDULO  ******/
   /*********************************/
-  /*Método de formatação de uma data do Javascript, para a máscara do arquivo de log*/
+  /* Método de formatação de uma data do Javascript, para a máscara do arquivo de log */
   public static formatDate(inputDate: Date): string {
-    let day: number = inputDate.getDate();
-    let month: number = inputDate.getMonth() + 1;
-    let year: number = inputDate.getFullYear();
+    let day: number = inputDate.getUTCDate();
+    let month: number = inputDate.getUTCMonth() + 1;
+    let year: number = inputDate.getUTCFullYear();
     
     let str_day = day.toString().padStart(2, '0');
     let str_month = month.toString().padStart(2, '0');
     
     return `${year}-${str_month}-${str_day}`;
   }
-  
+
+  /* Método de formatação de uma data/hora do Javascript, para a máscara do arquivo de log */
+  public static formatTimestamp(inputDate: Date): string {
+    let year: number = inputDate.getFullYear();
+    let month: number = inputDate.getMonth() + 1;
+    let day: number = inputDate.getDate();
+    let hour: number = inputDate.getHours();
+    let minute: number = inputDate.getMinutes();
+    let second: number = inputDate.getSeconds();
+    let millisecond: number = inputDate.getMilliseconds();
+    let offset: number = inputDate.getTimezoneOffset();
+
+    let str_month: string = month.toString().padStart(2, '0');
+    let str_day: string = day.toString().padStart(2, '0');
+    let str_hour: string = hour.toString().padStart(2, '0');
+    let str_minute: string = minute.toString().padStart(2, '0');
+    let str_second: string = second.toString().padStart(2, '0');
+    let str_millisecond: string = millisecond.toString().padStart(3, '0');
+    let str_offset: string = (offset <= 0 ? '+' : '-') + (offset / 60).toString().padStart(2, '0') + ':' + (offset % 60).toString().padStart(2, '0');
+    
+    return `${year}-${str_month}-${str_day} ${str_hour}:${str_minute}:${str_second}.${str_millisecond}${str_offset}`;
+  }
+
+  /* Método para calcular a diferença, em dias, entre duas datas */
+  public static dateDiff(d1: Date, d2: Date): number {
+    return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
   /* Método de remoção dos arquivos de log antigos do Agent */
   public static deleteOldLogs() {
     
@@ -105,7 +143,7 @@ export class Files {
       let maxDate: Date = new Date();
       maxDate.setDate(new Date().getDate() - conf.logfilesToKeep);
       
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DELETE_OLD_LOGS'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DELETE_OLD_LOGS'], null, null, null, null, null);
       
       //Realiza a leitura do nome de todos os arquivos presentes no diretório de log do Agent
       fs.readdir(CNST_LOGS_PATH(), (err: any, files: any) => {
@@ -128,37 +166,51 @@ export class Files {
           }
         });
         
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DELETE_OLD_LOGS_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DELETE_OLD_LOGS_OK'], null, null, null, null, null);
       });
     });
   }
   
   /* Método de escrita dos arquivos de log do Agent */
-  public static writeToLog(loglevel: any, system: string, message: string, execId: string, scheduleId: string, err: any): boolean {
+  public static writeToLog(loglevel: any, system: string, message: string, execId: string, scheduleId: string, err: any, logDate: Date, mirrorOverwrite: string): boolean {
     
     //Inicializa o objeto a ser escrito no log
     let obj: any = {
-      mirror: (Main.getMirrorMode() != 0 ? '[MIRROR]' : '[CLIENT]'),
-      timestamp: new Date(),
+      mirror: (((Main.getMirrorMode() == 2) || (Main.getMirrorMode() == 3) || ((Main.getMirrorMode() == 1) && (system == CNST_SYSTEMLEVEL.JAVA))) ? CNST_LOGS_TAGS_MIRROR : CNST_LOGS_TAGS_CLIENT),
+      timestamp: ((logDate == null) ? new Date() : logDate),
+      logDate: ((logDate == null) ? Files.formatTimestamp(new Date()) : Files.formatTimestamp(logDate)),
       loglevel: loglevel.tag,
       system: system,
       message: JSON.stringify(message).replaceAll('\"', '')
     };
-    
+
+    //Sobreescrita da função de sincronização de logs
+    if (mirrorOverwrite != null) obj.mirror = mirrorOverwrite;
+
     //Adiciona os campos de execId / scheduleId ao objeto, caso estes valores tenham sido passados ao método
     if (execId != null) obj['execId'] = execId;
     if (scheduleId != null) obj['scheduleId'] = scheduleId;
-    
+
     //Realiza a escrita no arquivo de log
     if (message) {
       switch (loglevel.level) {
-        case CNST_LOGLEVEL.ERROR.level: Files.loggerJSON.error(obj); break;
-        case CNST_LOGLEVEL.WARN.level: Files.loggerJSON.warn(obj); break;
-        case CNST_LOGLEVEL.INFO.level: Files.loggerJSON.info(obj); break;
-        case CNST_LOGLEVEL.DEBUG.level: Files.loggerJSON.debug(obj); break;
+        case CNST_LOGLEVEL.ERROR.level:
+          (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.error(obj) : Files.loggerJSONMIRROR.error(obj));
+          break;
+        case CNST_LOGLEVEL.WARN.level:
+          (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.warn(obj) : Files.loggerJSONMIRROR.warn(obj));
+          break;
+        case CNST_LOGLEVEL.INFO.level:
+          (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.info(obj) : Files.loggerJSONMIRROR.info(obj));
+          break;
+        case CNST_LOGLEVEL.DEBUG.level:
+          (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.debug(obj) : Files.loggerJSONMIRROR.debug(obj));
+          break;
       }
-    } else if (err) Files.loggerTEXT.error(err);
-    
+    } else if (err) {
+      (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerTEXT.error(err) : Files.loggerTEXTMIRROR.error(err));
+    }
+
     return true;
   }
   
@@ -181,7 +233,7 @@ export class Files {
         new TranslationInput('SCHEDULES.MESSAGES.VALIDATION_OK', [fileFolder]),
         new TranslationInput('SCHEDULES.MESSAGES.VALIDATION_ERROR', [fileFolder])
       ]);
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations1['SCHEDULES.MESSAGES.VALIDATION'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations1['SCHEDULES.MESSAGES.VALIDATION'], null, null, null, null, null);
       
       //Extrai todos os nomes dos arquivos de um diretório, com suas extensões.
       let files: string[] = Files.getFileNames(fileFolder);
@@ -202,16 +254,16 @@ export class Files {
         if (extension == 'XML') {
           validators.push(new Observable<FileValidation>((subscriber: any) => {
             setTimeout(() => {
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE'], null, null, null);
+              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE'], null, null, null, null, null);
             let xmlData: string = fs.readFileSync(path.join(fileFolder, file)).toString();
             xml2js.parseString(xmlData, (err, result) => {
               if (err == null) {
-                Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_OK'], null, null, null);
+                Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_OK'], null, null, null, null, null);
                 subscriber.next(new FileValidation('XML', 0));
                 subscriber.complete();
               } else {
-                Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_ERROR'], null, null, null);
-                setTimeout(() => { Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, null, null, null, err.toString()); }, 100);
+                Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_ERROR'], null, null, null, null, null);
+                setTimeout(() => { Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, null, null, null, err.toString(), null, null); }, 100);
                 subscriber.next(new FileValidation('XML', 1));
                 subscriber.complete();
               }
@@ -225,15 +277,15 @@ export class Files {
         else if (extension == 'JSON') {
           validators.push(new Observable<FileValidation>((subscriber: any) => {
             setTimeout(() => {
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE'], null, null, null);
+              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE'], null, null, null, null, null);
             try {
               fs.readJsonSync(path.join(fileFolder, file), { throws: true });
-              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_OK'], null, null, null);
+              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_OK'], null, null, null, null, null);
               subscriber.next(new FileValidation('JSON', 0));
               subscriber.complete();
             } catch (err: any) {
-              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_ERROR'], null, null, null);
-              setTimeout(() => { Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, null, null, null, err.toString()); }, 100);
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations2['SCHEDULES.MESSAGES.VALIDATION_FILE_ERROR'], null, null, null, null, null);
+              setTimeout(() => { Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, null, null, null, err.toString(), null, null); }, 100);
               subscriber.next(new FileValidation('JSON', 1));
               subscriber.complete();
             }
@@ -309,7 +361,7 @@ export class Files {
     //Retorna todas as linhas, de todos os arquivos de log válidos, que foram lidos.
     return logs;
   }
-  
+
   /*
     Método de inicialização do banco de dados do Agent, e seus arquivos de log.
     Caso não exista banco, é criado um com as configurações iniciais padrões.
@@ -324,19 +376,21 @@ export class Files {
 
     //Encerramento dos canais de logs anteriores (caso existam)
     Files.terminateLogStreams();
-    
+
+    //Atualiza a data de inicialização dos logs
+    Files.startDate = new Date();
+
     //Inicializa o canal de log p/ mensagens de debug / info
     Files.loggerJSON = winston.createLogger({
       level: 'debug',
       format: winston.format.combine(
-        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ssZ' }),
         winston.format((info) => {
           const {
-            mirror, timestamp, loglevel, system, message, level, ...rest
+            mirror, logDate, loglevel, system, message, level, ...rest
           } = info;
-          return {
-            mirror, timestamp, loglevel, system, message, level, ...rest,
-          };
+          delete info.timestamp;
+          delete info.level;
+          return info;
         })(),
         winston.format.json({ deterministic: false })
       ),
@@ -344,6 +398,28 @@ export class Files {
         new winston.transports.Console(),
         new winston.transports.File({
           filename: (Main.getMirrorMode() == 3 ? CNST_REMOTE_LOGS_PATH() : CNST_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
+        })
+      ]
+    });
+
+    //Inicializa o canal de log p/ mensagens de debug / info, disparadas remotamente
+    Files.loggerJSONMIRROR = winston.createLogger({
+      level: 'debug',
+      format: winston.format.combine(
+        winston.format((info) => {
+          const {
+            mirror, logDate, loglevel, system, message, level, ...rest
+          } = info;
+          delete info.timestamp;
+          delete info.level;
+          return info;
+        })(),
+        winston.format.json({ deterministic: false })
+      ),
+      transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({
+          filename: (Main.getMirrorMode() == 3 ? CNST_REMOTE_LOGS_PATH() : CNST_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + CNST_LOGS_MIRROR_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
         })
       ]
     });
@@ -361,25 +437,39 @@ export class Files {
         })
       ]
     });
-    
+
+    //Inicializa o canal de log p/ mensagens de erro, disparadas remotamente
+    Files.loggerTEXTMIRROR = winston.createLogger({
+      level: 'error',
+      format: winston.format.printf(({ message }) => {
+        return `${message}`;
+      }),
+      transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({
+          filename: (Main.getMirrorMode() == 3 ? CNST_REMOTE_LOGS_PATH() : CNST_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + CNST_LOGS_MIRROR_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION
+        })
+      ]
+    });
+
     //Verifica se existe um banco da instância espelhada no diretório de dados do Agent
     if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR())) {
         Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR();
-        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_MIRROR'], null, null, null);
+      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_MIRROR'], null, null, null, null, null);
 
     //Caso não exista, verifica se existe um banco de testes/desenv no mesmo diretório
     } else if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME_DEV())) {
       Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME_DEV();
-      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_DEVELOPMENT'], null, null, null);
+      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_DEVELOPMENT'], null, null, null, null, null);
       
     //Caso não exista, procura por um banco de produção no mesmo diretório
     } else if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME())) {
       Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME();
-      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_PRODUCTION'], null, null, null);
+      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_PRODUCTION'], null, null, null, null, null);
       
     //Caso também não exista, é criado um novo arquivo de banco, de produção, 
     } else {
-      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE'], null, null, null);
+      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE'], null, null, null, null, null);
       fs.createFileSync(CNST_AGENT_CLIENT_DATABASE_NAME());
 
       //Gravação das configurações iniciais do banco de dados do Agent-Client
@@ -395,7 +485,7 @@ export class Files {
       );
       
       Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME();
-      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE_OK'], null, null, null);
+      if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE_OK'], null, null, null, null, null);
     }
     
     //Cria o diretório de arquivos temporários do Agent (Caso ainda não exista)
@@ -406,8 +496,22 @@ export class Files {
 
   /* Método de encerramento dos canais de logs */
   public static terminateLogStreams(): void {
-    if (Files.loggerJSON) Files.loggerJSON.end();
-    if (Files.loggerTEXT) Files.loggerTEXT.end();
+    if (Files.loggerJSON) {
+      Files.loggerJSON.end();
+      Files.loggerJSON = null;
+    }
+    if (Files.loggerJSONMIRROR) {
+      Files.loggerJSONMIRROR.end();
+      Files.loggerJSONMIRROR = null;
+    }
+    if (Files.loggerTEXT) {
+      Files.loggerTEXT.end();
+      Files.loggerTEXT = null;
+    }
+    if (Files.loggerTEXTMIRROR) {
+      Files.loggerTEXTMIRROR.end();
+      Files.loggerTEXTMIRROR = null;
+    }
   }
 
   /* Método de leitura do banco do Agent */
@@ -486,6 +590,102 @@ export class Files {
     stream.end();
   }
 
+  /*
+    Método de anexação dos arquivos de log do Agent.
+
+    Este método é disparado para fazer a sincronização dos arquivos de log deste Agent-Client,
+    após o término do acesso remoto do servidor central da TOTVS, e/ou de outro Client.
+  */
+  public static appendLogData(newLogs: string): void {
+
+    //Armazena cada uma das linhas de log recebidas, em formato JSON
+    let logMessage: AgentLogMessage = null;
+
+    //Armazena todas as mensagens de log atuais deste Agent-Client
+    let agentLogMessagesCurrent: Array<AgentLogMessage> = [];
+
+    //Armazena todas as mensagens de log recebidas para serem anexadas à este Agent-Client
+    let agentLogMessagesNew: Array<AgentLogMessage> = [];
+    
+    //Armazena todas as mensagens de log recebidas para serem anexadas à este Agent-Client
+    let agentLogMessagesFinal: Array<AgentLogMessage> = [];
+
+    //Armazena todas as datas (ano-mês-dia) únicas das mensagens de log lidas.
+    let logfiles: Set<string> = new Set();
+
+    //Variável de suporte, usada para armazenar a última linha de log lida.
+    let lastMessage: any = null;
+
+    //Conversão JSONstring => JSON
+    agentLogMessagesNew = JSON.parse(newLogs);
+
+    //Conversão JSON => Objeto
+    agentLogMessagesNew = agentLogMessagesNew.map((message: AgentLogMessage) => {
+      return new AgentLogMessage(null, null, null, null, null, null, null, null, null).toObject(message);
+    });
+
+    //Leitura de todas as mensagens de log atualmente presentes no log deste Agent-Client
+    Files.readLogs().map((log: string) => {
+      try {
+        let messages: any = JSON.parse(log);
+        messages.str_timestamp = messages.timestamp;
+        messages.timestamp = new Date('' + messages.timestamp);
+        agentLogMessagesCurrent.push(messages);
+        lastMessage = messages;
+        
+      //Conversão dos textos de log de erro
+      } catch (ex) {
+        agentLogMessagesCurrent.push(new AgentLogMessage(lastMessage.mirror, lastMessage.timestamp, lastMessage.str_timestamp, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+      }
+    });
+    
+    /*
+      Remoção de todas as mensagens de log antigas, que já estão ordenadas corretamente
+
+      Todas as mensagens mais antigas que a mensagem mais recente recebida, estão ordenadas.
+      Apenas as mensagens dos arquivos de log remoto precisam ser ordenadas.
+    */
+    agentLogMessagesCurrent = agentLogMessagesCurrent.filter((message: AgentLogMessage) => {
+      return (Files.dateDiff(message.timestamp, agentLogMessagesNew[0].timestamp) <= 1);
+    });
+    
+    //Combina todas as mensagens de log, e as ordena.
+    agentLogMessagesFinal = agentLogMessagesCurrent.concat(agentLogMessagesNew)
+      .sort((a: AgentLogMessage, b: AgentLogMessage) => (a.timestamp.getTime() - b.timestamp.getTime()));
+    
+    //Extrai todas as datas distintas encontradas nos logs
+    agentLogMessagesFinal.filter((message1: AgentLogMessage) => {
+      let date: string = Files.formatDate(message1.timestamp);
+      let check: boolean = logfiles.has(date);
+      logfiles.add(date);
+      return !check;
+    }).map((message2: AgentLogMessage) => {
+
+      //Cria um novo arquivo de log, em branco, para a reescrita completa do mesmo
+      let logfile: string = CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(message2.timestamp) + '.' + CNST_LOGS_EXTENSION;
+      let logfileMirror: string = CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + CNST_LOGS_MIRROR_FILENAME + '-' + Files.formatDate(message2.timestamp) + '.' + CNST_LOGS_EXTENSION;
+      fs.truncateSync(logfile);
+      fs.truncateSync(logfileMirror);
+
+      let lastLine: string = null;
+      agentLogMessagesFinal.map((line: AgentLogMessage) => {
+        if (!(lastLine === line.message)) {
+          
+          let level: any = null;
+          switch (line.loglevel) {
+            case CNST_LOGLEVEL.ERROR.tag: level = CNST_LOGLEVEL.ERROR; break;
+            case CNST_LOGLEVEL.WARN.tag: level = CNST_LOGLEVEL.WARN; break;
+            case CNST_LOGLEVEL.INFO.tag: level = CNST_LOGLEVEL.INFO; break;
+            case CNST_LOGLEVEL.DEBUG.tag: level = CNST_LOGLEVEL.DEBUG; break;
+          }
+
+          Files.writeToLog(level, line.system, line.message, line.execId, line.scheduleId, null, line.timestamp, line.mirror);
+        }
+        lastLine = line.message;
+      });
+    });
+  }
+
   /* Método de seleção de um diretório da máquina do usuário */
   public static getFolder(b: any): Observable<string> {
     return from(dialog.showOpenDialog(b, {
@@ -502,7 +702,42 @@ export class Files {
       }
     }));
   }
-  
+
+  /* Método de seleção de todas as mensagens de log geradas pela instância espelhada do Agent */
+  public static getLogDataToSync(): AgentLogMessage[] {
+
+    //Variável de suporte, usada para armazenar a última linha de log lida.
+    let lastMessage: any = null;
+
+    //Armazena todas as mensagens de log atuais deste Agent-Client
+    let agentLogMessages: Array<AgentLogMessage> = [];
+
+    //Leitura de todas as mensagens de log atualmente presentes no log deste Agent-Client
+    Files.readLogs().map((log: string) => {
+      try {
+        let messages: any = JSON.parse(log);
+        messages.timestamp = new Date('' + messages.timestamp);
+        agentLogMessages.push(messages);
+        lastMessage = messages;
+
+      //Conversão dos textos de log de erro
+      } catch (ex) {
+        agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.timestamp, lastMessage.str_timestamp, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+      }
+    });
+
+    /*
+      Remoção de todas as mensagens de log que não foram geradas por este Agent-Client
+
+      Apenas as mensagens que não estão ainda armazenadas n
+    */
+    agentLogMessages = agentLogMessages.filter((message: AgentLogMessage) => {
+      return ((message.mirror == CNST_LOGS_TAGS_MIRROR) && (message.timestamp.getTime() >= Files.startDate.getTime()));
+    });
+
+    return agentLogMessages;
+  }
+
   /* Método de seleção de um diretório da máquina do usuário */
   public static getFile(b: any): Observable<string> {
     return from(dialog.showOpenDialog(b, {

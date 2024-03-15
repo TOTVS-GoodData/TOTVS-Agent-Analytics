@@ -44,13 +44,13 @@ export class ScriptService {
   public static getScripts(showLogs: boolean): Observable<ScriptClient[]> {
     
     //Escrita de logs (caso solicitado)
-    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING'], null, null, null);
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno das rotinas cadastradas
     return Files.readApplicationData().pipe(map((db: ClientData) => {
       return db.scripts;
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -64,7 +64,7 @@ export class ScriptService {
     ]);
     
     //Escrita de logs (caso solicitado)
-    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SCHEDULE_LOADING'], null, null, null);
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SCHEDULE_LOADING'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno das rotinas válidas
     return Files.readApplicationData().pipe(map((_dbd: ClientData) => {
@@ -72,7 +72,7 @@ export class ScriptService {
         return (script.scheduleId === sc.id)
       });
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SCHEDULE_LOADING_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SCHEDULE_LOADING_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -110,7 +110,7 @@ export class ScriptService {
           new TranslationInput('SCRIPTS.MESSAGES.SAVE_WARNING_ALREADY_EXISTS', [ss.name])
         ]);
         
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE'], null, null, null, null, null);
         
         //Validação do campo de Id da consulta. Caso não preenchido, é gerado um novo Id
         newId = (ss.id == null);
@@ -151,7 +151,7 @@ export class ScriptService {
         //Caso a gravação funcione, é gerado o log de sucesso / erro / avisos para todas as rotinas consideradas
         if (res) {
           validate.map((obj: any) => {
-            Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+            Files.writeToLog(obj.level, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null, null, null);
           });
           
           return errors;
@@ -165,8 +165,8 @@ export class ScriptService {
               new TranslationInput('SCRIPTS.MESSAGES.SAVE_ERROR', [obj.script.name]),
             ]);
             
-            if (obj.level != CNST_LOGLEVEL.ERROR) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], null, null, null);
-            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null);
+            if (obj.level != CNST_LOGLEVEL.ERROR) Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.SAVE_ERROR'], null, null, null, null, null);
+            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, obj.message, null, null, null, null, null);
           });
           
           return -1;
@@ -186,7 +186,7 @@ export class ScriptService {
       new TranslationInput('SCRIPTS.MESSAGES.DELETE_ERROR', [s.name])
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.DELETE'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.DELETE'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e remoção da rotina cadastrada
     return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
@@ -195,7 +195,7 @@ export class ScriptService {
       
       return Files.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['SCRIPTS.MESSAGES.ERROR'], null, null, err, null, null);
         throw err;
     }));
   }

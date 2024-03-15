@@ -66,6 +66,9 @@ import { Database } from './src-angular/app/database/database-interface';
 import { ScheduleService } from './src-electron/services/schedule-service';
 import { Schedule } from './src-angular/app/schedule/schedule-interface';
 
+/* Interfaces de logs do Agent-Client */
+import { AgentLogMessage } from './src-angular/app/monitor/monitor-interface';
+
 /* Serviço de consultas do Agent */
 import { QueryService } from './src-electron/services/query-service';
 import { QueryClient } from './src-angular/app/query/query-interface';
@@ -163,7 +166,7 @@ export default class Main {
                 if (!b) {
                   errors = errors + 1;
                   if (errors == CNST_MIRRORMODE_PINGS_MAX) {
-                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.SERVER_PING_ERROR'], null, null, null);
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.SERVER_PING_ERROR'], null, null, null, null, null);
                     let comm: ServerCommunication = new ServerCommunication();
                     comm.args = ['0'];
                     ServerService.setMirrorMode(comm).subscribe();
@@ -173,7 +176,7 @@ export default class Main {
                     let translations: any = TranslationService.getTranslations([
                       new TranslationInput('MIRROR_MODE.SERVER_PING_WARNING', ['' + errors, '' + CNST_MIRRORMODE_PINGS_MAX])
                     ]);
-                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.SERVER_PING_WARNING'], null, null, null);
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.SERVER_PING_WARNING'], null, null, null, null, null);
                   }
                 }
               });
@@ -209,7 +212,7 @@ export default class Main {
         autoLaunch.enable();
       }
     }).catch((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.AUTOLAUNCH_ERROR'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.AUTOLAUNCH_ERROR'], null, null, null, null, null);
     });
   }
   
@@ -237,7 +240,7 @@ export default class Main {
     
     //Evento de início da consulta por novas atualizações
     autoUpdater.on('checking-for-update', () => {
-      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.UPDATE_CHECK'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.UPDATE_CHECK'], null, null, null, null, null);
     });
     
     //Evento de nova atualização encontrada
@@ -248,7 +251,7 @@ export default class Main {
         new TranslationInput('ELECTRON.UPDATE_AVAILABLE', [autoUpdater.currentVersion, info.version])
       ]);
       
-      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_AVAILABLE'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_AVAILABLE'], null, null, null, null, null);
     });
     
     //Evento de nenhuma atualização encontrada
@@ -259,7 +262,7 @@ export default class Main {
         new TranslationInput('ELECTRON.UPDATE_NOT_AVAILABLE', [info.version])
       ]);
       
-      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_NOT_AVAILABLE'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_NOT_AVAILABLE'], null, null, null, null, null);
     });
     
     //Evento de progresso do download da atualização do Agent (Emitido a cada segundo)
@@ -292,7 +295,7 @@ export default class Main {
       ]);
       
       //Escrita da mensagem final no arquivo de log
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_DOWNLOAD'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.UPDATE_DOWNLOAD'], null, null, null, null, null);
     });
     
     //Evento de atualização baixada com sucesso
@@ -311,7 +314,7 @@ export default class Main {
       
       //Força a renderização da interface do Agent
       if (res) {
-        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.UPDATE_DOWNLOAD_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.UPDATE_DOWNLOAD_OK'], null, null, null, null, null);
         Main.hidden = false;
         Main.createWindowObject();
         
@@ -322,7 +325,7 @@ export default class Main {
     
     //Evento disparado ao encontrar algum erro na atualização
     autoUpdater.on('error', (err: Error) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.UPDATE_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.UPDATE_ERROR'], null, null, err, null, null);
     });
   }
   
@@ -376,7 +379,7 @@ export default class Main {
     ipcMain.removeHandler('AC_getLatestETLParameters');
     ipcMain.removeHandler('AC_getLatestSQLParameters');
     ipcMain.removeAllListeners('AC_getMirrorMode');
-    ipcMain.removeHandler('AC_requestRemoteAccess');
+    ipcMain.removeHandler('AC_requestRemoteAccessFromClient');
   }
   
   /* Método que define os eventos de comunicação com o Angular (Interface) */
@@ -388,7 +391,7 @@ export default class Main {
     //Consulta de ambientes
     ipcMain.on('AC_getWorkspaces', (event: IpcMainEvent, showLogs: boolean) => {
       WorkspaceService.getWorkspaces(showLogs).subscribe((workspaces: Workspace[]) => {
-        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_OK'], null, null, null);
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_OK'], null, null, null, null, null);
         event.returnValue = workspaces;
       });
     });
@@ -396,7 +399,7 @@ export default class Main {
     //Consulta de ambientes pertencentes à um banco de dados
     ipcMain.on('AC_getWorkspacesByDatabase', (event: IpcMainEvent, db: Database) => {
       WorkspaceService.getWorkspacesByDatabase(db).subscribe((workspaces: Workspace[]) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_DATABASES_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_DATABASES_OK'], null, null, null, null, null);
         event.returnValue = workspaces;
       });
     });
@@ -404,7 +407,7 @@ export default class Main {
     //Gravação de ambiente
     ipcMain.on('AC_saveWorkspace', (event: IpcMainEvent, w: Workspace) => {
       WorkspaceService.saveWorkspace(w).subscribe((b: boolean) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.SAVE_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.SAVE_OK'], null, null, null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -413,7 +416,7 @@ export default class Main {
     //Remoção de um ambiente
     ipcMain.on('AC_deleteWorkspace', (event: IpcMainEvent, w: Workspace) => {
       WorkspaceService.deleteWorkspace(w).subscribe((b: boolean) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.DELETE_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.DELETE_OK'], null, null, null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -425,7 +428,7 @@ export default class Main {
     //Consulta de bancos de dados
     ipcMain.on('AC_getDatabases', (event: IpcMainEvent, showLogs: boolean) => {
       DatabaseService.getDatabases(showLogs).subscribe((db: Database[]) => {
-        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_OK'], null, null, null);
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_OK'], null, null, null, null, null);
         event.returnValue = db;
         return db;
       });
@@ -434,7 +437,7 @@ export default class Main {
     //Gravação de um banco de dados
     ipcMain.on('AC_saveDatabase', (event: IpcMainEvent, db: Database) => {
       DatabaseService.saveDatabase(db).subscribe((b: boolean) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.SAVE_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.SAVE_OK'], null, null, null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -443,7 +446,7 @@ export default class Main {
     //Remoção de um banco de dados
     ipcMain.on('AC_deleteDatabase', (event: IpcMainEvent, db: Database) => {
       DatabaseService.deleteDatabase(db).subscribe((b: boolean) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.DELETE_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.DELETE_OK'], null, null, null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -468,7 +471,7 @@ export default class Main {
     //Consulta dos agendamentos
     ipcMain.on('AC_getSchedules', (event: IpcMainEvent, showLogs: boolean) => {
       ScheduleService.getSchedules(showLogs).subscribe((s: Schedule[]) => {
-        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_OK'], null, null, null);
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.LOADING_OK'], null, null, null, null, null);
         event.returnValue = s;
         return s;
       });
@@ -485,7 +488,7 @@ export default class Main {
     //Remoção dos agendamentos
     ipcMain.on('AC_deleteSchedule', (event: IpcMainEvent, s: Schedule) => {
       ScheduleService.deleteSchedule(s).subscribe((b: boolean) => {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.DELETE_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCHEDULES.MESSAGES.DELETE_OK'], null, null, null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -520,7 +523,7 @@ export default class Main {
                 new TranslationInput('SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR', [file.errors + '', file.type])
               ]);
               
-              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations3['SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR'], null, null, null);
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations3['SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR'], null, null, null, null, null);
               Main.electronMessage(CNST_LOGLEVEL.ERROR, translations3['SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR']);
             }
           });
@@ -535,8 +538,6 @@ export default class Main {
       return lastValueFrom(ServerService.checkFileIntegrityRemotelly(s.id).pipe(switchMap((res1: FileValidation[]) => {
         let errors: number = 0;
         res1.map((file: FileValidation) => errors += file.errors);
-        
-        console.log(errors);
         if ((errors == 0) || (res1.length == 0)) {
           return ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
             return ServerService.executeAndUpdateScheduleRemotelly(inputBuffer, s.id).pipe(switchMap((res1: number) => {
@@ -559,7 +560,7 @@ export default class Main {
                 new TranslationInput('SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR', [file.errors + '', file.type])
               ]);
               
-              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations3['SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR'], null, null, null);
+              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations3['SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR'], null, null, null, null, null);
               Main.electronMessage(CNST_LOGLEVEL.ERROR, translations3['SCHEDULES.MESSAGES.FILE_VALIDATION_ERROR']);
             }
           });
@@ -580,7 +581,7 @@ export default class Main {
     //Consulta da configuração atual do Agent
     ipcMain.on('AC_getConfiguration', (event: IpcMainEvent, showLogs: boolean) => {
       ConfigurationService.getConfiguration(showLogs).subscribe((conf: Configuration) => {
-        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK'], null, null, null);
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK'], null, null, null, null, null);
         event.returnValue = conf;
         return conf;
       });
@@ -597,7 +598,7 @@ export default class Main {
           //Reinicia a consulta de atualizações do Agent, pois a mesma pode ter sido desligada
           if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.autoUpdaterCheck(conf.autoUpdate);
           
-          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK'], null, null, null);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK'], null, null, null, null, null);
         }
         
         return b;
@@ -617,7 +618,7 @@ export default class Main {
     //Consulta das queries
     ipcMain.on('AC_getQueries', (event: IpcMainEvent, showLogs: boolean) => {
       QueryService.getQueries(showLogs).subscribe((q: QueryClient[]) => {
-        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_OK'], null, null, null);
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.LOADING_OK'], null, null, null, null, null);
         event.returnValue = q;
         return q;
       });
@@ -626,7 +627,7 @@ export default class Main {
     //Consulta das queries pertencentes à um agendamento
     ipcMain.on('AC_getQueriesBySchedule', (event: IpcMainEvent, sc: Schedule, showLogs: boolean) => {
       QueryService.getQueriesBySchedule(sc, showLogs).subscribe((q: QueryClient[]) => {
-        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null);
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null, null, null);
         event.returnValue = q;
         return q;
       });
@@ -643,7 +644,7 @@ export default class Main {
     //Remoção da consulta
     ipcMain.on('AC_deleteQuery', (event: IpcMainEvent, q: QueryClient) => {
       QueryService.deleteQuery(q).subscribe((b: boolean) => {
-        if (b) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_OK'], null, null, null);
+        if (b) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.DELETE_OK'], null, null, null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -663,7 +664,7 @@ export default class Main {
     //Consulta das rotinas
     ipcMain.on('AC_getScripts', (event: IpcMainEvent, showLogs: boolean) => {
       ScriptService.getScripts(showLogs).subscribe((s: ScriptClient[]) => {
-        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_OK'], null, null, null);
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.LOADING_OK'], null, null, null, null, null);
         event.returnValue = s;
         return s;
       });
@@ -672,7 +673,7 @@ export default class Main {
     //Consulta das rotinas pertencentes à um agendamento
     ipcMain.on('AC_getScriptsBySchedule', (event: IpcMainEvent, sc: Schedule, showLogs: boolean) => {
       ScriptService.getScriptsBySchedule(sc, showLogs).subscribe((s: ScriptClient[]) => {
-        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null);
+        if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.SCHEDULE_LOADING_OK'], null, null, null, null, null);
         event.returnValue = s;
         return s;
       });
@@ -689,7 +690,7 @@ export default class Main {
     //Remoção da rotina
     ipcMain.on('AC_deleteScript', (event: IpcMainEvent, s: ScriptClient) => {
       ScriptService.deleteScript(s).subscribe((b: boolean) => {
-        if (b) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE_OK'], null, null, null);
+        if (b) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.DELETE_OK'], null, null, null, null, null);
         event.returnValue = b;
         return b;
       });
@@ -733,7 +734,7 @@ export default class Main {
     
     //Escrita no arquivo de log
     ipcMain.on('AC_writeToLog', (event: IpcMainEvent, loglevel: any, system: string, message: string, err: any) => {
-      event.returnValue = Files.writeToLog(loglevel, system, message, null, null, err);
+      event.returnValue = Files.writeToLog(loglevel, system, message, null, null, err, null, null);
     });
     
     //Consulta do número de versão atual do Agent
@@ -824,8 +825,8 @@ export default class Main {
     });
 
     //Acesso remoto do Agent client p/ outro client
-    ipcMain.handle('AC_requestRemoteAccess', (event: IpcMainEvent, agentCode: string) => {
-      return lastValueFrom(ServerService.requestRemoteAccess(agentCode).pipe(map((res: number) => {
+    ipcMain.handle('AC_requestRemoteAccessFromClient', (event: IpcMainEvent, agentCode: string) => {
+      return lastValueFrom(ServerService.requestRemoteAccessFromClient(agentCode).pipe(map((res: number) => {
         if (res == 1) {
             Main.willClose();
 
@@ -961,8 +962,8 @@ export default class Main {
     //Desligamento forçado do Agent, caso esta instância seja invocada pelo Agent-Server (MirrorMode)
     if ((Main.getMirrorMode() == 2) || (Main.getMirrorMode() == 3)) Main.terminateApplication();
     else {
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_WINDOW_CLOSE'], null, null, null);
-      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_SERVICE'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_WINDOW_CLOSE'], null, null, null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_SERVICE'], null, null, null, null, null);
     }
   }
   
@@ -1032,7 +1033,7 @@ export default class Main {
     
     //Consulta da configuração atual do Agent
     ConfigurationService.getConfiguration(true).subscribe((configuration: Configuration) => {
-      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_START'], null, null, null);
+      Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_START'], null, null, null, null, null);
       
       //Define a linguagem padrão a ser utilizada no Agent
       TranslationService.use((configuration.locale));
@@ -1065,7 +1066,7 @@ export default class Main {
           //Renderização da interface do Agent (Caso habilitado)
           Main.renderWindow();
           
-          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK'], null, null, null);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK'], null, null, null, null, null);
           
           //Configuração do temporizador de execuções automática do Agent, a cada segundo
           let thisDay: number = 0;
@@ -1080,13 +1081,13 @@ export default class Main {
                 ServerService.getUpdatesFromServer().subscribe((b: number) => {
                   switch (b) {
                     case (0):
-                      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_OK'], null, null, null);
+                      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_OK'], null, null, null, null, null);
                       break;
                     case (null):
-                      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_NOT_FOUND'], null, null, null);
+                      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_NOT_FOUND'], null, null, null, null, null);
                       break;
                     default:
-                      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR'], null, null, null);
+                      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR'], null, null, null, null, null);
                       Main.electronMessage(CNST_LOGLEVEL.ERROR, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR']);
                       break;
                     }
@@ -1138,7 +1139,7 @@ export default class Main {
     
     return regKey.set('autoUpdate', Winreg.REG_SZ, value, (err: any) => {
       if (err != null) {
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.WINDOWS_REGISTRY_ERROR'], null, null, err);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.WINDOWS_REGISTRY_ERROR'], null, null, err, null, null);
         return false;
       } else return true;
     });
@@ -1162,9 +1163,9 @@ export default class Main {
         clearInterval(Main.timerRefId);
         
         //Desliga todos os processos do Java atualmente em execução
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL'], null, null, null, null, null);
         Execute.killAllProcesses();
-        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL_OK'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.PROCESS_KILL_ALL_OK'], null, null, null, null, null);
       }
       
       //Envia as alterações feitas na instância espelhada, para o Agent-Server
@@ -1173,20 +1174,24 @@ export default class Main {
           new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_SYNC', [conf.instanceName]),
           new TranslationInput('MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR', [conf.instanceName])
         ]);
-        
-        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.MESSAGES.SERVER_SYNC'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.MESSAGES.SERVER_SYNC'], null, null, null, null, null);
         
         //Leitura do arquivo de configuração da instância espelhada do Agent
         Files.readApplicationData().subscribe((db: ClientData) => {
-          ServerService.deactivateMirrorMode(db).subscribe((b: boolean) => {
-            if (b) Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.SERVER_SYNC_OK'], null, null, null);
-            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR'], null, null, null);
 
-            Main.setMirrorMode(0);
-            Files.initApplicationData(true, 'pt-BR');
+          //Leitura das mensagens de log que precisam ser sincronizadas com a instância espelhada do Agent
+          let agentLogMessages: string = JSON.stringify(Files.getLogDataToSync());
 
+          //Realiza a sincronização do agent remoto
+          ServerService.deactivateMirrorMode(db, agentLogMessages).subscribe((b: boolean) => {
+            if (b) Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.SERVER_SYNC_OK'], null, null, null, null, null);
+            else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR'], null, null, null, null, null);
             if (mirror == 3) {
+              Main.setMirrorMode(0);
+              Files.initApplicationData(true, 'pt-BR');
               Main.createWindowObject();
+            } else {
+              Files.terminateLogStreams();
             }
           });
         });
@@ -1198,11 +1203,11 @@ export default class Main {
   
   /* Método de desligamento do Electron */
   private static terminateElectron(): void {
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_FINISH'], null, null, null);
 
     //Encerramento dos canais de log
     Files.terminateLogStreams();
 
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_FINISH'], null, null, null, null, null);
     if (process.platform !== 'darwin') Main.application.quit();
   }
 }

@@ -38,8 +38,9 @@ export class AgentLogMessage {
   level: string;
   execId?: string;
   scheduleId?: string;
-  
-  constructor(timestamp: Date, str_timestamp: string, loglevel: string, system: string, message: string, level: string, execId: string, scheduleId: string) {
+  mirror: string;
+  constructor(mirror: string, timestamp: Date, str_timestamp: string, loglevel: string, system: string, message: string, level: string, execId: string, scheduleId: string) {
+    this.mirror = mirror;
     this.timestamp = timestamp;
     this.str_timestamp = str_timestamp;
     this.loglevel = loglevel;
@@ -48,5 +49,20 @@ export class AgentLogMessage {
     this.level = level;
     this.execId = execId;
     this.scheduleId = scheduleId;
+  }
+
+  /* Método de conversão da mensagem de log (JSON => Objeto) */
+  public toObject(data: AgentLogMessage): AgentLogMessage {
+    this.timestamp = new Date(data.timestamp);
+    this.str_timestamp = data.str_timestamp;
+    this.loglevel = data.loglevel;
+    this.system = data.system;
+    this.message = data.message;
+    this.level = data.level;
+    this.execId = data.execId;
+    this.scheduleId = data.scheduleId;
+    this.mirror = data.mirror;
+
+    return this;
   }
 }

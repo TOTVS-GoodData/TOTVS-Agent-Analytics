@@ -93,6 +93,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     MESSAGES: {
       TITLE: 'MIRROR MODE ACTIVATED - All changes to this Agent instance will be replicated to remote Agent [${p1}]',
       ONLINE: 'Warning - Remote access triggered by TOTVS\'s central server. This Agent is now blocked until remote access end.',
+      ONLINE_CONSULTANT: 'Warning - Remote access triggered by external consultant. This Agent is now blocked until remote access end.',
       OFFLINE: 'Remote access finished. Agent is ready to use again.',
       RUNNING: 'Remote access in progress',
       WAIT: 'Please wait...',

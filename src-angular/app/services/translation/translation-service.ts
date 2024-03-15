@@ -260,6 +260,7 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('MIRROR_MODE.MODAL.BUTTONS.PROCEED', []),
       new TranslationInput('MIRROR_MODE.MODAL.BUTTONS.CANCEL', []),
       new TranslationInput('MIRROR_MODE.MESSAGES.ONLINE', []),
+      new TranslationInput('MIRROR_MODE.MESSAGES.ONLINE_CONSULTANT', []),
       new TranslationInput('MIRROR_MODE.MESSAGES.OFFLINE', []),
       new TranslationInput('MIRROR_MODE.MESSAGES.RUNNING', []),
       new TranslationInput('MIRROR_MODE.MESSAGES.WAIT', []),

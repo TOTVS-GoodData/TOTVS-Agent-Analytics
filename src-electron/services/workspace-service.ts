@@ -32,13 +32,13 @@ export class WorkspaceService {
   public static getWorkspaces(showLogs: boolean): Observable<Workspace[]> {
     
     //Escrita de logs (caso solicitado)
-    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING'], null, null, null);
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno dos ambientes cadastrados
     return Files.readApplicationData().pipe(map((_dbd: ClientData) => {
       return _dbd.workspaces;
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -51,7 +51,7 @@ export class WorkspaceService {
       new TranslationInput('WORKSPACES.MESSAGES.LOADING_DATABASES', [db.name])
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.LOADING_DATABASES'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.LOADING_DATABASES'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e filtragem dos ambientes cadastrados
     return Files.readApplicationData().pipe(map((_dbd: ClientData) => {
@@ -59,7 +59,7 @@ export class WorkspaceService {
         return (w.databaseIdRef === db.id)
       });
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_DATABASES_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['WORKSPACES.MESSAGES.LOADING_DATABASES_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -80,7 +80,7 @@ export class WorkspaceService {
       new TranslationInput('WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME', [w.name])
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent
     return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
@@ -91,7 +91,7 @@ export class WorkspaceService {
       //Impede o cadastro de um ambiente com o mesmo nome
       workspace_name = _dbd.workspaces.filter((workspace: Workspace) => (workspace.id != w.id)).find((workspace: Workspace) => (workspace.name == w.name));
       if (workspace_name != undefined) {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null, null, null);
         return of(false);
       } else {
         
@@ -107,7 +107,7 @@ export class WorkspaceService {
         return Files.writeApplicationData(_dbd);
       }
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.SAVE_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -121,7 +121,7 @@ export class WorkspaceService {
       new TranslationInput('WORKSPACES.MESSAGES.DELETE_ERROR', [w.name]),
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.DELETE'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.DELETE'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e remoção do ambiente cadastrado
     return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
@@ -130,7 +130,7 @@ export class WorkspaceService {
       
       return Files.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.DELETE_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['WORKSPACES.MESSAGES.DELETE_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }

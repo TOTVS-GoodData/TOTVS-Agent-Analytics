@@ -35,13 +35,13 @@ export class DatabaseService {
   public static getDatabases(showLogs: boolean): Observable<Database[]> {
     
     //Escrita de logs (caso solicitado)
-    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING'], null, null, null);
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e retorno dos bancos de dados cadastrados
     return Files.readApplicationData().pipe(map((_dbd: ClientData) => {
       return _dbd.databases;
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['DATABASES.MESSAGES.LOADING_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -62,7 +62,7 @@ export class DatabaseService {
       new TranslationInput('DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME', [db.name]),
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent
     return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
@@ -73,7 +73,7 @@ export class DatabaseService {
       //Impede o cadastro de um banco de dados com o mesmo nome
       db_name = _dbd.databases.filter((database: Database) => (database.id != db.id)).find((database: Database) => (database.name == db.name));
       if (db_name != undefined) {
-        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE_ERROR_SAME_NAME'], null, null, null, null, null);
         return of(false);
       } else {
         
@@ -89,7 +89,7 @@ export class DatabaseService {
       //Gravação do banco de dados no banco do Agent
       return Files.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.SAVE_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
@@ -103,7 +103,7 @@ export class DatabaseService {
       new TranslationInput('DATABASES.MESSAGES.DELETE_ERROR', [db.name])
     ]);
     
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.DELETE'], null, null, null);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.DELETE'], null, null, null, null, null);
     
     //Leitura do banco de dados atual do Agent, e remoção do banco de dados cadastrado
     return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
@@ -112,7 +112,7 @@ export class DatabaseService {
       
       return Files.writeApplicationData(_dbd);
     }), catchError((err: any) => {
-      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.DELETE_ERROR'], null, null, err);
+      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['DATABASES.MESSAGES.DELETE_ERROR'], null, null, err, null, null);
       throw err;
     }));
   }
