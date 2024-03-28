@@ -14,7 +14,7 @@ export const CNST_MIRRORMODE_PINGS_MAX: number = 5;
 
 /* Hostname / Porta do Agent-Server da TOTVS */
 export const CNST_SERVER_SOURCE: string = 'SERVER';
-export const CNST_SERVER_PORT: number = 2000;
+export const CNST_SERVER_PORT: number = 80;
 export const CNST_SERVER_HOSTNAME: any = {
   DEVELOPMENT: '::1',
   PRODUCTION: 'gooddata.fluig.com'
