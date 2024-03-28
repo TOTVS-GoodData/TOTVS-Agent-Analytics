@@ -60,13 +60,16 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       MESSAGES: {
         START: '=== LISTENER ACTIVADO EN LA PUERTA [${p1}]===',
         FINISH: '=== LISTENER DESACTIVADO EN LA PUERTA [${p1}]===',
-        ERROR: 'Error - La inicialización del servidor ha fallado.',
+        ERROR: 'Error - La comunicación con el servidor del TOTVS ha fallado.',
+        WARN: 'Atención - La comunicación con el servidor de TOTVS ha fallado. El Agent va intentar de nuevo cuando sea necesario.',
         NEW_WORD: '[${p1}] Nueva palabra de comando recibida: \'${p2}\'.',
         CONNECTED: '=== CONECTADO COM EL SERVIDOR (CLIENT) ===',
         DISCONNECTED: '=== CONEXIÓN CERRADA CON EL SERVIDOR (CLIENT) ===',
-        SEND_COMMAND: 'Enviando comando \'${p1}\' para el servidor TOTVS...',
-        SEND_COMMAND_RESPONSE: 'Respuesta del comando \'${p1}\' fue recibida.',
-        SEND_COMMAND_OK: 'Comando enviado. Esperando por una respuesta...',
+        SEND_REQUEST: 'Enviando comando \'${p1}\' para el servidor TOTVS...',
+        SEND_REQUEST_OK: 'Comando enviado. Esperando por una respuesta...',
+        REQUEST_RESPONSE: 'Respuesta del comando \'${p1}\' fue recibida.',
+        SEND_RESPONSE: 'Enviando respuesta del comando \'${p1}\' para el servidor TOTVS...',
+        SEND_RESPONSE_OK: 'La respuesta del comando \'${p1}\' fue enviada.',
         CONNECTION_ERROR: '=== Perda de conexión con el Agent remoto. Por favor cerre instância del Agent y intenta otra vez ===',
         DEACTIVATED: 'Atención - Agent desactivado por el servidor del TOTVS. Por favor entre en contacto con nuestro equipo de soporte.'
       }
@@ -547,7 +550,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       EXECUTION_TIME: 'Tiempo de execución',
       DETAILS: {
         TITLE: 'Detalles de la ejecución',
-        TIMESTAMP: 'Fecha/Hora',
+        LOGDATE: 'Fecha/Hora',
         LEVEL: 'Nivel',
         SOURCE: 'Origen',
         MESSAGE: 'Mensaje'
@@ -582,7 +585,6 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     JAVA_TMPDIR: 'Directorio de archivos temporarios',
     JAVA_JREDIR: 'Directorio de la JRE del Java',
     TIMEZONE: 'Fuso horario',
-    CLIENT_PORT: 'Puerta de comunicación con el servidor de TOTVS',
     MESSAGES: {
       LOADING: 'Cargando configuración...',
       LOADING_OK: 'Configuración cargada.',
@@ -591,9 +593,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       SAVE: 'Gravando configuración...',
       SAVE_ERROR: 'Error - Un error inesperado ocurrió. Por favor intenta otra vez.',
       SAVE_OK: 'Configuración actualizada con éxito!',
-      SAVE_ERROR_SERVER: 'Error - La comunicación con el servidor del TOTVS ha fallando. Volviendo cambios...',
-      SAVE_ERROR_CONFIG: 'Error - La gravación de la configuración ha fallado. Volviendo cambios...',
-      SAVE_ERROR_PORT: 'Error - La inicialización del servidor en la puerta \'${p1}\' ha fallado. Volviendo cambios...'
+      SAVE_ERROR_CONFIG: 'Error - La gravación de la configuración ha fallado. Volviendo cambios...'
     },
     TOOLTIPS: {
       INSTANCE: 'Nombre de la instancia del Agent, definido automaticamente por TOTVS. Este nombre es utilizado para ayudar el servicio del equipo de soporte del TOTVS.',
@@ -603,7 +603,6 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
       JAVA_TMPDIR: 'Directorio temporario, utilizar por el Agent para almacenar los archivos antes de cargar al GoodData. Selecciona un directorio que puede ser borrado, si necesario.',
       JAVA_JREDIR: 'Directorio ./bin, donde se encuentra los archivos binarios de la JRE del Java. Si no informado, Agent buscará el Java en las variables de ambiente del sistema.',
       AUTOUPDATE: 'Define si el Agent va bajar actualizaciones creadas por TOTVS automaticamente. En caso positivo, Agent va contestar el usuario cuando encontrar una nueva versión, y va hacer la instalación inmediatamente. En caso negativo, Agent no va actualizar a nadie.',
-      CLIENT_PORT: 'Selecciona el numero de la puerta para hacer la comunicación con el servidor del TOTVS. Este numero debe estar entre ${p1} y ${p2}.'
     }
   },
   FORM_ERRORS: {

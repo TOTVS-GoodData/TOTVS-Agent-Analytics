@@ -17,8 +17,11 @@ export const CNST_SERVER_SOURCE: string = 'SERVER';
 export const CNST_SERVER_PORT: number = 2000;
 export const CNST_SERVER_HOSTNAME: any = {
   DEVELOPMENT: '::1',
-  PRODUCTION: '10.171.70.55'
+  PRODUCTION: 'gooddata.fluig.com'
 };
+
+//Velocidade de transferência dos pacotes a serem enviados, do Agent-Client, para o Agent-Server (em milissegundos)
+export const CNST_SERVER_TRANSFER_TIME: number = 100;
 
 //Tipos de IP (IPv4 / IPv6)
 export const CNST_SERVER_IP: any = {

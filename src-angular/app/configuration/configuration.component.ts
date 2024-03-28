@@ -110,7 +110,6 @@ export class ConfigurationComponent implements OnInit {
   protected lbl_save: string = null;
   protected lbl_locale: string = null;
   protected lbl_timezone: string = null;
-  protected lbl_clientPort: string = null;
   
   //Balões de ajuda
   protected ttp_instance: string = null;
@@ -120,7 +119,6 @@ export class ConfigurationComponent implements OnInit {
   protected ttp_javaXmx: string = null;
   protected ttp_logfilesToKeep: string = null;
   protected ttp_autoUpdate: string = null;
-  protected ttp_clientPort: string = null;
   
   /**************************/
   /*** MÉTODOS DO MÓDULO  ***/
@@ -187,7 +185,6 @@ export class ConfigurationComponent implements OnInit {
       this.lbl_java = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA'];
       this.lbl_locale = this._translateService.CNST_TRANSLATIONS['LANGUAGES.TITLE'];
       this.lbl_timezone = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TIMEZONE'];
-      this.lbl_clientPort = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.CLIENT_PORT'] + CNST_MANDATORY_FORM_FIELD;
       this.lbl_save = this._translateService.CNST_TRANSLATIONS['BUTTONS.SAVE'];
       
       //Tradução dos balões de ajuda dos campos
@@ -197,12 +194,10 @@ export class ConfigurationComponent implements OnInit {
       this.ttp_javaJREDir = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.JAVA_JREDIR'];
       this.ttp_logfilesToKeep = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.LOGFILES'];
       this.ttp_autoUpdate = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.AUTOUPDATE'];
-      this.ttp_clientPort = this._translateService.CNST_TRANSLATIONS['CONFIGURATION.TOOLTIPS.CLIENT_PORT'];
       
       //Definição dos campos obrigatórios do formulário
       this.CNST_FIELD_NAMES = [
         { key: 'logfilesToKeep', minimum: CNST_LOGFILES_MINIMUM, maximum: CNST_LOGFILES_MAXIMUM, value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.LOGFILES_TO_KEEP'] },
-        { key: 'clientPort', minimum: CNST_PORT_MINIMUM, maximum: CNST_PORT_MAXIMUM, value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.CLIENT_PORT'] },
         { key: 'javaXmx', minimum: CNST_JAVA_XMX_MINIMUM, value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_XMX'] },
         { key: 'javaTmpDir', value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_TMPDIR'] }
       ];
@@ -254,26 +249,19 @@ export class ConfigurationComponent implements OnInit {
     if (this.validConfiguration()) {
       if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'] };
       
-      this._translateService.getTranslations([
-        new TranslationInput('CONFIGURATION.MESSAGES.SAVE_ERROR_PORT', [this.configuration.clientPort + ''])
-      ]).subscribe((translations: any) => {
+      //Grava a nova configuração do Agent
+      this._configurationService.saveConfiguration(this.configuration).subscribe((b: number) => {
+        switch (b) {
+          case (1): this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK']); break;
+          case (-1): this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_CONFIG']); break;
+        }
         
-        //Grava a nova configuração do Agent
-        this._configurationService.saveConfiguration(this.configuration).subscribe((b: number) => {
-          switch (b) {
-            case (1): this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK']); break;
-            case (-1): this._utilities.createNotification(CNST_LOGLEVEL.ERROR, translations['CONFIGURATION.MESSAGES.SAVE_ERROR_PORT']); break;
-            case (-2): this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_CONFIG']); break;
-            case (-3): this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_SERVER']); break;
-          }
-          
-          //Recarrega a página de configuração do Agent
-          this.reloadConfiguration();
-          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
-        }, (err: any) => {
-          this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR']);
-          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
-        });
+        //Recarrega a página de configuração do Agent
+        this.reloadConfiguration();
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
+      }, (err: any) => {
+        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR']);
+        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       });
     }
   }

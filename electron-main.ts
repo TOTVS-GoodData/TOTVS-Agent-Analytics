@@ -84,6 +84,15 @@ import { Configuration } from './src-angular/app/configuration/configuration-int
 /* Componentes rxjs para controle de Promise / Observable */
 import { Observable, from, lastValueFrom, map, switchMap, of } from 'rxjs';
 
+export class ElectronMessage {
+  level: any;
+  message: string;
+
+  constructor(level: any, message: string) {
+    this.level = level;
+    this.message = message;
+  }
+}
 export default class Main {
   
   /**************************/
@@ -107,7 +116,10 @@ export default class Main {
   //Referência da função de temporização do Agent
   private static timerRefId: any = null;
   private static mirrorPing: any = null;
-  
+
+  //Sistema de envio de mensagens do Electron, para a interface do Agent (Angular)
+  private static electronMessages: ElectronMessage[] = [];
+
   /********* Parâmetros CMD *********/
   //Define se a interface do Agent deve ser renderizada em tela, ou não
   private static hidden: boolean = false;
@@ -342,12 +354,12 @@ export default class Main {
     ipcMain.removeAllListeners('AC_saveDatabase');
     ipcMain.removeAllListeners('AC_deleteDatabase');
     ipcMain.removeHandler('AC_testDatabaseConnectionLocally');
-    ipcMain.removeHandler('AC_testDatabaseConnectionRemotelly');
+    ipcMain.removeHandler('AC_testAndSyncDatabaseConnection');
     ipcMain.removeAllListeners('AC_getSchedules');
     ipcMain.removeAllListeners('AC_saveSchedule');
     ipcMain.removeAllListeners('AC_deleteSchedule');
-    ipcMain.removeHandler('AC_executeAndUpdateScheduleLocally');
-    ipcMain.removeHandler('AC_executeAndUpdateScheduleRemotelly');
+    ipcMain.removeHandler('AC_requestScheduleExecutionLocally');
+    ipcMain.removeHandler('AC_requestScheduleExecutionRemotelly');
     ipcMain.removeHandler('AC_getAvailableExecutionWindows');
     ipcMain.removeHandler('AC_killProcess');
     ipcMain.removeAllListeners('AC_getConfiguration');
@@ -461,8 +473,12 @@ export default class Main {
       Teste de conexão a um banco de dados (Disparo Remoto)
       Este método é sempre disparado pela instância espelhada do Agent
     */
-    ipcMain.handle('AC_testDatabaseConnectionRemotelly', (event: IpcMainEvent, buffer: string) => {
-      return lastValueFrom(ServerService.testDatabaseConnectionRemotelly(buffer));
+    ipcMain.handle('AC_testAndSyncDatabaseConnection', (event: IpcMainEvent, buffer: string) => {
+      return lastValueFrom(ServerService.testDatabaseConnectionRemotelly(buffer).pipe(switchMap((b: number) => {
+        return ServerService.requestAgentLogsSinceRemoteStart().pipe(map((res2: boolean) => {
+          return b;
+        }));
+      })));
     });
     
     /*****************************/
@@ -495,7 +511,7 @@ export default class Main {
     });
     
     //Disparo da execução de um agendamento, e atualização da última data de execução do mesmo
-    ipcMain.handle('AC_executeAndUpdateScheduleLocally', (event: IpcMainEvent, s: Schedule) => {
+    ipcMain.handle('AC_requestScheduleExecutionLocally', (event: IpcMainEvent, s: Schedule) => {
       return lastValueFrom(Files.checkFileIntegrityLocally(s.fileFolder).pipe(switchMap((res1: FileValidation[]) => {
         
         let errors: number = 0;
@@ -534,13 +550,13 @@ export default class Main {
     });
     
     //Disparo da execução de um agendamento, e atualização da última data de execução do mesmo
-    ipcMain.handle('AC_executeAndUpdateScheduleRemotelly', (event: IpcMainEvent, s: Schedule) => {
+    ipcMain.handle('AC_requestScheduleExecutionRemotelly', (event: IpcMainEvent, s: Schedule) => {
       return lastValueFrom(ServerService.checkFileIntegrityRemotelly(s.id).pipe(switchMap((res1: FileValidation[]) => {
         let errors: number = 0;
         res1.map((file: FileValidation) => errors += file.errors);
         if ((errors == 0) || (res1.length == 0)) {
           return ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
-            return ServerService.executeAndUpdateScheduleRemotelly(inputBuffer, s.id).pipe(switchMap((res1: number) => {
+            return ServerService.requestScheduleExecutionRemotelly(inputBuffer, s.id).pipe(switchMap((res1: number) => {
               if (res1 == 1) {
                 return ScheduleService.updateScheduleLastExecution(s).pipe(map((res2: number) => {
                   return res2;
@@ -845,7 +861,7 @@ export default class Main {
   
   /* Método de envio de mensagens ao usuário */
   public static electronMessage(level: any, message: string): boolean {
-    if (Main.mainWindow != null) Main.mainWindow.webContents.send('AC_electronMessage', level, message);
+    Main.electronMessages.push(new ElectronMessage(level, message));
     return true;
   }
   
@@ -958,7 +974,7 @@ export default class Main {
   /* Método disparado após fechar a interface do Agent (Angular) */
   private static onClose(): void {
     Main.mainWindow = null;
-    
+
     //Desligamento forçado do Agent, caso esta instância seja invocada pelo Agent-Server (MirrorMode)
     if ((Main.getMirrorMode() == 2) || (Main.getMirrorMode() == 3)) Main.terminateApplication();
     else {
@@ -1048,84 +1064,97 @@ export default class Main {
       if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.autoUpdaterCheck(configuration.autoUpdate);
       
       //Inicialização do servidor de comunicação do Agent, para receber comandos do Agent-Server
-      ServerService.startServer(configuration.clientPort).subscribe((b: boolean) => {
-        if (b) {
-          
-          //Configuração da comunicação c/ Angular (IPC)
-          Main.setIpcListeners();
-          
-          //Configuração da inicialização automática do Agent, ao ligar o computador
-          if (((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) && (TOTVS_Agent_Analytics.isProduction())) Main.setAutoLaunchOptions();
-          
-          //Configuração do menu minimizado do Agent (Tray)
-          if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.updateTrayMenu();
-          
-          //Configuração da interface do Agent (Angular)
-          Main.createWindowObject();
-          
-          //Renderização da interface do Agent (Caso habilitado)
-          Main.renderWindow();
-          
-          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK'], null, null, null, null, null);
-          
-          //Configuração do temporizador de execuções automática do Agent, a cada segundo
-          let thisDay: number = 0;
-          let i: number = 0;
-          if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) {
-            Main.timerRefId = setInterval(() => {
-              let date: Date = new Date();
-              
-              //Atualização das consultas / rotinas padrões do FAST, a cada 24h de execução do Agent
-              if ((configuration.serialNumber != null) && (i == 86400)) {
-                i = 0;
-                ServerService.getUpdatesFromServer().subscribe((b: number) => {
-                  switch (b) {
-                    case (0):
-                      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_OK'], null, null, null, null, null);
-                      break;
-                    case (null):
-                      Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_NOT_FOUND'], null, null, null, null, null);
-                      break;
-                    default:
-                      Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR'], null, null, null, null, null);
-                      Main.electronMessage(CNST_LOGLEVEL.ERROR, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR']);
-                      break;
-                    }
+      ServerService.startWebSocketConnection().pipe(switchMap((b: boolean) => {
+        if (b) return ServerService.pingServer()
+        else return of(false)
+      })).subscribe((b: boolean) => {
+        
+        //Configuração da comunicação c/ Angular (IPC)
+        Main.setIpcListeners();
+        
+        //Configuração da inicialização automática do Agent, ao ligar o computador
+        if (((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) && (TOTVS_Agent_Analytics.isProduction())) Main.setAutoLaunchOptions();
+        
+        //Configuração do menu minimizado do Agent (Tray)
+        if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.updateTrayMenu();
+        
+        //Configuração da interface do Agent (Angular)
+        Main.createWindowObject();
+        
+        //Renderização da interface do Agent (Caso habilitado)
+        Main.renderWindow();
+        
+        Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_OK'], null, null, null, null, null);
+        
+        //Configuração do temporizador de execuções automática do Agent, a cada segundo
+        let thisDay: number = 0;
+        let i: number = 0;
+        if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) {
+          Main.timerRefId = setInterval(() => {
+            let date: Date = new Date();
+            
+            //Atualização das consultas / rotinas padrões do FAST, a cada 24h de execução do Agent
+            if ((configuration.serialNumber != null) && (i == 86400)) {
+              i = 0;
+              ServerService.getUpdates().subscribe((b: number) => {
+                switch (b) {
+                  case (0):
+                    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_OK'], null, null, null, null, null);
+                    break;
+                  case (null):
+                    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_NOT_FOUND'], null, null, null, null, null);
+                    break;
+                  default:
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR'], null, null, null, null, null);
+                    Main.electronMessage(CNST_LOGLEVEL.ERROR, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR']);
+                    break;
+                  }
+              });
+            }
+            
+            //Disparo dos agendamentos automaticamente, a cada minuto
+            if ((configuration.serialNumber != null) && (date.getSeconds() == 0)) {
+              ScheduleService.getSchedulesToExecute().subscribe((schedules: Schedule[]) => {
+                schedules.map(async (s: Schedule) => {
+                  await ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
+                    return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((res1: number) => {
+                      if (res1 == 1) {
+                        return ScheduleService.updateScheduleLastExecution(s).pipe(map((res2: number) => {
+                          return res2;
+                        }));
+                      } else {
+                        return of(res1);
+                      }
+                    }));
+                  })).subscribe();
                 });
-              }
-              
-              //Disparo dos agendamentos automaticamente, a cada minuto
-              if ((configuration.serialNumber != null) && (date.getSeconds() == 0)) {
-                ScheduleService.getSchedulesToExecute().subscribe((schedules: Schedule[]) => {
-                  schedules.map(async (s: Schedule) => {
-                    await ScheduleService.prepareScheduleToExecute(s).pipe(switchMap((inputBuffer: string) => {
-                      return ScheduleService.executeAndUpdateScheduleLocally(inputBuffer, s.id).pipe(switchMap((res1: number) => {
-                        if (res1 == 1) {
-                          return ScheduleService.updateScheduleLastExecution(s).pipe(map((res2: number) => {
-                            return res2;
-                          }));
-                        } else {
-                          return of(res1);
-                        }
-                      }));
-                    })).subscribe();
-                  });
-                });
-              }
-              
-              //Reinicialização dos arquivos de log, a cada dia (meia noite)
-              if ((configuration.serialNumber != null) && (date.getDate() != thisDay)) {
-                ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
-                  Files.deleteOldLogs();
-                  Files.initApplicationData(false, conf.locale);
-                  thisDay = date.getDate();
-                });
-              }
-              
-              i = i + 1;
-            }, 1000);
-          }
+              });
+            }
+            
+            //Reinicialização dos arquivos de log, a cada dia (meia noite)
+            if ((configuration.serialNumber != null) && (date.getDate() != thisDay)) {
+              ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
+                Files.deleteOldLogs();
+                Files.initApplicationData(false, conf.locale);
+                thisDay = date.getDate();
+              });
+            }
+
+            //Envio de mensagens do Electron, ao usuário
+            if ((Main.electronMessages.length > 0) && (Main.mainWindow != null)) {
+              Main.mainWindow.webContents.send('AC_electronMessage',
+                Main.electronMessages[Main.electronMessages.length - 1].level,
+                Main.electronMessages[Main.electronMessages.length - 1].message
+              );
+              Main.electronMessages.pop();
+            }
+            
+            i = i + 1;
+          }, 1000);
         }
+
+        //Caso a comunicação com o Agent-Server tenha falhado, é gerada uma mensagem de aviso ao usuário
+        if (!b) Main.electronMessage(CNST_LOGLEVEL.WARN, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.WARN']);
       });
     });
   }
@@ -1205,9 +1234,9 @@ export default class Main {
   private static terminateElectron(): void {
 
     //Encerramento dos canais de log
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_FINISH'], null, null, null, null, null);
     Files.terminateLogStreams();
 
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_FINISH'], null, null, null, null, null);
     if (process.platform !== 'darwin') Main.application.quit();
   }
 }

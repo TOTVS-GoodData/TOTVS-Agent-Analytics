@@ -60,13 +60,16 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       MESSAGES: {
         START: '=== LISTENER ONLINE ON PORT [${p1}]===',
         FINISH: '=== LISTENER OFFLINE ON PORT [${p1}]===',
-        ERROR: 'Error - Server initialization has failed.',
+        ERROR: 'Error - Communication with TOTVS\'s server has failed.',
+        WARN: 'Warning - Communication with TOTVS\'s server has failed. Agent will try again to connect when necessary.',
         NEW_WORD: '[${p1}] New command word received: \'${p2}\'.',
         CONNECTED: '=== CONNECTED TO SERVER ===',
         DISCONNECTED: '=== DISCONNECTED FROM SERVER ===',
-        SEND_COMMAND: 'Sending \'${p1}\' command to TOTVS\'s server...',
-        SEND_COMMAND_RESPONSE: '\'${p1}\'s command response was received.',
-        SEND_COMMAND_OK: 'Request sent. Listening for a reponse...',
+        SEND_REQUEST: 'Sending \'${p1}\' request to TOTVS\'s server...',
+        SEND_REQUEST_OK: 'Request sent. Listening for a reponse...',
+        REQUEST_RESPONSE: '\'${p1}\' request response was received.',
+        SEND_RESPONSE: 'Sending command \'${p1}\' response to TOTVS\'s server...',
+        SEND_RESPONSE_OK: 'Command \'${p1}\' response was sent.',
         CONNECTION_ERROR: '=== Connection lost to remote Agent. Please close this instance and try again ===',
         DEACTIVATED: 'Warning - Agent deactivated by TOTVS\'s server. Please reach out to support team.'
       }
@@ -547,7 +550,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       EXECUTION_TIME: 'Execution time',
       DETAILS: {
         TITLE: 'Execution details',
-        TIMESTAMP: 'Timestamp',
+        LOGDATE: 'Timestamp',
         LEVEL: 'Level',
         SOURCE: 'Source',
         MESSAGE: 'Message'
@@ -582,7 +585,6 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     JAVA_TMPDIR: 'Temporary files directory',
     JAVA_JREDIR: 'Java\'s JRE directory',
     TIMEZONE: 'Timezone',
-    CLIENT_PORT: 'TOTVS Server\'s communication port',
     MESSAGES: {
       LOADING: 'Loading configurations...',
       LOADING_OK: 'Configurations loaded.',
@@ -591,9 +593,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       SAVE: 'Saving configuration...',
       SAVE_ERROR: 'Error - An unexpected error has happened. Please try again.',
       SAVE_OK: 'Configuration successfully saved!',
-      SAVE_ERROR_SERVER: 'Error - TOTVS\'s server communication could not be stablished. Reverting changes...',
-      SAVE_ERROR_CONFIG: 'Error - New configuration could not be saved. Reverting changes...',
-      SAVE_ERROR_PORT: 'Error - Server initialization at port \'${p1}\' has failed. Reverting changes...'
+      SAVE_ERROR_CONFIG: 'Error - New configuration could not be saved. Reverting changes...'
     },
     TOOLTIPS: {
       INSTANCE: 'Agent\'s instance name, set automatically by TOTVS. This name is used to help TOTVS\'s support team.',
@@ -603,7 +603,6 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       JAVA_TMPDIR: 'Temporary directory, used by Agent to store files before uploading to GoodData. Choose a directory that can be completely deleted if necessary.',
       JAVA_JREDIR: './bin directory, where Java\'s binary files are located. If not informed, Agent will search for Java under the system\'s environment variables.',
       AUTOUPDATE: 'Defines if Agent will automatically install any updates created by TOTVS. If positive, the user will be prompted when a new update has been found, which in turn will be installed immediately. If negative, Agent will never try to update itself.',
-      CLIENT_PORT: 'Choose the port\'s number that Agent will use to communicate with TOTVS\'s server. This number must be between ${p1} and ${p2}.'
     }
   },
   FORM_ERRORS: {

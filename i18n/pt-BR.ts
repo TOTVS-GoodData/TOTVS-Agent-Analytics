@@ -60,13 +60,16 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       MESSAGES: {
         START: '=== LISTENER ATIVADO NA PORTA [${p1}]===',
         FINISH: '=== LISTENER DESATIVADO NA PORTA [${p1}]===',
-        ERROR: 'Erro - Falha na inicialização do servidor.',
+        ERROR: 'Erro - Falha na comunicação com o servidor da TOTVS.',
+        WARN: 'Aviso - Falha na comunicação com o servidor da TOTVS. O Agent irá tentar se conectar novamente quando for necessário.',
         NEW_WORD: '[${p1}] Nova palavra de comando recebida: \'${p2}\'.',
         CONNECTED: '=== CONECTADO COM O SERVIDOR (CLIENT) ===',
         DISCONNECTED: '=== CONEXÃO ENCERRADA COM O SERVIDOR (CLIENT) ===',
-        SEND_COMMAND: 'Enviando comando \'${p1}\' ao servidor da TOTVS...',
-        SEND_COMMAND_RESPONSE: 'Resposta do comando \'${p1}\' foi recebida.',
-        SEND_COMMAND_OK: 'Requisição enviada. Aguardando resposta...',
+        SEND_REQUEST: 'Enviando requ~isição \'${p1}\' ao servidor da TOTVS...',
+        SEND_REQUEST_OK: 'Requisição enviada. Aguardando resposta...',
+        REQUEST_RESPONSE: 'Resposta da requisição \'${p1}\' foi recebida.',
+        SEND_RESPONSE: 'Enviando resposta do comando \'${p1}\' ao servidor da TOTVS...',
+        SEND_RESPONSE_OK: 'Resposta do comando \'${p1}\' foi enviada.',
         CONNECTION_ERROR: '=== Perda de conexão com o Agent remoto. Feche esta instância do Agent e tente novamente ===',
         SERVER_PING_WARNING: 'Aviso - Falha na comunicação com o Servidor (${p1}/${p2}). Tentaremos novamente em 1 minuto...',
         SERVER_PING_ERROR: 'Erro - Comunicação com o servidor perdida. Acesso remoto abortado.',
@@ -552,7 +555,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       EXECUTION_TIME: 'Tempo de execução',
       DETAILS: {
         TITLE: 'Detalhes da execução',
-        TIMESTAMP: 'Data/Hora',
+        LOGDATE: 'Data/Hora',
         LEVEL: 'Nível',
         SOURCE: 'Origem',
         MESSAGE: 'Mensagem'
@@ -587,7 +590,6 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     JAVA_TMPDIR: 'Diretório de arquivos temporários',
     JAVA_JREDIR: 'Diretório da JRE do Java',
     TIMEZONE: 'Fuso horário',
-    CLIENT_PORT: 'Porta de comunicação com o servidor da TOTVS',
     MESSAGES: {
       LOADING: 'Carregando configurações...',
       LOADING_OK: 'Configurações carregadas.',
@@ -596,9 +598,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       SAVE: 'Gravando configuração...',
       SAVE_ERROR: 'Erro - Um erro inesperado ocorreu. Por favor tente novamente.',
       SAVE_OK: 'Configuração atualizada com sucesso!',
-      SAVE_ERROR_SERVER: 'Erro - Falha na comunicação com o servidor da TOTVS. Revertendo alterações...',
-      SAVE_ERROR_CONFIG: 'Erro - Falha na gravação da nova configuração. Revertendo alterações...',
-      SAVE_ERROR_PORT: 'Erro - Falha na inicialização do servidor na porta \'${p1}\'. Revertendo alterações...'
+      SAVE_ERROR_CONFIG: 'Erro - Falha na gravação da nova configuração. Revertendo alterações...'
     },
     TOOLTIPS: {
       INSTANCE: 'Nome desta instância do Agent, definido automaticamente pela TOTVS. Este nome é usado para facilitar o atendimento da equipe de suporte da TOTVS.',
@@ -607,8 +607,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       JAVA_XMX: 'Alocação máxima de memória RAM (MB - Megabytes) que o Agent pode utilizar ao executar agendamentos. Caso a memória não seja suficiente, o Agent irá finalizar a execução, com uma mensagem de erro. Valor mínimo: ${p1}MB',
       JAVA_TMPDIR: 'Diretório temporário, usado pelo Agent para guardar os arquivos antes de enviá-los para o GoodData. Selecione um diretório que pode ser completamente apagado, caso necessário.',
       JAVA_JREDIR: 'Diretório ./bin, onde estão os arquivos binários da JRE do Java. Caso não seja informado, o Agent irá procurar o Java nas variáveis de ambiente do sistema.',
-      AUTOUPDATE: 'Define se o Agent irá baixar atualizações disponibilizadas pela TOTVS. Em caso positivo, o Agent irá avisar ao usuário quando encontrar uma nova versão, que será aplicada logo em sequência. Em caso negativo, nenhuma atualização será instalada.',
-      CLIENT_PORT: 'Informe a porta deste computador a ser utilizada pelo Agent, para comunicação com o servidor da TOTVS. Este valor deve estar entre ${p1} e ${p2}.'
+      AUTOUPDATE: 'Define se o Agent irá baixar atualizações disponibilizadas pela TOTVS. Em caso positivo, o Agent irá avisar ao usuário quando encontrar uma nova versão, que será aplicada logo em sequência. Em caso negativo, nenhuma atualização será instalada.',      
     }
   },
   FORM_ERRORS: {

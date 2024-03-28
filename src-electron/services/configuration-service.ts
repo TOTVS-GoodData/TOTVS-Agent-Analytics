@@ -48,7 +48,6 @@ export class ConfigurationService {
       conf.instanceName = db.configuration.instanceName;
       conf.logPath = db.configuration.logPath;
       conf.timezone = db.configuration.timezone;
-      conf.clientPort = db.configuration.clientPort;
       conf.serialNumber = db.configuration.serialNumber;
       conf.javaJREDir = db.configuration.javaJREDir;
       
@@ -62,56 +61,28 @@ export class ConfigurationService {
   /* Método de gravação da configuração do Agent */
   public static saveConfiguration(conf: Configuration): Observable<number> {
     
-    //Consulta das traduções
-    let translations: any = TranslationService.getTranslations([
-      new TranslationInput('CONFIGURATION.MESSAGES.SAVE_ERROR_PORT', ['' + conf.clientPort])
-    ]);
-    
     //Leitura da configuração atual do Agent
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE'], null, null, null, null, null);
     return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       let oldData: ClientData = { ..._dbd };
       _dbd.configuration = conf;
       
-      //Reinicialização do servidor do Agent, e gravação da nova configuração
-      return ServerService.startServer(conf.clientPort).pipe(switchMap((b: boolean) => {
-        if (b) return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
+      //Gravação da nova configuração
+      return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
+        if (b) {
           if (conf.serialNumber != null) {
-            if (b) {
-              if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) {
-                return ServerService.updateCommunicationPort(['' + conf.clientPort]).pipe(switchMap((b: boolean) => {
-                  if (b) {
-                    //Atualiza o idioma utilizado pelo Agent (caso tenha sido alterado)
-                    TranslationService.use(conf.locale);
-                    return of(1);
-                  } else {
-                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_SERVER'], null, null, null, null, null);
-                    return ServerService.startServer(oldData.configuration.clientPort).pipe(switchMap((b: boolean) => {
-                      return Files.writeApplicationData(oldData).pipe(map((b: boolean) => {
-                        return -3;
-                      }));
-                    }));
-                  }
-                }));
-              } else {
-                TranslationService.use(conf.locale);
-                return of(1);
-              }
-            } else {
-              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_CONFIG'], null, null, null, null, null);
-              return ServerService.startServer(oldData.configuration.clientPort).pipe(map((b: boolean) => {
-                return -2;
-              }));
+            if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) {
+
+              //Atualiza o idioma utilizado pelo Agent (caso tenha sido alterado)
+              TranslationService.use(conf.locale);
+              return of(1);
             }
           } else {
             return of(1);
           }
-        }));
-        else {
-          Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['CONFIGURATION.MESSAGES.SAVE_ERROR_PORT'], null, null, null, null, null);
-          return ServerService.startServer(oldData.configuration.clientPort).pipe(map((b: boolean) => {
-            return -1;
-          }));
+        } else {
+          Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_ERROR_CONFIG'], null, null, null, null, null);
+          return of(-1);
         }
       }));
     }), catchError((err: any) => {

@@ -213,7 +213,7 @@ export class DatabaseService {
             }));
           }));
         } else {
-          return from(this._electronService.ipcRenderer.invoke('AC_testDatabaseConnectionRemotelly', params)).pipe(switchMap((res: number) => {
+          return from(this._electronService.ipcRenderer.invoke('AC_testAndSyncDatabaseConnection', params)).pipe(switchMap((res: number) => {
             return this.printMessage(db, res, showMessage).pipe(map((res: number) => {
               return res;
             }));

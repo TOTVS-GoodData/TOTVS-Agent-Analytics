@@ -70,14 +70,14 @@ export class MonitorService {
         try {
           let messages: any = JSON.parse(log);
           if ((messages.execId != null) && (messages.scheduleId != null)) {
-            messages.str_timestamp = messages.timestamp;
-            messages.timestamp = new Date('' + messages.timestamp);
+            messages.str_logDate = messages.logDate;
+            messages.logDate = new Date('' + messages.logDate);
             agentLogMessages.push(messages);
             lastMessage = messages;
           }
         //Conversão dos textos de log de erro
         } catch (ex) {
-          agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.timestamp, lastMessage.str_timestamp, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+          agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
         }
       });
       
@@ -91,7 +91,7 @@ export class MonitorService {
         //Filtra todas as mensagens de log de cada execução
         let filteredMessages: Array<AgentLogMessage> = agentLogMessages
           .filter((message3: AgentLogMessage) => ((message2.scheduleId == message3.scheduleId) && (message2.execId == message3.execId)))
-          .sort((a: AgentLogMessage, b: AgentLogMessage) => (a.timestamp.getTime() - b.timestamp.getTime()));
+          .sort((a: AgentLogMessage, b: AgentLogMessage) => (a.logDate.getTime() - b.logDate.getTime()));
         
         //Detecta o idioma usado em cada execução
         let languages: string[] = this._customTranslationLoader.getAvailableLanguages();
@@ -127,7 +127,7 @@ export class MonitorService {
           ,scheduleName: (schedule != null ? schedule.name : this._translateService.CNST_TRANSLATIONS['MONITOR.MESSAGES.SCHEDULE_NOT_FOUND'])
           ,scheduleLines: filteredMessages.length
           ,execId: message2.execId
-          ,startDate: (startDateJava != null ? new Date(startDateJava) : filteredMessages[0].timestamp)
+          , startDate: (startDateJava != null ? new Date(startDateJava) : filteredMessages[0].logDate)
           ,str_startDate: startDateJava
           ,endDate: (endDateJava != null ? new Date(endDateJava) : null)
           ,str_endDate: endDateJava

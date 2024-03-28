@@ -19,7 +19,6 @@ export class Configuration {
   javaJREDir: string;
   logPath?: string;
   timezone: string;
-  clientPort: number;
   serialNumber: string;
   
   constructor(logfilesToKeep: number, debug: boolean, javaXmx: number, javaTmpDir: string, locale: string, autoUpdate: boolean) {
@@ -31,7 +30,6 @@ export class Configuration {
     this.locale = locale;
     this.autoUpdate = autoUpdate;
     this.timezone = CNST_TIMEZONES_DEFAULT[locale];
-    this.clientPort = CNST_DEFAULT_CLIENT_PORT;
     this.serialNumber = null;
   }
   

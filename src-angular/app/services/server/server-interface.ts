@@ -24,6 +24,18 @@ export class responseObj {
   }
 }
 
+/* Interface de pacotes a serem enviados ao Agent-Server */
+export class Package {
+  word: string;
+  buffer: string;
+  type: number;
+  constructor(word: string, buffer: string, type: number) {
+    this.word = word;
+    this.buffer = buffer;
+    this.type = type;
+  }
+}
+
 /* Interface de comunicação com o Agent-Server */
 export class ServerCommunication {
   source: string;

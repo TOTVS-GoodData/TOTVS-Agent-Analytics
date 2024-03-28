@@ -30,8 +30,8 @@ export class AgentLog {
 
 /* Interface de linhas de log do Agent (Implementada também no Java) */
 export class AgentLogMessage {
-  timestamp: Date;
-  str_timestamp: string;
+  logDate: Date;
+  str_logDate: string;
   loglevel: string;
   system: string;
   message: string;
@@ -39,10 +39,10 @@ export class AgentLogMessage {
   execId?: string;
   scheduleId?: string;
   mirror: string;
-  constructor(mirror: string, timestamp: Date, str_timestamp: string, loglevel: string, system: string, message: string, level: string, execId: string, scheduleId: string) {
+  constructor(mirror: string, logDate: Date, str_logDate: string, loglevel: string, system: string, message: string, level: string, execId: string, scheduleId: string) {
     this.mirror = mirror;
-    this.timestamp = timestamp;
-    this.str_timestamp = str_timestamp;
+    this.logDate = logDate;
+    this.str_logDate = str_logDate;
     this.loglevel = loglevel;
     this.system = system;
     this.message = message;
@@ -53,8 +53,8 @@ export class AgentLogMessage {
 
   /* Método de conversão da mensagem de log (JSON => Objeto) */
   public toObject(data: AgentLogMessage): AgentLogMessage {
-    this.timestamp = new Date(data.timestamp);
-    this.str_timestamp = data.str_timestamp;
+    this.logDate = new Date(data.logDate);
+    this.str_logDate = data.str_logDate;
     this.loglevel = data.loglevel;
     this.system = data.system;
     this.message = data.message;

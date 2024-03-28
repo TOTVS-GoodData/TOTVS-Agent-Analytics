@@ -151,7 +151,7 @@ export class MonitorComponent implements OnInit {
     
     //Tradução das colunas da tabela de detalhamento de logs
     this.setDetailColumns = [
-      { property: 'str_timestamp', label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.DETAILS.TIMESTAMP'], width: '20%' },
+      { property: 'str_logDate', label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.DETAILS.LOGDATE'], width: '20%' },
       { property: 'loglevel', label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.DETAILS.LEVEL'], width: '10%' },
       { property: 'system', label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.DETAILS.SOURCE'], width: '10%' },
       { property: 'message', label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.DETAILS.MESSAGE'], width: '60%' }

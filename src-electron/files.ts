@@ -628,14 +628,14 @@ export class Files {
     Files.readLogs().map((log: string) => {
       try {
         let messages: any = JSON.parse(log);
-        messages.str_timestamp = messages.timestamp;
-        messages.timestamp = new Date('' + messages.timestamp);
+        messages.str_logDate = messages.logDate;
+        messages.logDate = new Date('' + messages.logDate);
         agentLogMessagesCurrent.push(messages);
         lastMessage = messages;
         
       //Conversão dos textos de log de erro
       } catch (ex) {
-        agentLogMessagesCurrent.push(new AgentLogMessage(lastMessage.mirror, lastMessage.timestamp, lastMessage.str_timestamp, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+        agentLogMessagesCurrent.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
       }
     });
     
@@ -646,24 +646,24 @@ export class Files {
       Apenas as mensagens dos arquivos de log remoto precisam ser ordenadas.
     */
     agentLogMessagesCurrent = agentLogMessagesCurrent.filter((message: AgentLogMessage) => {
-      return (Files.dateDiff(message.timestamp, agentLogMessagesNew[0].timestamp) <= 1);
+      return (Files.dateDiff(message.logDate, agentLogMessagesNew[0].logDate) <= 1);
     });
     
     //Combina todas as mensagens de log, e as ordena.
     agentLogMessagesFinal = agentLogMessagesCurrent.concat(agentLogMessagesNew)
-      .sort((a: AgentLogMessage, b: AgentLogMessage) => (a.timestamp.getTime() - b.timestamp.getTime()));
+      .sort((a: AgentLogMessage, b: AgentLogMessage) => (a.logDate.getTime() - b.logDate.getTime()));
     
     //Extrai todas as datas distintas encontradas nos logs
     agentLogMessagesFinal.filter((message1: AgentLogMessage) => {
-      let date: string = Files.formatDate(message1.timestamp);
+      let date: string = Files.formatDate(message1.logDate);
       let check: boolean = logfiles.has(date);
       logfiles.add(date);
       return !check;
     }).map((message2: AgentLogMessage) => {
 
       //Cria um novo arquivo de log, em branco, para a reescrita completa do mesmo
-      let logfile: string = CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(message2.timestamp) + '.' + CNST_LOGS_EXTENSION;
-      let logfileMirror: string = CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + CNST_LOGS_MIRROR_FILENAME + '-' + Files.formatDate(message2.timestamp) + '.' + CNST_LOGS_EXTENSION;
+      let logfile: string = CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION;
+      let logfileMirror: string = CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + CNST_LOGS_MIRROR_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION;
       fs.truncateSync(logfile);
       fs.truncateSync(logfileMirror);
 
@@ -679,7 +679,7 @@ export class Files {
             case CNST_LOGLEVEL.DEBUG.tag: level = CNST_LOGLEVEL.DEBUG; break;
           }
 
-          Files.writeToLog(level, line.system, line.message, line.execId, line.scheduleId, null, line.timestamp, line.mirror);
+          Files.writeToLog(level, line.system, line.message, line.execId, line.scheduleId, null, line.logDate, line.mirror);
         }
         lastLine = line.message;
       });
@@ -716,13 +716,13 @@ export class Files {
     Files.readLogs().map((log: string) => {
       try {
         let messages: any = JSON.parse(log);
-        messages.timestamp = new Date('' + messages.timestamp);
+        messages.logDate = new Date('' + messages.logDate);
         agentLogMessages.push(messages);
         lastMessage = messages;
 
       //Conversão dos textos de log de erro
       } catch (ex) {
-        agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.timestamp, lastMessage.str_timestamp, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+        agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
       }
     });
 
@@ -732,7 +732,7 @@ export class Files {
       Apenas as mensagens que não estão ainda armazenadas n
     */
     agentLogMessages = agentLogMessages.filter((message: AgentLogMessage) => {
-      return ((message.mirror == CNST_LOGS_TAGS_MIRROR) && (message.timestamp.getTime() >= Files.startDate.getTime()));
+      return ((message.mirror == CNST_LOGS_TAGS_MIRROR) && (message.logDate.getTime() >= Files.startDate.getTime()));
     });
 
     return agentLogMessages;
