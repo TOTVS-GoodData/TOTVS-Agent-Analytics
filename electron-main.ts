@@ -143,16 +143,6 @@ export default class Main {
   /*********************************/
   /******* MÉTODOS DO MÓDULO  ******/
   /*********************************/
-  /* Método de consulta do acesso remoto (MirrorMode) */
-  public static getMirrorMode(): number {
-    return Main.mirrorMode;
-  }
-  
-  /* Método de ativação do acesso remoto do Agent (MirrorMode) */
-  public static setMirrorMode(mirror: number): void {
-    Main.mirrorMode = mirror;
-  }
-  
   /* Método de atualização das preferências vinculadas ao acesso remoto (MirrorMode) */
   public static updateDeactivationPreferrences(): void {
     if (Main.mainWindow != null) Main.mainWindow.webContents.send('AC_deactivateAgent', null);
@@ -162,8 +152,8 @@ export default class Main {
   /* Método de atualização das preferências vinculadas ao acesso remoto (MirrorMode) */
   public static updateMirrorModePreferences(): Observable<boolean> {
     return ConfigurationService.getConfiguration(false).pipe(map((conf: Configuration) => {
-      if (Main.mainWindow != null) Main.mainWindow.webContents.send('AC_setMirrorMode', Main.getMirrorMode());
-      if (Main.getMirrorMode() == 1) {
+      if (Main.mainWindow != null) Main.mainWindow.webContents.send('AC_setMirrorMode', TOTVS_Agent_Analytics.getMirrorMode());
+      if (TOTVS_Agent_Analytics.getMirrorMode() == 1) {
         if (Main.trayMenu) {
           Main.trayMenu.destroy();
           Main.trayMenu = null;
@@ -197,7 +187,7 @@ export default class Main {
           }, 1000);
         }
         return true;
-      } else if (Main.getMirrorMode() == 0) {
+      } else if (TOTVS_Agent_Analytics.getMirrorMode() == 0) {
         clearInterval(Main.mirrorPing);
         TranslationService.use(conf.locale);
         Main.updateTrayMenu();
@@ -609,10 +599,10 @@ export default class Main {
         if (b == 1) {
           
           //Atualiza o menu do sistema operacional, pois o usuário pode ter alterado o idioma do Agent
-          if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.updateTrayMenu();
+          if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) Main.updateTrayMenu();
           
           //Reinicia a consulta de atualizações do Agent, pois a mesma pode ter sido desligada
-          if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.autoUpdaterCheck(conf.autoUpdate);
+          if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) Main.autoUpdaterCheck(conf.autoUpdate);
           
           Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.SAVE_OK'], null, null, null, null, null);
         }
@@ -836,8 +826,8 @@ export default class Main {
     /*****************************/
     //Consulta do modo de execução do acesso remoto (Mirror Mode)
     ipcMain.on('AC_getMirrorMode', (event: IpcMainEvent) => {
-      event.returnValue = Main.getMirrorMode();
-      return Main.getMirrorMode();
+      event.returnValue = TOTVS_Agent_Analytics.getMirrorMode();
+      return TOTVS_Agent_Analytics.getMirrorMode();
     });
 
     //Acesso remoto do Agent client p/ outro client
@@ -848,10 +838,10 @@ export default class Main {
 
             //Espera 3 segundos para os eventos de fechamento da interface sejam encerrados
           setTimeout(() => {
-                Main.setMirrorMode(3);
-                Files.initApplicationData(true, 'pt-BR');
-                Main.createWindowObject();
-            }, 1000);
+            TOTVS_Agent_Analytics.setMirrorMode(3);
+            Files.initApplicationData(true, 'pt-BR');
+            Main.createWindowObject();
+          }, 1000);
         }
 
         return res;
@@ -976,7 +966,7 @@ export default class Main {
     Main.mainWindow = null;
 
     //Desligamento forçado do Agent, caso esta instância seja invocada pelo Agent-Server (MirrorMode)
-    if ((Main.getMirrorMode() == 2) || (Main.getMirrorMode() == 3)) Main.terminateApplication();
+    if ((TOTVS_Agent_Analytics.getMirrorMode() == 2) || (TOTVS_Agent_Analytics.getMirrorMode() == 3)) Main.terminateApplication();
     else {
       Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_WINDOW_CLOSE'], null, null, null, null, null);
       Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_SERVICE'], null, null, null, null, null);
@@ -989,9 +979,9 @@ export default class Main {
   /* Método de inicialização do Electron */
   static main(_app: App, mirrorMode: number) {
     Main.application = _app;
-    Main.setMirrorMode(mirrorMode);
+    TOTVS_Agent_Analytics.setMirrorMode(mirrorMode);
     
-    if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.application.disableHardwareAcceleration();
+    if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) Main.application.disableHardwareAcceleration();
 
     //Inicialização do serviço de tradução
     TranslationService.init();
@@ -1002,7 +992,7 @@ export default class Main {
     
     //Solicita a trava de única instância do Agent. Caso não consiga, este Agent é encerrado
     //Este processo é utilizado para bloquear a abertura de 2 Agents ao mesmo tempo
-    if ((TOTVS_Agent_Analytics.isProduction()) && ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1))) {
+    if ((TOTVS_Agent_Analytics.isProduction()) && ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1))) {
       Main.application.requestSingleInstanceLock();
       if (!Main.application.hasSingleInstanceLock()) {
         let translations: any = TranslationService.getTranslations([
@@ -1021,7 +1011,7 @@ export default class Main {
     Main.hidden = (Main.application.commandLine.hasSwitch('hidden') ? true : false);
     
     //Configuração dos eventos a serem disparados após a inicialização do Electron
-    if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.application.on('ready', Main.onReady);
+    if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) Main.application.on('ready', Main.onReady);
     else Main.onReady();
     
     Main.application.on('window-all-closed', () => {});
@@ -1055,13 +1045,13 @@ export default class Main {
       TranslationService.use((configuration.locale));
       
       //Atualização do registro do Windows p/ atualização automática (false)
-      if ((process.platform == 'win32') && ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) && (TOTVS_Agent_Analytics.isProduction())) Main.setWindowsAutoUpdateRegistry(0);
+      if ((process.platform == 'win32') && ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) && (TOTVS_Agent_Analytics.isProduction())) Main.setWindowsAutoUpdateRegistry(0);
       
       //Configuração da atualização automática do Agent
-      if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.setAutoUpdaterPreferences();
+      if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) Main.setAutoUpdaterPreferences();
       
       //Disparo da atualização automática do Agent (Caso habilitado)
-      if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.autoUpdaterCheck(configuration.autoUpdate);
+      if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) Main.autoUpdaterCheck(configuration.autoUpdate);
       
       //Inicialização do servidor de comunicação do Agent, para receber comandos do Agent-Server
       ServerService.startWebSocketConnection().pipe(switchMap((b: boolean) => {
@@ -1073,10 +1063,10 @@ export default class Main {
         Main.setIpcListeners();
         
         //Configuração da inicialização automática do Agent, ao ligar o computador
-        if (((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) && (TOTVS_Agent_Analytics.isProduction())) Main.setAutoLaunchOptions();
+        if (((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) && (TOTVS_Agent_Analytics.isProduction())) Main.setAutoLaunchOptions();
         
         //Configuração do menu minimizado do Agent (Tray)
-        if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) Main.updateTrayMenu();
+        if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) Main.updateTrayMenu();
         
         //Configuração da interface do Agent (Angular)
         Main.createWindowObject();
@@ -1089,7 +1079,7 @@ export default class Main {
         //Configuração do temporizador de execuções automática do Agent, a cada segundo
         let thisDay: number = 0;
         let i: number = 0;
-        if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) {
+        if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) {
           Main.timerRefId = setInterval(() => {
             let date: Date = new Date();
             
@@ -1178,7 +1168,7 @@ export default class Main {
   private static terminateApplication(): void {
 
     //Variável que armazena o nível de acesso que disparou esta função.
-    let mirror: number = Main.getMirrorMode();
+    let mirror: number = TOTVS_Agent_Analytics.getMirrorMode();
 
     ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {
 
@@ -1216,7 +1206,7 @@ export default class Main {
             if (b) Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.SERVER_SYNC_OK'], null, null, null, null, null);
             else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR'], null, null, null, null, null);
             if (mirror == 3) {
-              Main.setMirrorMode(0);
+              TOTVS_Agent_Analytics.setMirrorMode(0);
               Files.initApplicationData(true, 'pt-BR');
               Main.createWindowObject();
             } else {

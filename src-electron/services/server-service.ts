@@ -643,7 +643,7 @@ export class ServerService {
     if (mirror == 1) ServerService.mirrorModeDateStart = new Date();
     else ServerService.mirrorModeDateStart = null;
 
-    Main.setMirrorMode(mirror);
+    TOTVS_Agent_Analytics.setMirrorMode(mirror);
     Files.initApplicationData(false, 'pt-BR');
     return Main.updateMirrorModePreferences().pipe(map((b: boolean) => {
       return new responseObj([true], null);
@@ -1032,7 +1032,7 @@ export class ServerService {
                   //Criptografia do pacote a ser enviado
                   let params = EncryptionService.encrypt(JSON.stringify(javaInput));
 
-                  if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) {
+                  if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) {
                     return QueryService.exportQueriesFromI01Locally(params, scheduleId).pipe(switchMap((queriesI01: QueryClient[]) => {
                       return QueryService.saveQuery(queriesI01).pipe(map((errors: number) => {
                         subscriber.next(errors);

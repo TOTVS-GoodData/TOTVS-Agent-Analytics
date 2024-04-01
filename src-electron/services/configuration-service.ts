@@ -1,3 +1,6 @@
+/* Classe global do Agent */
+import { TOTVS_Agent_Analytics } from '../../app';
+
 /* Serviço de logs / arquivos do Agent */
 import { Files } from '../files';
 
@@ -71,7 +74,7 @@ export class ConfigurationService {
       return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
         if (b) {
           if (conf.serialNumber != null) {
-            if ((Main.getMirrorMode() == 0) || (Main.getMirrorMode() == 1)) {
+            if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) {
 
               //Atualiza o idioma utilizado pelo Agent (caso tenha sido alterado)
               TranslationService.use(conf.locale);

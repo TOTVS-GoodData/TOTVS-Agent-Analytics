@@ -16,7 +16,7 @@ export class TOTVS_Agent_Analytics {
   }
 
   /* Define se o Agent-Client será inicializado em modo espelho, ou não */
-  private static setMirrorMode(mirror: number): void {
+  public static setMirrorMode(mirror: number): void {
     TOTVS_Agent_Analytics.mirrorMode = mirror;
   }
 
