@@ -517,6 +517,7 @@ export class Files {
   /* Método de leitura do banco do Agent */
   public static readApplicationData(): Observable<ClientData> {
     return from(fs.readJson(Files.filepath)).pipe(map((data: ClientData) => {
+      
       data.workspaces = data.workspaces.map((parameter: Workspace) => {
         return new Workspace().toObject(parameter);
       });
@@ -536,7 +537,7 @@ export class Files {
       data.scripts = data.scripts.map((parameter: ScriptClient) => {
         return new ScriptClient(null).toObject(parameter);
       });
-      
+
       return data;
     }));
   }

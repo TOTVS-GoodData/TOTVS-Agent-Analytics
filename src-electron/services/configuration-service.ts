@@ -44,7 +44,7 @@ export class ConfigurationService {
         db.configuration.locale,
         db.configuration.autoUpdate
       );
-      
+
       conf.instanceName = db.configuration.instanceName;
       conf.logPath = db.configuration.logPath;
       conf.timezone = db.configuration.timezone;

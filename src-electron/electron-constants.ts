@@ -30,7 +30,7 @@ export const CNST_SERVER_IP: any = {
 };
 
 /* Caminho completo do diretório de recursos visuais do Agent (ícones) */
-export const CNST_ICONS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'icons');
+export const CNST_ICONS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'icons');
 export const CNST_ICONS_PATH_WINDOWS = (): string => path.join(CNST_ICONS_PATH(), 'windows');
 export const CNST_ICONS_PATH_LINUX = (): string => path.join(CNST_ICONS_PATH(), 'linux');
 export const CNST_ICON_WINDOWS = (): string => path.join(CNST_ICONS_PATH_WINDOWS(), 'analytics.ico');
@@ -40,13 +40,24 @@ export const CNST_ICON_LINUX = (): string => path.join(CNST_ICONS_PATH_LINUX(), 
 export const CNST_ICON_SIZE: number = 16;
 
 /* Caminho completo dos diretórios do Agent */
-export const CNST_TMP_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'tmp');
-export const CNST_I18N_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'i18n');
-export const CNST_AGENT_CLIENT_DATABASE_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'assets');
-export const CNST_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'logs');
-export const CNST_REMOTE_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'remote');
-export const CNST_JAVA_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'java');
-export const CNST_JRE_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootDir(), 'java', 'jre', 'bin');
+export const CNST_TMP_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'tmp');
+export const CNST_I18N_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'i18n');
+export const CNST_REMOTE_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'remote');
+export const CNST_JAVA_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'java');
+export const CNST_JRE_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'java', 'jre', 'bin');
+export const CNST_AGENT_CLIENT_DATABASE_PATH = (): string => {
+  if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1))
+    return path.join(TOTVS_Agent_Analytics.getRootPath(), 'assets');
+  else
+    return path.join(TOTVS_Agent_Analytics.getMirrorPath(), 'assets');
+}
+
+export const CNST_LOGS_PATH = (): string => {
+  if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1))
+    return path.join(TOTVS_Agent_Analytics.getRootPath(), 'logs');
+  else
+    return path.join(TOTVS_Agent_Analytics.getMirrorPath(), 'logs');
+}
 
 /* Caminho completo dos arquivos de cadastros do Agent (Produção / Desenv.) */
 export const CNST_AGENT_CLIENT_DATABASE_NAME = (): string => path.join(CNST_AGENT_CLIENT_DATABASE_PATH(), 'db.json');
