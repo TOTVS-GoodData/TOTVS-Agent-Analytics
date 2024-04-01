@@ -40,6 +40,7 @@ export class Package {
 export class ServerCommunication {
   source: string;
   destination: string;
+  mirror: boolean;
   word: string;
   errorCode: number;
   args: string[];

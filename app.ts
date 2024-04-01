@@ -40,10 +40,13 @@ export class TOTVS_Agent_Analytics {
   /* Exporta o diretório de instalação do Electron */
   public static getRootPath(): string {
     let rootFolder: string = null;
-    if (app.isPackaged) rootFolder = path.dirname(app.getPath('exe'));
-    else rootFolder = process.env.INIT_CWD || process.env.PWD;
-    
-    if (TOTVS_Agent_Analytics.mirrorMode == 2) rootFolder = path.join(rootFolder, 'node_modules/TOTVS-Agent-Analytics');
+    if (app.isPackaged) {
+      rootFolder = path.dirname(app.getPath('exe'));
+      if (TOTVS_Agent_Analytics.mirrorMode == 2) rootFolder = path.join(rootFolder, 'resources/app.asar.unpacked/node_modules/TOTVS-Agent-Analytics');
+    } else {
+      rootFolder = process.env.INIT_CWD || process.env.PWD;
+      if (TOTVS_Agent_Analytics.mirrorMode == 2) rootFolder = path.join(rootFolder, 'node_modules/TOTVS-Agent-Analytics');
+    }
     
     return rootFolder;
   }
@@ -52,6 +55,6 @@ export class TOTVS_Agent_Analytics {
   public static init(mirror: number, mirrorPath: string): void {
     TOTVS_Agent_Analytics.setMirrorMode(mirror);
     if (!((mirror == 0) || (mirror == 1))) TOTVS_Agent_Analytics.setMirrorPath(mirrorPath);
-    Main.main(app, TOTVS_Agent_Analytics.mirrorMode);
+    Main.main(app);
   }
 }

@@ -15,8 +15,7 @@ import {
   CNST_SERVER_SOURCE,
   CNST_SERVER_PORT,
   CNST_SERVER_HOSTNAME,
-  CNST_SERVER_IP,
-  CNST_SERVER_TRANSFER_TIME
+  CNST_SERVER_IP
 } from '../electron-constants';
 
 /* Componentes de utilitários do Agent */
@@ -108,6 +107,9 @@ export class ServerService {
 
   //Referência da função de temporização para envio de pacotes ao Agent-Server
   private static packageTimer: any = null;
+
+  //Referência da função de temporização para reconectar ao Agent-Server
+  private static refreshTimer: any = null;
   /*
     Função de callback, a ser executada após o recebimento de uma mensagem do Agent-Server
 
@@ -129,9 +131,27 @@ export class ServerService {
   //Armazena a data de início do acesso remoto
   private static mirrorModeDateStart: Date = null;
 
+  //Velocidade de transferência dos pacotes a serem enviados, do Agent-Client, para o Agent-Server (em milissegundos)
+  private static CNST_SERVER_TRANSFER_TIME: number = 100;
+
+  //Tempo de reconexão ao Agent-Server (em minutos)
+  private static CNST_SERVER_REFRESH_TIME: number = 30;
+
   /**************************/
   /*** MÉTODOS DO SERVIÇO ***/
   /**************************/
+  /* Método de reconexão ao Agent-Server */
+  public static refreshServerConnectionTimer(): void {
+
+    //Interrompe o temporizador
+    clearInterval(ServerService.refreshTimer);
+
+    //Reinicia o temporizador
+    ServerService.refreshTimer = setInterval(() => {
+      if (ServerService.ws == null) { ServerService.startWebSocketConnection().subscribe(); }
+    }, ServerService.CNST_SERVER_REFRESH_TIME * 1000 * 60);
+  }
+
   /* Método de inicialização do servidor do Agent, para recebimento de comandos do Agent-Server */
   public static startWebSocketConnection(): Observable<boolean> {
     
@@ -159,8 +179,11 @@ export class ServerService {
       ServerService.ws.on('open', () => {
         Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTED'], null, null, null, null, null);
 
-        // Inicializa o temporizador para transferência de um pacote, para o socket do Agent-Server */
+        //Inicializa o temporizador para transferência de um pacote, para o socket do Agent-Server
         ServerService.startAgentPackageTimer();
+
+        //Inicializa o temporizador para manter a conexão viva
+        ServerService.refreshServerConnectionTimer();
 
         subscriber.next(true);
         subscriber.complete();
@@ -432,6 +455,7 @@ export class ServerService {
       let command: ServerCommunication = {
         source: (ServerService.deactivatedSerialNumber != null ? ServerService.deactivatedSerialNumber : configuration.serialNumber),
         destination: CNST_SERVER_SOURCE,
+        mirror: ((TOTVS_Agent_Analytics.getMirrorMode() == 2) || (TOTVS_Agent_Analytics.getMirrorMode() == 3)),
         word: word,
         errorCode: errorCode,
         args: args
@@ -523,7 +547,7 @@ export class ServerService {
         if (packageToSend.type == 0) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_REQUEST_OK'], null, null, null, null, null);
         else Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_RESPONSE_OK'], null, null, null, null, null);
       }
-    }, CNST_SERVER_TRANSFER_TIME);
+    }, ServerService.CNST_SERVER_TRANSFER_TIME);
   }
 
   /****************************************/

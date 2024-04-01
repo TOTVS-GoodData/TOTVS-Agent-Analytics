@@ -977,9 +977,8 @@ export default class Main {
   /*** INICIALIZAÇÃO DO SISTEMA ****/
   /*********************************/
   /* Método de inicialização do Electron */
-  static main(_app: App, mirrorMode: number) {
+  static main(_app: App) {
     Main.application = _app;
-    TOTVS_Agent_Analytics.setMirrorMode(mirrorMode);
     
     if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) Main.application.disableHardwareAcceleration();
 
@@ -1131,7 +1130,7 @@ export default class Main {
             }
 
             //Envio de mensagens do Electron, ao usuário
-            if ((Main.electronMessages.length > 0) && (Main.mainWindow != null)) {
+            if ((Main.electronMessages.length > 0) && (Main.mainWindow != null) && (!Main.hidden)) {
               Main.mainWindow.webContents.send('AC_electronMessage',
                 Main.electronMessages[Main.electronMessages.length - 1].level,
                 Main.electronMessages[Main.electronMessages.length - 1].message
