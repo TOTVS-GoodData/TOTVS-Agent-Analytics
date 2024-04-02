@@ -541,7 +541,7 @@ export default class Main {
     
     //Disparo da execução de um agendamento, e atualização da última data de execução do mesmo
     ipcMain.handle('AC_requestScheduleExecutionRemotelly', (event: IpcMainEvent, s: Schedule) => {
-      return lastValueFrom(ServerService.checkFileIntegrityRemotelly(s.id).pipe(switchMap((res1: FileValidation[]) => {
+      return lastValueFrom(ServerService.requestFileIntegrityRemotelly(s.id).pipe(switchMap((res1: FileValidation[]) => {
         let errors: number = 0;
         res1.map((file: FileValidation) => errors += file.errors);
         if ((errors == 0) || (res1.length == 0)) {
@@ -836,12 +836,12 @@ export default class Main {
         if (res == 1) {
             Main.willClose();
 
-            //Espera 3 segundos para os eventos de fechamento da interface sejam encerrados
-          setTimeout(() => {
-            TOTVS_Agent_Analytics.setMirrorMode(3);
-            Files.initApplicationData(true, 'pt-BR');
-            Main.createWindowObject();
-          }, 1000);
+            //Espera 1 segundo para os eventos de fechamento da interface sejam encerrados
+            setTimeout(() => {
+              TOTVS_Agent_Analytics.setMirrorMode(3);
+              Files.initApplicationData(true, 'pt-BR');
+              Main.createWindowObject();
+            }, 1000);
         }
 
         return res;

@@ -304,23 +304,23 @@ export class ServerService {
             break;
 
           /* Método de execução remota e imediata de um agendamento do Agent-Client */
-          case 'requestScheduleExecution':
-            return ServerService.requestScheduleExecution(command).pipe(switchMap((res: responseObj) => {
-              return ServerService.writeResponseToAgentServerSocket('requestScheduleExecution', res);
+          case 'getScheduleExecution':
+            return ServerService.getScheduleExecution(command).pipe(switchMap((res: responseObj) => {
+              return ServerService.writeResponseToAgentServerSocket('getScheduleExecution', res);
             }));
             break;
 
           /* Método de validação da integridade dos arquivos XML / JSON a serem enviados pelo Agent-Client */
-          case 'requestFileIntegrityTest':
-            return ServerService.requestFileIntegrityTest(command).pipe(switchMap((res: responseObj) => {
-              return ServerService.writeResponseToAgentServerSocket('requestFileIntegrityTest', res);
+          case 'getFileIntegrityTest':
+            return ServerService.getFileIntegrityTest(command).pipe(switchMap((res: responseObj) => {
+              return ServerService.writeResponseToAgentServerSocket('getFileIntegrityTest', res);
             }));
             break;
 
           /* Método de exportação da tabela I01 do Protheus */
-          case 'requestQueryExportFromI01':
-            return ServerService.requestQueryExportFromI01(command).pipe(switchMap((res: responseObj) => {
-              return ServerService.writeResponseToAgentServerSocket('requestQueryExportFromI01', res);
+          case 'getQueryExportFromI01':
+            return ServerService.getQueryExportFromI01(command).pipe(switchMap((res: responseObj) => {
+              return ServerService.writeResponseToAgentServerSocket('getQueryExportFromI01', res);
             }));
             break;
 
@@ -399,7 +399,7 @@ export class ServerService {
             break;
 
           /* Método de validação da integridade dos arquivos XML / JSON a serem enviados pelo Agent-Client remoto */
-          case 'checkFileIntegrityRemotelly':
+          case 'requestFileIntegrityRemotelly':
             return ServerService.callbackFunction(command);
             break;
 
@@ -732,7 +732,7 @@ export class ServerService {
   }
 
   /* Método de execução remota e imediata de um agendamento do Agent-Client */
-  private static requestScheduleExecution(command: ServerCommunication): Observable<responseObj> {
+  private static getScheduleExecution(command: ServerCommunication): Observable<responseObj> {
 
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
@@ -746,7 +746,7 @@ export class ServerService {
   }
 
   /* Método de validação da integridade dos arquivos XML / JSON a serem enviados pelo Agent-Client */
-  private static requestFileIntegrityTest(command: ServerCommunication): Observable<responseObj> {
+  private static getFileIntegrityTest(command: ServerCommunication): Observable<responseObj> {
 
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
@@ -763,7 +763,7 @@ export class ServerService {
   }
 
   /* Método de exportação da tabela I01 do Protheus */
-  private static requestQueryExportFromI01(command: ServerCommunication): Observable<responseObj> {
+  private static getQueryExportFromI01(command: ServerCommunication): Observable<responseObj> {
 
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
@@ -1501,8 +1501,8 @@ export class ServerService {
   }
   
   /* Método de validação da integridade dos arquivos XML / JSON a serem enviados pelo Agent-Client remoto */
-  public static checkFileIntegrityRemotelly(scheduleId: string): Observable<FileValidation[]> {
-    return ServerService.writeRequestToAgentServerSocket('checkFileIntegrityRemotelly', [scheduleId]).pipe(switchMap((b: boolean) => {
+  public static requestFileIntegrityRemotelly(scheduleId: string): Observable<FileValidation[]> {
+    return ServerService.writeRequestToAgentServerSocket('requestFileIntegrityRemotelly', [scheduleId]).pipe(switchMap((b: boolean) => {
       return new Observable<FileValidation[]>((subscriber: any) => {
         if (b) {
 
@@ -1586,6 +1586,7 @@ export class ServerService {
 
           //Definição da função de callback para a próxima resposta do Agent-Server
           ServerService.callbackFunction = (res: ServerCommunication) => {
+
             //Consulta das traduções
             let translations: any = TranslationService.getTranslations([
               new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
