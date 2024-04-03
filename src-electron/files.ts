@@ -47,7 +47,10 @@ import {
   CNST_AGENT_CLIENT_DATABASE_NAME,
   CNST_AGENT_CLIENT_DATABASE_NAME_DEV,
   CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR,
+  CNST_REMOTE_PATH,
+  CNST_REMOTE_DATABASE_PATH,
   CNST_REMOTE_LOGS_PATH,
+  CNST_REMOTE_DATABASE,
   CNST_LOGS_PATH,
   CNST_TMP_PATH,
   CNST_JRE_PATH,
@@ -371,12 +374,6 @@ export class Files {
   */
   public static initApplicationData(showLogs: boolean, language: string): void {
 
-    //Apaga os arquivos temporários de logs / configuração do acesso remoto
-    if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) {
-      fs.emptyDirSync(CNST_REMOTE_LOGS_PATH());
-      if (fs.existsSync(CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR())) fs.removeSync(CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR());
-    }
-
     //Encerramento dos canais de logs anteriores (caso existam)
     Files.terminateLogStreams();
 
@@ -495,6 +492,20 @@ export class Files {
     if (!fs.existsSync(CNST_TMP_PATH())) {
       fs.mkdirSync(CNST_TMP_PATH());
     }
+
+    //Cria o diretório de arquivos remotos (MirrorMode) do Agent-Server (Caso ainda não exista)
+    if (!fs.existsSync(CNST_REMOTE_PATH())) {
+      fs.mkdirSync(CNST_REMOTE_PATH());
+      fs.mkdirSync(CNST_REMOTE_DATABASE_PATH());
+      fs.mkdirSync(CNST_REMOTE_LOGS_PATH());
+    } else {
+
+      //Apaga os arquivos remotos de logs / configuração do acesso remoto (Caso necessário)
+      if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) {
+        fs.emptyDirSync(CNST_REMOTE_DATABASE_PATH());
+        fs.emptyDirSync(CNST_REMOTE_LOGS_PATH());
+      }
+    }
   }
 
   /* Método de encerramento dos canais de logs */
@@ -562,7 +573,7 @@ export class Files {
   /* Método de escrita do banco do Agent */
   public static writeMirrorData(db: ClientData): Observable<boolean> {
     return from(fs.writeJson(
-      CNST_AGENT_CLIENT_DATABASE_NAME_MIRROR(),
+      CNST_REMOTE_DATABASE(),
       db,
       {
         spaces: CNST_LOGS_SPACING,

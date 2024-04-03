@@ -16,14 +16,14 @@ export const CNST_MIRRORMODE_PINGS_MAX: number = 5;
 export const CNST_SERVER_SOURCE: string = 'SERVER';
 export const CNST_SERVER_PORT: number = 80;
 export const CNST_SERVER_HOSTNAME: any = {
-  DEVELOPMENT: 'gooddata.fluig.com',
-  PRODUCTION: 'gooddata.fluig.com'
+  DEVELOPMENT: '::1',
+  PRODUCTION: '::1'
 };
 
 //Tipos de IP (IPv4 / IPv6)
 export const CNST_SERVER_IP: any = {
-  DEVELOPMENT: CNST_SERVER_IP_TYPES.IPV4,
-  PRODUCTION: CNST_SERVER_IP_TYPES.IPV4
+  DEVELOPMENT: CNST_SERVER_IP_TYPES.IPV6,
+  PRODUCTION: CNST_SERVER_IP_TYPES.IPV6
 };
 
 /* Caminho completo do diretório de recursos visuais do Agent (ícones) */
@@ -39,21 +39,35 @@ export const CNST_ICON_SIZE: number = 16;
 /* Caminho completo dos diretórios do Agent */
 export const CNST_TMP_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'tmp');
 export const CNST_I18N_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'i18n');
-export const CNST_REMOTE_LOGS_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'remote');
+export const CNST_REMOTE_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'remote');
 export const CNST_JAVA_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'java');
 export const CNST_JRE_PATH = (): string => path.join(TOTVS_Agent_Analytics.getRootPath(), 'java', 'jre', 'bin');
+
+/* Caminho completo do diretório de banco de dados / logs remoto do Agent-Client */
+export const CNST_REMOTE_DATABASE_PATH = (): string => path.join(CNST_REMOTE_PATH(), 'assets');
+export const CNST_REMOTE_LOGS_PATH = (): string => path.join(CNST_REMOTE_PATH(), 'logs');
+
+/* Caminho completo do arquivo de banco de dados remoto do Agent-Client */
+export const CNST_REMOTE_DATABASE = (): string => path.join(CNST_REMOTE_DATABASE_PATH(), 'dbMirror.json');
+
+/* Método que retorna o caminho do arquivo de banco de dados atualmente utilizado pelo Agent-Client */
 export const CNST_AGENT_CLIENT_DATABASE_PATH = (): string => {
   if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1))
     return path.join(TOTVS_Agent_Analytics.getRootPath(), 'assets');
-  else
+  else if (TOTVS_Agent_Analytics.getMirrorMode() == 2)
     return path.join(TOTVS_Agent_Analytics.getMirrorPath(), 'assets');
+  else
+    return CNST_REMOTE_DATABASE_PATH();
 }
 
+/* Método que retorna o caminho dos arquivos de logs atualmente utilizado pelo Agent-Client */
 export const CNST_LOGS_PATH = (): string => {
   if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1))
     return path.join(TOTVS_Agent_Analytics.getRootPath(), 'logs');
-  else
+  else if (TOTVS_Agent_Analytics.getMirrorMode() == 2)
     return path.join(TOTVS_Agent_Analytics.getMirrorPath(), 'logs');
+  else
+    return CNST_REMOTE_LOGS_PATH();
 }
 
 /* Caminho completo dos arquivos de cadastros do Agent (Produção / Desenv.) */

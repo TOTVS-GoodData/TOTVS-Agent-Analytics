@@ -44,7 +44,8 @@ import {
   CNST_ICON_WINDOWS,
   CNST_ICON_LINUX,
   CNST_TMP_PATH,
-  CNST_MIRRORMODE_PINGS_MAX
+  CNST_MIRRORMODE_PINGS_MAX,
+  CNST_REMOTE_PATH
 } from './src-electron/electron-constants';
 
 /* Dependência de comunicação com o Registro do Windows */
@@ -837,9 +838,9 @@ export default class Main {
             Main.willClose();
 
             //Espera 1 segundo para os eventos de fechamento da interface sejam encerrados
-            setTimeout(() => {
-              TOTVS_Agent_Analytics.setMirrorMode(3);
-              Files.initApplicationData(true, 'pt-BR');
+          setTimeout(() => {
+            TOTVS_Agent_Analytics.setMirrorMode(3);
+            Files.initApplicationData(true, 'pt-BR');
               Main.createWindowObject();
             }, 1000);
         }

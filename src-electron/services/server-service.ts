@@ -206,6 +206,7 @@ export class ServerService {
 
       //Configura o evento disparado ao receber a resposta da palavra de comando, pelo Agent-Server
       ServerService.ws.on('message', (buffer: any) => {
+        console.log('PACOTE');
         ServerService.parseServerResponse(buffer).subscribe();
       });
     });
@@ -220,7 +221,7 @@ export class ServerService {
     //Realiza a validação da palavra (criptografia, destino do pacote, etc). Ignora palavras inválidas.
     return ServerService.validateCommandWord(ServerService.longBuffer).pipe(switchMap((command: ServerCommunication) => {
       if (command != null) {
-
+        console.log('CHEGOU ALGO');
         //Reseta o buffer recebido do comando que foi aprovado
         ServerService.longBuffer = '';
         
@@ -293,6 +294,13 @@ export class ServerService {
           case 'appendLogData':
             return ServerService.appendLogData(command).pipe(switchMap((res: responseObj) => {
               return ServerService.writeResponseToAgentServerSocket('appendLogData', res);
+            }));
+            break;
+
+          /* Método de escrita dos arquivos de log do Agent-Client, para o acesso remoto (Client p/ Client) */
+          case 'publishAgentLogsFromClient':
+            return ServerService.publishAgentLogsFromClient(command).pipe(switchMap((res: responseObj) => {
+              return ServerService.writeResponseToAgentServerSocket('publishAgentLogsFromClient', res);
             }));
             break;
 
@@ -384,7 +392,12 @@ export class ServerService {
           /*** Instância espelhada (MirrorMode) ***/
           /****************************************/
           /* Método de envio das alterações feitas na instância espelhada do Agent-Client, para o Agent-Server */
-          case 'deactivateMirrorMode':
+          case 'deactivateMirrorModeFromMirror':
+            return ServerService.callbackFunction(command);
+            break;
+
+          /* Método de envio das alterações feitas por outra instância do Agent-Client, para o Agent-Server */
+          case 'deactivateMirrorModeFromClient':
             return ServerService.callbackFunction(command);
             break;
 
@@ -434,12 +447,7 @@ export class ServerService {
             return ServerService.callbackFunction(command);
             break;
 
-          /* Método de escrita dos arquivos de log do Agent-Client, para o acesso remoto (Client p/ Client) */
-          case 'publishAgentLogsAsMirror':
-            return ServerService.publishAgentLogsAsMirror(command).pipe(switchMap((res: responseObj) => {
-              return ServerService.writeResponseToAgentServerSocket('publishAgentLogsAsMirror', res);
-            }));
-            break;
+          
         }
       } else return of(null);
     }));
@@ -714,6 +722,12 @@ export class ServerService {
     Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD'], null, null, null, null, null);
 
     Files.appendLogData(command.args[0]);
+    return of(new responseObj([true], null));
+  }
+
+  /* Método de escrita dos arquivos de log do Agent-Client, para o acesso remoto (Client p/ Client) */
+  private static publishAgentLogsFromClient(command: ServerCommunication): Observable<responseObj> {
+    Files.writeRemoteLogData(command.args);
     return of(new responseObj([true], null));
   }
 
@@ -1380,12 +1394,17 @@ export class ServerService {
   /****************************************/
   /* Método de envio das alterações feitas na instância espelhada do Agent-Client, para o Agent-Server */
   public static deactivateMirrorMode(db: ClientData, agentLogMessages: string): Observable<boolean> {
-    return ServerService.writeRequestToAgentServerSocket('deactivateMirrorMode', [db, agentLogMessages]).pipe(switchMap((b: boolean) => {
+
+    //Define se o desligamento do acesso remoto foi disparado pela instância espelhada, ou por uma outra instância do Agent-Client
+    let word: string = ((TOTVS_Agent_Analytics.getMirrorMode() == 3) ? 'deactivateMirrorModeFromClient' : 'deactivateMirrorModeFromMirror');
+
+    return ServerService.writeRequestToAgentServerSocket(word, [db, agentLogMessages]).pipe(switchMap((b: boolean) => {
       return new Observable<boolean>((subscriber: any) => {
         if (b) {
 
           //Definição da função de callback para a próxima resposta do Agent-Server
           ServerService.callbackFunction = (res: ServerCommunication) => {
+
             //Consulta das traduções
             let translations: any = TranslationService.getTranslations([
               new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
@@ -1605,30 +1624,5 @@ export class ServerService {
         }
       });
     }));
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /* Método de escrita dos arquivos de log do Agent-Client, para o acesso remoto (Client p/ Client) */
-  private static publishAgentLogsAsMirror(command: ServerCommunication): Observable<responseObj> {
-    Files.writeRemoteLogData(command.args);
-    return of(new responseObj([true], null));
   }
 }
