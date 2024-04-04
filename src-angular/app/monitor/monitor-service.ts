@@ -56,7 +56,8 @@ export class MonitorService {
     let agentLogMessages: Array<AgentLogMessage> = [];
     let agentLog: Array<any> = [];
     let lastMessage: any = null;
-    
+    let javaLog: boolean = false;
+
     //Consulta todos os agendamentos cadastrados atualmente no Agent
     return forkJoin([
       this._scheduleService.getSchedules(false),
@@ -65,19 +66,21 @@ export class MonitorService {
       
       //Solicita ao Electron as mensagens de todos os arquivos de log existentes
       this._electronService.ipcRenderer.sendSync('AC_readLogs').map((log: string) => {
-        
+
         //Converte o texto do log de volta para o objeto de mensagem
         try {
           let messages: any = JSON.parse(log);
           if ((messages.execId != null) && (messages.scheduleId != null)) {
+            javaLog = true;
             messages.str_logDate = messages.logDate;
             messages.logDate = new Date('' + messages.logDate);
             agentLogMessages.push(messages);
             lastMessage = messages;
-          }
+          } else javaLog = false;
+
         //Conversão dos textos de log de erro
         } catch (ex) {
-          agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+          if ((lastMessage) && (javaLog)) agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
         }
       });
       

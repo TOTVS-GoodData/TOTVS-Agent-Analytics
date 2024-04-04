@@ -206,7 +206,6 @@ export class ServerService {
 
       //Configura o evento disparado ao receber a resposta da palavra de comando, pelo Agent-Server
       ServerService.ws.on('message', (buffer: any) => {
-        console.log('PACOTE');
         ServerService.parseServerResponse(buffer).subscribe();
       });
     });
@@ -221,7 +220,7 @@ export class ServerService {
     //Realiza a validação da palavra (criptografia, destino do pacote, etc). Ignora palavras inválidas.
     return ServerService.validateCommandWord(ServerService.longBuffer).pipe(switchMap((command: ServerCommunication) => {
       if (command != null) {
-        console.log('CHEGOU ALGO');
+
         //Reseta o buffer recebido do comando que foi aprovado
         ServerService.longBuffer = '';
         
