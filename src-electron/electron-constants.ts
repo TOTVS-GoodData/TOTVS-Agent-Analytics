@@ -16,13 +16,13 @@ export const CNST_MIRRORMODE_PINGS_MAX: number = 5;
 export const CNST_SERVER_SOURCE: string = 'SERVER';
 export const CNST_SERVER_PORT: number = 80;
 export const CNST_SERVER_HOSTNAME: any = {
-  DEVELOPMENT: 'gooddata.fluig.com',
+  DEVELOPMENT: '::1',
   PRODUCTION: 'gooddata.fluig.com'
 };
 
 //Tipos de IP (IPv4 / IPv6)
 export const CNST_SERVER_IP: any = {
-  DEVELOPMENT: CNST_SERVER_IP_TYPES.IPV4,
+  DEVELOPMENT: CNST_SERVER_IP_TYPES.IPV6,
   PRODUCTION: CNST_SERVER_IP_TYPES.IPV4
 };
 
