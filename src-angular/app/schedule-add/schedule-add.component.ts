@@ -278,7 +278,7 @@ export class ScheduleAddComponent {
   
   /* Método executado ao trocar o ambiente do agendamento */
   protected onChangeWorkspace(w: string): void {
-    
+
     //Extrai a licença / banco de dados do ambiente atualmente selecionado
     let workspace: Workspace = this.workspaces.find((workspace: Workspace) => (workspace.id == w));
     let license: License = workspace.license;

@@ -238,7 +238,7 @@ export class WorkspaceAddComponent {
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
         this._router.navigate(['/workspace']);
       } else {
-        
+
         //Armazena as licenças disponíveis para esta instalação do Agent
         this.licenses = results[0].licenses;
         
@@ -269,10 +269,10 @@ export class WorkspaceAddComponent {
           this.workspaceSource = this._CNST_ERP[0].value + '';
           this.onChangeERP(this.workspaceSource);
         }
-        
+
         //Realiza a leitura do ambiente a ser editado (se houver)
         if ((nav != undefined) && (nav.extras.state)) {
-          
+
           this.workspace.id = nav.extras.state['id'];
           
           //Dispara antecipadamente o evento de alteração do banco de dados do formuláro

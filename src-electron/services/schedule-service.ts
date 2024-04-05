@@ -111,7 +111,6 @@ export class ScheduleService {
             let executionDate: Date = (s.lastExecution == undefined ? new Date('2000-01-01') : new Date(s.lastExecution));
             
             let dateWindow = new Date();
-            
             let hour: number = parseInt(w.substring(0, 2));
             let minute: number = parseInt(w.substring(3, 5));
             dateWindow.setHours(hour, minute, 0, 0);

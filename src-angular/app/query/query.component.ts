@@ -374,10 +374,7 @@ export class QueryComponent {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, results[0]['QUERIES.MESSAGES.IMPORT_ERROR']);
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       } else if (results[1] == -2) {
-        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_ERROR']);
-        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
-      } else if (results[1] == -999) {
-        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTION_ERROR']);
+        this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_WARNING']);
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       } else {
         this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_WARNING_FAILURES']);

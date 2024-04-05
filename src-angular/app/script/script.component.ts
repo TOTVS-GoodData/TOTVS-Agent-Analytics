@@ -353,7 +353,7 @@ export class ScriptComponent {
         this._utilities.createNotification(CNST_LOGLEVEL.ERROR, results[0]['SCRIPTS.MESSAGES.IMPORT_ERROR']);
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       } else if (results[1] == -2) {
-        this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_ERROR']);
+        this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_WARNING']);
         if (this.mirrorMode != 1) this.po_lo_text = { value: null };
       } else {
         this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_WARNING_FAILURES']);

@@ -81,7 +81,7 @@ export const CNST_JAVA_CLASS_EXPORTQUERY: string = 'com.gooddata.agent.jdbc.Jdbc
 export const CNST_JAVA_CLASS_RUNAGENT: string = 'com.gooddata.agent.Main';
 
 /* Caminho completo do arquivo .jar do Agent */
-export const CNST_JAR_PATH_FAST = (): string => path.join(CNST_JAVA_PATH(), 'TOTVS-Agent-Analytics-Java-0.9.0.jar');
+export const CNST_JAR_PATH_FAST = (): string => path.join(CNST_JAVA_PATH(), 'TOTVS-Agent-Analytics-Java-1.0.0.jar');
 
 /* Nome do arquivo criptografado de comandos do Java, usado para comunicação */
 export const CNST_COMMAND_FILE: string = '_jCommand';

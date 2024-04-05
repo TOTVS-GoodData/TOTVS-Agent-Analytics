@@ -425,22 +425,6 @@ export class ServerService {
             return ServerService.callbackFunction(command);
             break;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
           /* Método de acesso remoto ao Agent-Client (Client p/ Client) */
           case 'requestRemoteAccessFromClient':
             return ServerService.callbackFunction(command);
@@ -675,7 +659,7 @@ export class ServerService {
     else ServerService.mirrorModeDateStart = null;
 
     TOTVS_Agent_Analytics.setMirrorMode(mirror);
-    Files.initApplicationData(false, 'pt-BR');
+    Files.initApplicationData(false, Main.getLocaleLanguage());
     return Main.updateMirrorModePreferences().pipe(map((b: boolean) => {
       return new responseObj([true], null);
     }));
@@ -795,29 +779,22 @@ export class ServerService {
   /* Método de teste de comunicação com o Agent-Server */
   public static pingServer(): Observable<boolean> {
     return ServerService.writeRequestToAgentServerSocket('pingServer', []).pipe(switchMap((b: boolean) => {
-      return new Observable<boolean>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<boolean>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.callbackFunction = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            if (res.args[0] == 'pong') subscriber.next(true);
-            else subscriber.next(false);
-            subscriber.complete();
-            return of(true);
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(false);
+          subscriber.next((res.args[0] == 'pong') ? true : false);
           subscriber.complete();
-        }
+          return of(true);
+        };
       });
     }));
   }
@@ -829,70 +806,63 @@ export class ServerService {
     ServerService.temporarySerialNumber = args[0];
     
     return ServerService.writeRequestToAgentServerSocket('requestSerialNumber', args).pipe(switchMap((b: boolean) => {
-      return new Observable<number>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<number>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.callbackFunction = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            //Verifica se o Agent-Server enviou um SerialNumber para esta instância do Agent
-            if (res.args[0] != null) {
-              return ConfigurationService.getConfiguration(false).pipe(switchMap((configuration: Configuration) => {
-                Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER'], null, null, null, null, null);
+          //Verifica se o Agent-Server enviou um SerialNumber para esta instância do Agent
+          if (res.args[0] != null) {
+            return ConfigurationService.getConfiguration(false).pipe(switchMap((configuration: Configuration) => {
+              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER'], null, null, null, null, null);
 
-                //Realiza a gravação do serialNumber desta instância do Agent
-                configuration.serialNumber = res.args[0];
-                configuration.instanceName = res.args[1];
+              //Realiza a gravação do serialNumber desta instância do Agent
+              configuration.serialNumber = res.args[0];
+              configuration.instanceName = res.args[1];
 
-                return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
-                  _dbd.configuration = configuration;
-                  return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
+              return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
+                _dbd.configuration = configuration;
+                return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
 
-                    //Remove o código de ativação temporário do Agent
-                    ServerService.temporarySerialNumber = null;
-                    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_OK'], null, null, null, null, null);
+                  //Remove o código de ativação temporário do Agent
+                  ServerService.temporarySerialNumber = null;
+                  Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_OK'], null, null, null, null, null);
 
-                    if (b) subscriber.next(1);
-                    else subscriber.next(0);
-                    subscriber.complete();
+                  if (b) subscriber.next(1);
+                  else subscriber.next(0);
+                  subscriber.complete();
+                  return of(true);
 
-                    return of(1);
-
-                  //Tratamento de erros
-                  }), catchError((err: any) => {
-                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR'], null, null, null, null, null);
-                    return of(0);
-                  }));
+                //Tratamento de erros
+                }), catchError((err: any) => {
+                  Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR'], null, null, null, null, null);
+                  return of(false);
                 }));
               }));
+            }));
 
-            //Caso o SerialNumber não tenha sido recebido, é gerado um log de erro de acordo com o código recebido
-            } else {
-              switch (res.errorCode) {
-                case (-1):
-                  Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_INVALID'], null, null, null, null, null);
-                  break;
-                case (-2):
-                  Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_COMMUNICATION'], null, null, null, null, null);
-                  break;
-              }
-              subscriber.next(res.errorCode);
-              subscriber.complete();
-              return of(false);
+          //Caso o SerialNumber não tenha sido recebido, é gerado um log de erro de acordo com o código recebido
+          } else {
+            switch (res.errorCode) {
+              case (-1):
+                Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR_INVALID'], null, null, null, null, null);
+                break;
+              case (-2):
+                Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.SERIAL_NUMBER_ERROR'], null, null, null, null, null);
+                break;
             }
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(null);
-          subscriber.complete();
-        }
+            subscriber.next(res.errorCode);
+            subscriber.complete();
+            return of(true);
+          }
+        };
       });
     }));
   }
@@ -900,28 +870,24 @@ export class ServerService {
   /* Método de solicitação das licenças disponíveis para esta instalação do Agent-Client */
   public static getAvailableLicenses(showLogs: boolean): Observable<AvailableLicenses> {
     return ServerService.writeRequestToAgentServerSocket('getAvailableLicenses', []).pipe(switchMap((b: boolean) => {
-      return new Observable<AvailableLicenses>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<AvailableLicenses>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.CB_getAvailableLicenses = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.CB_getAvailableLicenses = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            subscriber.next(res.args[0]);
-            subscriber.complete();
-            return of(true);
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(null);
+          //Emissão da resposta do Agent-Server, para o Electron
+          let output: AvailableLicenses = (res.errorCode == null ? Object.assign(new AvailableLicenses(null, null, []), res.args[0]) : null);
+          subscriber.next(output);
           subscriber.complete();
-        }
+          return of(true);
+        };
       });
     }));
   }
@@ -929,28 +895,24 @@ export class ServerService {
   /* Método de solicitação das janelas de execução dos agendamentos válidas para esta instalação do Agent-Client */
   public static getAvailableExecutionWindows(): Observable<string[]> {
     return ServerService.writeRequestToAgentServerSocket('getAvailableExecutionWindows', []).pipe(switchMap((b: boolean) => {
-      return new Observable<string[]>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<string[]>((subscriber: any) => {
+        
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.CB_getAvailableExecutionWindows = (res: ServerCommunication) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.CB_getAvailableExecutionWindows = (res: ServerCommunication) => {
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
-            
-            subscriber.next(res.args[0]);
-            subscriber.complete();
-            return of(true);
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(null);
+          //Emissão da resposta do Agent-Server, para o Electron
+          let output: string[] = (res.errorCode == null ? res.args : null);
+          subscriber.next(output);
           subscriber.complete();
-        }
+          return of(true);
+        };
       });
     }));
   }
@@ -958,28 +920,24 @@ export class ServerService {
   /* Método de solicitação dos últimos parâmetros de ETL disponíveis para esta licença do Agent-Client */
   public static getLatestETLParameters(license: License): Observable<ETLParameterCommunication> {
     return ServerService.writeRequestToAgentServerSocket('getLatestETLParameters', [license]).pipe(switchMap((b: boolean) => {
-      return new Observable<ETLParameterCommunication>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<ETLParameterCommunication>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.CB_getLatestETLParameters = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.CB_getLatestETLParameters = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            subscriber.next(res.args[0]);
-            subscriber.complete();
-            return of(true);
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(null);
+          //Emissão da resposta do Agent-Server, para o Electron
+          let output: ETLParameterCommunication = (res.errorCode == null ? Object.assign(new ETLParameterCommunication(), res.args[0]) : null);
+          subscriber.next(output);
           subscriber.complete();
-        }
+          return of(true);
+        };
       });
     }));
   }
@@ -987,28 +945,24 @@ export class ServerService {
   /* Método de solicitação dos últimos parâmetros de SQL disponíveis para esta licença do Agent-Client */
   public static getLatestSQLParameters(license: License, database: string): Observable<SQLParameterCommunication> {
     return ServerService.writeRequestToAgentServerSocket('getLatestSQLParameters', [license, database]).pipe(switchMap((b: boolean) => {
-      return new Observable<SQLParameterCommunication>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<SQLParameterCommunication>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.CB_getLatestSQLParameters = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.CB_getLatestSQLParameters = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            subscriber.next(res.args[0]);
-            subscriber.complete();
-            return of(true);
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(null);
+          //Emissão da resposta do Agent-Server, para o Electron
+          let output: SQLParameterCommunication = (res.errorCode == null ? Object.assign(new SQLParameterCommunication(), res.args[0]) : null);
+          subscriber.next(output);
           subscriber.complete();
-        }
+          return of(true);
+        };
       });
     }));
   }
@@ -1016,17 +970,24 @@ export class ServerService {
   /* Método de solicitação das últimas consultas disponíveis para esta licença do Agent-Client */
   public static saveLatestQueries(license: License, database: Database, scheduleId: string): Observable<number> {
     return ServerService.writeRequestToAgentServerSocket('getLatestQueries', [license, database.brand]).pipe(switchMap((b: boolean) => {
-      return new Observable<number>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<number>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.callbackFunction = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          
+          //Verifica se o Agent-Server falhou em atender esta solicitação
+          if (res.errorCode != null) {
+            subscriber.next(res.errorCode);
+            subscriber.complete();
+            return of(false);
+          } else {
 
             //Conversão da resposta do Agent-Server, para o objeto de comunicação das consultas
             let queries: QueryCommunication = Object.assign(new QueryCommunication(), res.args[0]);
@@ -1042,7 +1003,7 @@ export class ServerService {
               return QueryService.saveQuery(queriesToSave).pipe(switchMap((errors: number) => {
                 subscriber.next(errors);
                 subscriber.complete();
-                return of(1);
+                return of(true);
               }));
             } else {
               Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA'], null, null, null, null, null);
@@ -1088,7 +1049,7 @@ export class ServerService {
                           }));
                         }));
                       } else {
-                        subscriber.next(res.errorCode);
+                        subscriber.next(-1);
                         subscriber.complete();
                         return of(false);
                       }
@@ -1096,21 +1057,16 @@ export class ServerService {
                   }
                 }));
 
-                //Caso a origem dos dados não seja do Protheus, é gerada uma mensagem de erro
+              //Caso a origem dos dados não seja do Protheus, é gerada uma mensagem de erro
               } else {
-                Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_ERROR'], null, null, null, null, null);
+                Files.writeToLog(CNST_LOGLEVEL.WARN, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['QUERIES.MESSAGES.IMPORT_NO_DATA_WARNING'], null, null, null, null, null);
                 subscriber.next(-2);
                 subscriber.complete();
                 return of(false);
               }
             }
-          };
-          
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(null);
-          subscriber.complete();
-        }
+          }
+        };
       });
     }));
   }
@@ -1118,17 +1074,24 @@ export class ServerService {
   /* Método de solicitação das últimas rotinas disponíveis para esta licença do Agent-Client */
   public static saveLatestScripts(license: License, brand: string, scheduleId: string): Observable<number> {
     return ServerService.writeRequestToAgentServerSocket('getLatestScripts', [license, brand]).pipe(switchMap((b: boolean) => {
-      return new Observable<number>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<number>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.callbackFunction = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+
+          //Verifica se o Agent-Server falhou em atender esta solicitação
+          if (res.errorCode != null) {
+            subscriber.next(-1);
+            subscriber.complete();
+            return of(false);
+          } else {
 
             //Conversão da resposta do Agent-Server, para o objeto de comunicação das rotinas
             let scripts: ScriptCommunication = Object.assign(new ScriptCommunication(), res.args[0]);
@@ -1138,7 +1101,7 @@ export class ServerService {
               s.scheduleId = scheduleId;
               return s;
             });
-          
+
             /*
             Realiza a gravação das rotinas padrões.
             Caso não tenha recebido nenhuma rotina do Agent - Server, é gerado um código de erro
@@ -1151,18 +1114,13 @@ export class ServerService {
               });
             } else {
               Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA'], null, null, null, null, null);
-              Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_ERROR'], null, null, null, null, null);
+              Files.writeToLog(CNST_LOGLEVEL.WARN, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_WARNING'], null, null, null, null, null);
               subscriber.next(-2);
               subscriber.complete();
               return of(false);
             }
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(null);
-          subscriber.complete();
-        }
+          }
+        };
       });
     }));
   }
@@ -1263,126 +1221,120 @@ export class ServerService {
       );
 
       return ServerService.writeRequestToAgentServerSocket('getUpdates', [data]).pipe(switchMap((b: boolean) => {
-        return new Observable<number>((subscriber: any) => {
-          if (b) {
+        if (!b) return of(null);
+        else return new Observable<number>((subscriber: any) => {
 
-            //Definição da função de callback para a próxima resposta do Agent-Server
-            ServerService.callbackFunction = (res: ServerCommunication) => {
+          //Definição da função de callback para a próxima resposta do Agent-Server
+          ServerService.callbackFunction = (res: ServerCommunication) => {
 
-              //Consulta das traduções
-              let translations: any = TranslationService.getTranslations([
-                new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-              ]);
-              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+            //Consulta das traduções
+            let translations: any = TranslationService.getTranslations([
+              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+            ]);
+            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-              //Conversão da resposta do Agent-Server, para o objeto de comunicação das rotinas
-              let dataUpdate: DataUpdate = Object.assign(new DataUpdate(null, null, null, null), res.args[0]);
+            //Conversão da resposta do Agent-Server, para o objeto de comunicação das rotinas
+            let dataUpdate: DataUpdate = Object.assign(new DataUpdate(null, null, null, null), res.args[0]);
 
-              /*
-                Itera por todas as consultas atualmente gravadas no Agent-Client,
-                procurando a resposta do Agent-Server para cada uma delas.
-                Caso a consulta não possua atualização disponível, a mesma é removida do vetor
-              */
-              let queriesToSave: QueryClient[] = results[3].map((query: QueryClient) => {
-                let updated: QueryServer = new QueryServer().toObject(dataUpdate.Queries.find((q: QueryServer) => (query.id == q.id)));
+            /*
+              Itera por todas as consultas atualmente gravadas no Agent-Client,
+              procurando a resposta do Agent-Server para cada uma delas.
+              Caso a consulta não possua atualização disponível, a mesma é removida do vetor
+            */
+            let queriesToSave: QueryClient[] = results[3].map((query: QueryClient) => {
+              let updated: QueryServer = new QueryServer().toObject(dataUpdate.Queries.find((q: QueryServer) => (query.id == q.id)));
+
+              //Caso a resposta do Agent-Server seja uma versão acima da instalada atualmente, o vetor é atualizado
+              if (updated.version.getPatchVersion() > query.version.getPatchVersion()) {
+                query.command = updated.command;
+                query.version = updated.version;
+                query.executionMode = updated.executionMode;
+
+                return query;
+              } else {
+                return null;
+              }
+            }).filter((q: QueryClient) => (q != null));
+
+            /*
+              Itera por todas as rotinas atualmente gravadas no Agent-Client,
+              procurando a resposta do Agent-Server para cada uma delas.
+              Caso a rotina não possua atualização disponível, a mesma é removida do vetor
+            */
+            let scriptsToSave: ScriptClient[] = results[4].map((script: ScriptClient) => {
+              let updated: ScriptServer = new ScriptServer().toObject(dataUpdate.Scripts.find((s: ScriptServer) => (script.id == s.id)));
+
+              //Caso a resposta do Agent-Server seja uma versão acima da instalada atualmente, o vetor é atualizado
+              if (updated.version.getPatchVersion() > script.version.getPatchVersion()) {
+                script.command = updated.command;
+                script.version = updated.version;
+
+                return script;
+              } else {
+                return null;
+              }
+            }).filter((s: ScriptClient) => (s != null));
+            
+            /*
+              Itera por todos os agendamentos atualmente gravados no Agent-Client,
+              procurando a resposta do Agent-Server para cada parâmetro de ETL / SQL deles.
+              Caso o agendamento não possua nenhum parâmetro com atualização disponível, o mesma é removido do vetor
+            */
+            let schedulesToSave: Schedule[] = results[0].map((s: Schedule) => {
+              let hasUpdates: boolean = false;
+
+              //Procura por atualizações em cada parâmetro de ETL do agendamento
+              s.ETLParameters = s.ETLParameters.map((param: ETLParameterClient) => {
+                let updated: ETLParameterServer = new ETLParameterServer().toObject(dataUpdate.ETLParameters.find((p: ETLParameterServer) => (param.id == p.id)));
 
                 //Caso a resposta do Agent-Server seja uma versão acima da instalada atualmente, o vetor é atualizado
-                if (updated.version.getPatchVersion() > query.version.getPatchVersion()) {
-                  query.command = updated.command;
-                  query.version = updated.version;
-                  query.executionMode = updated.executionMode;
-
-                  return query;
-                } else {
-                  return null;
+                if (updated.version.getPatchVersion() > param.version.getPatchVersion()) {
+                  hasUpdates = true;
+                  param.command = updated.command;
+                  param.version = updated.version;
                 }
-              }).filter((q: QueryClient) => (q != null));
+                return param;
+              });
 
-              /*
-                Itera por todas as rotinas atualmente gravadas no Agent-Client,
-                procurando a resposta do Agent-Server para cada uma delas.
-                Caso a rotina não possua atualização disponível, a mesma é removida do vetor
-              */
-              let scriptsToSave: ScriptClient[] = results[4].map((script: ScriptClient) => {
-                let updated: ScriptServer = new ScriptServer().toObject(dataUpdate.Scripts.find((s: ScriptServer) => (script.id == s.id)));
+              //Procura por atualizações em cada parâmetro de SQL do agendamento
+              s.SQLParameters = s.SQLParameters.map((param: SQLParameterClient) => {
+                let updated: SQLParameterServer = new SQLParameterServer().toObject(dataUpdate.SQLParameters.find((p: SQLParameterServer) => (param.id == p.id)));
 
                 //Caso a resposta do Agent-Server seja uma versão acima da instalada atualmente, o vetor é atualizado
-                if (updated.version.getPatchVersion() > script.version.getPatchVersion()) {
-                  script.command = updated.command;
-                  script.version = updated.version;
-
-                  return script;
-                } else {
-                  return null;
+                if (updated.version.getPatchVersion() > param.version.getPatchVersion()) {
+                  hasUpdates = true;
+                  param.command = updated.command;
+                  param.version = updated.version;
+                  param.sql = updated.sql;
                 }
-              }).filter((s: ScriptClient) => (s != null));
-              
+                return param;
+              });
+
               /*
-                Itera por todos os agendamentos atualmente gravados no Agent-Client,
-                procurando a resposta do Agent-Server para cada parâmetro de ETL / SQL deles.
-                Caso o agendamento não possua nenhum parâmetro com atualização disponível, o mesma é removido do vetor
+                Caso pelo menos uma atualização dentra sido encontrada, o agendamento é mantido.
+                Caso contrário, o mesmo é removido do vetor
               */
-              let schedulesToSave: Schedule[] = results[0].map((s: Schedule) => {
-                let hasUpdates: boolean = false;
+              if (hasUpdates) return s;
+              else return null;
+            }).filter((s: Schedule) => (s != null));
 
-                //Procura por atualizações em cada parâmetro de ETL do agendamento
-                s.ETLParameters = s.ETLParameters.map((param: ETLParameterClient) => {
-                  let updated: ETLParameterServer = new ETLParameterServer().toObject(dataUpdate.ETLParameters.find((p: ETLParameterServer) => (param.id == p.id)));
-
-                  //Caso a resposta do Agent-Server seja uma versão acima da instalada atualmente, o vetor é atualizado
-                  if (updated.version.getPatchVersion() > param.version.getPatchVersion()) {
-                    hasUpdates = true;
-                    param.command = updated.command;
-                    param.version = updated.version;
-                  }
-                  return param;
-                });
-
-                //Procura por atualizações em cada parâmetro de SQL do agendamento
-                s.SQLParameters = s.SQLParameters.map((param: SQLParameterClient) => {
-                  let updated: SQLParameterServer = new SQLParameterServer().toObject(dataUpdate.SQLParameters.find((p: SQLParameterServer) => (param.id == p.id)));
-
-                  //Caso a resposta do Agent-Server seja uma versão acima da instalada atualmente, o vetor é atualizado
-                  if (updated.version.getPatchVersion() > param.version.getPatchVersion()) {
-                    hasUpdates = true;
-                    param.command = updated.command;
-                    param.version = updated.version;
-                    param.sql = updated.sql;
-                  }
-                  return param;
-                });
-
-                /*
-                  Caso pelo menos uma atualização dentra sido encontrada, o agendamento é mantido.
-                  Caso contrário, o mesmo é removido do vetor
-                */
-                if (hasUpdates) return s;
-                else return null;
-              }).filter((s: Schedule) => (s != null));
-
-              //Dispara os serviços de atualização de cada objeto
-              return forkJoin([
-                QueryService.saveQuery(queriesToSave),
-                ScriptService.saveScript(scriptsToSave),
-                ScheduleService.saveSchedule(schedulesToSave)
-              ]).pipe(map((res: [number, number, number]) => {
-                if ((res[0] == null) && (res[1] == null) && (res[2] == null)) {
-                  subscriber.next(null);
-                  subscriber.complete();
-                  return of(true);
-                } else {
-                  subscriber.next(res[0] + res[1] + res[2]);
-                  subscriber.complete();
-                  return of(false);
-                }
-              }));
-            };
-
-          //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-          } else {
-            subscriber.next(-999);
-            subscriber.complete();
-          }
+            //Dispara os serviços de atualização de cada objeto
+            return forkJoin([
+              QueryService.saveQuery(queriesToSave),
+              ScriptService.saveScript(scriptsToSave),
+              ScheduleService.saveSchedule(schedulesToSave)
+            ]).pipe(map((res: [number, number, number]) => {
+              if ((res[0] == null) && (res[1] == null) && (res[2] == null)) {
+                subscriber.next(null);
+                subscriber.complete();
+                return of(true);
+              } else {
+                subscriber.next(res[0] + res[1] + res[2]);
+                subscriber.complete();
+                return of(false);
+              }
+            }));
+          };
         });
       }));
     }));
@@ -1398,28 +1350,22 @@ export class ServerService {
     let word: string = ((TOTVS_Agent_Analytics.getMirrorMode() == 3) ? 'deactivateMirrorModeFromClient' : 'deactivateMirrorModeFromMirror');
 
     return ServerService.writeRequestToAgentServerSocket(word, [db, agentLogMessages]).pipe(switchMap((b: boolean) => {
-      return new Observable<boolean>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<boolean>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.callbackFunction = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            subscriber.next(Boolean(res.args[0]));
-            subscriber.complete();
-            return of(true);
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(false);
+          subscriber.next(Boolean(res.args[0]));
           subscriber.complete();
-        }
+          return of(Boolean(res.args[0]));
+        };
       });
     }));
   }
@@ -1428,32 +1374,25 @@ export class ServerService {
   public static requestAgentLogsSinceRemoteStart(): Observable<boolean> {
     return ConfigurationService.getConfiguration(false).pipe(switchMap((conf: Configuration) => {
       return ServerService.writeRequestToAgentServerSocket('requestAgentLogsSinceRemoteStart', [conf.serialNumber]).pipe(switchMap((b: boolean) => {
-        return new Observable<boolean>((subscriber: any) => {
-          if (b) {
+        if (!b) return of(null);
+        else return new Observable<boolean>((subscriber: any) => {
 
-            //Definição da função de callback para a próxima resposta do Agent-Server
-            ServerService.callbackFunction = (res: ServerCommunication) => {
+          //Definição da função de callback para a próxima resposta do Agent-Server
+          ServerService.callbackFunction = (res: ServerCommunication) => {
 
-              //Consulta das traduções
-              let translations: any = TranslationService.getTranslations([
-                new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-              ]);
-              Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+            //Consulta das traduções
+            let translations: any = TranslationService.getTranslations([
+              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+            ]);
+            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-              return ServerService.appendLogData(res).pipe(switchMap((res2: responseObj) => {
-                if (res2.errorCode) subscriber.next(false);
-                else subscriber.next(true);
-
-                subscriber.complete();
-                return of(res2.errorCode);
-              }));
-            };
-
-            //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-          } else {
-            subscriber.next(-1);
-            subscriber.complete();
-          }
+            return ServerService.appendLogData(res).pipe(switchMap((res2: responseObj) => {
+              let output: boolean = ((res2.errorCode) ? false : true);
+              subscriber.next(output);
+              subscriber.complete();
+              return of(output);
+            }));
+          };
         });
       }));
     }));
@@ -1462,28 +1401,22 @@ export class ServerService {
   /* Método de teste de conexão remota ao banco de dados do Agent-Client */
   public static testDatabaseConnectionRemotelly(inputBuffer: string): Observable<number> {
     return ServerService.writeRequestToAgentServerSocket('testDatabaseConnectionRemotelly', [inputBuffer]).pipe(switchMap((b: boolean) => {
-      return new Observable<number>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<number>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.callbackFunction = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            subscriber.next(res.errorCode);
-            subscriber.complete();
-            return of(res.errorCode);
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(-1);
+          subscriber.next(res.errorCode);
           subscriber.complete();
-        }
+          return of(true);
+        };
       });
     }));
   }
@@ -1491,29 +1424,23 @@ export class ServerService {
   /* Método de disparo da execução de um agendamento do Agent-Client */
   public static requestScheduleExecutionRemotelly(inputBuffer: string, scheduleId: string): Observable<number> {
     return ServerService.writeRequestToAgentServerSocket('requestScheduleExecutionRemotelly', [inputBuffer, scheduleId]).pipe(switchMap((b: boolean) => {
-      return new Observable<number>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<number>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.callbackFunction = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            if (res.errorCode) subscriber.next(res.errorCode);
-            else subscriber.next(Number(res.args[0]));
-            subscriber.complete();
-            return of(Number(res.args[0]));
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(-1);
+          if (res.errorCode) subscriber.next(res.errorCode);
+          else subscriber.next(Number(res.args[0]));
           subscriber.complete();
-        }
+          return of(true);
+        };
       });
     }));
   }
@@ -1521,34 +1448,28 @@ export class ServerService {
   /* Método de validação da integridade dos arquivos XML / JSON a serem enviados pelo Agent-Client remoto */
   public static requestFileIntegrityRemotelly(scheduleId: string): Observable<FileValidation[]> {
     return ServerService.writeRequestToAgentServerSocket('requestFileIntegrityRemotelly', [scheduleId]).pipe(switchMap((b: boolean) => {
-      return new Observable<FileValidation[]>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<FileValidation[]>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.callbackFunction = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            let files: FileValidation[] = [];
-            res.args.map((file: string) => {
-              let f: FileValidation = Object.assign(new FileValidation(null, null), file);
-              files.push(f);
-            });
+          let files: FileValidation[] = [];
+          res.args.map((file: string) => {
+            let f: FileValidation = Object.assign(new FileValidation(null, null), file);
+            files.push(f);
+          });
 
-            subscriber.next(files);
-            subscriber.complete();
-            return of(true);
-          };
-
-          //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(-1);
+          subscriber.next(files);
           subscriber.complete();
-        }
+          return of(true);
+        };
       });
     }));
   }
@@ -1556,71 +1477,45 @@ export class ServerService {
   /* Método de exportação da tabela I01 do Protheus (Teste Remoto / Disparo Remoto) */
   public static requestQueryExportFromI01Remotelly(inputBuffer: string, scheduleId: string): Observable<ServerCommunication> {
     return ServerService.writeRequestToAgentServerSocket('requestQueryExportFromI01Remotelly', [inputBuffer, scheduleId]).pipe(switchMap((b: boolean) => {
-      return new Observable<ServerCommunication>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<ServerCommunication>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.callbackFunction = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            subscriber.next(res);
-            subscriber.complete();
-            return of(res);
-          };
-
-        //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(-1);
+          subscriber.next(res);
           subscriber.complete();
-        }
+          return of(true);
+        };
       });
     }));
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   /* Método de acesso remoto ao Agent (Client p/ Client) */
   public static requestRemoteAccessFromClient(inputBuffer: string): Observable<number> {
     return ServerService.writeRequestToAgentServerSocket('requestRemoteAccessFromClient', [inputBuffer]).pipe(switchMap((b: boolean) => {
-      return new Observable<number>((subscriber: any) => {
-        if (b) {
+      if (!b) return of(null);
+      else return new Observable<number>((subscriber: any) => {
 
-          //Definição da função de callback para a próxima resposta do Agent-Server
-          ServerService.callbackFunction = (res: ServerCommunication) => {
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
 
-            //Consulta das traduções
-            let translations: any = TranslationService.getTranslations([
-              new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
-            ]);
-            Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            subscriber.next(Number(res.args[0]));
-            subscriber.complete();
-            return of(true);
-          };
-
-          //Tratamento de erro (Falha no envio do pacote para o Agent-Server)
-        } else {
-          subscriber.next(-1);
+          subscriber.next(Number(res.args[0]));
           subscriber.complete();
-        }
+          return of(true);
+        };
       });
     }));
   }

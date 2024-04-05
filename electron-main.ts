@@ -107,7 +107,10 @@ export default class Main {
   
   //Referência da aplicação como um todo, passada ao inicializar o Electron
   static application: Electron.App = null;
-  
+
+  //Referência do idioma do sistema operacional
+  private static localeLanguage: string = null;
+
   //Referência do temporizador de atualizações automáticas do Agent
   private static autoUpdaterRefresh: any = null;
   
@@ -144,6 +147,14 @@ export default class Main {
   /*********************************/
   /******* MÉTODOS DO MÓDULO  ******/
   /*********************************/
+  public static getLocaleLanguage(): string {
+    return Main.localeLanguage;
+  }
+
+  public static setLocaleLanguage(localeLanguage: string): void {
+    Main.localeLanguage = localeLanguage;
+  }
+
   /* Método de atualização das preferências vinculadas ao acesso remoto (MirrorMode) */
   public static updateDeactivationPreferrences(): void {
     if (Main.mainWindow != null) Main.mainWindow.webContents.send('AC_deactivateAgent', null);
@@ -840,7 +851,7 @@ export default class Main {
             //Espera 1 segundo para os eventos de fechamento da interface sejam encerrados
           setTimeout(() => {
             TOTVS_Agent_Analytics.setMirrorMode(3);
-            Files.initApplicationData(true, 'pt-BR');
+            Files.initApplicationData(true, Main.getLocaleLanguage());
               Main.createWindowObject();
             }, 1000);
         }
@@ -980,7 +991,8 @@ export default class Main {
   /* Método de inicialização do Electron */
   static main(_app: App) {
     Main.application = _app;
-    
+    Main.setLocaleLanguage(_app.getLocale());
+
     if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) Main.application.disableHardwareAcceleration();
 
     //Inicialização do serviço de tradução
@@ -1005,7 +1017,7 @@ export default class Main {
     }
     
     //Inicialização do arquivo de banco do Agent (Leitura das configurações existentes)
-    Files.initApplicationData(true, _app.getLocale());
+    Files.initApplicationData(true, Main.getLocaleLanguage());
     
     //Leitura dos parâmetros de linha de comando
     Main.hidden = (Main.application.commandLine.hasSwitch('hidden') ? true : false);
@@ -1207,7 +1219,7 @@ export default class Main {
             else Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.MESSAGES.SERVER_SYNC_ERROR'], null, null, null, null, null);
             if (mirror == 3) {
               TOTVS_Agent_Analytics.setMirrorMode(0);
-              Files.initApplicationData(true, 'pt-BR');
+              Files.initApplicationData(true, Main.getLocaleLanguage());
               Main.createWindowObject();
             } else {
               Files.terminateLogStreams();
