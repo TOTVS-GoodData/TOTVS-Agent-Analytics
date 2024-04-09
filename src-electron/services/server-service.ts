@@ -174,7 +174,7 @@ export class ServerService {
           : 'ws://[' + serverHostname + ']:'
         ) + CNST_SERVER_PORT
       );
-      
+
       //Inicializa a conexão com o Agent-Server da TOTVS
       ServerService.ws.on('open', () => {
         Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.CONNECTED'], null, null, null, null, null);
