@@ -272,19 +272,18 @@ export class WorkspaceAddComponent {
 
         //Realiza a leitura do ambiente a ser editado (se houver)
         if ((nav != undefined) && (nav.extras.state)) {
-
           this.workspace.id = nav.extras.state['id'];
-          
+
           //Dispara antecipadamente o evento de alteração do banco de dados do formuláro
           this.onChangeDatabase(nav.extras.state['databaseIdRef']);
-          
+
           //Dispara antecipadamente o evento de configuração dos módulos disponíveis no Agent
           this.onChangeERP(nav.extras.state['license'].source);
-          
+
           //Configura as variáveis de suporte da licença
           this.workspaceSource = nav.extras.state['license'].source;
           this.workspaceProduct = nav.extras.state['license'].product;
-          
+
           //Método disparado para atualiza a listagem de ambientes de GoodData disponíveis para o usuário cadastrado
           this.getWorkspaces(
             nav.extras.state['GDUsername'],
@@ -294,9 +293,13 @@ export class WorkspaceAddComponent {
           ).subscribe((res: boolean) => {
             this.workspace.GDWorkspaceId = nav.extras.state['GDWorkspaceId'];
             this.onChangeWorkspace().subscribe((res: boolean) => {
-              this.workspace.GDProcessId = nav.extras.state['GDProcessId'];
-              this.onChangeProcess();
-              
+
+              //Verifica se existe um processo de ETL configurado para este ambiente
+              if (nav.extras.state['GDProcessId'] != undefined) {
+                this.workspace.GDProcessId = nav.extras.state['GDProcessId'];
+                this.onChangeProcess();
+              }
+
               //Copia todos os valores do ambiente a ser editado, para o objeto de ambiente do formulário
               Object.getOwnPropertyNames.call(Object, nav.extras.state).map((p: string) => {
                 this.workspace[p] = nav.extras.state[p];
@@ -444,7 +447,7 @@ export class WorkspaceAddComponent {
   
   /* Método executado ao trocar o ERP do ambiente */
   protected onChangeERP(e: string): void {
-    console.log(this.licenses);
+
     //Define a listagem de todos os módulos disponíveis para o ERP selecionado
     this._CNST_PRODUTO = this.licenses.filter((l: License) => l.source === e)
     .map((l: License) => {

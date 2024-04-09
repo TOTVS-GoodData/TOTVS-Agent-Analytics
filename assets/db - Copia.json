@@ -1,0 +1,2672 @@
+{
+  "workspaces": [
+    {
+      "id": "19ac814c-7ab0-4c2a-ab43-b922a04a116a",
+      "GDEnvironment": "analytics.totvs.com.br",
+      "GDUsername": "dev.gd@totvs.com.br",
+      "GDPassword": "cb2e52727b9cd51de406f15472e0b041e1fb5a4acabee0d2338839f8407fcd92",
+      "GDWorkspaceId": "tub27mqwus0odc32vztat5mckr2w12h7",
+      "GDWorkspaceUploadURL": "https://secure-di.gooddata.com/project-uploads/tub27mqwus0odc32vztat5mckr2w12h7/today/",
+      "databaseIdRef": "07401fed-6e8d-44f1-8322-925579a3f23a",
+      "name": "Datasul BO Progress",
+      "license": {
+        "id": "14fc6355-52c6-4f19-b2a8-76279bfa50be",
+        "source": "Datasul",
+        "product": "Backoffice",
+        "modules": [
+          "aa0f0855-3991-400a-a97c-5b541dfca3f0",
+          "c5005d04-b8f9-479a-9464-93aaeaec9503",
+          "3638aad9-5a18-4567-b800-baef3e37630f",
+          "b0594d26-3fab-4bea-bc3b-7ef81b7fb401",
+          "26dea999-c1c7-4497-b191-10973ba32512",
+          "2b32e1f8-2723-41ff-a79d-4d75a9af6fbd",
+          "cea12e5a-d290-4198-991a-628047b075e9"
+        ]
+      }
+    },
+    {
+      "id": "b7fac45b-9f02-4663-8fd5-12db6fb373c2",
+      "GDEnvironment": "analytics.totvs.com.br",
+      "GDUsername": "dev.gd@totvs.com.br",
+      "GDPassword": "cb2e52727b9cd51de406f15472e0b041e1fb5a4acabee0d2338839f8407fcd92",
+      "GDWorkspaceId": "okdtv9dwnqcpxgkhq310un6x2us052be",
+      "GDWorkspaceUploadURL": "https://secure-di.gooddata.com/project-uploads/okdtv9dwnqcpxgkhq310un6x2us052be/today/",
+      "databaseIdRef": "db9e064b-c37b-46d9-be39-9935fd9392ee",
+      "name": "Datasul BO SQL Server",
+      "license": {
+        "id": "14fc6355-52c6-4f19-b2a8-76279bfa50be",
+        "source": "Datasul",
+        "product": "Backoffice",
+        "modules": [
+          "aa0f0855-3991-400a-a97c-5b541dfca3f0",
+          "c5005d04-b8f9-479a-9464-93aaeaec9503",
+          "3638aad9-5a18-4567-b800-baef3e37630f",
+          "b0594d26-3fab-4bea-bc3b-7ef81b7fb401",
+          "26dea999-c1c7-4497-b191-10973ba32512",
+          "2b32e1f8-2723-41ff-a79d-4d75a9af6fbd",
+          "cea12e5a-d290-4198-991a-628047b075e9"
+        ]
+      }
+    },
+    {
+      "id": "4121226e-0c17-425e-a5ba-5ec216253dc9",
+      "GDEnvironment": "analytics.totvs.com.br",
+      "GDUsername": "dev.gd@totvs.com.br",
+      "GDPassword": "cb2e52727b9cd51de406f15472e0b041e1fb5a4acabee0d2338839f8407fcd92",
+      "GDWorkspaceId": "kqmf0haoevyza1ql6vy2bl2f531jjxzj",
+      "GDWorkspaceUploadURL": "https://secure-di.gooddata.com/project-uploads/kqmf0haoevyza1ql6vy2bl2f531jjxzj/today/",
+      "databaseIdRef": "db9e064b-c37b-46d9-be39-9935fd9392ee",
+      "name": "Protheus BO SQL Serv",
+      "license": {
+        "id": "9b8ce0b6-7a59-4227-90bf-5a365bcb73e3",
+        "source": "Protheus",
+        "product": "Backoffice",
+        "modules": [
+          "aa0f0855-3991-400a-a97c-5b541dfca3f0",
+          "c5005d04-b8f9-479a-9464-93aaeaec9503",
+          "3638aad9-5a18-4567-b800-baef3e37630f",
+          "b0594d26-3fab-4bea-bc3b-7ef81b7fb401",
+          "26dea999-c1c7-4497-b191-10973ba32512",
+          "cea12e5a-d290-4198-991a-628047b075e9"
+        ]
+      },
+      "GDProcessId": "e4e888f0-2c68-466f-8da2-7efda47eb74d",
+      "GDProcessGraph": "/graph/_Main_Comercial.grf"
+    }
+  ],
+  "databases": [
+    {
+      "id": "db9e064b-c37b-46d9-be39-9935fd9392ee",
+      "name": "SQL Sv",
+      "type": "SQL_Server_2012",
+      "brand": "SQL_Server",
+      "driverClass": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+      "driverPath": "./java/files/jdbc/sqljdbc4.jar",
+      "connectionType": "DB",
+      "ip": "10.171.59.134",
+      "ipType": "IPV4",
+      "port": 1456,
+      "instance": "",
+      "db_databaseName": "P12123MNT",
+      "connectionString": "jdbc:sqlserver://10.171.59.134:1456;DatabaseName=P12123MNT",
+      "username": "sa",
+      "password": "efd4f834c1004a43a47d5d2fb5b1293e"
+    },
+    {
+      "id": "07401fed-6e8d-44f1-8322-925579a3f23a",
+      "name": "Progress",
+      "type": "Progress_11",
+      "brand": "Progress",
+      "driverClass": "com.ddtek.jdbc.openedge.OpenEdgeDriver",
+      "driverPath": "./java/files/jdbc/openedge_v11.jar",
+      "connectionType": "DB",
+      "ip": "10.171.59.134",
+      "ipType": "IPV4",
+      "port": 6001,
+      "instance": "",
+      "db_databaseName": "FastProgres",
+      "connectionString": "jdbc:datadirect:openedge://10.171.59.134:6001;DatabaseName=FastProgres",
+      "username": "diego.guedes",
+      "password": "039d1b953822829010f37b75bda31a60"
+    }
+  ],
+  "schedules": [
+    {
+      "id": "8de892e5-8652-46f6-885c-dd83b9141270",
+      "name": "Agend - Datasul BO 2",
+      "workspaceId": "b7fac45b-9f02-4663-8fd5-12db6fb373c2",
+      "windows": [
+        "06:00"
+      ],
+      "enabled": false,
+      "GDZipFilename": "Ger",
+      "GDZipExtension": ".zip",
+      "ETLParameters": [
+        {
+          "id": "e61596ae-b241-4c36-8f85-d64c3b84d82e",
+          "name": "LOAD_MODE_DIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FULL_LOAD",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "03539b47-c91d-4490-abf1-68637d0e3a0a",
+          "name": "LOAD_MODE_FCT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "INCREMENTAL",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "af14769a-204e-4496-8003-7847b8e48a62",
+          "name": "LOAD_MODE_KPI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FULL_LOAD",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "b897f698-c659-4869-baac-74d845a12c80",
+          "name": "LOAD_MODE_SNAPSHOT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FULL_LOAD",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "1502a1fe-6aba-484e-a08d-e3bcd556d9f5",
+          "name": "MULTI_INSTANCIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FALSE",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        }
+      ],
+      "SQLParameters": [
+        {
+          "id": "8221502a-811c-45ce-8b4a-d380fed0d291",
+          "name": "GERAL_INSTANCIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "01",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "33f24d0f-2f85-4a73-a35f-b2552e65cf2d",
+          "name": "START_DATE",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "0e5817ca-1ade-4d2f-9d2f-42a0c188074c",
+          "name": "FINAL_DATE",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "20b1fbd9-da4a-4ccd-82ce-080a4a33a0a2",
+          "name": "DATE_MASK",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "yyyyMMdd",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "3eb5f4b0-c250-40c2-8522-c9ce5c00f2b6",
+          "name": "DATABASE_DIRECTORY",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "Preencher",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "c4f0d16a-98c3-4824-b94e-c6acdb382aa4",
+          "name": "MGUNI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "4fa62b1c-f3c0-4e54-89eb-be4c12753697",
+          "name": "GERAL_MATRIZ_TRADUCAO_ORG_EXT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "c0aa759d-f10b-4807-bb5d-f649c4ac7329",
+          "name": "MGADM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "732ad4cd-1c4e-4048-83c5-3deb4065f267",
+          "name": "MGDIS",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "cf9b1d33-1d86-4490-ae3b-3e9f1b22863a",
+          "name": "MGFIS",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "1ee46593-03e7-425a-9af6-aec6bc17894f",
+          "name": "MGFRO",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "78fb2bca-8d51-4349-a05d-7ca478b46655",
+          "name": "MGIND",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "be8cdf47-a16a-495b-a781-90bbbaaf6cba",
+          "name": "MGINV",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "83b79cee-2f55-4622-bcb7-8c1a10030aed",
+          "name": "MGMFG",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "9137d021-a789-4520-b1d3-cdd6178123b0",
+          "name": "MGMNT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "45991574-fb8d-4723-aa5d-9ed48c2a9633",
+          "name": "MGMRP",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "0cbf9a45-3469-44e9-a041-ac5e96867990",
+          "name": "MGSCM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "c9583019-af26-4d2f-996a-204a6282aea4",
+          "name": "MOVADM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e71ce4a5-6f96-4adb-b100-5ec105ddf527",
+          "name": "MOVDIS",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "36f50a91-028f-42f2-b697-0cd41fc46afa",
+          "name": "MOVFIS",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "62dfe5a2-aabe-4520-b25f-17a43024f19e",
+          "name": "MOVFRO",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "b7eb7ff7-8ff4-4253-9eea-df854b79051e",
+          "name": "MOVIND",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "374edafc-8680-44f0-aaa3-1e30e44103a6",
+          "name": "MOVMFG",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "50355269-af81-4649-8309-fd8dd9cb3b01",
+          "name": "MOVMNT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "46458619-a94b-435f-bbfc-e0ef280b9e1d",
+          "name": "EMSBAS",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS5CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "50452be4-9430-423d-bb00-4353201d8e26",
+          "name": "EMSFIN",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS5CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "7a453e2c-c97e-4443-af98-35bbbd1dff1c",
+          "name": "EMSUNI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS5CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "94b221c3-e032-4347-b3fa-f27dc934c338",
+          "name": "EMSVEN",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS5CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "b7579666-3656-40b1-aa27-639cbdc107dc",
+          "name": "MOVFIN",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS5CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "72db5856-fa50-45d6-ae09-afe7878a28d5",
+          "name": "PRODUCAO_REALIZADA_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "b575f619-6636-4681-a525-12edb3d451e5",
+          "name": "PRODUCAO_REALIZADA_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e8712f19-e887-4d6b-a61c-042b9c2deb4c",
+          "name": "FATURAMENTO_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "21368350-7667-4f42-afe0-cc76322ca431",
+          "name": "FATURAMENTO_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e18ccec0-6eee-4faf-b0b5-3682787224ed",
+          "name": "PEDIDO_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "93e323c6-9eec-4496-96fa-020397298054",
+          "name": "PEDIDO_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "360a5381-94c0-4ded-b2c3-127d925c9aac",
+          "name": "DEVOLUCAO_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "cbfb4ba0-85a5-460c-82a7-69ec64fdf319",
+          "name": "DEVOLUCAO_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "7373fc93-857e-4556-a257-8e822ec6cf3a",
+          "name": "CONTAS_PAGAR_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "891e709c-935f-4955-84ad-5f2bb6735fbb",
+          "name": "CONTAS_PAGAR_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, +1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "22bb5dd7-7ecd-4524-9da8-f8ab781ca90d",
+          "name": "CONTAS_RECEBER_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "cc2dd486-8191-49b3-8164-1de9e6d66f50",
+          "name": "CONTAS_RECEBER_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, +1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "2f700757-1ecd-4aa3-9ccc-9f3180badc99",
+          "name": "CONTABILIDADE_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "ceabb97e-b769-4c36-a9fb-1737d71d4d47",
+          "name": "CONTABILIDADE_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "SYSDATE",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "b070c034-02f6-4f91-ad02-9ec892a475cf",
+          "name": "CONTABILIDADE_CODIGO_CENARIO_CONTABIL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "8ba5a740-7593-4d3a-9363-029e89fc3411",
+          "name": "CONTABILIDADE_CODIGO_FINALIDADE_ECONOMICA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "d26e0ae0-6b67-4cd9-9457-c88748c5bdce",
+          "name": "ORCAMENTO_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "4ae1f8ad-6db0-4516-b5c1-538d7db88fca",
+          "name": "ORCAMENTO_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "126ed97e-71b1-46ae-bc38-ce2f6d1c4717",
+          "name": "ORCAMENTO_CODIGO_CENARIO_CONTABIL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "9dc0262f-277d-4f0f-8fa4-1764345636df",
+          "name": "ORCAMENTO_CODIGO_CENARIO_ORCAMENTARIO",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "efaeac51-51af-4b9c-b71a-61adff7dd259",
+          "name": "ORCAMENTO_CODIGO_UNIDADE_ORCAMENTARIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "b4843c1c-ba4e-4db6-940f-910fbd575536",
+          "name": "ORCAMENTO_CODIGO_SEQUENCIA_ORCAMENTARIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": 0,
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "47d66744-e7fb-4593-bc58-799d00ef163a",
+          "name": "DEVOLUCAO_COMPRAS_DT_EMIS_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "60bcb578-8cd6-4d46-bbbf-21091df23c82",
+          "name": "DEVOLUCAO_COMPRAS_DT_EMIS_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "37506771-967a-42f9-8f92-565cabc43d52",
+          "name": "RECEBIMENTO_DT_TRANS_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "46ca9438-a36a-4143-88ba-809a3adce1e8",
+          "name": "RECEBIMENTO_DT_TRANS_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "62d790cd-b774-4ad8-a690-c1c35e983264",
+          "name": "COMPRAS_DT_PEDIDO_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "89b6d13d-78d2-4517-a46d-a494f06c0ece",
+          "name": "COMPRAS_DT_PEDIDO_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "5ae03bca-6595-430f-a421-8401920079e1",
+          "name": "MOVIMENTACAO_ESTOQUE_DT_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "db92e8ba-77eb-4110-b1ff-466e62bc5043",
+          "name": "MOVIMENTACAO_ESTOQUE_DT_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "c4d99014-849d-450b-890c-dd049f7fe012",
+          "name": "SALDO_TERC_DT_RETORNO_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "015bb61c-f316-4992-ba61-6656bcad12d3",
+          "name": "SALDO_TERC_DT_RETORNO_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e60ac09d-b5ba-4a13-b7f5-29505cda9622",
+          "name": "ESTOQUE_DIARIO_ESP_DESCONSIDERAR",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "2,37",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "c2865e6f-8086-4e41-a1ef-ea646fc98f3b",
+          "name": "SALDO_ESTOQUE_COD_ESTAB_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "ab83b074-bf77-44cb-9a4e-f7f7a96361c1",
+          "name": "SALDO_ESTOQUE_COD_ESTAB_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "abcf9429-5ec9-4b3a-be66-e31ac9829b75",
+          "name": "SALDO_ESTOQUE_COD_DEPOS_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "f2fa9383-b219-4b5b-897a-1941842e37d8",
+          "name": "SALDO_ESTOQUE_COD_DEPOS_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "46da7ab3-364d-4657-9d94-f315858179e1",
+          "name": "SALDO_ESTOQUE_COD_LOCALIZ_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "ff71c979-bbda-48e3-a9b3-7ca43767e42b",
+          "name": "SALDO_ESTOQUE_COD_LOCALIZ_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZZZZZZZZZZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e42dba85-a450-49c8-bd6e-e1c5a451bcb2",
+          "name": "SALDO_ESTOQUE_COD_LOTE_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "f7175e84-91ee-4a6e-b14c-2973cc8d238f",
+          "name": "SALDO_ESTOQUE_COD_LOTE_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "6b0c2b66-bd1a-4fa2-bf09-5327db36aca1",
+          "name": "SALDO_ESTOQUE_COD_REFER_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "7d112111-2d0f-4486-9e85-08e6d2131e6a",
+          "name": "SALDO_ESTOQUE_COD_REFER_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e3f961f5-5ab5-4a8a-a0e0-7be62ce27a58",
+          "name": "SALDO_ESTOQUE_TERC_COD_CALENDAR",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": 1,
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "44b03aa6-0c56-4370-9d9e-f4cfd6f48509",
+          "name": "SALDO_ESTOQUE_DT_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -25), 'MM'), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "76f349af-0d2a-455a-a9aa-1df19cc10b1e",
+          "name": "SALDO_ESTOQUE_DT_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "SYSDATE",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "1ccd50ff-e226-4ff7-a107-9ceb3bc0850e",
+          "name": "SALDO_ESTOQUE_COD_ITEM_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "84ce0d45-8513-4664-8516-86be8edf90f9",
+          "name": "SALDO_ESTOQUE_COD_ITEM_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "cde697b4-3809-4d87-a157-cb3184989afb",
+          "name": "SALDO_ESTOQUE_COD_FAMILIA_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "4e926604-2350-4b19-be95-ee163ee44f7c",
+          "name": "SALDO_ESTOQUE_COD_FAMILIA_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "0f982bf8-ab0b-4e34-b0e7-17d112a0cb73",
+          "name": "SALDO_ESTOQUE_GRUPO_ESTOQ_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": 0,
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "1e5242de-a9f5-437b-868b-402ebe648e4c",
+          "name": "SALDO_ESTOQUE_GRUPO_ESTOQ_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "99",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        }
+      ],
+      "fileFolder": "",
+      "fileFolderWildcard": "*.*"
+    },
+    {
+      "id": "53970e5b-52f8-4401-8d2b-f4f6421f15aa",
+      "name": "Agend - Protheus BO SQL Serv",
+      "workspaceId": "4121226e-0c17-425e-a5ba-5ec216253dc9",
+      "windows": [
+        "06:00"
+      ],
+      "enabled": false,
+      "GDZipFilename": "Jujubao",
+      "GDZipExtension": ".zip",
+      "ETLParameters": [
+        {
+          "id": "ab0adb86-7750-4646-846d-9855792eecda",
+          "name": "LOAD_MODE_DIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FULL_LOAD",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "f243617d-65cf-413b-bb86-89b133cfa3ee",
+          "name": "LOAD_MODE_FCT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "INCREMENTAL",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "7662eb56-4ef6-4d78-b750-e8255b4382a2",
+          "name": "LOAD_MODE_KPI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "INCREMENTAL",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "d1e5fec6-9ab3-46b8-a3ff-062f799b5554",
+          "name": "LOAD_MODE_SNAPSHOT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FULL_LOAD",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e023d5e6-ba08-4693-92fc-7c6d7eaa5480",
+          "name": "MULTI_INSTANCIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FALSE",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "d4cb2010-b543-4f53-b336-b36f32ed7ca4",
+          "name": "INSTANCIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "01",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        }
+      ],
+      "SQLParameters": [
+        {
+          "id": "e5fb67bb-c17a-4327-8ef4-a84d09c08fc3",
+          "name": "START_DATE",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "CONVERT(VARCHAR(8), DATEADD(MONTH, -24, DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)), 112)",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "500771ac-73e7-4a95-a9c9-084037e671b6",
+          "name": "FINAL_DATE",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "CONVERT(VARCHAR(8), GETDATE(), 112)",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "9cae7ed2-5c14-41b0-88f2-753ac6f90884",
+          "name": "EXTRACTION_DATE",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "CONVERT(VARCHAR(8), GETDATE(), 112)",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "4083913f-d38b-4239-a5ef-eea9e2e52c89",
+          "name": "DATE_MASK",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "yyyyMMdd",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        }
+      ],
+      "fileFolder": "",
+      "fileFolderWildcard": "*.*"
+    },
+    {
+      "id": "281bf174-a84a-4860-8b25-d1e162219352",
+      "name": "Agend - Protheus BO SQL Server com pasta pra subir",
+      "workspaceId": "4121226e-0c17-425e-a5ba-5ec216253dc9",
+      "windows": [
+        "06:00"
+      ],
+      "enabled": false,
+      "GDZipFilename": "Pastona",
+      "GDZipExtension": ".zip",
+      "ETLParameters": [
+        {
+          "id": "d7b42557-d7de-475c-bbfe-5c08477be5b1",
+          "name": "LOAD_MODE_DIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FULL_LOAD",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "1a5647c2-1832-4b4c-a099-4aef43e4cb39",
+          "name": "LOAD_MODE_FCT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "INCREMENTAL",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "0ee4db4b-06d1-4bd6-9031-8c694096651e",
+          "name": "LOAD_MODE_KPI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "INCREMENTAL",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "a0ec536f-a43e-447b-aa99-8ba4687eb23a",
+          "name": "LOAD_MODE_SNAPSHOT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FULL_LOAD",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "d1aec941-a309-438a-b32d-84cd230c5640",
+          "name": "MULTI_INSTANCIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FALSE",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e2e7e03b-a7aa-404c-80fd-3ef421c7b75e",
+          "name": "INSTANCIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "01",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        }
+      ],
+      "SQLParameters": [
+        {
+          "id": "5a3720dd-4880-4bac-9f55-745fb9ab82ec",
+          "name": "START_DATE",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "CONVERT(VARCHAR(8), DATEADD(MONTH, -24, DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)), 112)",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "df840124-17e0-4e4d-a177-293498cd9583",
+          "name": "FINAL_DATE",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "CONVERT(VARCHAR(8), GETDATE(), 112)",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "64b77f6a-fd13-4ecf-a087-b0a586d73479",
+          "name": "EXTRACTION_DATE",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "CONVERT(VARCHAR(8), GETDATE(), 112)",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "f57edac3-dfc1-4f11-ab32-55225bd64c0e",
+          "name": "DATE_MASK",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "yyyyMMdd",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        }
+      ],
+      "fileFolder": "C:\\Users\\diego.guedes\\Downloads\\Subir",
+      "fileFolderWildcard": "*.*",
+      "workspaceName": "Protheus BO SQL Serv"
+    },
+    {
+      "id": "15ed04f5-2afc-4c34-89d3-adf5c0526ddc",
+      "name": "Agend - Datasul BO Progress",
+      "workspaceId": "19ac814c-7ab0-4c2a-ab43-b922a04a116a",
+      "windows": [
+        "06:00"
+      ],
+      "enabled": false,
+      "GDZipFilename": "Proggresso",
+      "GDZipExtension": ".zip",
+      "ETLParameters": [
+        {
+          "name": "LOAD_MODE_DIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FULL_LOAD",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true,
+          "id": "4d8b2d17-9b63-4804-96b6-4fcf85716b1a"
+        },
+        {
+          "name": "LOAD_MODE_FCT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "INCREMENTAL",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true,
+          "id": "a515b7aa-8f4a-4bed-bbad-5f049c1cb1fa"
+        },
+        {
+          "name": "LOAD_MODE_KPI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FULL_LOAD",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true,
+          "id": "0f8e8b93-17c4-4a42-9cb0-06616927d81b"
+        },
+        {
+          "name": "LOAD_MODE_SNAPSHOT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FULL_LOAD",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true,
+          "id": "c7bd857c-4eb3-4f0f-9ff3-0294d4be1334"
+        },
+        {
+          "name": "MULTI_INSTANCIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "FALSE",
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true,
+          "id": "f4d4a781-57f2-4536-a89e-6a322dd6eef6"
+        }
+      ],
+      "SQLParameters": [
+        {
+          "id": "2a88c371-8e6d-433e-b5f3-d82ec8d82ded",
+          "name": "GERAL_INSTANCIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "01",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "c3cf492e-fa88-4f25-bdb8-20c0b0532469",
+          "name": "START_DATE",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "94f96cea-76ad-447d-9a7d-5f63397a086b",
+          "name": "FINAL_DATE",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "2da54d3b-a557-45b4-924f-9b1ab10c6412",
+          "name": "DATE_MASK",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "yyyyMMdd",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "7e2ede9b-c858-407b-9e3d-593cfc593fe7",
+          "name": "DATABASE_DIRECTORY",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "Preencher",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "4c65fd9d-70e2-4097-81b2-82a80bdfec3d",
+          "name": "MGUNI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "31306404-0a26-4d3e-bed2-d8206cb18e8c",
+          "name": "GERAL_MATRIZ_TRADUCAO_ORG_EXT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "18d11a02-6300-4d21-bcf1-c970e780d552",
+          "name": "MGADM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "54f72906-ff4a-466a-8181-0b2e770a1502",
+          "name": "MGDIS",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "c3a04deb-d24e-4e7f-a3da-e82785f9192c",
+          "name": "MGFIS",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "7bba5949-1eaa-4e22-9740-767a6ec78efc",
+          "name": "MGFRO",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "30dffda6-c71d-42a3-85d5-618310a5eb88",
+          "name": "MGIND",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e6abcdae-126f-4119-b670-79788a262203",
+          "name": "MGINV",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "cbceacd6-3b48-486b-bfeb-28c36f03e046",
+          "name": "MGMFG",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "722224c3-87fa-4bbf-a711-d96db570e129",
+          "name": "MGMNT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "c2b4803f-940f-4c0b-a778-7553b986ffab",
+          "name": "MGMRP",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "42e76f94-2b19-4dc4-b963-b565c083c7cb",
+          "name": "MGSCM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "b7356607-2ff2-4b89-b21d-e1ed02727cc0",
+          "name": "MOVADM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "66525837-d553-44be-89c0-a1a7742200c5",
+          "name": "MOVDIS",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "772cc177-99be-49fb-ae65-7bf8a4e53c23",
+          "name": "MOVFIS",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "74fbdd41-3056-4932-86fd-168307630bb3",
+          "name": "MOVFRO",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "20358c96-01dd-4a67-8de2-a2e28f5eb8c1",
+          "name": "MOVIND",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "f9de7a7f-ac8b-4036-b24d-523931fba2e3",
+          "name": "MOVMFG",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "84b8aad9-85f7-4d21-86ef-91c1b7db586b",
+          "name": "MOVMNT",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS2MOV",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "44714a96-15f6-42d1-8d8a-44fc5e6d86ac",
+          "name": "EMSBAS",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS5CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "082c166a-c04a-4690-a767-c9dab66f6968",
+          "name": "EMSFIN",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS5CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "4c400bdd-dee0-4535-a35d-2b0232a658fb",
+          "name": "EMSUNI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS5CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "0d4c450f-bf16-4ac2-aeaa-48dc125f1bba",
+          "name": "EMSVEN",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS5CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "3753adb5-21cd-4cce-8dbd-769161c13250",
+          "name": "MOVFIN",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "EMS5CAD",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e296cc4e-ee05-45b6-a790-baaf2f3a73fc",
+          "name": "PRODUCAO_REALIZADA_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e7440eb2-44d4-4e94-97f2-49250a2d5f43",
+          "name": "PRODUCAO_REALIZADA_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "4249ffab-568f-4a5f-8874-0a5c8fc4f757",
+          "name": "FATURAMENTO_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "d308d107-a81e-49aa-bd12-763f5f78706d",
+          "name": "FATURAMENTO_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "43e5277a-a619-4e6d-8509-e9cf931eab32",
+          "name": "PEDIDO_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "5eaee962-50a4-4211-870e-88b793fa4289",
+          "name": "PEDIDO_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "f5ba6d46-079b-451e-ba7d-0050b6a6b549",
+          "name": "DEVOLUCAO_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "2965f44a-a055-4736-a69b-cec32e503255",
+          "name": "DEVOLUCAO_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "14914ce7-3fd4-44b5-93ac-19041a14496a",
+          "name": "CONTAS_PAGAR_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "4e54be89-4d53-4892-b969-f6cb0179cebc",
+          "name": "CONTAS_PAGAR_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, +1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "a695acd8-a0ed-4f23-94c9-66edca1b258a",
+          "name": "CONTAS_RECEBER_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "1ca391cf-9f74-462b-8b22-bbda8c8fa9c8",
+          "name": "CONTAS_RECEBER_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, +1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "65990e45-91ba-4177-9540-e2eed93f6c91",
+          "name": "CONTABILIDADE_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "8cff20b7-bdfe-484a-a04b-eada232ee6c5",
+          "name": "CONTABILIDADE_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "SYSDATE",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "dccfe2af-f6e2-479e-a6a8-f91b863e6d0c",
+          "name": "CONTABILIDADE_CODIGO_CENARIO_CONTABIL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "ae1985df-fc69-4c5f-8f52-37204886a40f",
+          "name": "CONTABILIDADE_CODIGO_FINALIDADE_ECONOMICA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "7620e25c-bd43-4494-ad97-e3c6d09e46f6",
+          "name": "ORCAMENTO_PERIODO_INICIAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "67eec5fa-6b27-455c-9be6-640867dd6e24",
+          "name": "ORCAMENTO_PERIODO_FINAL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "a20c6622-6b39-49ff-8b2c-62f8c5808606",
+          "name": "ORCAMENTO_CODIGO_CENARIO_CONTABIL",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "701219b7-3dfb-4149-a288-23ed76338e39",
+          "name": "ORCAMENTO_CODIGO_CENARIO_ORCAMENTARIO",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "052ff1da-4663-4303-85ba-3aa98d5123b9",
+          "name": "ORCAMENTO_CODIGO_UNIDADE_ORCAMENTARIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "6197c712-0f8f-4e54-8ecc-451cc56bac78",
+          "name": "ORCAMENTO_CODIGO_SEQUENCIA_ORCAMENTARIA",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": 0,
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "1d7f0877-b1c6-4c6b-8d4c-fd6a1a15087e",
+          "name": "DEVOLUCAO_COMPRAS_DT_EMIS_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "c8c5a00c-ac8d-4eef-8574-25f4debcb31c",
+          "name": "DEVOLUCAO_COMPRAS_DT_EMIS_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "33619b1e-9f1b-40d9-afef-3f859ad5e5a1",
+          "name": "RECEBIMENTO_DT_TRANS_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e4d28387-add0-4c35-aef2-7f4d4c223ecf",
+          "name": "RECEBIMENTO_DT_TRANS_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "d174facc-f272-44b2-917c-49cc5025a4ef",
+          "name": "COMPRAS_DT_PEDIDO_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "d39d137a-43ae-4164-a81d-cf773b225c0b",
+          "name": "COMPRAS_DT_PEDIDO_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "0076d010-a880-4cee-99b2-d4ba70d65d84",
+          "name": "MOVIMENTACAO_ESTOQUE_DT_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "e0b4b461-1149-41d5-a8df-7c184319a904",
+          "name": "MOVIMENTACAO_ESTOQUE_DT_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "0fbb1ff3-600c-473b-adb7-ae3278d0e8c9",
+          "name": "SALDO_TERC_DT_RETORNO_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(TO_DATE('01' + TO_CHAR(ADD_MONTHS(SYSDATE, -1),'/MM/yyyy')), 'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "df27bde9-57b0-495c-835d-5af238caad6a",
+          "name": "SALDO_TERC_DT_RETORNO_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "TO_CHAR(SYSDATE,'YYYYMMDD')",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "bedf1847-6437-4f7b-9e92-63180462884f",
+          "name": "ESTOQUE_DIARIO_ESP_DESCONSIDERAR",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "2,37",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "3db1c4b4-f0d9-489d-9edc-319002dd3619",
+          "name": "SALDO_ESTOQUE_COD_ESTAB_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "375c9a7b-73f8-4485-87e3-c5301ede9ad1",
+          "name": "SALDO_ESTOQUE_COD_ESTAB_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "a37b18ff-f37d-4249-8ea4-b9912fb9c087",
+          "name": "SALDO_ESTOQUE_COD_DEPOS_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "d71855a7-39cc-4d97-8c42-6277da041c6b",
+          "name": "SALDO_ESTOQUE_COD_DEPOS_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "33422938-dbcb-4123-b80b-8f2b6a894064",
+          "name": "SALDO_ESTOQUE_COD_LOCALIZ_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "77c10ca7-e63b-4d9b-a27f-8288d7e72180",
+          "name": "SALDO_ESTOQUE_COD_LOCALIZ_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZZZZZZZZZZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "f8cdab8f-c5cc-4383-b881-8cf9ecbded98",
+          "name": "SALDO_ESTOQUE_COD_LOTE_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "94c24de2-ca18-4776-89b6-91d63e773b3c",
+          "name": "SALDO_ESTOQUE_COD_LOTE_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "d778cbe5-5a2b-4c56-bb99-21165c85ce26",
+          "name": "SALDO_ESTOQUE_COD_REFER_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "3218b542-f967-4c7d-824d-ac5feca798d6",
+          "name": "SALDO_ESTOQUE_COD_REFER_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "3efaf72b-467a-4888-908e-b56723b76d2d",
+          "name": "SALDO_ESTOQUE_TERC_COD_CALENDAR",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": 1,
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "4a2f9d14-a133-47d3-a013-e38e006999fb",
+          "name": "SALDO_ESTOQUE_DT_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "SYSDATE - 10",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "ee545ae0-1dd0-48be-93f3-1e4b543e9d68",
+          "name": "SALDO_ESTOQUE_DT_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "SYSDATE",
+          "sql": false,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "f5e981f3-52e6-457c-848d-f32394f53bec",
+          "name": "SALDO_ESTOQUE_COD_ITEM_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "53924846-ff13-4425-88f9-1cd87784aab8",
+          "name": "SALDO_ESTOQUE_COD_ITEM_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "8b4c8966-2ce2-4d98-bd1b-5916e49409c4",
+          "name": "SALDO_ESTOQUE_COD_FAMILIA_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "7a5dbb06-0f87-4e45-b0e0-d479a49e2f16",
+          "name": "SALDO_ESTOQUE_COD_FAMILIA_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "ZZZZZZZZ",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "00ba419a-fdda-492b-96c8-ac75428dca68",
+          "name": "SALDO_ESTOQUE_GRUPO_ESTOQ_INI",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": 0,
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        },
+        {
+          "id": "ff762ef4-5880-4850-a97d-0abc710abe41",
+          "name": "SALDO_ESTOQUE_GRUPO_ESTOQ_FIM",
+          "module": "cea12e5a-d290-4198-991a-628047b075e9",
+          "command": "99",
+          "sql": true,
+          "version": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          },
+          "TOTVS": true
+        }
+      ],
+      "fileFolder": "",
+      "fileFolderWildcard": "*.*"
+    }
+  ],
+  "queries": [],
+  "scripts": [],
+  "configuration": {
+    "logfilesToKeep": 10,
+    "instanceName": "Zara",
+    "debug": true,
+    "javaXmx": 2048,
+    "javaTmpDir": "C:\\Users\\diego.guedes\\source\\repos\\TOTVS-GoodData\\TOTVS-Agent-Analytics\\tmp",
+    "locale": "pt-BR",
+    "autoUpdate": true,
+    "timezone": "America/Sao_Paulo",
+    "serialNumber": "711ad372-412c-4a95-a18f-e3bb4cfac3a8",
+    "javaJREDir": "C:\\Users\\diego.guedes\\source\\repos\\TOTVS-GoodData\\TOTVS-Agent-Analytics\\java\\jre\\bin"
+  }
+}

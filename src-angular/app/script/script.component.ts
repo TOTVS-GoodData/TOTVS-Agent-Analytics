@@ -364,7 +364,7 @@ export class ScriptComponent {
         });
       }
     }, (err: any) => {
-      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_ERROR'], err);
+      this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.LOADING_LICENSES_ERROR'], err);
       if (this.mirrorMode != 1) this.po_lo_text = { value: null };
     });
   }

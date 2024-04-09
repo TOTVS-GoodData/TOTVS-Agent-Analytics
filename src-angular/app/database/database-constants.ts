@@ -33,7 +33,7 @@ export const CNST_DATABASE_CONNECTIONSTRING_INSTANCE_2 = '<INSTANCE>';
 export const CNST_DATABASE_IPTYPES: any = [
   { label: 'IPv4', value: 'IPV4', pattern: '^(\\b25[0-5]|\\b2[0-4][0-9]|\\b[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$' },
   { label: 'IPv6', value: 'IPV6', pattern: '^((([0-9A-Fa-f]{1,4}:){1,6}:)|(([0-9A-Fa-f]{1,4}:){7}))([0-9A-Fa-f]{1,4})$'},
-  { label: 'Hostname', value: 'HOSTNAME', pattern: '^[0-9a-zA-Z\.]*$' }
+  { label: 'Hostname', value: 'HOSTNAME', pattern: '^[0-9a-zA-Z\.\-\_]*$' }
 ];
 
 //Tipos de bancos de dados disponíveis dentro do Agent

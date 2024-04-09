@@ -1107,11 +1107,11 @@ export class ServerService {
             Caso não tenha recebido nenhuma rotina do Agent - Server, é gerado um código de erro
             */
             if (scriptsToSave.length > 0) {
-              return ScriptService.saveScript(scriptsToSave).subscribe((errors: number) => {
+              return ScriptService.saveScript(scriptsToSave).pipe(switchMap((errors: number) => {
                 subscriber.next(errors);
                 subscriber.complete();
                 return of(true);
-              });
+              }));
             } else {
               Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA'], null, null, null, null, null);
               Files.writeToLog(CNST_LOGLEVEL.WARN, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SCRIPTS.MESSAGES.IMPORT_NO_DATA_WARNING'], null, null, null, null, null);

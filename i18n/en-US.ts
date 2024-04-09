@@ -528,8 +528,8 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       IMPORT_OK: 'Script import finished successfully.',
       IMPORT_ERROR: 'Error - An unexpected error has happened while saving FAST\'s standard scripts on schedule \'${p1}\'. Please try again.',
       IMPORT_WARNING_FAILURES: 'Warning - Some scripts could not be saved due to customizations. Please check the log files.',
-      IMPORT_NO_DATA: 'No data received from Agent-Server.',
-      IMPORT_NO_DATA_ERROR: 'Error - No data available for import. Please reach out to support team.',
+      IMPORT_NO_DATA: 'No data received from TOTVS\'s server.',
+      IMPORT_NO_DATA_WARNING: 'Warning - No data available for import. Please reach out to support team.',
       ENCRYPT: 'Encrypting script: \'${p1}\'',
       VALIDATE: 'Validating script...'
     },

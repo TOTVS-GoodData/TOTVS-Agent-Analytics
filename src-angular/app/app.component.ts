@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* Componentes padrões do Angular */
-import { Component, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, ViewChild, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
 
 /* Componentes visuais da biblioteca Portinari.UI */
@@ -103,7 +103,7 @@ export class AppComponent {
     private _configurationService: ConfigurationService,
     private _menuService: MenuService,
     private _utilities: Utilities,
-    private _changeDetectorService: ChangeDetectorRef,
+    private _ngZone: NgZone,
     private _router: Router
   ) {
     
@@ -121,18 +121,20 @@ export class AppComponent {
           
           //Evento de abertura do modal de atualização do Agent (Disparado pelo Electron)
           this._electronService.ipcRenderer.on('AC_deactivateAgent', () => {
-            this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
-              this.setMenuTranslations(conf.serialNumber);
-              this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DEACTIVATED']);
-              this._changeDetectorService.detectChanges();
-              this._router.navigate(['/configuration']);
+            this._ngZone.run(() => {
+              this._configurationService.getConfiguration(false).subscribe((conf: Configuration) => {
+                this.setMenuTranslations(conf.serialNumber);
+                this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.DEACTIVATED']);
+                this._router.navigate(['/configuration']);
+              });
             });
           });
           
           //Evento de abertura do modal de atualização do Agent (Disparado pelo Electron)
           this._electronService.ipcRenderer.on('AC_update-downloaded', () => {
-            this.modal_updateAgent.open();
-            this._changeDetectorService.detectChanges();
+            this._ngZone.run(() => {
+              this.modal_updateAgent.open();
+            });
           });
           
           //Configuração da mensagem de acesso remoto (MirrorMode)
@@ -145,28 +147,28 @@ export class AppComponent {
           
           //Evento de alteração do acesso remoto (MirrorMode)
           this._electronService.ipcRenderer.on('AC_setMirrorMode', (event: any, ...args: any[]) => {
-            this.mirrorMode = args[0];
-            
-            //Acesso remoto ativado
-            if (args[0] == 1) {
-              this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.ONLINE']);
-              this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.RUNNING'] };
-              
-            //Acesso remoto desativado
-            } else {
-              this._translateService.use(conf.locale).subscribe((b: boolean) => {
-                this._menuService.updateMenu();
-                this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.OFFLINE']);
-                this.po_lo_text = { value: null };
+            this._ngZone.run(() => {
+              this.mirrorMode = args[0];
 
-                //Navega para uma página do Agent, para forçar a atualização da interface.
-                if (this._router.url == '/workspace') this._router.navigate(['/database']);
-                else this._router.navigate(['/workspace']);
-              });
-            }
-            
-            this._changeDetectorService.detectChanges();
-            return;
+              //Acesso remoto ativado
+              if (args[0] == 1) {
+                this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.ONLINE']);
+                this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.RUNNING'] };
+
+              //Acesso remoto desativado
+              } else {
+                this._translateService.use(conf.locale).subscribe((b: boolean) => {
+                  this._menuService.updateMenu();
+                  this._utilities.createNotification(CNST_LOGLEVEL.INFO, this._translateService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.OFFLINE']);
+                  this.po_lo_text = { value: null };
+
+                  //Navega para uma página do Agent, para forçar a atualização da interface.
+                  if (this._router.url == '/workspace') this._router.navigate(['/database']);
+                  else this._router.navigate(['/workspace']);
+                });
+              }
+              return;
+            });
           });
           
           //Solicita ao Electron a versão atual do Agent

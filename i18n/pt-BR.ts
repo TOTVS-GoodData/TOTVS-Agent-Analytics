@@ -533,8 +533,8 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
       IMPORT_OK: 'Importação de rotinas concluída com sucesso.',
       IMPORT_ERROR: 'Erro - Um erro inesperado ocorreu ao gravar as rotinas padrões no agendamento \'${p1}\'. Por favor tente novamente.',
       IMPORT_WARNING_FAILURES: 'Aviso - Algumas rotinas não foram salvas, por terem sido customizadas. Por favor verifique os arquivos de log.',
-      IMPORT_NO_DATA: 'Nenhuma informação recebida do Agent-Server.',
-      IMPORT_NO_DATA_ERROR: 'Erro - Nenhuma informação disponível para importação. Por favor entre em contato com a equipe de suporte.',
+      IMPORT_NO_DATA: 'Nenhuma informação recebida do servidor da TOTVS.',
+      IMPORT_NO_DATA_WARNING: 'Aviso - Nenhuma informação disponível para importação. Por favor entre em contato com a equipe de suporte.',
       ENCRYPT: 'Criptografando rotina: \'${p1}\'',
       VALIDATE: 'Validando rotina...'
     },
