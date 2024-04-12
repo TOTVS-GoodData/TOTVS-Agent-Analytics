@@ -414,7 +414,6 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('SUPPORT_TICKET.HELP', []),
       new TranslationInput('SUPPORT_TICKET.GROUP_1', []),
       new TranslationInput('SUPPORT_TICKET.GROUP_2', []),
-      new TranslationInput('SUPPORT_TICKET.GROUP_3', []),
       new TranslationInput('SUPPORT_TICKET.LINK', []),
       new TranslationInput('WORKSPACES.TITLE', []),
       new TranslationInput('WORKSPACES.DELETE_CONFIRMATION', []),

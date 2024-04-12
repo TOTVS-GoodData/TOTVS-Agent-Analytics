@@ -32,6 +32,7 @@ import { QueryClient } from '../src-angular/app/query/query-interface';
 /* Serviço de configuração do Agent */
 import { ConfigurationService } from './services/configuration-service';
 import { Configuration } from '../src-angular/app/configuration/configuration-interface';
+import { CNST_CONTRACT_TYPES } from '../src-angular/app/configuration/configuration-constants';
 
 /* Interfaces de comunicação com o Agent-Server */
 import { responseObj } from '../src-angular/app/services/server/server-interface';
@@ -100,7 +101,7 @@ export class Execute {
       //Cria o arquivo de comando do Java
       let commandPath: string = path.join(conf.javaTmpDir, CNST_COMMAND_FILE + '_' + execId);
       fs.writeFile(commandPath, inputBuffer);
-      console.log(inputBuffer);
+
       //Define o idioma/país atualmente utilizado pelo Agent para configuração da JVM do Java (Locale)
       let language: string = conf.getLocaleLanguage();
       let country: string = conf.getLocaleCountry();
@@ -147,43 +148,43 @@ export class Execute {
         
         //Função de processamento do canal de dados
         child.stdout.on('data', (stdOutputBuffer: string) => {
-          
+
           //Concatena a mensagem recebida com o buffer de dados deste observável
           obs_stdOutputBuffer += stdOutputBuffer;
-          
+
           //Calcula a posição inicial / final da próxima mensagem recebida, via tags
           obs_stdOutputStartIndex = obs_stdOutputBuffer.indexOf(Execute.CNST_BUFFER_BEGIN_TAG, obs_stdOutputPosition);
           obs_stdOutputFinalIndex = obs_stdOutputBuffer.indexOf(Execute.CNST_BUFFER_END_TAG, obs_stdOutputPosition);
-          
+
           //Caso uma mensagem completa tenha sido recebida (<buffer> mensagem </buffer>), processa-a
           if (obs_stdOutputFinalIndex > obs_stdOutputPosition) {
             obs_stdOutputPosition = obs_stdOutputFinalIndex + Execute.CNST_BUFFER_END_SIZE;
-            
+
             //Recorta apenas a última mensagem não processada
             let buffer: string = obs_stdOutputBuffer.substring(obs_stdOutputStartIndex + Execute.CNST_BUFFER_BEGIN_SIZE, obs_stdOutputFinalIndex).toString();
-            
+
             //Remove as quebras de linha da mensagem no início do buffer, caso existam
             if (buffer.endsWith(CNST_OS_LINEBREAK())) buffer = buffer.substring(0, buffer.toString().length - 1);
             if (buffer.startsWith(CNST_OS_LINEBREAK())) buffer = buffer.substring(1, buffer.toString().length);
-            
+
             /*
               Tenta converter a mensagem para um objeto da interface de comunicação do Agent com o Java
               Caso não tenha sucesso, escreve a mensagem como foi recebida no arquivo de log (erro stacktrace)
               Caso consiga, formata a mensagem dos dados, e escreve no log
             */
             try {
-              
+
               //Conversão da mensagem para a interface de comunicação com o Java
               let obj: JavaOutputBuffer = JSON.parse(buffer);
-              
+
               //Procura o nível de execução da mensagem (INFO / WARN / DEBUG / ERROR)
               let loglevel = Object.getOwnPropertyNames.call(Object, CNST_LOGLEVEL).map((p: string) => {
                 return CNST_LOGLEVEL[p];
               }).find((loglevel: any) => { return (loglevel.level == obj.level); });
-              
+
               //Escrita do objeto recebido no arquivo de log (Ex: query da tabela I01)
               if (obj.message_json) {
-                Files.writeToLog(loglevel, CNST_SYSTEMLEVEL.JAVA, JSON.stringify(obj.message_json), execId, scheduleId, null, null, null);
+                if (conf.contractType == CNST_CONTRACT_TYPES.PLATFORM) Files.writeToLog(loglevel, CNST_SYSTEMLEVEL.JAVA, obj.message_json, execId, scheduleId, null, null, null);
                 
                 //Executa a função de processamento de objetos recebidos pelo Java 
                 stdDataFunction(obj.message_json);
@@ -457,7 +458,7 @@ export class Execute {
         do Agent, como um desligamento de máquina imediato.
       */
       Object.getOwnPropertyNames.call(Object, CNST_TRANSLATIONS).map((p: string) => {
-        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.JAVA, CNST_TRANSLATIONS[p].ELECTRON.JAVA_EXECUTION_CANCELLED, execId, scheduleId, null, null, null);
+        Files.writeToLog(CNST_LOGLEVEL.INFO, CNST_SYSTEMLEVEL.JAVA, CNST_TRANSLATIONS[p].ELECTRON.JAVA_EXECUTION_CANCELLED, execId, scheduleId, null, null, null,);
       });
       
       Files.writeToLog(CNST_LOGLEVEL.WARN, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.PROCESS_KILL_WARN'], null, null, null, null, null);

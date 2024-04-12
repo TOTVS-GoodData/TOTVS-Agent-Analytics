@@ -16,9 +16,6 @@ import * as xml2js from 'xml2js';
 /* Dependência para gravação de arquivos de log */
 import * as winston from 'winston';
 
-/* Serviço central do Electron */
-import Main from '../electron-main';
-
 /* Serviço de tradução do Electron */
 import { TranslationService } from './services/translation-service';
 import { TranslationInput } from '../src-angular/app/services/translation/translation-interface';
@@ -75,7 +72,7 @@ import { ConfigurationService } from './services/configuration-service';
 import { Configuration } from '../src-angular/app/configuration/configuration-interface';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { Observable, from, map, switchMap, of, catchError, concat, zip } from 'rxjs';
+import { Observable, from, map, switchMap, of, catchError, concat, zip, forkJoin, concatMap, mergeMap } from 'rxjs';
 
 export class Files {
   
@@ -588,21 +585,186 @@ export class Files {
     Método de escrita dos arquivos de log de um Agent remoto
     Caso não exista arquivo de log, é criado um novo.
   */
-  public static writeRemoteLogData(lines: string[]): void {
-    
+  public static writeRemoteLogData(newLogs: string[]): Observable<boolean> {
+
+    //Armazena todas as mensagens de log recebidas para serem anexadas à este Agent-Client
+    let agentLogMessages: Array<AgentLogMessage> = [];
+
+    //Armazena todas as datas (ano-mês-dia) únicas das mensagens de log lidas.
+    let logfiles: Set<string> = new Set();
+
+    let lastMessage: any = null;
+    let javaLog: boolean = false;
+
     //Apaga todos os arquivos de log existentes no diretório
     fs.emptyDirSync(CNST_REMOTE_LOGS_PATH());
 
-    //Cria um novo arquivo de log
-    let logfile: string = CNST_REMOTE_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(new Date()) + '.' + CNST_LOGS_EXTENSION;
+    //Conversão JSONstring => Objeto
+    agentLogMessages = newLogs.map((message: string) => {
+      try {
+        let x: AgentLogMessage = JSON.parse(message);
+        let agentLogMessage: AgentLogMessage = new AgentLogMessage(null, null, null, null, null, null, null, null, null).toObject(x);
+        lastMessage = agentLogMessage;
+        return agentLogMessage;
+      } catch (ex) {
+        if (lastMessage != undefined) return new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, null, lastMessage.system, message, lastMessage.level, lastMessage.execId, lastMessage.scheduleId);
+        else return new AgentLogMessage(null, null, null, null, null, null, null, null, null);
+      }
+    }).filter((a: AgentLogMessage) => (a.logDate != null))
+      .sort((a: AgentLogMessage, b: AgentLogMessage) => (a.logDate.getTime() - b.logDate.getTime()));
 
-    //Realiza a escrita de todo o log recebido no arquivo
-    let stream: any = fs.createWriteStream(logfile, { flags: 'a' });
-    lines.map((line: string) => {
-      stream.write(line + CNST_OS_LINEBREAK());
+    let obs: Observable<boolean>[] = [];
+
+    //Extrai todas as datas distintas encontradas nos logs
+    obs = agentLogMessages.filter((message1: AgentLogMessage) => {
+      let date: string = Files.formatDate(message1.logDate);
+      let check: boolean = logfiles.has(date);
+      logfiles.add(date);
+      return !check;
+    }).map((message2: AgentLogMessage) => {
+
+      //Retorna um observável para cada arquivo a ser gravado com os novos logs
+      return new Observable<boolean>((subscriber: any) => {
+
+        //Inicializa o canal de log p/ mensagens de debug / info, disparadas remotamente
+        let loggerJSONREMOTE: any = winston.createLogger({
+          level: 'debug',
+          format: winston.format.combine(
+            winston.format((info) => {
+              const {
+                mirror, logDate, loglevel, system, message, level, ...rest
+              } = info;
+              delete info.timestamp;
+              delete info.level;
+              return info;
+            })(),
+            winston.format.json({ deterministic: false })
+          ),
+          transports: [
+            new winston.transports.File({
+              filename: CNST_REMOTE_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION
+            })
+          ]
+        });
+
+        //Inicializa o canal de log p/ mensagens de debug / info, disparadas remotamente
+        let loggerJSONREMOTEMIRROR: any = winston.createLogger({
+          level: 'debug',
+          format: winston.format.combine(
+            winston.format((info) => {
+              const {
+                mirror, logDate, loglevel, system, message, level, ...rest
+              } = info;
+              delete info.timestamp;
+              delete info.level;
+              return info;
+            })(),
+            winston.format.json({ deterministic: false })
+          ),
+          transports: [
+            new winston.transports.File({
+              filename: CNST_REMOTE_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + CNST_LOGS_MIRROR_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION
+            })
+          ]
+        });
+
+        //Inicializa o canal de log p/ mensagens de erro, disparadas remotamente
+        let loggerTEXTREMOTE: any = winston.createLogger({
+          level: 'error',
+          format: winston.format.printf(({ message }) => {
+            return `${message}`;
+          }),
+          transports: [
+            new winston.transports.File({
+              filename: CNST_REMOTE_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION
+            })
+          ]
+        });
+
+        //Inicializa o canal de log p/ mensagens de erro, disparadas remotamente
+        let loggerTEXTREMOTEMIRROR: any = winston.createLogger({
+          level: 'error',
+          format: winston.format.printf(({ message }) => {
+            return `${message}`;
+          }),
+          transports: [
+            new winston.transports.File({
+              filename: CNST_REMOTE_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + CNST_LOGS_MIRROR_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION
+            })
+          ]
+        });
+
+        //Filtra apenas as mensagens de log deste arquivo, baseando-se em sua data
+        agentLogMessages.filter((line1: AgentLogMessage) => (Files.dateDiff(message2.logDate, line1.logDate) == 0))
+        .map((line2: AgentLogMessage) => {
+
+          //Prepara o objeto a ser escrito pela função de log
+          let obj: any = {
+            mirror: line2.mirror,
+            timestamp: ((line2.logDate == null) ? new Date() : line2.logDate),
+            logDate: ((line2.logDate == null) ? Files.formatTimestamp(new Date()) : Files.formatTimestamp(line2.logDate)),
+            loglevel: line2.loglevel,
+            system: line2.system,
+            message: JSON.stringify(line2.message).replaceAll('\"', '')
+          };
+
+          //Adiciona os campos de execId / scheduleId ao objeto, caso estes valores tenham sido passados ao método
+          if (line2.execId != null) obj['execId'] = line2.execId;
+          if (line2.scheduleId != null) obj['scheduleId'] = line2.scheduleId;
+
+          //Realiza a escrita no arquivo de log
+          if (obj.message) {
+            switch (line2.loglevel) {
+              case CNST_LOGLEVEL.ERROR.tag:
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.error(obj) : loggerJSONREMOTEMIRROR.error(obj));
+                break;
+              case CNST_LOGLEVEL.WARN.tag:
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.warn(obj) : loggerJSONREMOTEMIRROR.warn(obj));
+                break;
+              case CNST_LOGLEVEL.INFO.tag:
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.info(obj) : loggerJSONREMOTEMIRROR.info(obj));
+                break;
+              case CNST_LOGLEVEL.DEBUG.tag:
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.debug(obj) : loggerJSONREMOTEMIRROR.debug(obj));
+                break;
+              default:
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerTEXTREMOTE.error(obj.message) : loggerTEXTREMOTEMIRROR.error(obj.message));
+                break;
+            }
+          }
+        });
+
+        //Gera um delay para aguardar o término da escrita do arquivo de log
+        setTimeout(() => {
+
+          //Encerra os escritos do arquivo de log
+          loggerJSONREMOTE.end();
+          loggerJSONREMOTEMIRROR.end();
+          loggerTEXTREMOTE.end();
+          loggerTEXTREMOTEMIRROR.end();
+
+          //Emite a resposta final do observável
+          subscriber.next(true);
+          subscriber.complete();
+        }, 100);
+      });
     });
 
-    stream.end();
+    /*
+      Retorna o observável desta função, que emitirá uma única vez,
+      depois que todos os observáveis de gravação do arquivo de log
+      terem sido concluídos, um por vez.
+    */
+    return new Observable<boolean>((subscriber: any) => {
+      let i: number = 0;
+      concat(...obs).pipe(map((res: any) => {
+        i = i + 1;
+        if (obs.length == i) {
+          subscriber.next(true);
+          subscriber.complete();
+        }
+      })).subscribe();
+    });
   }
 
   /*
@@ -611,7 +773,7 @@ export class Files {
     Este método é disparado para fazer a sincronização dos arquivos de log deste Agent-Client,
     após o término do acesso remoto do servidor central da TOTVS, e/ou de outro Client.
   */
-  public static appendLogData(newLogs: string): void {
+  public static appendLogData(newLogs: string, logPath: number): void {
 
     //Armazena cada uma das linhas de log recebidas, em formato JSON
     let logMessage: AgentLogMessage = null;
@@ -637,7 +799,7 @@ export class Files {
     //Conversão JSON => Objeto
     agentLogMessagesNew = agentLogMessagesNew.map((message: AgentLogMessage) => {
       return new AgentLogMessage(null, null, null, null, null, null, null, null, null).toObject(message);
-    });
+    }).filter((a: AgentLogMessage) => (a.logDate != null));
 
     //Leitura de todas as mensagens de log atualmente presentes no log deste Agent-Client
     Files.readLogs().map((log: string) => {
@@ -650,10 +812,15 @@ export class Files {
         
       //Conversão dos textos de log de erro
       } catch (ex) {
-        agentLogMessagesCurrent.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+        if (lastMessage != undefined) agentLogMessagesCurrent.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, null, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+        else agentLogMessagesCurrent.push(new AgentLogMessage(null, null, null, null, null, null, null, null, null));
       }
     });
-    
+
+    //Remove todas as mensagens de erro que estão no início do arquivo, antes de qualquer outra mensagem
+    //Isto é necessário devido à falta de sincronia dos loggers do winston (JSON / texto).
+    agentLogMessagesCurrent = agentLogMessagesCurrent.filter((a: AgentLogMessage) => (a.logDate != null));
+
     /*
       Remoção de todas as mensagens de log antigas, que já estão ordenadas corretamente
 
@@ -676,27 +843,56 @@ export class Files {
       return !check;
     }).map((message2: AgentLogMessage) => {
 
-      //Cria um novo arquivo de log, em branco, para a reescrita completa do mesmo
-      let logfile: string = CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION;
-      let logfileMirror: string = CNST_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + CNST_LOGS_MIRROR_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION;
-      fs.truncateSync(logfile);
-      fs.truncateSync(logfileMirror);
-
       let lastLine: string = null;
-      agentLogMessagesFinal.map((line: AgentLogMessage) => {
-        if (!(lastLine === line.message)) {
-          
-          let level: any = null;
-          switch (line.loglevel) {
-            case CNST_LOGLEVEL.ERROR.tag: level = CNST_LOGLEVEL.ERROR; break;
-            case CNST_LOGLEVEL.WARN.tag: level = CNST_LOGLEVEL.WARN; break;
-            case CNST_LOGLEVEL.INFO.tag: level = CNST_LOGLEVEL.INFO; break;
-            case CNST_LOGLEVEL.DEBUG.tag: level = CNST_LOGLEVEL.DEBUG; break;
-          }
 
-          Files.writeToLog(level, line.system, line.message, line.execId, line.scheduleId, null, line.logDate, line.mirror);
+      //Cria um novo arquivo de log, em branco, para a reescrita completa do mesmo
+      let logfile: string = (logPath == 1 ? CNST_LOGS_PATH() : CNST_REMOTE_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION;
+      let logfileMirror: string = (logPath == 1 ? CNST_LOGS_PATH() : CNST_REMOTE_LOGS_PATH()) + '/' + CNST_LOGS_FILENAME + '-' + CNST_LOGS_MIRROR_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION;
+      if (fs.existsSync(logfile)) fs.truncateSync(logfile);
+      if (fs.existsSync(logfileMirror)) fs.truncateSync(logfileMirror);
+
+      //Filtra apenas as mensagens de log deste arquivo, baseando-se em sua data
+      agentLogMessagesFinal.filter((line1: AgentLogMessage) => (Files.dateDiff(message2.logDate, line1.logDate) == 0))
+      .map((line2: AgentLogMessage) => {
+
+        //Prepara o objeto a ser escrito pela função de log
+        let obj: any = {
+          mirror: line2.mirror,
+          timestamp: ((line2.logDate == null) ? new Date() : line2.logDate),
+          logDate: ((line2.logDate == null) ? Files.formatTimestamp(new Date()) : Files.formatTimestamp(line2.logDate)),
+          loglevel: line2.loglevel,
+          system: line2.system,
+          message: JSON.stringify(line2.message).replaceAll('\"', '')
+        };
+
+        //Adiciona os campos de execId / scheduleId ao objeto, caso estes valores tenham sido passados ao método
+        if (line2.execId != null) obj['execId'] = line2.execId;
+        if (line2.scheduleId != null) obj['scheduleId'] = line2.scheduleId;
+
+        //Realiza a escrita no arquivo de log, caso a mensagem não esteja duplicada
+        if (!(lastLine === obj.message)) {
+          if (obj.message) {
+            switch (line2.loglevel) {
+              case CNST_LOGLEVEL.ERROR.tag:
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.error(obj) : Files.loggerJSONMIRROR.error(obj));
+                break;
+              case CNST_LOGLEVEL.WARN.tag:
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.warn(obj) : Files.loggerJSONMIRROR.warn(obj));
+                break;
+              case CNST_LOGLEVEL.INFO.tag:
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.info(obj) : Files.loggerJSONMIRROR.info(obj));
+                break;
+              case CNST_LOGLEVEL.DEBUG.tag:
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.debug(obj) : Files.loggerJSONMIRROR.debug(obj));
+                break;
+              default:
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerTEXT.error(obj.message) : Files.loggerTEXTMIRROR.error(obj.message));
+                break;
+            }
+          }
         }
-        lastLine = line.message;
+
+        lastLine = obj.message;
       });
     });
   }
@@ -737,7 +933,7 @@ export class Files {
 
       //Conversão dos textos de log de erro
       } catch (ex) {
-        agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+        if (lastMessage != undefined) agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
       }
     });
 

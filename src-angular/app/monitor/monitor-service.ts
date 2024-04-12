@@ -4,6 +4,9 @@ import { Injectable } from '@angular/core';
 /* Serviço de comunicação com o Electron */
 import { ElectronService } from '../core/services';
 
+/* Serviço de consulta do acesso remoto (MirrorMode) */
+import { MirrorService } from '../services/mirror-service';
+
 /* Componentes de utilitários do Agent */
 import { CNST_LOGLEVEL } from '../utilities/utilities-constants';
 
@@ -23,6 +26,7 @@ import { Configuration } from '../configuration/configuration-interface';
 
 /* Interfaces de execuções de agendamentos, e logs do Agent */
 import { AgentLog, AgentLogMessage } from './monitor-interface';
+import { CNST_MONITOR_TIMER } from './monitor-constants';
 
 /* Componentes rxjs para controle de Promise / Observable */
 import { timer, Observable, map, switchMap, forkJoin, of } from 'rxjs';
@@ -35,6 +39,7 @@ export class MonitorService {
   /**************************/
   constructor(
     private _electronService: ElectronService,
+    private _mirrorService: MirrorService,
     private _translateService: TranslationService,
     private _scheduleService: ScheduleService,
     private _configurationService: ConfigurationService,
@@ -43,7 +48,8 @@ export class MonitorService {
   
   /* Método de temporização logs de execução do Agent (a cada <1> segundos) */
   public emitMonitorLog(): Observable<AgentLog[]> {
-    return timer(0, 1000).pipe(switchMap(() => {
+    let mirror: number = this._mirrorService.getMirrorMode();
+    return timer(0, (((mirror == 0) || (mirror == 1)) ? CNST_MONITOR_TIMER.DEFAULT : CNST_MONITOR_TIMER.MIRROR) * 1000).pipe(switchMap(() => {
       return this.getMonitorLog().pipe(map((logs: AgentLog[]) => {
         return logs;
       }));
@@ -65,8 +71,8 @@ export class MonitorService {
     ]).pipe(map((results: [Schedule[], Configuration]) => {
       
       //Solicita ao Electron as mensagens de todos os arquivos de log existentes
-      this._electronService.ipcRenderer.sendSync('AC_readLogs').map((log: string) => {
-
+      this._electronService.ipcRenderer.invoke('AC_readLogs').then((log: string) => {
+        
         //Converte o texto do log de volta para o objeto de mensagem
         try {
           let messages: any = JSON.parse(log);

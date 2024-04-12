@@ -53,7 +53,8 @@ export class ConfigurationService {
       conf.timezone = db.configuration.timezone;
       conf.serialNumber = db.configuration.serialNumber;
       conf.javaJREDir = db.configuration.javaJREDir;
-      
+      conf.contractType = db.configuration.contractType;
+
       return conf;
     }), catchError((err: any) => {
       Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_ERROR'], null, null, err, null, null);
@@ -69,7 +70,7 @@ export class ConfigurationService {
     return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
       let oldData: ClientData = { ..._dbd };
       _dbd.configuration = conf;
-      
+
       //Gravação da nova configuração
       return Files.writeApplicationData(_dbd).pipe(switchMap((b: boolean) => {
         if (b) {

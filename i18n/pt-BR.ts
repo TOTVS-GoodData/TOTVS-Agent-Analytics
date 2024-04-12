@@ -81,7 +81,6 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     HELP: 'Caso precise de apoio, abra um chamado para a equipe de suporte da TOTVS, informando os seguintes agrupadores no formulário:',
     GROUP_1: 'Macrossegmento -> Cross Segmentos',
     GROUP_2: 'Produto -> Analytics By GoodData',
-    GROUP_3: 'ABC -> 123',
     LINK: 'Link:'
   },
   MIRROR_MODE: {

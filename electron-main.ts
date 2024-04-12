@@ -762,9 +762,15 @@ export default class Main {
     });
     
     //Consulta dos arquivos de logs atualmente existentes
-    ipcMain.on('AC_readLogs', (event: IpcMainEvent) => {
-      event.returnValue = Files.readLogs();
-      return;
+    ipcMain.handle('AC_readLogs', (event: IpcMainEvent) => {
+      let mirror: number = TOTVS_Agent_Analytics.getMirrorMode();
+      if (mirror == 3) {
+        return lastValueFrom(ServerService.requestAgentLogsSinceRemoteStart().pipe(map((res: boolean) => {
+          return Files.readLogs();
+        })));
+      } else {
+        return lastValueFrom(of(Files.readLogs()));
+      }
     });
     
     /*****************************/
@@ -1220,6 +1226,7 @@ export default class Main {
             if (mirror == 3) {
               TOTVS_Agent_Analytics.setMirrorMode(0);
               Files.initApplicationData(true, Main.getLocaleLanguage());
+              Main.electronMessage(CNST_LOGLEVEL.INFO, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.MESSAGES.SERVER_SYNC_OK']);
               Main.createWindowObject();
             } else {
               Files.terminateLogStreams();

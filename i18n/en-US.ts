@@ -79,7 +79,6 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     HELP: 'If you need any assistance, please reach out to our support team, with the following options on the form:',
     GROUP_1: 'Macrossegmento -> Cross Segmentos',
     GROUP_2: 'Produto -> Analytics By GoodData',
-    GROUP_3: 'ABC -> 123',
     LINK: 'Link:'
   },
   MIRROR_MODE: {

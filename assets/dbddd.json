@@ -1,0 +1,19 @@
+{
+  "workspaces": [],
+  "databases": [],
+  "schedules": [],
+  "queries": [],
+  "scripts": [],
+  "configuration": {
+    "logfilesToKeep": 10,
+    "instanceName": "Agent Visual Studio",
+    "debug": true,
+    "javaXmx": 2048,
+    "javaTmpDir": "C:\\Users\\diego.guedes\\source\\repos\\TOTVS-GoodData\\TOTVS-Agent-Analytics\\tmp",
+    "locale": "pt-BR",
+    "autoUpdate": true,
+    "timezone": "America/Sao_Paulo",
+    "serialNumber": "5654a250-69d1-4a24-bf86-420591f1f7ba",
+    "javaJREDir": "C:\\Users\\diego.guedes\\source\\repos\\TOTVS-GoodData\\TOTVS-Agent-Analytics\\java\\jre\\bin"
+  }
+}

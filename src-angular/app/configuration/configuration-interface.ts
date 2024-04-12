@@ -4,7 +4,8 @@ import { CNST_TIMEZONES_DEFAULT } from '../services/timezones';
 /* Constante de porta de entrada padrão do Agent */
 import {
   CNST_DEFAULT_CLIENT_PORT,
-  CNST_DEFAULT_INSTANCE_NAME
+  CNST_DEFAULT_INSTANCE_NAME,
+  CNST_CONTRACT_TYPES
 } from './configuration-constants';
 
 /* Interface de configuração do Agent */
@@ -20,7 +21,7 @@ export class Configuration {
   logPath?: string;
   timezone: string;
   serialNumber: string;
-  
+  contractType: string;
   constructor(logfilesToKeep: number, debug: boolean, javaXmx: number, javaTmpDir: string, locale: string, autoUpdate: boolean) {
     this.logfilesToKeep = logfilesToKeep;
     this.instanceName = CNST_DEFAULT_INSTANCE_NAME;
@@ -31,6 +32,7 @@ export class Configuration {
     this.autoUpdate = autoUpdate;
     this.timezone = CNST_TIMEZONES_DEFAULT[locale];
     this.serialNumber = null;
+    this.contractType = CNST_CONTRACT_TYPES.FAST;
   }
   
   /* Método que retorna o idioma configurado no Agent (Ex: pt) */

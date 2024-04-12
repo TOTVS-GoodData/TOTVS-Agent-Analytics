@@ -7,3 +7,9 @@ export const CNST_DEFAULT_CLIENT_PORT: number = 3000;
 
 /* Nome padrão desta instância do Agent */
 export const CNST_DEFAULT_INSTANCE_NAME: string = 'AgentDevelopment';
+
+//Modalidades de contratação do GoodData (FAST / Plataforma)
+export const CNST_CONTRACT_TYPES: any = {
+  FAST: 'FAST',
+  PLATFORM: 'PLAT'
+};

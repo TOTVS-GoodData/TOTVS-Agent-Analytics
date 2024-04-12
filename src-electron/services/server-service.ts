@@ -291,7 +291,7 @@ export class ServerService {
             
           /* Método de anexação de novas mensagens de log do Agent-Client / Instância espelhada (MirrorMode) */
           case 'appendLogData':
-            return ServerService.appendLogData(command).pipe(switchMap((res: responseObj) => {
+            return ServerService.appendLogData(command, true, 1).pipe(switchMap((res: responseObj) => {
               return ServerService.writeResponseToAgentServerSocket('appendLogData', res);
             }));
             break;
@@ -696,22 +696,23 @@ export class ServerService {
   }
   
   /* Método de anexação de novas mensagens de log do Agent-Client / Instância espelhada (MirrorMode) */
-  private static appendLogData(command: ServerCommunication): Observable<responseObj> {
+  private static appendLogData(command: ServerCommunication, showLogs: boolean, logPath: number): Observable<responseObj> {
 
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
       new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD', [command.source, command.word])
     ]);
-    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD'], null, null, null, null, null);
+    if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD'], null, null, null, null, null);
 
-    Files.appendLogData(command.args[0]);
+    Files.appendLogData(command.args[0], logPath);
     return of(new responseObj([true], null));
   }
 
   /* Método de escrita dos arquivos de log do Agent-Client, para o acesso remoto (Client p/ Client) */
   private static publishAgentLogsFromClient(command: ServerCommunication): Observable<responseObj> {
-    Files.writeRemoteLogData(command.args);
-    return of(new responseObj([true], null));
+    return Files.writeRemoteLogData(command.args).pipe(map((res: boolean) => {
+      return new responseObj([res], null);
+    }));
   }
 
   /* Método de teste de conexão ao banco de dados do Agent-Client */
@@ -826,6 +827,7 @@ export class ServerService {
               //Realiza a gravação do serialNumber desta instância do Agent
               configuration.serialNumber = res.args[0];
               configuration.instanceName = res.args[1];
+              configuration.contractType = res.args[2];
 
               return Files.readApplicationData().pipe(switchMap((_dbd: ClientData) => {
                 _dbd.configuration = configuration;
@@ -1386,7 +1388,7 @@ export class ServerService {
             ]);
             Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
-            return ServerService.appendLogData(res).pipe(switchMap((res2: responseObj) => {
+            return ServerService.appendLogData(res, false, 2).pipe(switchMap((res2: responseObj) => {
               let output: boolean = ((res2.errorCode) ? false : true);
               subscriber.next(output);
               subscriber.complete();
