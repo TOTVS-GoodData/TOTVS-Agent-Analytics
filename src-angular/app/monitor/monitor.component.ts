@@ -115,6 +115,7 @@ export class MonitorComponent implements OnInit {
       {
         property: 'status',
         sortable: false,
+        label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.STATUS'],
         type: 'subtitle',
         width: '7%',
         subtitles: [
@@ -150,6 +151,7 @@ export class MonitorComponent implements OnInit {
         width: '15%'
       },{
         property: 'terminate',
+        sortable: false,
         label: ' ',
         width: '5%',
         type: 'icon',

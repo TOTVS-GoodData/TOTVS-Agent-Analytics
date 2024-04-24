@@ -542,7 +542,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     NEXT_REFRESH: 'Next refresh in [${p1}] seconds.',
     REFRESHING_NOW: 'Refreshing now...',
     TABLE: {
-      STATUS: 'Status',
+      STATUS: ' ',
       LINES: 'Lines',
       SCHEDULE: 'Schedule',
       START_DATE: 'Date/Time start',
