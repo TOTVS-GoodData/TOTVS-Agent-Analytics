@@ -26,10 +26,9 @@ import { Configuration } from '../configuration/configuration-interface';
 
 /* Interfaces de execuções de agendamentos, e logs do Agent */
 import { AgentLog, AgentLogMessage } from './monitor-interface';
-import { CNST_MONITOR_TIMER } from './monitor-constants';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { timer, Observable, map, switchMap, forkJoin, of } from 'rxjs';
+import { timer, Observable, map, switchMap, forkJoin, of, from } from 'rxjs';
 
 @Injectable()
 export class MonitorService {
@@ -47,12 +46,18 @@ export class MonitorService {
   ) {}
   
   /* Método de temporização logs de execução do Agent (a cada <1> segundos) */
-  public emitMonitorLog(): Observable<AgentLog[]> {
-    let mirror: number = this._mirrorService.getMirrorMode();
-    return timer(0, (((mirror == 0) || (mirror == 1)) ? CNST_MONITOR_TIMER.DEFAULT : CNST_MONITOR_TIMER.MIRROR) * 1000).pipe(switchMap(() => {
-      return this.getMonitorLog().pipe(map((logs: AgentLog[]) => {
-        return logs;
-      }));
+  public emitMonitorLog(refreshTimer: number): Observable<AgentLog[]> {
+    let refresh: number = 1;
+    return timer(0, 1000).pipe(switchMap(() => {
+      refresh = refresh - 1;
+      if (refresh == 0) {
+        refresh = refreshTimer;
+        return this.getMonitorLog().pipe(map((logs: AgentLog[]) => {
+          return logs;
+        }));
+      } else {
+        return of([]);
+      }
     }));
   }
   
@@ -68,86 +73,95 @@ export class MonitorService {
     return forkJoin([
       this._scheduleService.getSchedules(false),
       this._configurationService.getConfiguration(false)
-    ]).pipe(map((results: [Schedule[], Configuration]) => {
-      
-      //Solicita ao Electron as mensagens de todos os arquivos de log existentes
-      this._electronService.ipcRenderer.invoke('AC_readLogs').then((log: string) => {
-        
-        //Converte o texto do log de volta para o objeto de mensagem
-        try {
-          let messages: any = JSON.parse(log);
-          if ((messages.execId != null) && (messages.scheduleId != null)) {
-            javaLog = true;
-            messages.str_logDate = messages.logDate;
-            messages.logDate = new Date('' + messages.logDate);
-            agentLogMessages.push(messages);
-            lastMessage = messages;
-          } else javaLog = false;
+    ]).pipe(switchMap((results: [Schedule[], Configuration]) => {
 
-        //Conversão dos textos de log de erro
-        } catch (ex) {
-          if ((lastMessage) && (javaLog)) agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
-        }
-      });
-      
-      //Extrai todas as execuções distintas encontradas nos logs
-      return agentLogMessages.filter((message1: AgentLogMessage) => {
-        let check: boolean = agentSets.has(message1.scheduleId + '|' + message1.execId);
-        agentSets.add(message1.scheduleId + '|' + message1.execId);
-        return !check;
-      }).map((message2: AgentLogMessage)=> {
-        
-        //Filtra todas as mensagens de log de cada execução
-        let filteredMessages: Array<AgentLogMessage> = agentLogMessages
-          .filter((message3: AgentLogMessage) => ((message2.scheduleId == message3.scheduleId) && (message2.execId == message3.execId)))
-          .sort((a: AgentLogMessage, b: AgentLogMessage) => (a.logDate.getTime() - b.logDate.getTime()));
-        
-        //Detecta o idioma usado em cada execução
-        let languages: string[] = this._customTranslationLoader.getAvailableLanguages();
-        let logLanguage: string = CNST_DEFAULT_LANGUAGE;
-        for (let i: number = 0; i < languages.length; i++) {
-          if (this.findRegex(filteredMessages, CNST_TRANSLATIONS[languages[i]].ELECTRON.RUN_AGENT_ELEC_START) != null) {
-            logLanguage = languages[i];
-            break;
+      //Solicita ao Electron as mensagens de todos os arquivos de log existentes
+      return from(this._electronService.ipcRenderer.invoke('AC_readLogs')).pipe(map((logs: string[]) => {
+        logs.map((log: string) => {
+          
+          //Converte o texto do log de volta para o objeto de mensagem
+          try {
+            let messages: any = JSON.parse(log);
+
+            if ((messages.execId != null) && (messages.scheduleId != null)) {
+              javaLog = true;
+              messages.str_logDate = messages.logDate;
+              messages.logDate = new Date('' + messages.logDate);
+              agentLogMessages.push(messages);
+              lastMessage = messages;
+            } else javaLog = false;
+
+          //Conversão dos textos de log de erro
+          } catch (ex) {
+            if ((lastMessage) && (javaLog)) agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
           }
-        }
+        });
         
-        //Utiliza o idioma da execução encontrado para buscar pelas mensagens específicas do Agent
-        let startDateJava: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_START, 1);
-        let endDateJava: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_END, 1);
-        let durationJava: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_DURATION, 1);
-        let stopped: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_CANCELLED);
-        
-        //Detecta se houveram erros na execução do agendamento
-        let hasErrors: boolean = (filteredMessages.find((message2: AgentLogMessage) => (message2.loglevel == CNST_LOGLEVEL.ERROR.tag)) != null ? true : false);
-        
-        //Remove as mensagens de debug do log, caso configurado no Agent
-        filteredMessages = filteredMessages.filter((message2: AgentLogMessage) => (results[1].debug || (message2.loglevel != CNST_LOGLEVEL.DEBUG.tag)));
-        
-        //Define o status final da execução
-        let status: number = this.setExecutionStatus(stopped, hasErrors, endDateJava);
-        
-        //Procura o agendamento executado no cadastro atual (para mostrar o nome do mesmo, caso encontrado)
-        let schedule: Schedule = results[0].find((schedule: Schedule) => (schedule.id == message2.scheduleId));
-        
-        //Retorna o objeto de execução, com as mensagens de log dentro do mesmo
-        return {
-           scheduleId: message2.scheduleId
-          ,scheduleName: (schedule != null ? schedule.name : this._translateService.CNST_TRANSLATIONS['MONITOR.MESSAGES.SCHEDULE_NOT_FOUND'])
-          ,scheduleLines: filteredMessages.length
-          ,execId: message2.execId
-          , startDate: (startDateJava != null ? new Date(startDateJava) : filteredMessages[0].logDate)
-          ,str_startDate: startDateJava
-          ,endDate: (endDateJava != null ? new Date(endDateJava) : null)
-          ,str_endDate: endDateJava
-          ,duration: (durationJava != null ? durationJava : null)
-          ,messages: filteredMessages
-          ,status: status
-          ,terminate: (((stopped != null) || (endDateJava != null)) ? null : 'po-icon po-icon-close')
-        };
-      
-      //Ordena as execuções, da mais recente para a mais antiga
-      }).sort((a: AgentLog, b: AgentLog) => (b.startDate.getTime() - a.startDate.getTime()));
+        //Extrai todas as execuções distintas encontradas nos logs
+        return agentLogMessages.filter((message1: AgentLogMessage) => {
+          let check: boolean = agentSets.has(message1.scheduleId + '|' + message1.execId);
+          agentSets.add(message1.scheduleId + '|' + message1.execId);
+          return !check;
+        }).map((message2: AgentLogMessage) => {
+
+          //Filtra todas as mensagens de log de cada execução
+          let filteredMessages: Array<AgentLogMessage> = agentLogMessages
+            .filter((message3: AgentLogMessage) => ((message2.scheduleId == message3.scheduleId) && (message2.execId == message3.execId)))
+            .sort((a: AgentLogMessage, b: AgentLogMessage) => (a.logDate.getTime() - b.logDate.getTime()));
+
+          //Detecta o idioma usado em cada execução
+          let languages: string[] = this._customTranslationLoader.getAvailableLanguages();
+          let logLanguage: string = CNST_DEFAULT_LANGUAGE;
+          for (let i: number = 0; i < languages.length; i++) {
+            if (this.findRegex(filteredMessages, CNST_TRANSLATIONS[languages[i]].ELECTRON.RUN_AGENT_ELEC_START) != null) {
+              logLanguage = languages[i];
+              break;
+            }
+          }
+
+          //Utiliza o idioma da execução encontrado para buscar pelas mensagens específicas do Agent
+          let startDateJava: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_START, 1);
+          startDateJava = startDateJava.substring(0, startDateJava.length - 5);
+          
+          let endDateJava: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_END, 1);
+          endDateJava = endDateJava.substring(0, endDateJava.length - 5);
+
+          let durationJava: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_DURATION, 1);
+          let stopped: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_CANCELLED);
+
+          //Detecta se houveram erros na execução do agendamento
+          let hasErrors: boolean = (filteredMessages.find((message2: AgentLogMessage) => (message2.loglevel == CNST_LOGLEVEL.ERROR.tag)) != null ? true : false);
+          
+          //Remove as mensagens de debug do log, caso configurado no Agent
+          filteredMessages = filteredMessages.filter((message2: AgentLogMessage) => (results[1].debug || (message2.loglevel != CNST_LOGLEVEL.DEBUG.tag)));
+          
+          //Define o status final da execução
+          let status: number = this.setExecutionStatus(stopped, hasErrors, endDateJava);
+
+          //Procura o agendamento executado no cadastro atual (para mostrar o nome do mesmo, caso encontrado)
+          let schedule: Schedule = results[0].find((schedule: Schedule) => (schedule.id == message2.scheduleId));
+
+          let x: any = {
+            scheduleId: message2.scheduleId
+            , scheduleName: (schedule != null ? schedule.name : this._translateService.CNST_TRANSLATIONS['MONITOR.MESSAGES.SCHEDULE_NOT_FOUND'])
+            , scheduleLines: filteredMessages.length
+            , execId: message2.execId
+            , startDate: (startDateJava != null ? new Date(startDateJava) : filteredMessages[0].logDate)
+            , str_startDate: startDateJava
+            , endDate: (endDateJava != null ? new Date(endDateJava) : null)
+            , str_endDate: endDateJava
+            , duration: (durationJava != null ? durationJava : null)
+            , messages: filteredMessages
+            , status: status
+            , terminate: (((stopped != null) || (endDateJava != null)) ? null : 'po-icon po-icon-close')
+          };
+          
+          //Retorna o objeto de execução, com as mensagens de log dentro do mesmo
+          return x;
+
+        //Ordena as execuções, da mais recente para a mais antiga
+        }).sort((a: AgentLog, b: AgentLog) => (b.startDate.getTime() - a.startDate.getTime()));
+      }));
     }));
   }
   

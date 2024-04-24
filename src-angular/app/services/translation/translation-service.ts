@@ -276,6 +276,8 @@ export class TranslationService extends TranslateService implements PipeTransfor
       new TranslationInput('MIRROR_MODE.MESSAGES.INVALID_AGENT_ERROR', []),
       new TranslationInput('MONITOR.TITLE', []),
       new TranslationInput('MONITOR.NO_DATA', []),
+      new TranslationInput('MONITOR.NEXT_REFRESH', []),
+      new TranslationInput('MONITOR.REFRESHING_NOW', []),
       new TranslationInput('MONITOR.TABLE.STATUS', []),
       new TranslationInput('MONITOR.TABLE.LINES', []),
       new TranslationInput('MONITOR.TABLE.SCHEDULE', []),

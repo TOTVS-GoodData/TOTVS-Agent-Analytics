@@ -29,10 +29,12 @@ export class Package {
   word: string;
   buffer: string;
   type: number;
-  constructor(word: string, buffer: string, type: number) {
+  showLogs: boolean;
+  constructor(word: string, buffer: string, type: number, showLogs: boolean) {
     this.word = word;
     this.buffer = buffer;
     this.type = type;
+    this.showLogs = showLogs;
   }
 }
 

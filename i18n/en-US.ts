@@ -141,9 +141,9 @@ export const CNST_TRANSLATIONS_EN_US: any = {
   SERVICES: {
     GOODDATA: {
       MESSAGES: {
-        LOADING: 'Logging in to GoodData\'s platform...',
+        LOADING: 'Logging in to GoodData...',
         LOADING_ERROR: 'Login has failed. Please check your credentials.',
-        LOADING_WORKSPACES: 'Login\'s successfull. Loading workspaces...',
+        LOADING_WORKSPACES: 'Loading workspaces...',
         LOADING_WORKSPACES_OK: 'Workspaces successfully loaded!',
         LOADING_WORKSPACES_ERROR: 'Unable to connect to GoodData\'s platform. Check your connection and try again.',
         LOADING_PROCESSES: 'Loading ETL processes...',
@@ -454,7 +454,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
       SCHEDULE_NAME: 'Schedule name',
       MODULE: 'Module',
       QUERY_NAME: 'Query name',
-      MODE: 'Execution mode',
+      MODE: 'Execution',
       TOTVS: 'Custom?',
       SQL: 'SQL command'
     },
@@ -504,7 +504,7 @@ export const CNST_TRANSLATIONS_EN_US: any = {
     TABLE: {
       SCHEDULE_NAME: 'Schedule name',
       MODULE: 'Module',
-      SCRIPT_NAME: 'Script name',
+      SCRIPT_NAME: 'Script',
       TOTVS: 'Custom?',
       SQL: 'SQL command'
     },
@@ -539,13 +539,15 @@ export const CNST_TRANSLATIONS_EN_US: any = {
   MONITOR: {
     TITLE: 'Execution Monitor',
     NO_DATA: 'No execution logs were found',
+    NEXT_REFRESH: 'Next refresh in [${p1}] seconds.',
+    REFRESHING_NOW: 'Refreshing now...',
     TABLE: {
       STATUS: 'Status',
       LINES: 'Lines',
       SCHEDULE: 'Schedule',
       START_DATE: 'Date/Time start',
       FINAL_DATE: 'Date/Time finish',
-      EXECUTION_TIME: 'Execution time',
+      EXECUTION_TIME: 'Duration',
       DETAILS: {
         TITLE: 'Execution details',
         LOGDATE: 'Timestamp',

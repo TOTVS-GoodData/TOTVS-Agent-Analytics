@@ -3,6 +3,13 @@
   <!-- Componente de animação de carregamento do Portinari.UI -->
   <po-loading-overlay [hidden]="(po_lo_text.value == null)" p-screen-lock="true" [p-text]="po_lo_text.value"></po-loading-overlay>
   
+  <!-- Mensagem do tempo de atualização do monitoramento (Apenas p/ acesso remoto) -->
+  <div class="po-row">
+      <span class="title po-sm-12 po-md-12 po-lg-12 po-xl-12">
+          {{ lbl_nextUpdate }}
+      </span>
+  </div>
+
   <!-- Tabela com todas as execuções dos agendamentos -->
   <po-table
     class="executions"

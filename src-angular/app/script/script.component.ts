@@ -190,9 +190,9 @@ export class ScriptComponent {
     //Tradução das colunas da tabela de consultas dos agendamentos
     this.setColumns = [
       { property: 'moduleName', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.MODULE'], type: 'string', width: '15%', sortable: true },
-      { property: 'name', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SCRIPT_NAME'], type: 'string', width: '20%', sortable: true },
-      { property: 'command', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SQL'], type: 'string', width: '50%', sortable: false },
-      { property: 'TOTVSName', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.TOTVS'], type: 'string', width: '15%', sortable: true }
+      { property: 'name', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SCRIPT_NAME'], type: 'string', width: '19%', sortable: true },
+      { property: 'command', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.SQL'], type: 'string', width: '43%', sortable: false },
+      { property: 'TOTVSName', label: this._translateService.CNST_TRANSLATIONS['SCRIPTS.TABLE.TOTVS'], type: 'string', width: '23%', sortable: true }
     ];
     
     //Tradução das mensagens padrões do componente de listagem do Portinari.UI

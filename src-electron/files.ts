@@ -64,6 +64,9 @@ import {
 /* Interface do banco de dados do Agent */
 import { ClientData } from './electron-interface';
 
+/* Serviço de criptografia do Agent-Client */
+import { EncryptionService } from './encryption/encryption-service';
+
 /* Interface de validação de arquivos Agent */
 import { FileValidation } from './files-interface';
 
@@ -184,7 +187,7 @@ export class Files {
       logDate: ((logDate == null) ? Files.formatTimestamp(new Date()) : Files.formatTimestamp(logDate)),
       loglevel: loglevel.tag,
       system: system,
-      message: JSON.stringify(message).replaceAll('\"', '')
+      message: (message ? message.replaceAll('\"', '') : null)
     };
 
     //Sobreescrita da função de sincronização de logs
@@ -193,7 +196,7 @@ export class Files {
     //Adiciona os campos de execId / scheduleId ao objeto, caso estes valores tenham sido passados ao método
     if (execId != null) obj['execId'] = execId;
     if (scheduleId != null) obj['scheduleId'] = scheduleId;
-
+    
     //Realiza a escrita no arquivo de log
     if (message) {
       switch (loglevel.level) {
@@ -387,6 +390,7 @@ export class Files {
           } = info;
           delete info.timestamp;
           delete info.level;
+          info.message = info.message.replaceAll('\\', '\/');
           return info;
         })(),
         winston.format.json({ deterministic: false })
@@ -409,6 +413,7 @@ export class Files {
           } = info;
           delete info.timestamp;
           delete info.level;
+          info.message = info.message.replaceAll('\\', '\/');
           return info;
         })(),
         winston.format.json({ deterministic: false })
@@ -425,6 +430,7 @@ export class Files {
     Files.loggerTEXT = winston.createLogger({
       level: 'error',
       format: winston.format.printf(({ message }) => {
+        message = message.replaceAll('\\', '\/');
         return `${message}`;
       }),
       transports: [
@@ -439,6 +445,7 @@ export class Files {
     Files.loggerTEXTMIRROR = winston.createLogger({
       level: 'error',
       format: winston.format.printf(({ message }) => {
+        message = message.replaceAll('\\', '\/');
         return `${message}`;
       }),
       transports: [
@@ -468,20 +475,8 @@ export class Files {
     } else {
       if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE'], null, null, null, null, null);
       fs.createFileSync(CNST_AGENT_CLIENT_DATABASE_NAME());
-
-      //Gravação das configurações iniciais do banco de dados do Agent-Client
-      let db: ClientData = new ClientData();
-      db.configuration.javaJREDir = CNST_JRE_PATH();
-      fs.writeJsonSync(
-        CNST_AGENT_CLIENT_DATABASE_NAME(),
-        db,
-        {
-          spaces: CNST_LOGS_SPACING,
-          'EOL': CNST_OS_LINEBREAK()
-        }
-      );
-      
       Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME();
+      Files.writeApplicationData(new ClientData()).subscribe();
       if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE_OK'], null, null, null, null, null);
     }
     
@@ -527,58 +522,51 @@ export class Files {
 
   /* Método de leitura do banco do Agent */
   public static readApplicationData(): Observable<ClientData> {
-    return from(fs.readJson(Files.filepath)).pipe(map((data: ClientData) => {
-      
-      data.workspaces = data.workspaces.map((parameter: Workspace) => {
-        return new Workspace().toObject(parameter);
-      });
-      
-      data.databases = data.databases.map((parameter: Database) => {
-        return new Database().toObject(parameter);
-      });
-      
-      data.schedules = data.schedules.map((parameter: Schedule) => {
-        return new Schedule().toObject(parameter);
-      });
-      
-      data.queries = data.queries.map((parameter: QueryClient) => {
-        return new QueryClient(null).toObject(parameter);
-      });
-      
-      data.scripts = data.scripts.map((parameter: ScriptClient) => {
-        return new ScriptClient(null).toObject(parameter);
-      });
 
-      return data;
-    }));
+    let str: any = fs.readFileSync(Files.filepath, EncryptionService.CNST_FILE_ENCODING_INPUT);
+    let data: ClientData = Object.assign(new ClientData(), JSON.parse(EncryptionService.decrypt(str)));
+
+    data.workspaces = data.workspaces.map((parameter: Workspace) => {
+      return new Workspace().toObject(parameter);
+    });
+    
+    data.databases = data.databases.map((parameter: Database) => {
+      return new Database().toObject(parameter);
+    });
+    
+    data.schedules = data.schedules.map((parameter: Schedule) => {
+      return new Schedule().toObject(parameter);
+    });
+    
+    data.queries = data.queries.map((parameter: QueryClient) => {
+      return new QueryClient(null).toObject(parameter);
+    });
+    
+    data.scripts = data.scripts.map((parameter: ScriptClient) => {
+      return new ScriptClient(null).toObject(parameter);
+    });
+
+    return of(data);
   }
   
-  /* Método de escrita do banco do Agent */
+  /* Método de escrita do banco do Agent-Client */
   public static writeApplicationData(db: ClientData): Observable<boolean> {
-    return from(fs.writeJson(
+    fs.writeFileSync(
       Files.filepath,
-      db,
-      {
-        spaces: CNST_LOGS_SPACING,
-        'EOL': CNST_OS_LINEBREAK()
-      }
-    )).pipe(map((r: any) => {
-      return true;
-    }));
+      EncryptionService.encrypt(JSON.stringify(db)),
+    );
+
+    return of(true);
   }
 
   /* Método de escrita do banco do Agent */
   public static writeMirrorData(db: ClientData): Observable<boolean> {
-    return from(fs.writeJson(
+    fs.writeFileSync(
       CNST_REMOTE_DATABASE(),
-      db,
-      {
-        spaces: CNST_LOGS_SPACING,
-        'EOL': CNST_OS_LINEBREAK()
-      }
-    )).pipe(map((r: any) => {
-      return true;
-    }));
+      EncryptionService.encrypt(JSON.stringify(db)),
+    );
+
+    return of(true);
   }
 
   /*
@@ -636,6 +624,7 @@ export class Files {
               } = info;
               delete info.timestamp;
               delete info.level;
+              info.message = info.message.replaceAll('\\', '\/');
               return info;
             })(),
             winston.format.json({ deterministic: false })
@@ -657,6 +646,7 @@ export class Files {
               } = info;
               delete info.timestamp;
               delete info.level;
+              info.message = info.message.replaceAll('\\', '\/');
               return info;
             })(),
             winston.format.json({ deterministic: false })
@@ -672,6 +662,7 @@ export class Files {
         let loggerTEXTREMOTE: any = winston.createLogger({
           level: 'error',
           format: winston.format.printf(({ message }) => {
+            message = message.replaceAll('\\', '\/');
             return `${message}`;
           }),
           transports: [
@@ -685,6 +676,7 @@ export class Files {
         let loggerTEXTREMOTEMIRROR: any = winston.createLogger({
           level: 'error',
           format: winston.format.printf(({ message }) => {
+            message = message.replaceAll('\\', '\/');
             return `${message}`;
           }),
           transports: [

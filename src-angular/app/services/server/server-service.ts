@@ -165,7 +165,7 @@ export class ServerService {
         });
       } else {
         this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.COMMUNICATION_WARNING']);
-        return of(null);
+        return of(['01:00', '02:00', '03:00']);
       }
     }));
   }

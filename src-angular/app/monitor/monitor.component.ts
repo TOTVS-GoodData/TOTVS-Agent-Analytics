@@ -21,6 +21,7 @@ import { MirrorService } from '../services/mirror-service';
 
 /* Serviço de monitoramento do Agent */
 import { MonitorService } from './monitor-service';
+import { CNST_MONITOR_TIMER } from './monitor-constants';
 
 /* Serviço de tradução do Agent */
 import { TranslationService } from '../services/translation/translation-service';
@@ -28,6 +29,9 @@ import { TranslationInput } from '../services/translation/translation-interface'
 
 /* Interface de execuções de agendamentos do Agent */
 import { AgentLog, AgentLogMessage } from './monitor-interface';
+
+/* Componentes rxjs para controle de Promise / Observable */
+import { Observable, map, switchMap } from 'rxjs';
 
 @Component({
     selector: 'app-monitor',
@@ -93,7 +97,8 @@ export class MonitorComponent implements OnInit {
   protected lbl_confirm: string = null;
   protected lbl_nextError: string = null;
   protected lbl_noErrors: string = null;
-  
+  protected lbl_nextUpdate: string = null;
+
   /**************************/
   /*** MÉTODOS DO MÓDULO  ***/
   /**************************/
@@ -109,8 +114,9 @@ export class MonitorComponent implements OnInit {
     this.setColumns = [
       {
         property: 'status',
+        sortable: false,
         type: 'subtitle',
-        width: '10%',
+        width: '7%',
         subtitles: [
           { value: CNST_LOGLEVEL.INFO.level, color: 'color-10', label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.EXECUTION_STATUS.DONE'], content: '' },
           { value: CNST_LOGLEVEL.WARN.level, color: 'color-01', label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.EXECUTION_STATUS.RUNNING'], content: '' },
@@ -119,24 +125,29 @@ export class MonitorComponent implements OnInit {
         ]
       },{
         property: 'scheduleLines',
+        sortable: false,
         label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.LINES'],
         width: '10%'
       },{
         property: 'scheduleName',
+        sortable: false,
         label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.SCHEDULE'],
-        width: '15%'
+        width: '17%'
       },{
         property: 'str_startDate',
+        sortable: false,
         label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.START_DATE'],
-        width: '25%'
+        width: '23%'
       },{
         property: 'str_endDate',
+        sortable: false,
         label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.FINAL_DATE'],
-        width: '25%'
+        width: '23%'
       },{
         property: 'duration',
+        sortable: false,
         label: this._translateService.CNST_TRANSLATIONS['MONITOR.TABLE.EXECUTION_TIME'],
-        width: '20%'
+        width: '15%'
       },{
         property: 'terminate',
         label: ' ',
@@ -205,7 +216,7 @@ export class MonitorComponent implements OnInit {
     this.lbl_goBack = this._translateService.CNST_TRANSLATIONS['BUTTONS.GO_BACK'];
     this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];
     this.lbl_noErrors = this._translateService.CNST_TRANSLATIONS['BUTTONS.NO_ERRORS'];
-    
+
     //Configuração da mensagem de acesso remoto (MirrorMode)
     this.mirrorMode = this._mirrorService.getMirrorMode();
   }
@@ -213,9 +224,41 @@ export class MonitorComponent implements OnInit {
   /* Método de inicialização do monitoramento (Apenas disponível pelo Electron) */
   public ngOnInit(): void {
     if (this._electronService.isElectronApp) {
-      this.monitorLogSubscription = this._monitorService.emitMonitorLog().subscribe((logs: AgentLog[]) => {
-        this.agentLog = logs;
-      });
+      let mirror: number = this._mirrorService.getMirrorMode();
+      let refreshTimer: number = (((mirror == 0) || (mirror == 1)) ? CNST_MONITOR_TIMER.DEFAULT : CNST_MONITOR_TIMER.MIRROR);
+      let refresh: number = refreshTimer;
+
+      //Atualização das mensagens do monitoramento, executada fora do temporizador pela primeira vez
+      if ((mirror == 2) || (mirror == 3)) {
+        this.lbl_nextUpdate = this._translateService.CNST_TRANSLATIONS['MONITOR.REFRESHING_NOW'];
+        if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MONITOR.REFRESHING_NOW'] };
+      }
+
+      this.monitorLogSubscription = this._monitorService.emitMonitorLog(refreshTimer).pipe(switchMap((logs: AgentLog[]) => {
+        return this._translateService.getTranslations([
+          new TranslationInput('MONITOR.NEXT_REFRESH', ['' + refresh])
+        ]).pipe(map((translations: any) => {
+
+          //Atualiza a mensagem de monitoramento
+          if ((mirror == 2) || (mirror == 3)) {
+            if (refresh == 1) {
+              this.lbl_nextUpdate = this._translateService.CNST_TRANSLATIONS['MONITOR.REFRESHING_NOW'];
+              if (this.mirrorMode != 1) this.po_lo_text = { value: this._translateService.CNST_TRANSLATIONS['MONITOR.REFRESHING_NOW'] };
+            } else {
+              this.lbl_nextUpdate = translations['MONITOR.NEXT_REFRESH'];
+              if (this.mirrorMode != 1) this.po_lo_text = { value: null };
+            }
+          }
+
+          refresh = refresh - 1;
+
+          //Realiza a atualização dos dados do monitoramento
+          if (logs.length > 0) {
+            refresh = refreshTimer;
+            this.agentLog = logs;
+          }
+        }));
+      })).subscribe();
     } else {
       this._utilities.createNotification(CNST_LOGLEVEL.WARN, this._translateService.CNST_TRANSLATIONS['MONITOR.MESSAGES.WARNING'], null);
     }

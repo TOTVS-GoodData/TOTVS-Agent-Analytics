@@ -141,9 +141,9 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
   SERVICES: {
     GOODDATA: {
       MESSAGES: {
-        LOADING: 'Iniciando sesión en la plataforma GoodData...',
+        LOADING: 'Empezando sesión en GoodData...',
         LOADING_ERROR: 'Login ha fallado. Mira sus credenciales.',
-        LOADING_WORKSPACES: 'Login hecho con éxito. Cargando ambientes...',
+        LOADING_WORKSPACES: 'Cargando ambientes...',
         LOADING_WORKSPACES_OK: 'Ambientes cargados con éxito!',
         LOADING_WORKSPACES_ERROR: 'No fue posible conectar a la plataforma GoodData. Mira su conexión y intenta otra vez.',
         LOADING_PROCESSES: 'Cargando procesos de ETL...',
@@ -452,10 +452,10 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     TABLE: {
       SCHEDULE_NAME: 'Nombre del horario',
       MODULE: 'Modulo',
-      QUERY_NAME: 'Nombre de la consulta',
-      MODE: 'Modo de ejecución',
+      QUERY_NAME: 'Consulta',
+      MODE: 'Ejecución',
       TOTVS: '¿Customización?',
-      SQL: 'Comando SQL'
+      SQL: 'Instrucción SQL'
     },
     EXECUTION_MODES: {
       COMPLETE: 'Completa',
@@ -503,7 +503,7 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
     TABLE: {
       SCHEDULE_NAME: 'Nombre del horario',
       MODULE: 'Modulo',
-      SCRIPT_NAME: 'Nombre de la rutina',
+      SCRIPT_NAME: 'Rutina',
       SQL: 'Instrucción SQL',
       TOTVS: '¿Customización?',
     },
@@ -539,13 +539,15 @@ export const CNST_TRANSLATIONS_ES_ES: any = {
   MONITOR: {
     TITLE: 'Monitor de Ejecución',
     NO_DATA: 'Ningún log de ejecución fue encontrado',
+    NEXT_REFRESH: 'Proxima actualización en [${p1}] segundos.',
+    REFRESHING_NOW: 'Actualizando ahora...',
     TABLE: {
       STATUS: 'Status',
       LINES: 'Líneas',
       SCHEDULE: 'Horario',
-      START_DATE: 'Fecha/hora de início',
-      FINAL_DATE: 'Fecha/hora de finalización',
-      EXECUTION_TIME: 'Tiempo de execución',
+      START_DATE: 'Fecha de início',
+      FINAL_DATE: 'Fecha de finalización',
+      EXECUTION_TIME: 'Duración',
       DETAILS: {
         TITLE: 'Detalles de la ejecución',
         LOGDATE: 'Fecha/Hora',

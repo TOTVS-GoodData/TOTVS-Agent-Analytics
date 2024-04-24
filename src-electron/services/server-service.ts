@@ -170,8 +170,8 @@ export class ServerService {
       }
       ServerService.ws = new WebSocket(
         (serverIpType == CNST_SERVER_IP_TYPES.IPV4
-          ? 'ws://' + serverHostname + ':'
-          : 'ws://[' + serverHostname + ']:'
+          ? 'wss://' + serverHostname + ':'
+          : 'wss://[' + serverHostname + ']:'
         ) + CNST_SERVER_PORT
       );
 
@@ -482,7 +482,7 @@ export class ServerService {
   }
 
   /* Método de solicitação de um comando para o Agent-Server */
-  private static writeRequestToAgentServerSocket(word: string, args: any[]): Observable<boolean> {
+  private static writeRequestToAgentServerSocket(showLogs: boolean, word: string, args: any[]): Observable<boolean> {
 
     //Prepara o comando a ser enviado ao socket
     return ServerService.prepareCommandWord(
@@ -492,11 +492,11 @@ export class ServerService {
     ).pipe(switchMap((buffer: string) => {
       if (ServerService.ws == null) {
         return ServerService.startWebSocketConnection().pipe(map((b: boolean) => {
-          if (b) ServerService.packages.push(new Package(word, buffer, 0));
+          if (b) ServerService.packages.push(new Package(word, buffer, 0, showLogs));
           return b;
         }));
       } else {
-        ServerService.packages.push(new Package(word, buffer, 0));
+        ServerService.packages.push(new Package(word, buffer, 0, showLogs));
         return of(true);
       }
     }));
@@ -511,7 +511,7 @@ export class ServerService {
       res.errorCode,
       res.response
     ).pipe(map((buffer: string) => {
-      ServerService.packages.push(new Package(word, buffer, 1));
+      ServerService.packages.push(new Package(word, buffer, 1, true));
       return true;
     }));
   }
@@ -531,12 +531,18 @@ export class ServerService {
         ]);
 
         //Envia a resposta para o socket
-        if (packageToSend.type == 0) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_REQUEST'], null, null, null, null, null);
-        else Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_RESPONSE'], null, null, null, null, null);
+        if (packageToSend.showLogs) {
+          if (packageToSend.type == 0) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_REQUEST'], null, null, null, null, null);
+          else Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_RESPONSE'], null, null, null, null, null);
+        }
+
         ServerService.ws.send(packageToSend.buffer);
         ServerService.packages.pop();
-        if (packageToSend.type == 0) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_REQUEST_OK'], null, null, null, null, null);
-        else Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_RESPONSE_OK'], null, null, null, null, null);
+
+        if (packageToSend.showLogs) {
+          if (packageToSend.type == 0) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_REQUEST_OK'], null, null, null, null, null);
+          else Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.SEND_RESPONSE_OK'], null, null, null, null, null);
+          }
       }
     }, ServerService.CNST_SERVER_TRANSFER_TIME);
   }
@@ -778,8 +784,8 @@ export class ServerService {
   /***    Envio de mensagens (OUTPUT)   ***/
   /****************************************/
   /* Método de teste de comunicação com o Agent-Server */
-  public static pingServer(): Observable<boolean> {
-    return ServerService.writeRequestToAgentServerSocket('pingServer', []).pipe(switchMap((b: boolean) => {
+  public static pingServer(showLogs: boolean): Observable<boolean> {
+    return ServerService.writeRequestToAgentServerSocket(showLogs, 'pingServer', []).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<boolean>((subscriber: any) => {
 
@@ -790,7 +796,7 @@ export class ServerService {
           let translations: any = TranslationService.getTranslations([
             new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
           ]);
-          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+          if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
           subscriber.next((res.args[0] == 'pong') ? true : false);
           subscriber.complete();
@@ -806,7 +812,7 @@ export class ServerService {
     //Armazena temporariamente o código de ativação do Agent
     ServerService.temporarySerialNumber = args[0];
     
-    return ServerService.writeRequestToAgentServerSocket('requestSerialNumber', args).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'requestSerialNumber', args).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<number>((subscriber: any) => {
 
@@ -871,7 +877,7 @@ export class ServerService {
   
   /* Método de solicitação das licenças disponíveis para esta instalação do Agent-Client */
   public static getAvailableLicenses(showLogs: boolean): Observable<AvailableLicenses> {
-    return ServerService.writeRequestToAgentServerSocket('getAvailableLicenses', []).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'getAvailableLicenses', []).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<AvailableLicenses>((subscriber: any) => {
 
@@ -896,7 +902,7 @@ export class ServerService {
 
   /* Método de solicitação das janelas de execução dos agendamentos válidas para esta instalação do Agent-Client */
   public static getAvailableExecutionWindows(): Observable<string[]> {
-    return ServerService.writeRequestToAgentServerSocket('getAvailableExecutionWindows', []).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'getAvailableExecutionWindows', []).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<string[]>((subscriber: any) => {
         
@@ -921,7 +927,7 @@ export class ServerService {
 
   /* Método de solicitação dos últimos parâmetros de ETL disponíveis para esta licença do Agent-Client */
   public static getLatestETLParameters(license: License): Observable<ETLParameterCommunication> {
-    return ServerService.writeRequestToAgentServerSocket('getLatestETLParameters', [license]).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'getLatestETLParameters', [license]).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<ETLParameterCommunication>((subscriber: any) => {
 
@@ -946,7 +952,7 @@ export class ServerService {
 
   /* Método de solicitação dos últimos parâmetros de SQL disponíveis para esta licença do Agent-Client */
   public static getLatestSQLParameters(license: License, database: string): Observable<SQLParameterCommunication> {
-    return ServerService.writeRequestToAgentServerSocket('getLatestSQLParameters', [license, database]).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'getLatestSQLParameters', [license, database]).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<SQLParameterCommunication>((subscriber: any) => {
 
@@ -971,7 +977,7 @@ export class ServerService {
   
   /* Método de solicitação das últimas consultas disponíveis para esta licença do Agent-Client */
   public static saveLatestQueries(license: License, database: Database, scheduleId: string): Observable<number> {
-    return ServerService.writeRequestToAgentServerSocket('getLatestQueries', [license, database.brand]).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'getLatestQueries', [license, database.brand]).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<number>((subscriber: any) => {
 
@@ -1075,7 +1081,7 @@ export class ServerService {
   
   /* Método de solicitação das últimas rotinas disponíveis para esta licença do Agent-Client */
   public static saveLatestScripts(license: License, brand: string, scheduleId: string): Observable<number> {
-    return ServerService.writeRequestToAgentServerSocket('getLatestScripts', [license, brand]).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'getLatestScripts', [license, brand]).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<number>((subscriber: any) => {
 
@@ -1222,7 +1228,7 @@ export class ServerService {
         scriptUpdates
       );
 
-      return ServerService.writeRequestToAgentServerSocket('getUpdates', [data]).pipe(switchMap((b: boolean) => {
+      return ServerService.writeRequestToAgentServerSocket(true, 'getUpdates', [data]).pipe(switchMap((b: boolean) => {
         if (!b) return of(null);
         else return new Observable<number>((subscriber: any) => {
 
@@ -1351,7 +1357,7 @@ export class ServerService {
     //Define se o desligamento do acesso remoto foi disparado pela instância espelhada, ou por uma outra instância do Agent-Client
     let word: string = ((TOTVS_Agent_Analytics.getMirrorMode() == 3) ? 'deactivateMirrorModeFromClient' : 'deactivateMirrorModeFromMirror');
 
-    return ServerService.writeRequestToAgentServerSocket(word, [db, agentLogMessages]).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, word, [db, agentLogMessages]).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<boolean>((subscriber: any) => {
 
@@ -1375,7 +1381,7 @@ export class ServerService {
   /* Método de solicitação dos arquivos de log do Agent-Client, desde o início do acesso remoto */
   public static requestAgentLogsSinceRemoteStart(): Observable<boolean> {
     return ConfigurationService.getConfiguration(false).pipe(switchMap((conf: Configuration) => {
-      return ServerService.writeRequestToAgentServerSocket('requestAgentLogsSinceRemoteStart', [conf.serialNumber]).pipe(switchMap((b: boolean) => {
+      return ServerService.writeRequestToAgentServerSocket(true, 'requestAgentLogsSinceRemoteStart', [conf.serialNumber]).pipe(switchMap((b: boolean) => {
         if (!b) return of(null);
         else return new Observable<boolean>((subscriber: any) => {
 
@@ -1402,7 +1408,7 @@ export class ServerService {
 
   /* Método de teste de conexão remota ao banco de dados do Agent-Client */
   public static testDatabaseConnectionRemotelly(inputBuffer: string): Observable<number> {
-    return ServerService.writeRequestToAgentServerSocket('testDatabaseConnectionRemotelly', [inputBuffer]).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'testDatabaseConnectionRemotelly', [inputBuffer]).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<number>((subscriber: any) => {
 
@@ -1425,7 +1431,7 @@ export class ServerService {
   
   /* Método de disparo da execução de um agendamento do Agent-Client */
   public static requestScheduleExecutionRemotelly(inputBuffer: string, scheduleId: string): Observable<number> {
-    return ServerService.writeRequestToAgentServerSocket('requestScheduleExecutionRemotelly', [inputBuffer, scheduleId]).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'requestScheduleExecutionRemotelly', [inputBuffer, scheduleId]).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<number>((subscriber: any) => {
 
@@ -1449,7 +1455,7 @@ export class ServerService {
   
   /* Método de validação da integridade dos arquivos XML / JSON a serem enviados pelo Agent-Client remoto */
   public static requestFileIntegrityRemotelly(scheduleId: string): Observable<FileValidation[]> {
-    return ServerService.writeRequestToAgentServerSocket('requestFileIntegrityRemotelly', [scheduleId]).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'requestFileIntegrityRemotelly', [scheduleId]).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<FileValidation[]>((subscriber: any) => {
 
@@ -1478,7 +1484,7 @@ export class ServerService {
   
   /* Método de exportação da tabela I01 do Protheus (Teste Remoto / Disparo Remoto) */
   public static requestQueryExportFromI01Remotelly(inputBuffer: string, scheduleId: string): Observable<ServerCommunication> {
-    return ServerService.writeRequestToAgentServerSocket('requestQueryExportFromI01Remotelly', [inputBuffer, scheduleId]).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'requestQueryExportFromI01Remotelly', [inputBuffer, scheduleId]).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<ServerCommunication>((subscriber: any) => {
 
@@ -1501,7 +1507,7 @@ export class ServerService {
 
   /* Método de acesso remoto ao Agent (Client p/ Client) */
   public static requestRemoteAccessFromClient(inputBuffer: string): Observable<number> {
-    return ServerService.writeRequestToAgentServerSocket('requestRemoteAccessFromClient', [inputBuffer]).pipe(switchMap((b: boolean) => {
+    return ServerService.writeRequestToAgentServerSocket(true, 'requestRemoteAccessFromClient', [inputBuffer]).pipe(switchMap((b: boolean) => {
       if (!b) return of(null);
       else return new Observable<number>((subscriber: any) => {
 

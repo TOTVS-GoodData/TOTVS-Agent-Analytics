@@ -143,9 +143,9 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
   SERVICES: {
     GOODDATA: {
       MESSAGES: {
-        LOADING: 'Fazendo login na plataforma GoodData...',
+        LOADING: 'Fazendo login no GoodData...',
         LOADING_ERROR: 'Falha no login. Por favor, verifique seu usuário / senha.',
-        LOADING_WORKSPACES: 'Login bem sucedido. Carregando ambientes...',
+        LOADING_WORKSPACES: 'Carregando ambientes...',
         LOADING_WORKSPACES_OK: 'Ambientes carregados com sucesso!',
         LOADING_WORKSPACES_ERROR: 'Não foi possível se conectar ao GoodData. Verifique sua conexão e tente novamente.',
         LOADING_PROCESSES: 'Carregando processos de ETL...',
@@ -457,8 +457,8 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     TABLE: {
       SCHEDULE_NAME: 'Nome do agendamento',
       MODULE: 'Módulo',
-      QUERY_NAME: 'Nome da consulta',
-      MODE: 'Modo de execução',
+      QUERY_NAME: 'Consulta',
+      MODE: 'Execução',
       TOTVS: 'Customizado?',
       SQL: 'Comando SQL'
     },
@@ -508,7 +508,7 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
     TABLE: {
       SCHEDULE_NAME: 'Nome do agendamento',
       MODULE: 'Módulo',
-      SCRIPT_NAME: 'Nome da rotina',
+      SCRIPT_NAME: 'Rotina',
       TOTVS: 'Customizado?',
       SQL: 'Comando SQL'
     },
@@ -544,13 +544,15 @@ export const CNST_TRANSLATIONS_PT_BR: any = {
   MONITOR: {
     TITLE: 'Monitor de Execução',
     NO_DATA: 'Nenhum log de execução foi encontrado',
+    NEXT_REFRESH: 'Próxima atualização em [${p1}] segundos.',
+    REFRESHING_NOW: 'Atualizando agora...',
     TABLE: {
-      STATUS: 'Status',
+      STATUS: '',
       LINES: 'Linhas',
       SCHEDULE: 'Agendamento',
-      START_DATE: 'Data/hora de início',
-      FINAL_DATE: 'Data/hora de término',
-      EXECUTION_TIME: 'Tempo de execução',
+      START_DATE: 'Data de início',
+      FINAL_DATE: 'Data de término',
+      EXECUTION_TIME: 'Duração',
       DETAILS: {
         TITLE: 'Detalhes da execução',
         LOGDATE: 'Data/Hora',

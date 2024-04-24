@@ -204,17 +204,17 @@ export class QueryComponent {
     //Tradução das colunas da tabela de consultas dos agendamentos
     this.setColumns = [
       { property: 'moduleName', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODULE'], type: 'string', width: '15%', sortable: true },
-      { property: 'name', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.QUERY_NAME'], type: 'string', width: '20%', sortable: true },
-      { property: 'executionModeName', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODE'], type: 'string', width: '20%', sortable: true },
-      { property: 'command', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'], type: 'string', width: '30%', sortable: false },
-      { property: 'TOTVSName', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.TOTVS'], type: 'string', width: '15%', sortable: true }
+      { property: 'name', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.QUERY_NAME'], type: 'string', width: '19%', sortable: true },
+      { property: 'executionModeName', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.MODE'], type: 'string', width: '20%', sortable: false },
+      { property: 'command', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.SQL'], type: 'string', width: '23%', sortable: false },
+      { property: 'TOTVSName', label: this._translateService.CNST_TRANSLATIONS['QUERIES.TABLE.TOTVS'], type: 'string', width: '23%', sortable: true }
     ];
     
     //Tradução das mensagens padrões do componente de listagem do Portinari.UI
     this.setLiterals = {
       noData: this._translateService.CNST_TRANSLATIONS['QUERIES.NO_DATA']
     };
-      
+    
     //Tradução dos botões
     this.lbl_add = this._translateService.CNST_TRANSLATIONS['BUTTONS.ADD'];
     this.lbl_confirm = this._translateService.CNST_TRANSLATIONS['BUTTONS.CONFIRM'];

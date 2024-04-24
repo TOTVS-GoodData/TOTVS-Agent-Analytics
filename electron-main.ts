@@ -116,10 +116,12 @@ export default class Main {
   
   //Menu minimizado do Agent (Interface fechada)
   private static trayMenu: Tray = null;
-  
+
+  //Define se o fechamento da interface do Agent foi disparado pela opção do Tray
+  private static closedFromTray: boolean = false;
+
   //Referência da função de temporização do Agent
   private static timerRefId: any = null;
-  private static mirrorPing: any = null;
 
   //Sistema de envio de mensagens do Electron, para a interface do Agent (Angular)
   private static electronMessages: ElectronMessage[] = [];
@@ -169,38 +171,9 @@ export default class Main {
         if (Main.trayMenu) {
           Main.trayMenu.destroy();
           Main.trayMenu = null;
-          
-          //Ativa a verificação de conexão com o Agent-Server
-          let i: number = 0;
-          let errors: number = 0;
-          Main.mirrorPing = setInterval(() => {
-            if (i == 60) {
-              i = 0;
-              ServerService.pingServer().subscribe((b: boolean) => {
-                if (!b) {
-                  errors = errors + 1;
-                  if (errors == CNST_MIRRORMODE_PINGS_MAX) {
-                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.SERVER_PING_ERROR'], null, null, null, null, null);
-                    let comm: ServerCommunication = new ServerCommunication();
-                    comm.args = ['0'];
-                    ServerService.setMirrorMode(comm).subscribe();
-                  }
-                  
-                  if (errors < CNST_MIRRORMODE_PINGS_MAX) {
-                    let translations: any = TranslationService.getTranslations([
-                      new TranslationInput('MIRROR_MODE.SERVER_PING_WARNING', ['' + errors, '' + CNST_MIRRORMODE_PINGS_MAX])
-                    ]);
-                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.SERVER_PING_WARNING'], null, null, null, null, null);
-                  }
-                }
-              });
-            }
-            i = i + 1;
-          }, 1000);
         }
         return true;
       } else if (TOTVS_Agent_Analytics.getMirrorMode() == 0) {
-        clearInterval(Main.mirrorPing);
         TranslationService.use(conf.locale);
         Main.updateTrayMenu();
       }
@@ -383,7 +356,7 @@ export default class Main {
     ipcMain.removeAllListeners('AC_getTmpPath');
     ipcMain.removeAllListeners('AC_writeToLog');
     ipcMain.removeAllListeners('AC_getAgentVersion');
-    ipcMain.removeAllListeners('AC_readLogs');
+    ipcMain.removeHandler('AC_readLogs');
     ipcMain.removeAllListeners('AC_exit');
     ipcMain.removeAllListeners('AC_updateAgentNow');
     ipcMain.removeHandler('AC_requestSerialNumber');
@@ -764,9 +737,15 @@ export default class Main {
     //Consulta dos arquivos de logs atualmente existentes
     ipcMain.handle('AC_readLogs', (event: IpcMainEvent) => {
       let mirror: number = TOTVS_Agent_Analytics.getMirrorMode();
-      if (mirror == 3) {
-        return lastValueFrom(ServerService.requestAgentLogsSinceRemoteStart().pipe(map((res: boolean) => {
-          return Files.readLogs();
+      if ((mirror == 2) || (mirror == 3)) {
+        return lastValueFrom(ServerService.requestAgentLogsSinceRemoteStart().pipe(switchMap((res: boolean) => {
+          return new Observable<string[]>((subscriber: any) => {
+            setTimeout(() => {
+              if (res) subscriber.next(Files.readLogs());
+              else subscriber.next([]);
+              subscriber.complete();
+            }, 100);
+          });
         })));
       } else {
         return lastValueFrom(of(Files.readLogs()));
@@ -784,7 +763,7 @@ export default class Main {
     //Desligamento do Agent, e disparo da atualização (Executado via pedido do usuário)
     ipcMain.on('AC_updateAgentNow', (event: IpcMainEvent) => {
       if (Main.mainWindow != null) Main.willClose();
-      Main.terminateApplication();
+      else Main.terminateApplication();
     });
     
     /*****************************/
@@ -910,7 +889,7 @@ export default class Main {
       });
       
       //Configuração do evento de fechamento da interface
-      Main.mainWindow.on('closed', function () {
+      Main.mainWindow.on('closed', () => {
         Main.onClose();
       });
     }
@@ -967,8 +946,10 @@ export default class Main {
         label: TranslationService.CNST_TRANSLATIONS['ELECTRON.TRAY_FINISH_PROCESS'],
         type: 'normal',
         click: () => {
-          if (Main.mainWindow != null) Main.willClose();
-          Main.terminateApplication();
+          if (Main.mainWindow != null) {
+            Main.closedFromTray = true;
+            Main.willClose();
+          } else Main.terminateApplication();
         }
       }
     ]));
@@ -976,7 +957,7 @@ export default class Main {
   
   /* Método disparado antes de se fechar a interface do Agent (Angular) */
   private static willClose(): void {
-    Main.mainWindow.close();
+      Main.mainWindow.close();
   }
   
   /* Método disparado após fechar a interface do Agent (Angular) */
@@ -984,7 +965,7 @@ export default class Main {
     Main.mainWindow = null;
 
     //Desligamento forçado do Agent, caso esta instância seja invocada pelo Agent-Server (MirrorMode)
-    if ((TOTVS_Agent_Analytics.getMirrorMode() == 2) || (TOTVS_Agent_Analytics.getMirrorMode() == 3)) Main.terminateApplication();
+    if ((Main.closedFromTray) || (TOTVS_Agent_Analytics.getMirrorMode() == 2) || (TOTVS_Agent_Analytics.getMirrorMode() == 3)) Main.terminateApplication();
     else {
       Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_WINDOW_CLOSE'], null, null, null, null, null);
       Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.SYSTEM_SERVICE'], null, null, null, null, null);
@@ -1073,7 +1054,7 @@ export default class Main {
       
       //Inicialização do servidor de comunicação do Agent, para receber comandos do Agent-Server
       ServerService.startWebSocketConnection().pipe(switchMap((b: boolean) => {
-        if (b) return ServerService.pingServer()
+        if (b) return ServerService.pingServer(true)
         else return of(false)
       })).subscribe((b: boolean) => {
         
@@ -1097,6 +1078,7 @@ export default class Main {
         //Configuração do temporizador de execuções automática do Agent, a cada segundo
         let thisDay: number = 0;
         let i: number = 0;
+        let pingErrors: number = 0;
         if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) {
           Main.timerRefId = setInterval(() => {
             let date: Date = new Date();
@@ -1116,10 +1098,10 @@ export default class Main {
                     Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR'], null, null, null, null, null);
                     Main.electronMessage(CNST_LOGLEVEL.ERROR, TranslationService.CNST_TRANSLATIONS['SERVICES.SERVER.MESSAGES.UPDATES_ERROR']);
                     break;
-                  }
+                }
               });
             }
-            
+
             //Disparo dos agendamentos automaticamente, a cada minuto
             if ((configuration.serialNumber != null) && (date.getSeconds() == 0)) {
               ScheduleService.getSchedulesToExecute().subscribe((schedules: Schedule[]) => {
@@ -1138,7 +1120,37 @@ export default class Main {
                 });
               });
             }
-            
+
+            //KeepAlive da conexão ao Agent-Server: Envio de um pacote de ping/pong a cada minuto
+            if ((configuration.serialNumber != null) && (date.getSeconds() == 0)) {
+              let mirror: boolean = (TOTVS_Agent_Analytics.getMirrorMode() == 1);
+              ServerService.pingServer(mirror).subscribe((res: boolean) => {
+
+                /*
+                  Verifica se o Agent-Client está bloqueado pelo acesso remoto
+                  Caso esteja, e a comunicação do servidor falhe diversas vezes, o acesso remoto é removido
+                */
+                if ((mirror) && (!res)) {
+                  pingErrors = pingErrors + 1;
+                  if (pingErrors == CNST_MIRRORMODE_PINGS_MAX) {
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['MIRROR_MODE.SERVER_PING_ERROR'], null, null, null, null, null);
+                    let comm: ServerCommunication = new ServerCommunication();
+                    comm.args = ['0'];
+                    ServerService.setMirrorMode(comm).subscribe();
+                  }
+
+                  if (pingErrors < CNST_MIRRORMODE_PINGS_MAX) {
+                    let translations: any = TranslationService.getTranslations([
+                      new TranslationInput('MIRROR_MODE.SERVER_PING_WARNING', ['' + pingErrors, '' + CNST_MIRRORMODE_PINGS_MAX])
+                    ]);
+                    Files.writeToLog(CNST_LOGLEVEL.ERROR, CNST_SYSTEMLEVEL.ELEC, translations['MIRROR_MODE.SERVER_PING_WARNING'], null, null, null, null, null);
+                  }
+                } else {
+                  pingErrors = 0;
+                }
+              });
+            }
+
             //Reinicialização dos arquivos de log, a cada dia (meia noite)
             if ((configuration.serialNumber != null) && (date.getDate() != thisDay)) {
               ConfigurationService.getConfiguration(false).subscribe((conf: Configuration) => {

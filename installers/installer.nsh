@@ -1,4 +1,4 @@
-Function un.uCustom
+Function un.atomicRMDir2
   Exch $R0
   Push $R1
   Push $R2
@@ -22,7 +22,7 @@ Function un.uCustom
     CreateDirectory "$PLUGINSDIR\old-install$R0\$R2"
     
     Push "$R0\$R2"
-    Call un.uCustom
+    Call un.atomicRMDir2
     RMDir /r "$INSTDIR$R0\$R2"
     Pop $R3
     
@@ -57,11 +57,12 @@ Function un.uCustom
     Exch $R0
 FunctionEnd
 
-!macro un.customRemoveFiles
-  ${if} ${isUpdated}
+!macro customRemoveFiles
+  ; Condicional para apagar as pastas logs/assets apenas no processo de atualização (E não na desinstalação)
+  ;${if} ${isUpdated}
     CreateDirectory "$PLUGINSDIR\old-install"
     Push ""
-    Call un.uCustom
+    Call un.atomicRMDir2
     Pop $R0
     ${if} $R0 != 0
       DetailPrint "File is busy, aborting: $R0"
@@ -71,10 +72,10 @@ FunctionEnd
       Pop $R0
       Abort `Can't rename "$INSTDIR" to "$PLUGINSDIR\old-install".`
     ${endif}
-  ${else}
-    # Remove all files (or remaining shallow directories from the block above)
-    RMDir /r $INSTDIR
-  ${endif}
+  ;${else}
+  ;  # Remove all files (or remaining shallow directories from the block above)
+  ;  RMDir /r $INSTDIR
+  ;${endif}
 !macroend
 
 !macro preInit

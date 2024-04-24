@@ -1,4 +1,8 @@
 /* Classe de formatação do cabeçalho do menu principal */
+:root {
+    --menu-size: 150px;
+}
+
 .menu-title {
   font-size: 17px;
   align-items: center;

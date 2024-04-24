@@ -25,7 +25,7 @@ export class EncryptionService {
   /**************************/
   /********* Gerais *********/  
   //Codificação de entrada / saída do texto criptografado
-  private static CNST_FILE_ENCODING_INPUT: BufferEncoding = 'utf-8';
+  public static CNST_FILE_ENCODING_INPUT: BufferEncoding = 'utf-8';
   private static CNST_FILE_ENCODING_OUTPUT: BufferEncoding = 'hex';
   
   //Chaves de criptografia / descriptografia
