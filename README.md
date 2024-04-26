@@ -12,27 +12,7 @@ Executar o seguinte comando:
    npm install
 ```
 
-Depois, acessar a pasta ```node_modules``` criada pelo comando anterior, e alterar o código fonte do programa ```auto-launch/dist/AutoLaunchWindows.js```.
-
-De:
-
-```powershell
-regKey = new Winreg({
-  hive: Winreg.HKCU,
-  key: '\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
-});
-```
-
-Para:
-
-```powershell
-regKey = new Winreg({
-  hive: Winreg.HKLM,
-  key: '\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
-});
-```
-
-Esta alteração é necessária pois esta dependência ```auto-launch``` não foi configurada para instalar pacotes do Windows de maneira global na máquina.
+Depois, é necessário alterar o código fonte da dependência ```auto-launch```, instalada na pasta ```node_modules``` pelo comando acima. Para isto, basta pegar os 2 fontes da pasta ```replacements``` (AutoLaunchWindowsjs e AutoLaunchLinux.js), e substituí-los na pasta ```node_modules/auto-launch/dist/```.
 
 Após a instalação das dependências do projeto e realizado o ajuste acima, executar o seguinte comando para subir a aplicação:
 

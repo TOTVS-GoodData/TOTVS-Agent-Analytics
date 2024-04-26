@@ -867,7 +867,7 @@ export default class Main {
         width: width,
         height: height - 35,
         frame: true,
-        autoHideMenuBar: false,
+        autoHideMenuBar: TOTVS_Agent_Analytics.isProduction(),
         resizable: true,
         webPreferences: {
           contextIsolation: false,
