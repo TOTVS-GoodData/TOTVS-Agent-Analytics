@@ -10,8 +10,8 @@
       "dist/TOTVS-Agent-Analytics/i18n/**/*",
       "!dist/TOTVS-Agent-Analytics-Server/remote/assets/**/*",
       "!dist/TOTVS-Agent-Analytics-Server/remote/logs/**/*",
-      "!dist/TOTVS-Agent-Analytics/assets/dbDevelopment.json",
-      "!dist/TOTVS-Agent-Analytics/assets/db.json",
+      "dist/TOTVS-Agent-Analytics/assets/dbTemplate.json",
+      "!dist/TOTVS-Agent-Analytics/assets/**/*",
       "!dist/TOTVS-Agent-Analytics/src-electron/encryption/keys/agent.rsa.public",
       "!dist/TOTVS-Agent-Analytics/src-electron/encryption/keys/agent.rsa.private"
     ],
