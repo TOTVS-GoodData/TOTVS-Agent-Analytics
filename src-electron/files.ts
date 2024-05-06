@@ -476,7 +476,12 @@ export class Files {
       if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE'], null, null, null, null, null);
       fs.createFileSync(CNST_AGENT_CLIENT_DATABASE_NAME());
       Files.filepath = CNST_AGENT_CLIENT_DATABASE_NAME();
-      Files.writeApplicationData(new ClientData()).subscribe();
+
+      //Define a localização da JRE padrão do Agent-Client
+      let cd: ClientData = new ClientData();
+      cd.configuration.javaJREDir = CNST_JRE_PATH();
+
+      Files.writeApplicationData(cd).subscribe();
       if (showLogs) Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, TranslationService.CNST_TRANSLATIONS['ELECTRON.DATABASE_CREATE_OK'], null, null, null, null, null);
     }
     

@@ -30,7 +30,7 @@ import { TranslationInput } from '../services/translation/translation-interface'
 import { CustomTranslationLoader } from '../services/translation/custom-translation-loader';
 
 /* Componentes rxjs para controle de Promise / Observable */
-import { map, from } from 'rxjs';
+import { map, switchMap, from, of } from 'rxjs';
 
 /* Constantes do Agent */
 import {
@@ -201,29 +201,10 @@ export class ConfigurationComponent implements OnInit {
         { key: 'javaXmx', minimum: CNST_JAVA_XMX_MINIMUM, value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_XMX'] },
         { key: 'javaTmpDir', value: this._translateService.CNST_TRANSLATIONS['CONFIGURATION.JAVA_TMPDIR'] }
       ];
-      
-      //Atualização do número de versão do Java / Agent
-      if (this._electronService.isElectronApp) {
-        this.AgentVersion = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('AC_getAgentVersion').version;
-        from(this._electronService.ipcRenderer.invoke('AC_getJavaVersion')).pipe(map((res: string[]) => {
-          
-          //Formata as informações recebidas do Java, para visualização em tela.
-          let comma1: number = res[0].indexOf('"');
-          let comma2: number = res[0].indexOf('"', comma1 + 1);
-          this.JavaVersionTitle = CNST_PROGRAM_VERSION.PRODUCTION + res[0].slice(comma1 + 1, comma2);
-          
-          delete res[0];
-          this.JavaVersionDetails = res.reduce((acc: string, s: string) => (acc += '\n' + s));
-        })).subscribe();
-      } else {
-        this.AgentVersion = CNST_PROGRAM_VERSION.DEVELOPMENT;
-        this.JavaVersionTitle = CNST_PROGRAM_VERSION.DEVELOPMENT;
-        this.JavaVersionDetails = 'Java(TM) SE Runtime Environment (build 1.8.0_381-b09)\nJava HotSpot(TM) 64-Bit Server VM (build 25.381-b09, mixed mode)';
-      }
-      
-      this._configurationService.getConfiguration(true).subscribe((conf: Configuration) => {
+
+      this._configurationService.getConfiguration(true).pipe(switchMap((conf: Configuration) => {
         this.configuration = conf;
-        
+
         //Aualização dos idiomas disponíveis no Agent
         this.CNST_LANGUAGES = this._customTranslationLoader.getAvailableLanguages().map((locale: string) => ({
           label: this._translateService.CNST_TRANSLATIONS['LANGUAGES.' + locale],
@@ -232,9 +213,29 @@ export class ConfigurationComponent implements OnInit {
           selected: (this.configuration.locale == locale),
           value: locale
         }));
-        
-        if (this.mirrorMode != 1) this.po_lo_text = { value: null };
-      });
+
+        //Atualização do número de versão do Java / Agent
+        if (this._electronService.isElectronApp) {
+          this.AgentVersion = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('AC_requestAgentVersion').version;
+          return from(this._electronService.ipcRenderer.invoke('AC_requestJavaVersion')).pipe(map((res: string[]) => {
+
+            //Formata as informações recebidas do Java, para visualização em tela.
+            let comma1: number = res[0].indexOf('"');
+            let comma2: number = res[0].indexOf('"', comma1 + 1);
+            this.JavaVersionTitle = CNST_PROGRAM_VERSION.PRODUCTION + res[0].slice(comma1 + 1, comma2);
+
+            delete res[0];
+            this.JavaVersionDetails = res.reduce((acc: string, s: string) => (acc += '\n' + s));
+            if (this.mirrorMode != 1) this.po_lo_text = { value: null };
+          }));
+        } else {
+          this.AgentVersion = CNST_PROGRAM_VERSION.DEVELOPMENT;
+          this.JavaVersionTitle = CNST_PROGRAM_VERSION.DEVELOPMENT;
+          this.JavaVersionDetails = 'Java(TM) SE Runtime Environment (build 1.8.0_381-b09)\nJava HotSpot(TM) 64-Bit Server VM (build 25.381-b09, mixed mode)';
+          if (this.mirrorMode != 1) this.po_lo_text = { value: null };
+          return of(null);
+        }
+      })).subscribe();
     }, (err: any) => {
       this._utilities.createNotification(CNST_LOGLEVEL.ERROR, this._translateService.CNST_TRANSLATIONS['CONFIGURATION.MESSAGES.LOADING_ERROR'], err);
       if (this.mirrorMode != 1) this.po_lo_text = { value: null };

@@ -4,6 +4,9 @@ import { TOTVS_Agent_Analytics } from '../../app';
 /* Dependência Node.js p/ comunicação via Socket */
 import { WebSocket, WebSocketServer } from 'ws';
 
+/* Serviço de execução do Java pelo Agent */
+import { Execute } from '../execute';
+
 /* Serviço de arquivos */
 import { Files } from '../files';
 import { FileValidation } from '../files-interface';
@@ -161,6 +164,7 @@ export class ServerService {
       //Define o hostname do Agent-Server, dependendo se a aplicação está sendo executada em desenv / prod.
       let serverHostname: string = (TOTVS_Agent_Analytics.isProduction() ? CNST_SERVER_HOSTNAME.PRODUCTION : CNST_SERVER_HOSTNAME.DEVELOPMENT);
       let serverIpType: string = (TOTVS_Agent_Analytics.isProduction() ? CNST_SERVER_IP.PRODUCTION : CNST_SERVER_IP.DEVELOPMENT);
+      let secureMode: string = (TOTVS_Agent_Analytics.isProduction() ? '' : '');
 
       //WebSocket de comunicação com o Agent-Server
       if (ServerService.ws != null) {
@@ -168,10 +172,11 @@ export class ServerService {
         ServerService.packages = [];
         clearInterval(ServerService.packageTimer);
       }
+
       ServerService.ws = new WebSocket(
         (serverIpType == CNST_SERVER_IP_TYPES.IPV4
-          ? 'wss://' + serverHostname + ':'
-          : 'wss://[' + serverHostname + ']:'
+          ? 'ws' + secureMode + '://' + serverHostname + ':'
+          : 'ws' + secureMode + '://[' + serverHostname + ']:'
         ) + CNST_SERVER_PORT
       );
 
@@ -331,6 +336,13 @@ export class ServerService {
             }));
             break;
 
+          /* Método de exportação da tabela I01 do Protheus */
+          case 'requestJavaVersion':
+            return ServerService.requestJavaVersion(command).pipe(switchMap((res: responseObj) => {
+              return ServerService.writeResponseToAgentServerSocket('requestJavaVersion', res);
+            }));
+            break;
+
           /****************************************/
           /***    Envio de mensagens (OUTPUT)   ***/
           /****************************************/
@@ -430,7 +442,10 @@ export class ServerService {
             return ServerService.callbackFunction(command);
             break;
 
-          
+          /* Método de consulta da versão do Java do Agent-Client */
+          case 'requestJavaVersionRemotelly':
+            return ServerService.callbackFunction(command);
+            break;
         }
       } else return of(null);
     }));
@@ -621,6 +636,8 @@ export class ServerService {
     //Variável de suporte, usada para armazenar a última linha de log lida.
     let lastMessage: any = null;
 
+    let javaLog: boolean = false;
+
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
       new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD', [command.source, command.word])
@@ -631,14 +648,18 @@ export class ServerService {
     Files.readLogs().map((log: string) => {
       try {
         let messages: any = JSON.parse(log);
-        messages.str_logDate = messages.logDate;
-        messages.logDate = new Date('' + messages.logDate);
-        agentLogMessages.push(messages);
-        lastMessage = messages;
+
+        if ((messages.execId != null) && (messages.scheduleId != null)) {
+          javaLog = true;
+          messages.str_logDate = messages.logDate;
+          messages.logDate = new Date('' + messages.logDate);
+          agentLogMessages.push(messages);
+          lastMessage = messages;
+        } else javaLog = false;
 
       //Conversão dos textos de log de erro
       } catch (ex) {
-        agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+        if ((lastMessage) && (javaLog)) agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
       }
     });
 
@@ -779,7 +800,21 @@ export class ServerService {
       return new responseObj(res, null);
     }));
   }
-  
+
+  /* Método de consulta da versão do Java usada pelo Agent */
+  private static requestJavaVersion(command: ServerCommunication): Observable<responseObj> {
+
+    //Consulta das traduções
+    let translations: any = TranslationService.getTranslations([
+      new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD', [command.source, command.word])
+    ]);
+    Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD'], null, null, null, null, null);
+
+    return Execute.requestJavaVersion().pipe(map((res: string[]) => {
+      return new responseObj(res, 0);
+    }));
+  }
+
   /****************************************/
   /***    Envio de mensagens (OUTPUT)   ***/
   /****************************************/
@@ -1521,6 +1556,29 @@ export class ServerService {
           Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
 
           subscriber.next(Number(res.args[0]));
+          subscriber.complete();
+          return of(true);
+        };
+      });
+    }));
+  }
+
+  /* Método de consulta da versão do Java do Agent (Client p/ Client) */
+  public static requestJavaVersionRemotelly(): Observable<string[]> {
+    return ServerService.writeRequestToAgentServerSocket(true, 'requestJavaVersionRemotelly', []).pipe(switchMap((b: boolean) => {
+      if (!b) return of([]);
+      else return new Observable<string[]>((subscriber: any) => {
+
+        //Definição da função de callback para a próxima resposta do Agent-Server
+        ServerService.callbackFunction = (res: ServerCommunication) => {
+
+          //Consulta das traduções
+          let translations: any = TranslationService.getTranslations([
+            new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE', [res.word])
+          ]);
+          Files.writeToLog(CNST_LOGLEVEL.DEBUG, CNST_SYSTEMLEVEL.ELEC, translations['ELECTRON.SERVER_COMMUNICATION.MESSAGES.REQUEST_RESPONSE'], null, null, null, null, null);
+
+          subscriber.next(res.args);
           subscriber.complete();
           return of(true);
         };

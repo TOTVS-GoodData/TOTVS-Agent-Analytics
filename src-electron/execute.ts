@@ -101,7 +101,7 @@ export class Execute {
       //Cria o arquivo de comando do Java
       let commandPath: string = path.join(conf.javaTmpDir, CNST_COMMAND_FILE + '_' + execId);
       fs.writeFile(commandPath, inputBuffer);
-
+      
       //Define o idioma/país atualmente utilizado pelo Agent para configuração da JVM do Java (Locale)
       let language: string = conf.getLocaleLanguage();
       let country: string = conf.getLocaleCountry();
@@ -184,7 +184,8 @@ export class Execute {
 
               //Escrita do objeto recebido no arquivo de log (Ex: query da tabela I01)
               if (obj.message_json) {
-                if (conf.contractType == CNST_CONTRACT_TYPES.PLATFORM) Files.writeToLog(loglevel, CNST_SYSTEMLEVEL.JAVA, obj.message_json, execId, scheduleId, null, null, null);
+                
+                if (conf.contractType == CNST_CONTRACT_TYPES.PLATFORM) Files.writeToLog(loglevel, CNST_SYSTEMLEVEL.JAVA, obj.message_json.command, execId, scheduleId, null, null, null);
                 
                 //Executa a função de processamento de objetos recebidos pelo Java 
                 stdDataFunction(obj.message_json);
@@ -295,7 +296,7 @@ export class Execute {
   }
   
   /* Método de teste de conexão ao banco de dados */
-  public static getJavaVersion(): Observable<string[]> {
+  public static requestJavaVersion(): Observable<string[]> {
     let javaData: string = '';
     return ConfigurationService.getConfiguration(true).pipe(switchMap((conf: Configuration) => {
       
@@ -307,7 +308,7 @@ export class Execute {
       
       //Configuração da JVM
       let child: any = childProcess.spawn(
-        (conf.javaJREDir == null ? 'java' : path.join(conf.javaJREDir, 'java')),
+        (conf.javaJREDir == null ? 'java.exe' : path.join(conf.javaJREDir, 'java.exe')),
         [
           '-version',
           '-Duser.language=' + language,

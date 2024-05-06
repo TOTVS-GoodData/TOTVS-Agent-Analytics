@@ -172,7 +172,7 @@ export class AppComponent {
           });
           
           //Solicita ao Electron a versão atual do Agent
-          this.version = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('AC_getAgentVersion').version;
+          this.version = CNST_PROGRAM_VERSION.PRODUCTION + this._electronService.ipcRenderer.sendSync('AC_requestAgentVersion').version;
           
           //Define o valor padrão do diretório temporário do Java
           if (conf.javaTmpDir == null) {

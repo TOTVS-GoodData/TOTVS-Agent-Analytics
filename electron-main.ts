@@ -338,7 +338,7 @@ export default class Main {
     ipcMain.removeHandler('AC_getAvailableExecutionWindows');
     ipcMain.removeHandler('AC_killProcess');
     ipcMain.removeAllListeners('AC_getConfiguration');
-    ipcMain.removeHandler('AC_getJavaVersion');
+    ipcMain.removeHandler('AC_requestJavaVersion');
     ipcMain.removeHandler('AC_saveConfiguration');
     ipcMain.removeAllListeners('AC_getQueries');
     ipcMain.removeAllListeners('AC_getQueriesBySchedule');
@@ -355,7 +355,7 @@ export default class Main {
     ipcMain.removeAllListeners('AC_getFile');
     ipcMain.removeAllListeners('AC_getTmpPath');
     ipcMain.removeAllListeners('AC_writeToLog');
-    ipcMain.removeAllListeners('AC_getAgentVersion');
+    ipcMain.removeAllListeners('AC_requestAgentVersion');
     ipcMain.removeHandler('AC_readLogs');
     ipcMain.removeAllListeners('AC_exit');
     ipcMain.removeAllListeners('AC_updateAgentNow');
@@ -597,10 +597,16 @@ export default class Main {
     });
     
     //Consulta da versão atual do Java usado pelo Agent
-    ipcMain.handle('AC_getJavaVersion', (event: IpcMainEvent) => {
-      return lastValueFrom(Execute.getJavaVersion().pipe(map((res: string[]) => {
-        return res;
-      })));
+    ipcMain.handle('AC_requestJavaVersion', (event: IpcMainEvent) => {
+      if ((TOTVS_Agent_Analytics.getMirrorMode() == 0) || (TOTVS_Agent_Analytics.getMirrorMode() == 1)) {
+        return lastValueFrom(Execute.requestJavaVersion().pipe(map((res: string[]) => {
+          return res;
+        })));
+      } else {
+        return lastValueFrom(ServerService.requestJavaVersionRemotelly().pipe(map((res: string[]) => {
+          return res;
+        })));
+      }
     });
     
     /*****************************/
@@ -729,7 +735,7 @@ export default class Main {
     });
     
     //Consulta do número de versão atual do Agent
-    ipcMain.on('AC_getAgentVersion', (event: IpcMainEvent) => {
+    ipcMain.on('AC_requestAgentVersion', (event: IpcMainEvent) => {
       event.returnValue = autoUpdater.currentVersion;
       return autoUpdater.currentVersion;
     });

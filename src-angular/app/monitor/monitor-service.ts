@@ -121,10 +121,10 @@ export class MonitorService {
 
           //Utiliza o idioma da execução encontrado para buscar pelas mensagens específicas do Agent
           let startDateJava: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_START, 1);
-          startDateJava = startDateJava.substring(0, startDateJava.length - 5);
+          if (startDateJava != null) startDateJava = startDateJava.substring(0, startDateJava.length - 5);
           
           let endDateJava: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_END, 1);
-          endDateJava = endDateJava.substring(0, endDateJava.length - 5);
+          if (endDateJava != null) endDateJava = endDateJava.substring(0, endDateJava.length - 5);
 
           let durationJava: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_DURATION, 1);
           let stopped: string = this.findRegex(filteredMessages, CNST_TRANSLATIONS[logLanguage].ELECTRON.JAVA_EXECUTION_CANCELLED);
