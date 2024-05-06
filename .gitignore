@@ -4,7 +4,7 @@ dist/
 logs/
 tmp/
 remote/
-assets/
+assets/*
 !assets/dbTemplate.json
 .angular
 .vs
