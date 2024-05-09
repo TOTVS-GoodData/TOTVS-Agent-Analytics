@@ -53,6 +53,7 @@ export class MonitorService {
       if (refresh == 0) {
         refresh = refreshTimer;
         return this.getMonitorLog().pipe(map((logs: AgentLog[]) => {
+          console.log(logs.length);
           return logs;
         }));
       } else {

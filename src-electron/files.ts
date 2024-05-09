@@ -135,8 +135,18 @@ export class Files {
   }
 
   /* Método para calcular a diferença, em dias, entre duas datas */
-  public static dateDiff(d1: Date, d2: Date): number {
-    return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+  public static dateDiff(d1: Date, d2: Date, type: string): number {
+    switch (type) {
+      case 'second':
+        return Math.round((d2.getTime() - d1.getTime()) / 1000);
+        break;
+      case 'day':
+        return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+        break;
+      default:
+        return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+        break;
+    }
   }
 
   /* Método de remoção dos arquivos de log antigos do Agent */
@@ -619,51 +629,7 @@ export class Files {
       //Retorna um observável para cada arquivo a ser gravado com os novos logs
       return new Observable<boolean>((subscriber: any) => {
 
-        //Inicializa o canal de log p/ mensagens de debug / info, disparadas remotamente
-        let loggerJSONREMOTE: any = winston.createLogger({
-          level: 'debug',
-          format: winston.format.combine(
-            winston.format((info) => {
-              const {
-                mirror, logDate, loglevel, system, message, level, ...rest
-              } = info;
-              delete info.timestamp;
-              delete info.level;
-              info.message = info.message.replaceAll('\\', '\/');
-              return info;
-            })(),
-            winston.format.json({ deterministic: false })
-          ),
-          transports: [
-            new winston.transports.File({
-              filename: CNST_REMOTE_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION
-            })
-          ]
-        });
-
-        //Inicializa o canal de log p/ mensagens de debug / info, disparadas remotamente
-        let loggerJSONREMOTEMIRROR: any = winston.createLogger({
-          level: 'debug',
-          format: winston.format.combine(
-            winston.format((info) => {
-              const {
-                mirror, logDate, loglevel, system, message, level, ...rest
-              } = info;
-              delete info.timestamp;
-              delete info.level;
-              info.message = info.message.replaceAll('\\', '\/');
-              return info;
-            })(),
-            winston.format.json({ deterministic: false })
-          ),
-          transports: [
-            new winston.transports.File({
-              filename: CNST_REMOTE_LOGS_PATH() + '/' + CNST_LOGS_FILENAME + '-' + CNST_LOGS_MIRROR_FILENAME + '-' + Files.formatDate(message2.logDate) + '.' + CNST_LOGS_EXTENSION
-            })
-          ]
-        });
-
-        //Inicializa o canal de log p/ mensagens de erro, disparadas remotamente
+        //Inicializa o canal de log p/ mensagens, disparadas remotamente
         let loggerTEXTREMOTE: any = winston.createLogger({
           level: 'error',
           format: winston.format.printf(({ message }) => {
@@ -677,7 +643,7 @@ export class Files {
           ]
         });
 
-        //Inicializa o canal de log p/ mensagens de erro, disparadas remotamente
+        //Inicializa o canal de log p/ mensagens, disparadas remotamente
         let loggerTEXTREMOTEMIRROR: any = winston.createLogger({
           level: 'error',
           format: winston.format.printf(({ message }) => {
@@ -692,13 +658,13 @@ export class Files {
         });
 
         //Filtra apenas as mensagens de log deste arquivo, baseando-se em sua data
-        agentLogMessages.filter((line1: AgentLogMessage) => (Files.dateDiff(message2.logDate, line1.logDate) == 0))
+        agentLogMessages.filter((line1: AgentLogMessage) => (Files.dateDiff(message2.logDate, line1.logDate, 'day') == 0))
         .map((line2: AgentLogMessage) => {
 
           //Prepara o objeto a ser escrito pela função de log
           let obj: any = {
             mirror: line2.mirror,
-            timestamp: ((line2.logDate == null) ? new Date() : line2.logDate),
+            //timestamp: ((line2.logDate == null) ? new Date() : line2.logDate),
             logDate: ((line2.logDate == null) ? Files.formatTimestamp(new Date()) : Files.formatTimestamp(line2.logDate)),
             loglevel: line2.loglevel,
             system: line2.system,
@@ -713,21 +679,27 @@ export class Files {
           if (obj.message) {
             switch (line2.loglevel) {
               case CNST_LOGLEVEL.ERROR.tag:
-                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.error(obj) : loggerJSONREMOTEMIRROR.error(obj));
+                //(obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.error(obj) : loggerJSONREMOTEMIRROR.error(obj));
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerTEXTREMOTE.error(JSON.stringify(obj)) : loggerTEXTREMOTEMIRROR.error(JSON.stringify(obj)));
                 break;
               case CNST_LOGLEVEL.WARN.tag:
-                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.warn(obj) : loggerJSONREMOTEMIRROR.warn(obj));
+                //(obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.warn(obj) : loggerJSONREMOTEMIRROR.warn(obj));
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerTEXTREMOTE.error(JSON.stringify(obj)) : loggerTEXTREMOTEMIRROR.error(JSON.stringify(obj)));
                 break;
               case CNST_LOGLEVEL.INFO.tag:
-                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.info(obj) : loggerJSONREMOTEMIRROR.info(obj));
+                //(obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.info(obj) : loggerJSONREMOTEMIRROR.info(obj));
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerTEXTREMOTE.error(JSON.stringify(obj)) : loggerTEXTREMOTEMIRROR.error(JSON.stringify(obj)));
                 break;
               case CNST_LOGLEVEL.DEBUG.tag:
-                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.debug(obj) : loggerJSONREMOTEMIRROR.debug(obj));
+                //(obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerJSONREMOTE.debug(obj) : loggerJSONREMOTEMIRROR.debug(obj));
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerTEXTREMOTE.error(JSON.stringify(obj)) : loggerTEXTREMOTEMIRROR.error(JSON.stringify(obj)));
                 break;
-              default:
+              default: 
                 (obj.mirror == CNST_LOGS_TAGS_CLIENT ? loggerTEXTREMOTE.error(obj.message) : loggerTEXTREMOTEMIRROR.error(obj.message));
                 break;
             }
+
+            
           }
         });
 
@@ -735,8 +707,6 @@ export class Files {
         setTimeout(() => {
 
           //Encerra os escritos do arquivo de log
-          loggerJSONREMOTE.end();
-          loggerJSONREMOTEMIRROR.end();
           loggerTEXTREMOTE.end();
           loggerTEXTREMOTEMIRROR.end();
 
@@ -825,7 +795,7 @@ export class Files {
       Apenas as mensagens dos arquivos de log remoto precisam ser ordenadas.
     */
     agentLogMessagesCurrent = agentLogMessagesCurrent.filter((message: AgentLogMessage) => {
-      return (Files.dateDiff(message.logDate, agentLogMessagesNew[0].logDate) <= 1);
+      return (Files.dateDiff(message.logDate, agentLogMessagesNew[0].logDate, 'day') <= 1);
     });
     
     //Combina todas as mensagens de log, e as ordena.
@@ -849,13 +819,13 @@ export class Files {
       if (fs.existsSync(logfileMirror)) fs.truncateSync(logfileMirror);
 
       //Filtra apenas as mensagens de log deste arquivo, baseando-se em sua data
-      agentLogMessagesFinal.filter((line1: AgentLogMessage) => (Files.dateDiff(message2.logDate, line1.logDate) == 0))
+      agentLogMessagesFinal.filter((line1: AgentLogMessage) => (Files.dateDiff(message2.logDate, line1.logDate, 'day') == 0))
       .map((line2: AgentLogMessage) => {
 
         //Prepara o objeto a ser escrito pela função de log
         let obj: any = {
           mirror: line2.mirror,
-          timestamp: ((line2.logDate == null) ? new Date() : line2.logDate),
+          //timestamp: ((line2.logDate == null) ? new Date() : line2.logDate),
           logDate: ((line2.logDate == null) ? Files.formatTimestamp(new Date()) : Files.formatTimestamp(line2.logDate)),
           loglevel: line2.loglevel,
           system: line2.system,
@@ -871,16 +841,16 @@ export class Files {
           if (obj.message) {
             switch (line2.loglevel) {
               case CNST_LOGLEVEL.ERROR.tag:
-                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.error(obj) : Files.loggerJSONMIRROR.error(obj));
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerTEXT.error(JSON.stringify(obj)) : Files.loggerTEXTMIRROR.error(JSON.stringify(obj)));
                 break;
               case CNST_LOGLEVEL.WARN.tag:
-                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.warn(obj) : Files.loggerJSONMIRROR.warn(obj));
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerTEXT.error(JSON.stringify(obj)) : Files.loggerTEXTMIRROR.error(JSON.stringify(obj)));
                 break;
               case CNST_LOGLEVEL.INFO.tag:
-                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.info(obj) : Files.loggerJSONMIRROR.info(obj));
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerTEXT.error(JSON.stringify(obj)) : Files.loggerTEXTMIRROR.error(JSON.stringify(obj)));
                 break;
               case CNST_LOGLEVEL.DEBUG.tag:
-                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerJSON.debug(obj) : Files.loggerJSONMIRROR.debug(obj));
+                (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerTEXT.error(JSON.stringify(obj)) : Files.loggerTEXTMIRROR.error(JSON.stringify(obj)));
                 break;
               default:
                 (obj.mirror == CNST_LOGS_TAGS_CLIENT ? Files.loggerTEXT.error(obj.message) : Files.loggerTEXTMIRROR.error(obj.message));

@@ -636,8 +636,6 @@ export class ServerService {
     //Variável de suporte, usada para armazenar a última linha de log lida.
     let lastMessage: any = null;
 
-    let javaLog: boolean = false;
-
     //Consulta das traduções
     let translations: any = TranslationService.getTranslations([
       new TranslationInput('ELECTRON.SERVER_COMMUNICATION.MESSAGES.NEW_WORD', [command.source, command.word])
@@ -648,26 +646,26 @@ export class ServerService {
     Files.readLogs().map((log: string) => {
       try {
         let messages: any = JSON.parse(log);
-
-        if ((messages.execId != null) && (messages.scheduleId != null)) {
-          javaLog = true;
-          messages.str_logDate = messages.logDate;
-          messages.logDate = new Date('' + messages.logDate);
-          agentLogMessages.push(messages);
-          lastMessage = messages;
-        } else javaLog = false;
+        messages.str_logDate = messages.logDate;
+        messages.logDate = new Date('' + messages.logDate);
+        agentLogMessages.push(messages);
+        lastMessage = messages;
 
       //Conversão dos textos de log de erro
       } catch (ex) {
-        if ((lastMessage) && (javaLog)) agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, CNST_LOGLEVEL.ERROR.tag, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+        if (lastMessage != undefined) agentLogMessages.push(new AgentLogMessage(lastMessage.mirror, lastMessage.logDate, lastMessage.str_logDate, null, lastMessage.system, log, lastMessage.level, lastMessage.execId, lastMessage.scheduleId));
+        else agentLogMessages.push(new AgentLogMessage(null, null, null, null, null, null, null, null, null));
       }
     });
-
+    
     /* Remoção de todas as mensagens de log que não foram geradas após o início do acesso remoto */
     agentLogMessages = agentLogMessages.filter((message: AgentLogMessage) => {
-      return (Files.dateDiff(ServerService.mirrorModeDateStart, message.logDate) >= 0);
+      return (Files.dateDiff(ServerService.mirrorModeDateStart, message.logDate, 'second') >= -1);
     });
-    
+
+    //Atualiza a data de início do acesso remoto, para não reenviar arquivos de log já sincronizados.
+    ServerService.mirrorModeDateStart = new Date();
+
     return of(new responseObj([JSON.stringify(agentLogMessages)], null));
   }
   

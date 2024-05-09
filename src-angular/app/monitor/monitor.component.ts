@@ -255,10 +255,8 @@ export class MonitorComponent implements OnInit {
           refresh = refresh - 1;
 
           //Realiza a atualização dos dados do monitoramento
-          if (logs.length > 0) {
-            refresh = refreshTimer;
-            this.agentLog = logs;
-          }
+          if (refresh == 0) refresh = refreshTimer;
+          if (logs.length > 0) this.agentLog = logs;
         }));
       })).subscribe();
     } else {

@@ -104,14 +104,14 @@ export class ScheduleComponent implements OnInit {
           this._router.navigate(['/schedule-add'], { state: s });
         }
       },{
+        label: this._translateService.CNST_TRANSLATIONS['BUTTONS.EXECUTE'],
+        action: this.runAgent.bind(this)
+      },{
         label: this._translateService.CNST_TRANSLATIONS['BUTTONS.DELETE'],
         action: (s: Schedule) => {
           this.scheduleToDelete = s;
           this.modal_deleteSchedule.open();
         }
-      },{
-        label: this._translateService.CNST_TRANSLATIONS['BUTTONS.EXECUTE'],
-        action: this.runAgent.bind(this)
       }
     ];
     
