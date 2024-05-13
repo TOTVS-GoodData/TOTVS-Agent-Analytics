@@ -5,7 +5,7 @@ Suporta sistemas Windows / Linux / MacOS.
 
 Desenvolvido em NodeJS 18.17.1 / Portinari.16.4.1 / Angular.16.2.11 / Electron.27.0.0
 
-## Instalação do programa
+## Instalação do programa do agent
 Executar o seguinte comando:
 
 ```powershell
