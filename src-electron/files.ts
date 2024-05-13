@@ -564,7 +564,7 @@ export class Files {
     return of(data);
   }
   
-  /* Método de escrita do banco do Agent-Client */
+  /* Método de escrita do banco de dados do Agent-Client */
   public static writeApplicationData(db: ClientData): Observable<boolean> {
     fs.writeFileSync(
       Files.filepath,
